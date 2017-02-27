@@ -1,0 +1,1 @@
+"C:\Program Files (x86)\SEGGER\JLink_V612f\JLinkGDBServerCL.exe" -select USB -device MK60FN1M0xxx15 -if SWD -speed auto -ir
