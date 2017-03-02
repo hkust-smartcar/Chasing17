@@ -58,6 +58,7 @@ void CameraToLcd() {
   // initialize LCD
   St7735r::Config config_lcd;
   config_lcd.fps = 60;
+  config_lcd.is_revert = true;
   St7735r lcd(config_lcd);
 
   // start the camera and wait until it's ready
@@ -80,19 +81,16 @@ void CameraToLcd() {
       // attempt to refresh the buffer at every 100th millisecond
       if ((System::Time() % 100) == 0) {
         // lock the buffer and copy it
-        const Byte *pBuffer = camera.LockBuffer();
-        std::array<Byte, kBufferSize> bufferArr{};
-        /*for (uint16_t i = 0; i < kBufferSize; ++i) {
-          bufferArr[i] = pBuffer[i];
-        }*/
-        util::CopyByteArray(*pBuffer, &bufferArr);
+        const Byte *p_buffer = camera.LockBuffer();
+        std::array<Byte, kBufferSize> buffer_arr{};
+        util::CopyByteArray(*p_buffer, &buffer_arr);
 
         // unlock the buffer now that we have the data
         camera.UnlockBuffer();
 
         // rewrite lcd with new data
         lcd.SetRegion(Lcd::Rect(0, 0, kCameraWidth, kCameraHeight));
-        lcd.FillBits(Lcd::kBlack, Lcd::kWhite, bufferArr.data(), kBufferSize * 8);
+        lcd.FillBits(Lcd::kBlack, Lcd::kWhite, buffer_arr.data(), kBufferSize * 8);
       }
     }
   }

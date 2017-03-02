@@ -165,15 +165,15 @@ void CenterLineMethod() {
 
       // copy the buffer for processing
       const Byte *pbuffer = camera->LockBuffer();
-      Byte image1d[kBufferSize];
-      CopyByteArray(*pbuffer, image1d, kBufferSize);
+      array<Byte, kBufferSize> image1d{};
+      CopyByteArray(*pbuffer, &image1d);
       camera->UnlockBuffer();
 
       led2.SetEnable(true);
 
       // 1d to 2d array
       array<array<bool, kCameraWidth>, kCameraHeight> image2d;
-      ByteTo2DBitArray(*pbuffer, &image2d);
+      ByteTo2DBitArray(image1d, &image2d);
 
       // apply median filter
       array<array<bool, kCameraWidth>, kCameraHeight> image2d_median;
@@ -182,30 +182,34 @@ void CenterLineMethod() {
       // fill in row information
       for (int rowIndex = kCameraHeight - 1; rowIndex >= 0; --rowIndex) {
         if (rowIndex == kCameraHeight - 1) {  // row closest to car
-          if (!image2d_median[rowIndex][kCameraWidth / 2]) {  // middle is track - do normal processing
+          if (!image2d_median.at(rowIndex).at(kCameraWidth / 2)) {  // middle is track - do normal processing
             RowInfo[rowIndex].right_bound = static_cast<Uint>(
-                FindElement(image2d_median[rowIndex], kCameraWidth / 2, kCameraWidth - 1, true, true));
+                FindElement(image2d_median.at(rowIndex), kCameraWidth / 2, kCameraWidth - 1, true, true));
             RowInfo[rowIndex].left_bound = static_cast<Uint>(
-                FindElement(image2d_median[rowIndex], kCameraWidth / 2, 0, true, true));
+                FindElement(image2d_median.at(rowIndex), kCameraWidth / 2, 0, true, true));
           } else {  // middle is not track! - alternate processing
             // take the previous steer_value, and assume the track will be at that side as well
             if (steer_value > kCameraWidth / 2) {  // assumes track at right side
               RowInfo[rowIndex].left_bound = static_cast<Uint>(
-                  FindElement(image2d_median[rowIndex], kCameraWidth / 2, kCameraWidth - 1, false, true));
+                  FindElement(image2d_median.at(rowIndex), kCameraWidth / 2, kCameraWidth - 1, false, true));
               RowInfo[rowIndex].right_bound = static_cast<Uint>(
-                  FindElement(image2d_median[rowIndex], RowInfo[rowIndex].left_bound, kCameraWidth - 1, true, true));
+                  FindElement(image2d_median.at(rowIndex), RowInfo[rowIndex].left_bound, kCameraWidth - 1, true, true));
             } else if (steer_value < kCameraWidth / 2) {  // assumes track at left side
               RowInfo[rowIndex].right_bound =
-                  static_cast<Uint>(FindElement(image2d_median[rowIndex], kCameraWidth / 2, 0, false, true));
+                  static_cast<Uint>(FindElement(image2d_median.at(rowIndex), kCameraWidth / 2, 0, false, true));
               RowInfo[rowIndex].left_bound = static_cast<Uint>(
-                  FindElement(image2d_median[rowIndex], RowInfo[rowIndex].right_bound, 0, true, true));
+                  FindElement(image2d_median.at(rowIndex), RowInfo[rowIndex].right_bound, 0, true, true));
             }
           }
         } else {  // all other rows - dependent on the closest row
           RowInfo[rowIndex].right_bound = static_cast<Uint>(
-              FindElement(image2d_median[rowIndex], RowInfo[rowIndex + 1].center_point, kCameraWidth - 1, true, true));
+              FindElement(image2d_median.at(rowIndex),
+                          RowInfo[rowIndex + 1].center_point,
+                          kCameraWidth - 1,
+                          true,
+                          true));
           RowInfo[rowIndex].left_bound = static_cast<Uint>(
-              FindElement(image2d_median[rowIndex], RowInfo[rowIndex + 1].center_point, 0, true, true));
+              FindElement(image2d_median.at(rowIndex), RowInfo[rowIndex + 1].center_point, 0, true, true));
         }
         // calculate the dependencies
         RowInfo[rowIndex].center_point = (RowInfo[rowIndex].left_bound + RowInfo[rowIndex].right_bound) / 2;
@@ -217,7 +221,7 @@ void CenterLineMethod() {
       // render center line on lcd
       if (kEnableLcd) {
         lcd->SetRegion(Lcd::Rect(0, 0, kCameraWidth, kCameraHeight));
-        lcd->FillBits(Lcd::kBlack, Lcd::kWhite, image1d, kBufferSize * 8);
+        lcd->FillBits(Lcd::kBlack, Lcd::kWhite, image1d.data(), kBufferSize * 8);
         for (Uint i = kCameraHeight - 1; i > kCameraMaxSrcHeight; --i) {
           if (RowInfo[i].track_count < kCameraMinPixelCount) {
             break;
@@ -366,15 +370,15 @@ void CenterLineMethodTest() {
 
       // copy the buffer for processing
       const Byte *pbuffer = camera->LockBuffer();
-      Byte image1d[kBufferSize];
-      CopyByteArray(*pbuffer, image1d, kBufferSize);
+      std::array<Byte, kBufferSize> image1d{};
+      CopyByteArray(*pbuffer, &image1d);
       camera->UnlockBuffer();
 
       led2.SetEnable(true);
 
       // 1d to 2d array
       array<array<bool, kCameraWidth>, kCameraHeight> image2d;
-      ByteTo2DBitArray(*pbuffer, &image2d);
+      ByteTo2DBitArray(image1d, &image2d);
 
       // apply median filter
       array<array<bool, kCameraWidth>, kCameraHeight> image2d_median;
@@ -383,30 +387,34 @@ void CenterLineMethodTest() {
       // fill in row information
       for (int rowIndex = kCameraHeight - 1; rowIndex >= 0; --rowIndex) {
         if (rowIndex == kCameraHeight - 1) {  // row closest to car
-          if (!image2d_median[rowIndex][kCameraWidth / 2]) {  // middle is track - do normal processing
+          if (!image2d_median.at(rowIndex).at(kCameraWidth / 2)) {  // middle is track - do normal processing
             RowInfo[rowIndex].right_bound = static_cast<Uint>(
-                FindElement(image2d_median[rowIndex], kCameraWidth / 2, kCameraWidth - 1, true, true));
+                FindElement(image2d_median.at(rowIndex), kCameraWidth / 2, kCameraWidth - 1, true, true));
             RowInfo[rowIndex].left_bound = static_cast<Uint>(
-                FindElement(image2d_median[rowIndex], kCameraWidth / 2, 0, true, true));
+                FindElement(image2d_median.at(rowIndex), kCameraWidth / 2, 0, true, true));
           } else {  // middle is not track! - alternate processing
             // take the previous steer_value, and assume the track will be at that side as well
             if (steer_value > kCameraWidth / 2) {  // assumes track at right side
               RowInfo[rowIndex].left_bound = static_cast<Uint>(
-                  FindElement(image2d_median[rowIndex], kCameraWidth / 2, kCameraWidth - 1, false, true));
+                  FindElement(image2d_median.at(rowIndex), kCameraWidth / 2, kCameraWidth - 1, false, true));
               RowInfo[rowIndex].right_bound = static_cast<Uint>(
-                  FindElement(image2d_median[rowIndex], RowInfo[rowIndex].left_bound, kCameraWidth - 1, true, true));
+                  FindElement(image2d_median.at(rowIndex), RowInfo[rowIndex].left_bound, kCameraWidth - 1, true, true));
             } else if (steer_value < kCameraWidth / 2) {  // assumes track at left side
               RowInfo[rowIndex].right_bound =
-                  static_cast<Uint>(FindElement(image2d_median[rowIndex], kCameraWidth / 2, 0, false, true));
+                  static_cast<Uint>(FindElement(image2d_median.at(rowIndex), kCameraWidth / 2, 0, false, true));
               RowInfo[rowIndex].left_bound = static_cast<Uint>(
-                  FindElement(image2d_median[rowIndex], RowInfo[rowIndex].right_bound, 0, true, true));
+                  FindElement(image2d_median.at(rowIndex), RowInfo[rowIndex].right_bound, 0, true, true));
             }
           }
         } else {  // all other rows - dependent on the closest row
           RowInfo[rowIndex].right_bound = static_cast<Uint>(
-              FindElement(image2d_median[rowIndex], RowInfo[rowIndex + 1].center_point, kCameraWidth - 1, true, true));
+              FindElement(image2d_median.at(rowIndex),
+                          RowInfo[rowIndex + 1].center_point,
+                          kCameraWidth - 1,
+                          true,
+                          true));
           RowInfo[rowIndex].left_bound = static_cast<Uint>(
-              FindElement(image2d_median[rowIndex], RowInfo[rowIndex + 1].center_point, 0, true, true));
+              FindElement(image2d_median.at(rowIndex), RowInfo[rowIndex + 1].center_point, 0, true, true));
         }
         // calculate the dependencies
         RowInfo[rowIndex].center_point = (RowInfo[rowIndex].left_bound + RowInfo[rowIndex].right_bound) / 2;
@@ -419,7 +427,7 @@ void CenterLineMethodTest() {
       if (kEnableLcd) {
         lcd->SetRegion(Lcd::Rect(0, 0, kCameraWidth, kCameraHeight));
         lcd->FillColor(Lcd::kWhite);
-        // lcd->FillBits(Lcd::kBlack, Lcd::kWhite, image1d,  kBufferSize * 8);
+        // lcd->FillBits(Lcd::kBlack, Lcd::kWhite, image1d.data(),  kBufferSize * 8);
         for (Uint i = kCameraHeight - 1; i > 0; --i) {
           if (RowInfo[i].track_count < kCameraMinPixelCount) {
             break;

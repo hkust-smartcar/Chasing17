@@ -18,6 +18,7 @@
 #include "libsc/system.h"
 #include "libsc/k60/ov7725.h"
 
+#include "util/util.h"
 #include "util/encoder_proportional_controller.h"
 
 using libsc::AlternateMotor;
@@ -62,6 +63,7 @@ void LedTest() {
 void LcdTest() {
   St7735r::Config config;
   config.fps = 10;
+  config.is_revert = true;
   unique_ptr<St7735r> lcd(new St7735r(config));
 
   while (true) {
@@ -90,20 +92,19 @@ void CameraTest() {
   // initialize LCD
   St7735r::Config lcd_config;
   lcd_config.fps = 50;
+  lcd_config.is_revert = true;
   unique_ptr<St7735r> lcd(new St7735r(lcd_config));
 
   while (!camera->IsAvailable()) {}
 
   while (true) {
     const Byte *pBuffer = camera->LockBuffer();
-    Byte bufferArr[kBufferSize];
-    for (uint16_t i = 0; i < kBufferSize; ++i) {
-      bufferArr[i] = pBuffer[i];
-    }
+    std::array<Byte, kBufferSize> buffer_arr{};
+    CopyByteArray(*pBuffer, &buffer_arr);
 
     camera->UnlockBuffer();
     lcd->SetRegion(Lcd::Rect(0, 0, 80, 60));
-    lcd->FillBits(Lcd::kBlack, Lcd::kWhite, bufferArr, kBufferSize * 8);
+    lcd->FillBits(Lcd::kBlack, Lcd::kWhite, buffer_arr.data(), kBufferSize * 8);
   }
 
   camera->Stop();
@@ -174,7 +175,7 @@ void DirEncoderTest() {
     encoder_left.Update();
     encoder_right.Update();
 
-    std::string s = std::to_string(encoder_left.GetCount()) + " " + std::to_string(encoder_right.GetCount());
+    std::string s = std::to_string(encoder_left.GetCount()) + " " + std::to_string(encoder_right.GetCount()) + "\n";
     console.WriteString(s.c_str());
 
     System::DelayMs(100);

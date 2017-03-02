@@ -5,7 +5,7 @@ include(CMakeForceCompiler)
 
 # specific what we're working with
 # valid options: david_desktop, david_laptop
-set(COMPILE_ENV david_desktop)
+set(COMPILE_ENV david_laptop)
 
 # specify the cross compiler
 set(TOOLCHAIN_PREFIX arm-none-eabi-)

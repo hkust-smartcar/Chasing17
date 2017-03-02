@@ -8,7 +8,6 @@
 #include "libbase/k60/mcg.h"
 #include "libsc/system.h"
 
-#include "assignments/camera_to_lcd.h"
 
 namespace libbase {
 namespace k60 {
@@ -26,8 +25,6 @@ using libsc::System;
 
 int main() {
   System::Init();
-
-  CameraToLcd();
 
   while (true) {
   }
