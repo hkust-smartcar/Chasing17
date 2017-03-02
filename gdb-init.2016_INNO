@@ -1,6 +1,6 @@
 target remote :2331
 
-file C:/Users/david/Dropbox/ENGG4950S/Internal2017/bin/inno14-d-2016-inno.elf
+file C:/Users/david/Dropbox/ENGG4950S/Chasing17/bin/inno14-d-2016-inno.elf
 
 monitor reset
 monitor halt
