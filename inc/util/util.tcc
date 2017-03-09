@@ -16,28 +16,10 @@ void CopyByteArray(const Byte &src, std::array<Byte, size> *dest) {
 }
 
 template<size_t size>
-void ByteTo1DBitArray(const Byte &src, std::array<bool, size> *dest) {
-  for (size_t i = 0; i < size / 8; ++i) {
-    for (uint8_t j = 0; j < 8; ++j) {
-      dest->at(i * 8 + j) = ((&src)[i] >> (7 - j)) & 1;
-    }
-  }
-}
-
-template<size_t size>
 void ByteTo1DBitArray(const std::array<Byte, size / 8> &src, std::array<bool, size> *dest) {
   for (size_t i = 0; i < src.size(); ++i) {
     for (uint8_t j = 0; j < 8; ++j) {
       dest->at(i * 8 + j) = (src.at(i) >> (7 - j)) & 1;
-    }
-  }
-}
-
-template<size_t width, size_t height>
-void ByteTo2DBitArray(const Byte &src, std::array<std::array<bool, width>, height> *dest) {
-  for (size_t i = 0; i < width * height / 8; ++i) {
-    for (uint8_t j = 0; j < 8; ++j) {
-      dest->at(i * 8 / width).at((i * 8 % width) + j) = ((&src)[i] >> (7 - j)) & 1;
     }
   }
 }
@@ -252,29 +234,6 @@ void MedianFilter(std::array<std::array<bool, width>, height> *arr) {
     }
   }
   *arr = tmp;
-}
-
-template<class T, typename = enable_if_t <std::is_integral<T>::value>>
-int FindElement(const T &arr, int first, int last, T value, bool return_last) {
-  if (last > first) {
-    for (; first <= last; ++first) {
-      if ((&arr)[first] == value) {
-        return first;
-      }
-    }
-  } else if (first > last) {
-    for (; first >= last; --first) {
-      if ((&arr)[first] == value) {
-        return first;
-      }
-    }
-  } else if (first == last) {
-    if ((&arr)[first] == value) {
-      return first;
-    }
-    return return_last ? last : -1;
-  }
-  return return_last ? last : -1;
 }
 
 template<class T, typename = enable_if_t <std::is_integral<T>::value>, std::size_t size>
