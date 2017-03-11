@@ -178,6 +178,7 @@ float CalcLinearRegressionSlope(const int *x, const int *y, size_t size);
  * @return Slope of regression line
  */
 float CalcLinearRegressionSlope(const std::vector<int> &x, const std::vector<int> &y);
+void Int32to4Bytes(const uint32_t num, std::array<Byte, 4> *ByteArray);
 
 namespace distortion {
 /**
