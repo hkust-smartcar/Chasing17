@@ -1,8 +1,10 @@
 /*
+ * util.cpp
+ *
  * Copyright (c) 2014-2017 HKUST SmartCar Team
  * Refer to LICENSE for details
  *
- * Author: David Mak (Derppening)
+ * Author: David Mak (Derppening), Peter Tse (mcreng)
  */
 
 #include "util/util.h"
@@ -82,6 +84,12 @@ float CalcLinearRegressionSlope(const std::vector<int> &x, const std::vector<int
   float m = ((rhs_matrix.at(0) * lhs_matrix.at(1).at(1)) - (lhs_matrix.at(0).at(1) * rhs_matrix.at(1))) / det;
 
   return m;
+}
+
+void Int32to4Bytes(const uint32_t num, std::array<Byte, 4> *ByteArray){
+	for (int i = 0; i < 4; i++){
+		ByteArray->at(i) = static_cast<Byte>(num >> (24 - 8*i));
+	}
 }
 
 namespace distortion {
