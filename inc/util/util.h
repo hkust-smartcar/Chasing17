@@ -106,6 +106,14 @@ void MedianFilter(std::array<std::array<bool, width>, height> *arr);
  */
 float CalcLinearRegressionSlope(const std::vector<int> &x, const std::vector<int> &y);
 
+/**
+ * Converts an uint16_t to an array with 2 bytes.
+ *
+ * @param num The uint16_t number
+ * @param bytes Destination byte (C++11-style) array
+ */
+void Int16To2ByteArray(const uint16_t num, std::array<Byte, 2> &bytes);
+
 namespace distortion {
 /**
  * Distortion constants of the intrinsic matrix used in @p GetUndistortCoord.

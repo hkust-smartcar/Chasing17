@@ -37,6 +37,11 @@ float CalcLinearRegressionSlope(const std::vector<int> &x, const std::vector<int
   return m;
 }
 
+void Int16To2ByteArray(const uint16_t num, std::array<Byte, 2> &bytes) {
+  bytes.at(0) = static_cast<Byte>(num >> 8);
+  bytes.at(1) = static_cast<Byte>(num);
+}
+
 namespace distortion {
 void GetUndistortCoord(std::vector<std::array<int, 2>> *v) {
   for (std::array<int, 2> a : *v) {
@@ -52,7 +57,8 @@ void GetUndistortCoord(std::vector<int> *x, std::vector<int> *y) {
   }
   for (size_t i = 0; i < x->size(); ++i) {
     x->at(i) =
-        static_cast<int>(DistortionConstants.f_x * x->at(i) + DistortionConstants.s * y->at(i) + DistortionConstants.c_x);
+        static_cast<int>(DistortionConstants.f_x * x->at(i) + DistortionConstants.s * y->at(i)
+            + DistortionConstants.c_x);
     y->at(i) = static_cast<int>(DistortionConstants.f_y * y->at(i) + DistortionConstants.c_y);
   }
 }

@@ -5,7 +5,7 @@ include(CMakeForceCompiler)
 
 # specify what environment we're working with
 # valid options: david_desktop, david_laptop
-set(COMPILE_ENV david_laptop)
+set(COMPILE_ENV david_desktop)
 
 # specify the cross compiler
 set(TOOLCHAIN_PREFIX arm-none-eabi-)
@@ -38,14 +38,10 @@ elseif (${CMAKE_BUILD_TYPE} STREQUAL Debug)
 else (${CMAKE_BUILD_TYPE} STREQUAL Release)
     message(WARNING "No build type configured. Defaulting to Debug")
     set(MAKE_BUILD_TYPE DEBUG)
-endif (${CMAKE_BUILD_TYPE} STREQUAL Release)
+endif ()
 
 # set make parameters
-if (${COMPILE_ENV} STREQUAL david_desktop)
-    set(MAKE_PATH "D:/Program Files (x86)/GnuWin32/bin/make.exe")
-else ()
-    set(MAKE_PATH "C:/Program Files (x86)/GnuWin32/bin/make.exe")
-endif ()
+set(MAKE_PATH "C:/Program Files (x86)/GnuWin32/bin/make.exe")
 set(MAKE_ARGS -f ${Chasing17_SOURCE_DIR}/Makefile -k)
 if (${COMPILE_ENV} STREQUAL david_desktop)
     set(MAKE_ARGS ${MAKE_ARGS} -j8)

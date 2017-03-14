@@ -15,10 +15,10 @@ namespace util {
 void EncoderPController::DoCorrection() {
   // cleanup from previous cycle if it is out of range
   // [kMotorLowerBound,kMotorUpperBound]
-  if (motor_->GetPower() > kMotorUpperBound) {
-    motor_->SetPower(kMotorUpperBound);
-  } else if (motor_->GetPower() < kMotorLowerBound) {
-    motor_->SetPower(kMotorLowerBound);
+  if (motor_->GetPower() > static_cast<uint16_t>(MotorConstants::kUpperBound)) {
+    motor_->SetPower(static_cast<uint16_t>(MotorConstants::kUpperBound));
+  } else if (motor_->GetPower() < static_cast<uint16_t>(MotorConstants::kLowerBound)) {
+    motor_->SetPower(static_cast<uint16_t>(MotorConstants::kLowerBound));
   }
 
   // sets the correction target speed to the new speed, if
@@ -38,13 +38,13 @@ void EncoderPController::DoCorrection() {
   // get the speed difference and add power linearly.
   // bigger difference = higher power difference
   int16_t speed_diff = static_cast<int16_t>(std::abs(last_encoder_val_) - std::abs(curr_speed_));
-  motor_->AddPower(-speed_diff / kMotorDFactor);
+  motor_->AddPower(-speed_diff / static_cast<uint16_t>(MotorConstants::kDiffFactor));
 
   // hard limit bounds checking
-  if (motor_->GetPower() > kMotorUpperHardLimit) {
-    motor_->SetPower(kMotorUpperHardLimit);
-  } else if (motor_->GetPower() < kMotorLowerHardLimit) {
-    motor_->SetPower(kMotorLowerHardLimit);
+  if (motor_->GetPower() > static_cast<uint16_t>(MotorConstants::kUpperHardLimit)) {
+    motor_->SetPower(static_cast<uint16_t>(MotorConstants::kUpperHardLimit));
+  } else if (motor_->GetPower() < static_cast<uint16_t>(MotorConstants::kLowerHardLimit)) {
+    motor_->SetPower(static_cast<uint16_t>(MotorConstants::kLowerHardLimit));
   }
 }
 }  // namespace util

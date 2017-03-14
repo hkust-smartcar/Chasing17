@@ -8,6 +8,7 @@
 #pragma once
 
 #include <memory>
+#include <string>
 
 #include "libsc/alternate_motor.h"
 #include "libsc/dir_encoder.h"
@@ -102,6 +103,10 @@ class EncoderPController {
    * @return Current target speed.
    */
   inline int16_t GetTargetSpeed() const { return target_speed_; }
+  /**
+   * @return Current speed in encoder value per second
+   */
+  inline int32_t GetCurrentSpeed() const { return last_encoder_val_; }
 
   /**
  * Does motor power correction using encoder, and resets the encoder count.
@@ -113,34 +118,34 @@ class EncoderPController {
   /**
    * Constants for encoder to motor value conversions
    */
-  enum MotorConstants {
+  enum struct MotorConstants {
     /**
      * Conversion factor from encoder difference to motor power difference.
      *
      * @example If set to 50, for every encoder value difference of 50, the
      * motor power will increase/decrease by 1.
      */
-        kMotorDFactor = 50,
+        kDiffFactor = 50,
     /**
      * Lower bound of motor power which should not be used for extended periods
      * of time. [0,1000]
      */
-        kMotorLowerBound = 75,
+        kLowerBound = 75,
     /**
      * Upper bound of motor power which should not be used for extended periods
      * of time. [0,1000]
      */
-        kMotorUpperBound = 500,
+        kUpperBound = 500,
     /**
      * Lower bound of motor power which should never be exceeded.
      * [0,kMotorLowerBound]
      */
-        kMotorLowerHardLimit = 75,
+        kLowerHardLimit = 75,
     /**
      * Upper bound of motor power which should never be exceeded.
      * [kMotorUpperBound,1000]
      */
-        kMotorUpperHardLimit = 500,
+        kUpperHardLimit = 500,
   };
 
   /**

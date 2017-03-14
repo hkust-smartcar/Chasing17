@@ -82,8 +82,7 @@ else
 $(warning Unknown build type, defaulting to DEBUG (set SCCC_BUILD))
 BIN_SUFFIX:=$(BIN_SUFFIX)-d
 CPPFLAGS+=-DDEBUG=1
-#CCFLAGS+=-O0 -g3
-CCFLAGS+=-O0 -ggdb -gdwarf -g3 -ggdb
+CCFLAGS+=-O0 -g -gdwarf -g3 -ggdb
 $(info Build = DEBUG)
 
 endif

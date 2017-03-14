@@ -1,0 +1,24 @@
+target remote :2331
+
+# check this path when switching between configs/boards
+file C:/Users/david/Dropbox/ENGG4950S/Chasing17/bin/inno14-d-2017-inno.elf
+# file C:/Users/david/Dropbox/ENGG4950S/Chasing17/bin/inno14-d-2016-inno.elf
+
+monitor reset
+monitor halt
+monitor endian little
+monitor speed auto
+
+# change this device when switching between configs/boards
+monitor flash device MK60FN1M0xxx15
+# monitor flash device MK60FX512xxx15
+
+load
+monitor reset
+
+# uncomment when running
+cont
+
+# uncomment when debugging
+quit
+y
