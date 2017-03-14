@@ -7,18 +7,24 @@
 
 #include "util/util.h"
 
+#include <array>
 #include <string>
+#include <vector>
 
-using std::bitset;
+#include "libbase/misc_types.h"
+
+using std::array;
+using std::size_t;
 using std::string;
+using std::vector;
 
 namespace util {
-float CalcLinearRegressionSlope(const std::vector<int> &x, const std::vector<int> &y) {
+float CalcLinearRegressionSlope(const vector<int> &x, const vector<int> &y) {
   if (x.size() != y.size()) {
     return std::numeric_limits<float>::infinity();
   }
-  std::array<std::array<int, 2>, 2> lhs_matrix{};
-  std::array<int, 2> rhs_matrix{};
+  array<array<int, 2>, 2> lhs_matrix{};
+  array<int, 2> rhs_matrix{};
 
   // least squares method approximation
   for (unsigned int i = 0; i < x.size(); ++i) {
@@ -37,21 +43,21 @@ float CalcLinearRegressionSlope(const std::vector<int> &x, const std::vector<int
   return m;
 }
 
-void Int16To2ByteArray(const uint16_t num, std::array<Byte, 2> &bytes) {
+void Int16To2ByteArray(const uint16_t num, array<Byte, 2> &bytes) {
   bytes.at(0) = static_cast<Byte>(num >> 8);
   bytes.at(1) = static_cast<Byte>(num);
 }
 
 namespace distortion {
-void GetUndistortCoord(std::vector<std::array<int, 2>> *v) {
-  for (std::array<int, 2> a : *v) {
+void GetUndistortCoord(vector<array<int, 2>> *v) {
+  for (array<int, 2> a : *v) {
     a.at(0) =
         static_cast<int>(DistortionConstants.f_x * a.at(0) + DistortionConstants.s * a.at(1) + DistortionConstants.c_x);
     a.at(1) = static_cast<int>(DistortionConstants.f_y * a.at(1) + DistortionConstants.c_y);
   }
 }
 
-void GetUndistortCoord(std::vector<int> *x, std::vector<int> *y) {
+void GetUndistortCoord(vector<int> *x, vector<int> *y) {
   if (x->size() != y->size()) {
     return;
   }

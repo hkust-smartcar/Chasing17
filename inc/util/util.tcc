@@ -8,50 +8,50 @@
 #include "util/util.h"
 
 namespace util {
-template<size_t size>
+template<std::size_t size>
 void CopyByteArray(const Byte &src, std::array<Byte, size> *dest) {
-  for (size_t i = 0; i < size; ++i) {
+  for (std::size_t i = 0; i < size; ++i) {
     dest->at(i) = (&src)[i];
   }
 }
 
-template<size_t size>
+template<std::size_t size>
 void ByteTo1DBitArray(const std::array<Byte, size / 8> &src, std::array<bool, size> *dest) {
-  for (size_t i = 0; i < src.size(); ++i) {
+  for (std::size_t i = 0; i < src.size(); ++i) {
     for (uint8_t j = 0; j < 8; ++j) {
       dest->at(i * 8 + j) = (src.at(i) >> (7 - j)) & 1;
     }
   }
 }
 
-template<size_t width, size_t height>
+template<std::size_t width, std::size_t height>
 void ByteTo2DBitArray(const std::array<Byte, width * height / 8> &src,
                       std::array<std::array<bool, width>, height> *dest) {
-  for (size_t i = 0; i < src.size(); ++i) {
+  for (std::size_t i = 0; i < src.size(); ++i) {
     for (int j = 0; j < 8; ++j) {
       dest->at(i * 8 / width).at((i * 8 % width) + (7 - j)) = (src.at(i) >> (7 - j)) & 1;
     }
   }
 }
 
-template<size_t size>
-bool GetBitValue(const std::array<Byte, size> &a, const size_t pos) {
+template<std::size_t size>
+bool GetBitValue(const std::array<Byte, size> &a, const std::size_t pos) {
   if (pos >= size * 8) {
     return false;
   }
   return (a.at(pos / 8) >> (7 - pos % 8)) & 1;
 }
 
-template<size_t size>
-bool GetBitValue(const std::array<Byte, size> &a, const size_t x_size, const size_t x, const size_t y) {
+template<std::size_t size>
+bool GetBitValue(const std::array<Byte, size> &a, const std::size_t x_size, const std::size_t x, const std::size_t y) {
   if (x >= x_size) {
     return false;
   }
-  size_t pos = y * x_size + x;
+  std::size_t pos = y * x_size + x;
   return (a.at(pos / 8) >> (7 - pos % 8)) & 1;
 }
 
-template<size_t width, size_t height>
+template<std::size_t width, std::size_t height>
 void MedianFilter(const std::array<std::array<bool, width>, height> &src,
                   std::array<std::array<bool, width>, height> *dest) {
   for (Uint i = 0; i < height; ++i) {
@@ -143,7 +143,7 @@ void MedianFilter(const std::array<std::array<bool, width>, height> &src,
   }
 }
 
-template<size_t width, size_t height>
+template<std::size_t width, std::size_t height>
 void MedianFilter(std::array<std::array<bool, width>, height> *arr) {
   std::array<std::array<bool, width>, height> tmp{};
   for (Uint i = 0; i < height; ++i) {

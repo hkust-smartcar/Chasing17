@@ -7,9 +7,16 @@
 
 #include "util/encoder_proportional_controller.h"
 
+#include <cstdint>
+
+#include "libsc/alternate_motor.h"
+#include "libsc/system.h"
+#include "libsc/timer.h"
+
 using libsc::AlternateMotor;
 using libsc::System;
 using libsc::Timer;
+using std::abs;
 
 namespace util {
 void EncoderPController::DoCorrection() {
@@ -37,7 +44,7 @@ void EncoderPController::DoCorrection() {
 
   // get the speed difference and add power linearly.
   // bigger difference = higher power difference
-  int16_t speed_diff = static_cast<int16_t>(std::abs(last_encoder_val_) - std::abs(curr_speed_));
+  int16_t speed_diff = static_cast<int16_t>(abs(last_encoder_val_) - abs(curr_speed_));
   motor_->AddPower(-speed_diff / static_cast<uint16_t>(MotorConstants::kDiffFactor));
 
   // hard limit bounds checking

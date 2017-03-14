@@ -9,6 +9,7 @@
 
 #include <memory>
 
+#include "libbase/misc_types.h"
 #include "libsc/alternate_motor.h"
 #include "libsc/dir_encoder.h"
 #include "libsc/futaba_s3010.h"
@@ -34,7 +35,6 @@ using libsc::k60::Ov7725;
 using std::unique_ptr;
 
 namespace util {
-
 void LedTest() {
   Led::Config config;
   config.is_active_low = true;
