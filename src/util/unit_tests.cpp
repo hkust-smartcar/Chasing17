@@ -20,7 +20,7 @@
 #include "libsc/k60/ov7725.h"
 
 #include "util/util.h"
-#include "util/encoder_proportional_controller.h"
+#include "util/mpc.h"
 
 using libsc::AlternateMotor;
 using libsc::DirEncoder;
@@ -182,7 +182,7 @@ void DirEncoderTest() {
   }
 }
 
-void EncoderPControllerTest() {
+void MpcTest() {
   Led::Config config;
   config.is_active_low = true;
   config.id = 0;
@@ -224,10 +224,10 @@ void EncoderPControllerTest() {
   console_config.lcd = lcd.get();
   unique_ptr<LcdConsole> console(new LcdConsole(console_config));
 
-  unique_ptr<EncoderPController> epc1(new EncoderPController(encoder1.get(), motor1.get()));
-  unique_ptr<EncoderPController> epc2(new EncoderPController(encoder2.get(), motor2.get()));
-  unique_ptr<EncoderPControllerDebug> epc1_d(new EncoderPControllerDebug(epc1.get()));
-  unique_ptr<EncoderPControllerDebug> epc2_d(new EncoderPControllerDebug(epc2.get()));
+  unique_ptr<Mpc> epc1(new Mpc(encoder1.get(), motor1.get()));
+  unique_ptr<Mpc> epc2(new Mpc(encoder2.get(), motor2.get()));
+  unique_ptr<MpcDebug> epc1_d(new MpcDebug(epc1.get()));
+  unique_ptr<MpcDebug> epc2_d(new MpcDebug(epc2.get()));
 
   led4.SetEnable(false);
 

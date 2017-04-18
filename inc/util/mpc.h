@@ -3,9 +3,21 @@
  * Refer to LICENSE for details
  *
  * Author: David Mak (Derppening)
+ *
+ * Motor Proportional Controller class
+ *
+ * Implements a Proportional Controller system using encoders to make speed
+ * adjustments to the motor power. Allows getting and target-setting of
+ * encoder values.
+ *
+ * Prerequisites:
+ * - libsc::AlternateMotor
+ * - libsc::DirEncoder
+ *
  */
 
-#pragma once
+#ifndef CHASING17_UTIL_MPC_H_
+#define CHASING17_UTIL_MPC_H_
 
 #include <memory>
 #include <string>
@@ -15,11 +27,10 @@
 #include "libsc/lcd_console.h"
 #include "libsc/system.h"
 
+#include "util/util.h"
+
 namespace util {
-/**
- * Framework for a one-motor speed setting and correction system using encoders.
- */
-class EncoderPController {
+class Mpc {
  public:
   /**
    * Constructor accepting an already-created encoder object.
@@ -27,31 +38,13 @@ class EncoderPController {
    * @param e Pointer to an encoder object
    * @param m Pointer to an AlternateMotor object
    */
-  explicit EncoderPController(libsc::DirEncoder *e, libsc::AlternateMotor *m)
+  explicit Mpc(libsc::DirEncoder* e, libsc::AlternateMotor* m)
       : motor_(m), encoder_(e) {
     motor_->SetPower(0);
     UpdateEncoder();
   }
 
-  /**
-   * Constructor which creates an encoder object.
-   *
-   * @note When creating this object, cast @c id as a @c uint8_t to prevent
-   * ambiguous constructor definition.
-   *
-   * @param id ID of the encoder.
-   * @param m Pointer to an AlternateMotor object
-   */
-  EncoderPController(const uint8_t &id, libsc::AlternateMotor *m)
-      : motor_(m) {
-    libsc::Encoder::Config e_config;
-    e_config.id = id;
-    encoder_.reset(new libsc::DirEncoder(e_config));
-    motor_->SetPower(0);
-    UpdateEncoder();
-  }
-
-  ~EncoderPController() {
+  ~Mpc() {
     encoder_.reset();
     motor_.reset();
   }
@@ -72,12 +65,7 @@ class EncoderPController {
    * @param commit_now Whether to commit the target speed immediately. This will
    * also reset the encoder values.
    */
-  void SetTargetSpeed(const int16_t speed, bool commit_now = true) {
-    target_speed_ = speed;
-    if (commit_now) {
-      CommitTargetSpeed();
-    }
-  }
+  void SetTargetSpeed(const int16_t speed, bool commit_now = true);
   /**
    * Adds to the target speed.
    *
@@ -86,12 +74,7 @@ class EncoderPController {
    * @param commit_now Whether to commit the target speed immediately. This will
    * also reset the encoder values.
    */
-  void AddToTargetSpeed(const int16_t d_speed, bool commit_now = true) {
-    target_speed_ += d_speed;
-    if (commit_now) {
-      CommitTargetSpeed();
-    }
-  }
+  void AddToTargetSpeed(const int16_t d_speed, bool commit_now = true);
 
   // Getters
   /**
@@ -109,10 +92,19 @@ class EncoderPController {
   inline int32_t GetCurrentSpeed() const { return last_encoder_val_; }
 
   /**
- * Does motor power correction using encoder, and resets the encoder count.
- * Also commits the user-given target speed if @c commit_target_flag is true.
- */
+   * Does motor power correction using encoder, and resets the encoder count.
+   * Also commits the user-given target speed if @c commit_target_flag is true.
+   */
   void DoCorrection();
+
+ protected:
+  Mpc() {};
+
+  /**
+   * Whether to commit the user-defined target speed on next call to
+   * @c DoCorrection()
+   */
+  bool commit_target_flag_ = false;
 
  private:
   /**
@@ -151,19 +143,11 @@ class EncoderPController {
   /**
    * Commits the target speed.
    */
-  void CommitTargetSpeed() {
-    commit_target_flag_ = true;
-    DoCorrection();
-  }
+  void CommitTargetSpeed();
   /**
    * Updates the encoder value and resets the encoder
    */
-  void UpdateEncoder() {
-    last_encoder_duration_ = GetTimeElapsed();
-    encoder_->Update();
-    last_encoder_val_ = encoder_->GetCount() * 1000 / static_cast<int32_t>(last_encoder_duration_);
-    time_encoder_start_ = libsc::System::Time();
-  }
+  void UpdateEncoder();
 
   /**
    * Compares if two variables have the same sign.
@@ -200,49 +184,37 @@ class EncoderPController {
    */
   libsc::Timer::TimerInt last_encoder_duration_ = 0;
 
-  /**
-   * Whether to commit the user-defined target speed on next call to
-   * @c DoCorrection()
-   */
-  bool commit_target_flag_ = false;
-
+ private:
   std::shared_ptr<libsc::AlternateMotor> motor_;
   std::shared_ptr<libsc::DirEncoder> encoder_;
 
-  friend class EncoderPControllerDebug;
+  friend class MpcDebug;
+  friend class MpcDualDebug;
 };
 
 /**
- * Debug class for @c EncoderProportionalController. Provides access to private variables for
- * debugging purposes.
+ * Debug class for @c Mpc. Provides access to private variables for debugging purposes.
  */
-class EncoderPControllerDebug final {
+class MpcDebug {
  public:
   /**
-   * Constructor which accepts an already-created @c EncoderProportionalController
-   * object.
+   * Constructor which accepts an already-created @c Mpc object.
    *
-   * @param epc Pointer to the @c EncoderProportionalController object.
+   * @param mpc Pointer to the @c mpc object.
    */
-  explicit EncoderPControllerDebug(EncoderPController *epc) : epc_(epc) {};
+  explicit MpcDebug(Mpc* mpc) : mpc_(mpc) {};
   /**
    * Outputs the encoder value (in units per second) and power of the managed motor.
    *
    * @param console Pointer to a console object
    */
-  void OutputEncoderMotorValues(libsc::LcdConsole *console) const {
-    std::string s = std::to_string(epc_->last_encoder_val_) + " " + std::to_string(epc_->motor_->GetPower()) + "\n";
-    console->WriteString(s.c_str());
-  }
+  void OutputEncoderMotorValues(libsc::LcdConsole* console) const;
   /**
    * Outputs the previous encoder duration and value.
    *
    * @param console Pointer to a console object
    */
-  void OutputLastEncoderValues(libsc::LcdConsole *console) const {
-    std::string s = std::to_string(epc_->last_encoder_duration_) + " " + std::to_string(epc_->last_encoder_val_) + "\n";
-    console->WriteString(s.c_str());
-  }
+  void OutputLastEncoderValues(libsc::LcdConsole* console) const;
 
   // Setters
   /**
@@ -253,22 +225,24 @@ class EncoderPControllerDebug final {
    * @param pwr Power of the motor
    * @param is_clockwise True if the motor should be spinning clockwise
    */
-  void SetMotorPower(uint16_t power, bool is_clockwise) {
-    epc_->motor_->SetClockwise(is_clockwise);
-    epc_->motor_->SetPower(power);
-  }
+  void SetMotorPower(uint16_t power, bool is_clockwise);
 
   // Getters
   /**
    * @return The period of the last encoder execution.
    */
-  inline libsc::Timer::TimerInt GetLastRunDuration() const { return epc_->last_encoder_duration_; }
+  inline libsc::Timer::TimerInt GetLastRunDuration() const { return mpc_->last_encoder_duration_; }
   /**
    * @return The encoder value in units per second
    */
-  inline int32_t GetEncoderVal() const { return epc_->last_encoder_val_; }
+  inline int32_t GetEncoderVal() const { return mpc_->last_encoder_val_; }
+
+ protected:
+  MpcDebug() {};
 
  private:
-  std::unique_ptr<EncoderPController> epc_;
+  std::unique_ptr<Mpc> mpc_;
 };
 }  // namespace util
+
+#endif  // CHASING17_UTIL_MPC_H_

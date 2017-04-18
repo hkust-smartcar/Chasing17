@@ -3,14 +3,19 @@
  * Refer to LICENSE for details
  *
  * Author: David Mak (Derppening)
+ *
+ * Utility functions to avoid repetition of code.
+ *
  */
 
-#pragma once
+#ifndef CHASING17_UTIL_UTIL_H_
+#define CHASING17_UTIL_UTIL_H_
 
 #include <algorithm>
 #include <array>
 #include <bitset>
 #include <iterator>
+#include <memory>
 #include <string>
 #include <type_traits>
 #include <vector>
@@ -26,7 +31,7 @@ namespace util {
  * @param dest Destination (C++11-style) array
  */
 template<size_t size>
-void CopyByteArray(const Byte &src, std::array<Byte, size> *dest);
+void CopyByteArray(const Byte& src, std::array<Byte, size>* dest);
 
 /**
  * Converts a byte array to a C++11-style 1D bit array
@@ -36,7 +41,7 @@ void CopyByteArray(const Byte &src, std::array<Byte, size> *dest);
  * @param dest Destination 1D bit (C++11-style) array
  */
 template<size_t size>
-void ByteTo1DBitArray(const std::array<Byte, size / 8> &src, std::array<bool, size> *dest);
+void ByteTo1DBitArray(const std::array<Byte, size / 8>& src, std::array<bool, size>* dest);
 
 /**
  * Converts a byte array to a C++11-style 2D bit array
@@ -47,8 +52,8 @@ void ByteTo1DBitArray(const std::array<Byte, size / 8> &src, std::array<bool, si
  * @param dest Destination bit (C++11-style) array
  */
 template<size_t width, size_t height>
-void ByteTo2DBitArray(const std::array<Byte, width * height / 8> &src,
-                      std::array<std::array<bool, width>, height> *dest);
+void ByteTo2DBitArray(const std::array<Byte, width * height / 8>& src,
+                      std::array<std::array<bool, width>, height>* dest);
 
 /**
  * Retrieves the bit value from a byte array, given a 1D coordinate.
@@ -59,7 +64,7 @@ void ByteTo2DBitArray(const std::array<Byte, width * height / 8> &src,
  * @return False if index out of bounds. Otherwise the bit value.
  */
 template<size_t size>
-bool GetBitValue(const std::array<Byte, size> &byte_arr, const size_t pos);
+bool GetBitValue(const std::array<Byte, size>& byte_arr, const size_t pos);
 
 /**
  * Retrieves the bit value from a byte array, given a 2D coordinate.
@@ -72,7 +77,7 @@ bool GetBitValue(const std::array<Byte, size> &byte_arr, const size_t pos);
  * @return False if index out of bounds. Otherwise the bit value.
  */
 template<size_t size>
-bool GetBitValue(const std::array<Byte, size> &byte_arr, const size_t x_size, const size_t x, const size_t y);
+bool GetBitValue(const std::array<Byte, size>& byte_arr, const size_t x_size, const size_t x, const size_t y);
 
 /**
  * Applies median filter to a C++11-style 2D bit array
@@ -83,8 +88,8 @@ bool GetBitValue(const std::array<Byte, size> &byte_arr, const size_t x_size, co
  * @param dest Destination bit (C++11-style) array
  */
 template<size_t width, size_t height>
-void MedianFilter(const std::array<std::array<bool, width>, height> &src,
-                  std::array<std::array<bool, width>, height> *dest);
+void MedianFilter(const std::array<std::array<bool, width>, height>& src,
+                  std::array<std::array<bool, width>, height>* dest);
 /**
  * Applies median filter to a C++11-style 2D bit array
  *
@@ -93,7 +98,7 @@ void MedianFilter(const std::array<std::array<bool, width>, height> &src,
  * @param arr Bit array (C++11-style) to apply filter to
  */
 template<size_t width, size_t height>
-void MedianFilter(std::array<std::array<bool, width>, height> *arr);
+void MedianFilter(std::array<std::array<bool, width>, height>* arr);
 
 /**
  * Calculates the slope of the linear regression line from a given set of points.
@@ -104,7 +109,7 @@ void MedianFilter(std::array<std::array<bool, width>, height> *arr);
  * @param y Vector of y values
  * @return Slope of regression line
  */
-float CalcLinearRegressionSlope(const std::vector<int> &x, const std::vector<int> &y);
+float CalcLinearRegressionSlope(const std::vector<int>& x, const std::vector<int>& y);
 
 /**
  * Converts an uint16_t to an array with 2 bytes.
@@ -112,7 +117,7 @@ float CalcLinearRegressionSlope(const std::vector<int> &x, const std::vector<int
  * @param num The uint16_t number
  * @param bytes Destination byte (C++11-style) array
  */
-void Int16To2ByteArray(const uint16_t num, std::array<Byte, 2> &bytes);
+void Int16To2ByteArray(const uint16_t num, std::array<Byte, 2>& bytes);
 
 namespace distortion {
 /**
@@ -151,7 +156,7 @@ void GetUndistortCoord(std::vector<std::array<int, 2>> coords);
  * @param x Vector of x values
  * @param y Vector of y values
  */
-void GetUndistortCoord(std::vector<int> *x, std::vector<int> *y);
+void GetUndistortCoord(std::vector<int>* x, std::vector<int>* y);
 }  // namespace distortion
 
 #if __cplusplus < 201402L
@@ -160,8 +165,17 @@ void GetUndistortCoord(std::vector<int> *x, std::vector<int> *y);
  */
 template<bool B, class T = void>
 using enable_if_t = typename std::enable_if<B, T>::type;
+
+/**
+ * Backport of std::make_unique from C++14
+ */
+template<typename T, typename... Args>
+std::unique_ptr<T> make_unique(Args&& ... args) {
+  return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
 #else
 using std::enable_if_t;
+using std::make_unique;
 #endif
 
 /**
@@ -179,7 +193,9 @@ using std::enable_if_t;
  * @return Index of first matching element if found. Otherwise dependent on @p return_last.
  */
 template<class T, typename = enable_if_t<std::is_integral<T>::value>, std::size_t size>
-int FindElement(const std::array<T, size> &arr, int first, int last, T value, bool return_last = true);
+int FindElement(const std::array<T, size>& arr, int first, int last, T value, bool return_last = true);
 }  // namespace util
 
 #include "util/util.tcc"
+
+#endif

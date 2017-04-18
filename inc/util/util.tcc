@@ -3,6 +3,9 @@
  * Refer to LICENSE for details
  *
  * Author: David Mak (Derppening)
+ *
+ * Template implementations for util.h
+ *
  */
 
 #include "util/util.h"

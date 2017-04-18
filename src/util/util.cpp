@@ -19,7 +19,7 @@ using std::string;
 using std::vector;
 
 namespace util {
-float CalcLinearRegressionSlope(const vector<int> &x, const vector<int> &y) {
+float CalcLinearRegressionSlope(const vector<int>& x, const vector<int>& y) {
   if (x.size() != y.size()) {
     return std::numeric_limits<float>::infinity();
   }
@@ -43,13 +43,13 @@ float CalcLinearRegressionSlope(const vector<int> &x, const vector<int> &y) {
   return m;
 }
 
-void Int16To2ByteArray(const uint16_t num, array<Byte, 2> &bytes) {
+void Int16To2ByteArray(const uint16_t num, array<Byte, 2>& bytes) {
   bytes.at(0) = static_cast<Byte>(num >> 8);
   bytes.at(1) = static_cast<Byte>(num);
 }
 
 namespace distortion {
-void GetUndistortCoord(vector<array<int, 2>> *v) {
+void GetUndistortCoord(vector<array<int, 2>>* v) {
   for (array<int, 2> a : *v) {
     a.at(0) =
         static_cast<int>(DistortionConstants.f_x * a.at(0) + DistortionConstants.s * a.at(1) + DistortionConstants.c_x);
@@ -57,7 +57,7 @@ void GetUndistortCoord(vector<array<int, 2>> *v) {
   }
 }
 
-void GetUndistortCoord(vector<int> *x, vector<int> *y) {
+void GetUndistortCoord(vector<int>* x, vector<int>* y) {
   if (x->size() != y->size()) {
     return;
   }
