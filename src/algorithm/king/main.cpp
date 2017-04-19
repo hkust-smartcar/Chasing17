@@ -133,6 +133,7 @@ void main(bool has_encoder) {
         car.NormalMovingTestingVersion2(servo, lcd);
 
         bluetooth.sendSpeed(motor_left.GetPower() / 10);
+        bluetooth.sendFeature(CarManager::Feature::kStraight);
       }
     }
   }

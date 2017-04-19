@@ -38,7 +38,7 @@ int main() {
   System::Init();
 
   // modify next line to switch between algorithms
-  constexpr Algorithm a = Algorithm::kLeslie;
+  constexpr Algorithm a = Algorithm::kKing;
 
   // modify next line to enable/disable encoder
   constexpr bool has_encoder = false;
