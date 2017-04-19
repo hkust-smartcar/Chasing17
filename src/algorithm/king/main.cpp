@@ -204,6 +204,7 @@ void main(bool has_encoder) {
 ---------------------------------------------------------------------------*/
 
         bluetooth.sendSpeed(motor_left.GetPower() / 10);
+        bluetooth.sendFeature(CarManager::Feature::kStraight);
       }
     }
   }
