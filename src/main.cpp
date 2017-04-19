@@ -3,6 +3,9 @@
  * Refer to LICENSE for details
  *
  * Author: David Mak (Derppening)
+ *
+ * Program entry point.
+ *
  */
 
 #include <string>
@@ -35,7 +38,7 @@ int main() {
   System::Init();
 
   // modify next line to switch between algorithms
-  constexpr Algorithm a = Algorithm::kKing;
+  constexpr Algorithm a = Algorithm::kLeslie;
 
   // modify next line to enable/disable encoder
   constexpr bool has_encoder = false;

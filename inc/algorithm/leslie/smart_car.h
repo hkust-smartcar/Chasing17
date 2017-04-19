@@ -1,3 +1,6 @@
+#ifndef CHASING17_ALGORITHM_LESLIE_SMART_CAR_H_
+#define CHASING17_ALGORITHM_LESLIE_SMART_CAR_H_
+
 #include <cassert>
 #include <cstring>
 #include <libbase/k60/mcg.h>
@@ -46,4 +49,15 @@ using namespace libbase::k60;
 using namespace libutil;
 using namespace std;
 
-int smart_car(Joystick *FiveWaySwitch,St7735r *LCD,LcdConsole *Console,Ov7725 *Cam,FutabaS3010 *Servo,AlternateMotor *MotorA,AlternateMotor *MotorB,DirEncoder *EncoderA,DirEncoder *EncoderB, bool has_encoder);
+int smart_car(Joystick* FiveWaySwitch,
+              St7735r* LCD,
+              LcdConsole* Console,
+              Ov7725* Cam,
+              FutabaS3010* Servo,
+              AlternateMotor* MotorA,
+              AlternateMotor* MotorB,
+              DirEncoder* EncoderA,
+              DirEncoder* EncoderB,
+              bool has_encoder);
+
+#endif  // CHASING17_ALGORITHM_LESLIE_SMART_CAR_H_

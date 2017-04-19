@@ -6,9 +6,11 @@
  * Refer to LICENSE for details
  */
 
-#include "../../../inc/algorithm/leslie/smart_car.h"
+#include "algorithm/leslie/smart_car.h"
 
 #include <libsc/k60/jy_mcu_bt_106.h>
+
+#include "bluetooth.h"
 
 //Global variable-----------------------------------------------------------------------------------------------------------
 const Uint CamHeight = 60;
@@ -102,6 +104,11 @@ int smart_car(Joystick* FiveWaySwitch,
   configLed1.id = 1;
   Led led1(configLed1);
 
+  JyMcuBt106::Config bluetooth_config;
+  bluetooth_config.id = 0;
+  bluetooth_config.baud_rate = Uart::Config::BaudRate::k115200;
+  BTComm bluetooth(bluetooth_config);
+
   Cam->Start();
   while (true) {
     while (t != System::Time()) {
@@ -124,6 +131,8 @@ int smart_car(Joystick* FiveWaySwitch,
             MotorB->SetPower(150);
           }
         }
+
+//        bluetooth.sendSpeed(MotorA->GetPower() / 10);
 
         Cam->UnlockBuffer();
         led1.Switch();

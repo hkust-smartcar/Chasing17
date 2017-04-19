@@ -3,13 +3,14 @@
  * Refer to LICENSE for details
  *
  * Author: Peter Tse (mcreng), David Mak (Derppening)
+ *
+ * Implementation for BTComm class.
+ *
  */
 
 #include "bluetooth.h"
 #include "algorithm/overtake.h"
 #include "libsc/system.h"
-
-bool flag_i;
 
 // static variables
 uint8_t BTComm::speed_ = 0;
@@ -55,8 +56,6 @@ void BTComm::resendNAKData() {
 }
 
 bool BTComm::BTListener(const Byte* data, size_t size) {
-  flag_i = true;
-
   if ((data[0] == BitConsts::kHandshake || data[0] == BitConsts::kACK) && (dataIndex_ == 0)) {
     dataArray_[0] = data[0];
     dataIndex_ = 1;

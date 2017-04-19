@@ -20,12 +20,10 @@
  * Getters are designed to be used universally, but Setters aren't. In particular:
  * - SetFeature is exclusively for the camera algorithm.
  * - SetIdentity/SwitchIdentity is exclusively for the overtaking algorithm.
- * - SetSpeedSrc is to set which encoder to take motor values from when using
- *    GetLeftSpeed()
  * - Other Setters are designed to set target values.
  *
  * Prerequisites:
- * - util::EncoderPController OR util::EPCDual
+ * - util::MpcDual OR util::Mpc
  * - libsc::FutubaS3010
  * - libsc::Mpu6050
  *

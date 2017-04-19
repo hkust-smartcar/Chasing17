@@ -125,6 +125,7 @@ libsc::Timer::TimerInt MpcDualDebug::GetLastRunDuration(MpcDual::MotorSide side)
     case MpcDual::MotorSide::kBoth:
       return 0;
   }
+  return 0;
 }
 
 int32_t MpcDualDebug::GetEncoderVal(MpcDual::MotorSide side) const {
@@ -136,5 +137,6 @@ int32_t MpcDualDebug::GetEncoderVal(MpcDual::MotorSide side) const {
     case MpcDual::MotorSide::kBoth:
       return 0;
   }
+  return 0;
 }
 }  // namespace util

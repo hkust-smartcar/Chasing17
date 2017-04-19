@@ -3,6 +3,28 @@
  * Refer to LICENSE for details
  *
  * Author: Peter Tse (mcreng), David Mak (Derppening)
+ *
+ * BTComm class
+ * Interface for Bluetooth communication between two devices. While both
+ * devices are not required to use this class, communication between these
+ * devices are required to send/receive according to the protocol established
+ * in this class. This interface also stores data values sent from other
+ * devices and provides function to access them.
+ *
+ * Usage:
+ * Pass an already-defined libsc::k60::JyMcuBt106::Config struct into the
+ * class. No additional setup will be needed.
+ *
+ * All send... functions will send the current values of the given parameter
+ * to the other device.
+ * All req... functions will request the values of the given parameter from
+ * the other device.
+ * All get... functions will retrieve the values of the given parameter of the
+ * other device from the buffer.
+ *
+ * Prerequisites:
+ * - CarManager
+ *
  */
 
 #ifndef CHASING17_BLUETOOTH_H_
@@ -21,12 +43,9 @@
 #include "car_manager.h"
 #include "util/util.h"
 
-extern bool flag_i;
-
 class BTComm {
  public:
   BTComm(libsc::k60::JyMcuBt106::Config bt_config) {
-
     bt_config.rx_isr = BTListener;
     bluetooth_ = util::make_unique<libsc::k60::JyMcuBt106>(bt_config);
     ptrBT_ = bluetooth_.get();

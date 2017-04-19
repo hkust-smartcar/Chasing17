@@ -3,12 +3,14 @@
 #include "libsc/alternate_motor.h"
 #include "libsc/dir_encoder.h"
 #include "libsc/futaba_s3010.h"
+#include "libsc/k60/jy_mcu_bt_106.h"
 #include "libsc/lcd_console.h"
 #include "libsc/led.h"
 #include "libsc/st7735r.h"
 #include "libsc/system.h"
 #include "libsc/k60/ov7725.h"
 
+#include "bluetooth.h"
 #include "algorithm/king/Moving.h"
 
 using libsc::AlternateMotor;
@@ -86,6 +88,11 @@ void main(bool has_encoder) {
   while (!camera.IsAvailable()) {
   }
 
+  JyMcuBt106::Config bluetooth_config;
+  bluetooth_config.id = 0;
+  bluetooth_config.baud_rate = Uart::Config::BaudRate::k115200;
+  BTComm bluetooth(bluetooth_config);
+
   //Initiate a car
   Moving car;
   Timer::TimerInt timeImg = System::Time();  // current execution time
@@ -124,6 +131,8 @@ void main(bool has_encoder) {
         car.extract_cam(camBuffer);
         camera.UnlockBuffer();
         car.NormalMovingTestingVersion2(servo, lcd);
+
+        bluetooth.sendSpeed(motor_left.GetPower() / 10);
       }
     }
   }

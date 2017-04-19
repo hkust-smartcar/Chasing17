@@ -5,7 +5,8 @@
  * Author: David Mak (Derppening)
  */
 
-#pragma once
+#ifndef CHASING17_UTIL_UNIT_TESTS_H_
+#define CHASING17_UTIL_UNIT_TESTS_H_
 
 namespace util {
 /**
@@ -68,3 +69,5 @@ void DirEncoderTest();
  */
 void EncoderPControllerTest();
 }  // namespace util
+
+#endif  // CHASING17_UTIL_UNIT_TESTS_H_
