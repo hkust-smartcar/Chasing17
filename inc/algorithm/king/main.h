@@ -4,6 +4,7 @@
 namespace algorithm {
 namespace king {
 void main(bool);
+void main_receive(bool);
 }
 }
 

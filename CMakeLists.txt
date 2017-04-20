@@ -25,8 +25,8 @@ elseif (${COMPILE_ENV} STREQUAL david_laptop)
 endif ()
 
 # define the c++ standard and includes to resolve *.h
-set(CMAKE_C_STANDARD 11)
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_CXX_STANDARD 11)
 include_directories(inc)
 include_directories(${LIBSCCC_PATH}/inc)
 

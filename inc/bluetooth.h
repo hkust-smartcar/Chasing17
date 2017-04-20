@@ -36,6 +36,7 @@
 #include <map>
 #include <memory>
 
+#include "libsc/led.h"
 #include "libsc/system.h"
 #include "libsc/k60/jy_mcu_bt_106.h"
 #include "libbase/misc_types.h"
@@ -274,6 +275,8 @@ class BTComm {
    * @note should be called with short time intervals.
    */
   void resendNAKData();
+
+  static libsc::Led* led_ptr;
 
  private:
   struct BitConsts {

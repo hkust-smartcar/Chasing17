@@ -1,3 +1,9 @@
+//
+// Created by david on 21/4/2017.
+//
+
+#include "algorithm/king/main.h"
+
 #include "algorithm/king/main.h"
 
 #include "libsc/alternate_motor.h"
@@ -16,12 +22,11 @@
 #include "algorithm/king/Moving.h"
 
 using namespace libsc;
-using namespace libsc::k60;
 using namespace std;
 
 namespace algorithm {
 namespace king {
-void main(bool has_encoder) {
+void main_receive(bool has_encoder) {
   // initialize LEDs
   Led::Config ledConfig;
   ledConfig.is_active_low = true;
@@ -76,6 +81,10 @@ void main(bool has_encoder) {
   AlternateMotor motor_left(config);
   config.id = 1;
   AlternateMotor motor_right(config);
+
+  LcdConsole::Config console_config;
+  console_config.lcd = &lcd;
+  LcdConsole console(console_config);
 
   motor_left.SetClockwise(true);
   motor_right.SetClockwise(false);
@@ -205,9 +214,15 @@ void main(bool has_encoder) {
         console.WriteString(s.c_str());
 ---------------------------------------------------------------------------*/
 //
-        if (timeImg % 100 == 0) {
-          bluetooth.sendSpeed(motor_left.GetPower() / 10);
-          bluetooth.sendSlopeDeg((servo.GetDegree() - 900) / 10);
+        if (timeImg % 1000 == 0) {
+          console.SetCursorRow(0);
+          std::string s;
+          s += "speed = " + std::to_string(bluetooth.getBufferSpeed()) + "\n";
+//        s += "slope = " + std::to_string(bt.getBufferSlopeDeg()) + "\n";
+          s += "servo = " + std::to_string(bluetooth.getBufferSlopeDeg()) + "\n";
+          s += "featu = " + std::to_string(static_cast<int>(bluetooth.getBufferFeature())) + "\n";
+          s += "side  = " + std::to_string(static_cast<int>(bluetooth.getBufferSide())) + "\n";
+          console.WriteString(s.c_str());
         }
 //        if((feature != CarManager::Feature::kRoundabout) && (feature != CarManager::Feature::kCross)){
 //        	bluetooth.sendFeature(feature);
@@ -219,6 +234,5 @@ void main(bool has_encoder) {
     }
   }
 }
-}
-}
-
+}  // namespace king
+}  // namespace algorithm

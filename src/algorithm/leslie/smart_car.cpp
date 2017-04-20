@@ -87,12 +87,12 @@ int smart_car(Joystick* FiveWaySwitch,
               bool has_encoder) {
   System::Init();
 
-  MotorA->SetClockwise(false);
+  MotorA->SetClockwise(true);
   motorAPt = MotorA;
-  MotorA->SetPower(250);
-  MotorB->SetClockwise(true);
+  MotorA->SetPower(200);
+  MotorB->SetClockwise(false);
   motorBPt = MotorB;
-  MotorB->SetPower(250);
+  MotorB->SetPower(200);
 
   servoPt = Servo;
   Servo->SetDegree(800);//Servo 0 degree turned
@@ -113,22 +113,22 @@ int smart_car(Joystick* FiveWaySwitch,
   while (true) {
     while (t != System::Time()) {
       t = System::Time();
-      if (t % 5 == 0) {
+      if (t % 10 == 0) {
         const Byte* camPtr;
         const Byte tempInt = 49;
         const Byte* temp = &tempInt;
         camPtr = Cam->LockBuffer();
-        CameraPrint(LCD, Cam);
+//        CameraPrint(LCD, Cam);
         moveAlgo(camPtr, LCD, Servo);
         if (has_encoder) {
           EncoderA->Update();
           EncoderB->Update();
           if (EncoderA->GetCount() > 10 || EncoderB->GetCount() > 10) {
-            MotorA->SetPower(150);
-            MotorB->SetPower(150);
+            MotorA->SetPower(200);
+            MotorB->SetPower(200);
           } else {
-            MotorA->SetPower(150);
-            MotorB->SetPower(150);
+            MotorA->SetPower(0);
+            MotorB->SetPower(0);
           }
         }
 

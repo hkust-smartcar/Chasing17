@@ -25,11 +25,10 @@ std::map<int, std::pair<char, uint16_t>> BTComm::NAKbuffer_{};
 Byte BTComm::dataArray_[6]{0, 0, 0, 0, 0, 0};
 uint8_t BTComm::dataIndex_ = 0;
 uint8_t BTComm::mapIndex_ = 0;
+libsc::Led* BTComm::led_ptr = nullptr;
 
 void BTComm::sendData(unsigned char type, uint16_t data) {
-  uint8_t ID = mapIndex_++;
-  //TODO: to check if ID is duplicate
-  //TODO: if map count > 255 -> flush oldest buffers
+  uint8_t ID = (mapIndex_ %= 10)++;
   Byte dataArray[6];
   dataArray[0] = BitConsts::kHandshake;
   dataArray[1] = ID;
@@ -38,7 +37,11 @@ void BTComm::sendData(unsigned char type, uint16_t data) {
   dataArray[4] = static_cast<Byte>(data);
   dataArray[5] = BitConsts::kEND;
   ptrBT_->SendBuffer(dataArray, 6);
-  NAKbuffer_.emplace(ID, std::make_pair(type, data));
+  auto a = NAKbuffer_.emplace(ID, std::make_pair(type, data));
+  if (!a.second){
+	  NAKbuffer_.erase(a.first);
+	  NAKbuffer_.emplace(ID, std::make_pair(type,data));
+  }
 }
 
 void BTComm::resendNAKData() {
@@ -56,6 +59,10 @@ void BTComm::resendNAKData() {
 }
 
 bool BTComm::BTListener(const Byte* data, size_t size) {
+  if (led_ptr != nullptr) {
+    led_ptr->Switch();
+  }
+  if (data == nullptr) return true; //just a basic check, should not be triggered anyways
   if ((data[0] == BitConsts::kHandshake || data[0] == BitConsts::kACK) && (dataIndex_ == 0)) {
     dataArray_[0] = data[0];
     dataIndex_ = 1;
@@ -162,8 +169,8 @@ bool BTComm::BTListener(const Byte* data, size_t size) {
   ACKArray[3] = 0x00;
   ACKArray[4] = 0x00;
   ACKArray[5] = BitConsts::kEND;
+
   ptrBT_->SendBuffer(ACKArray, 6);
 
   return true;
-
 }
