@@ -9,6 +9,7 @@
 #include "libsc/st7735r.h"
 #include "libsc/system.h"
 #include "libsc/k60/ov7725.h"
+#include "libsc/joystick.h"
 
 #include "bluetooth.h"
 #include "car_manager.h"
@@ -51,7 +52,7 @@ void main(bool has_encoder) {
 //	lcdConfig.fps = 10;
   St7735r lcd(lcdConfig);
 
-  // initialize LCD console
+//  // initialize LCD console
 //	LcdConsole::Config console_config;
 //	console_config.lcd = &lcd;
 //	LcdConsole console(console_config);
@@ -141,12 +142,12 @@ void main(bool has_encoder) {
       // attempt to refresh the buffer at every 10th millisecond
       if ((timeImg % time_ms) == 0) {
         /*Motor Protection*/
-//				encoderA.Update();
-//				encoderB.Update();
-//				if(encoderA.GetCount() == 0 || encoderB.GetCount() == 0){
-//					motor_left.SetPower(0);
-//					motor_right.SetPower(0);
-//				}
+				encoderA.Update();
+				encoderB.Update();
+				if(encoderA.GetCount() == 0 || encoderB.GetCount() == 0){
+					motor_left.SetPower(0);
+					motor_right.SetPower(0);
+				}
         /*--------------------------------------------------------------record the starting time
         startTime = System::Time();
 ----------------------------------------------------------------*/
