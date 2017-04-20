@@ -352,11 +352,12 @@ void Moving::NormalMovingTestingVersion2(FutabaS3010& servo, St7735r& lcd) {
   servo.SetDegree(UpdatedDegree);
 }
 
-void Moving::NormalMovingTestingVersion3(FutabaS3010& servo, St7735r& lcd) {
+void Moving::NormalMovingTestingVersion3(FutabaS3010& servo, St7735r& lcd, AlternateMotor & motor_right, AlternateMotor& motor_left) {
   // initialize LCD console
-  LcdConsole::Config console_config;
-  console_config.lcd = &lcd;
-  LcdConsole console(console_config);
+//  LcdConsole::Config console_config;
+//  console_config.lcd = &lcd;
+//  LcdConsole console(console_config);
+
   int layer = 55;
   int LayerCount = 0;
   bool R_Edge_is_found;
@@ -388,11 +389,11 @@ void Moving::NormalMovingTestingVersion3(FutabaS3010& servo, St7735r& lcd) {
   if (ext_camptr[Center[layer] - 1][layer] || ext_camptr[Center[layer]][layer]
       || ext_camptr[Center[layer] + 1][layer] == true) {
     /*Double check*/
-    if (DoubleCheckRound(Center[layer], layer)) {
-      /*ROUNDABOUT HANDLING*/
-      string s = "Status: Roundabout\n";
-      console.SetCursorRow(1);
-      console.WriteString(s.c_str());
+//    if (DoubleCheckRound(Center[layer], layer)) {
+//      /*ROUNDABOUT HANDLING*/
+//      string s = "Status: Roundabout\n";
+//      console.SetCursorRow(1);
+//      console.WriteString(s.c_str());
 
       for (int x = Center[layer]; x > 0; x--) {
         if (ext_camptr[x][layer] == false) {
@@ -407,8 +408,8 @@ void Moving::NormalMovingTestingVersion3(FutabaS3010& servo, St7735r& lcd) {
         }
       }
       Center[layer] = (Left_edge[layer] + Right_edge[layer]) / 2; // Update new center point
-      lcd.SetRegion(Lcd::Rect(Center[layer], layer, 5, 5));
-      lcd.FillColor(Lcd::kRed);
+//      lcd.SetRegion(Lcd::Rect(Center[layer], layer, 5, 5));
+//      lcd.FillColor(Lcd::kRed);
       if ((ServoStraightDegree - (Center[layer] - 35) * ServoP) > ServoLeftBoundary) {
         UpdatedDegree = ServoLeftBoundary;
       } else if ((ServoStraightDegree - (Center[layer] - 35) * ServoP) < ServoRightBoundary) {
@@ -418,7 +419,7 @@ void Moving::NormalMovingTestingVersion3(FutabaS3010& servo, St7735r& lcd) {
       }
       servo.SetDegree(UpdatedDegree); //Action immediately for this special case
       return;
-    }
+//    }
   }
   //ext_camptr[Center[layer]][layer] = 3;
   // Find the rest (Choose the start point based on last layer midpoint)-------------------------------------------
@@ -462,14 +463,14 @@ void Moving::NormalMovingTestingVersion3(FutabaS3010& servo, St7735r& lcd) {
     if (ext_camptr[Center[layer] - 1][layer] || ext_camptr[Center[layer]][layer]
         || ext_camptr[Center[layer] + 1][layer] == true) {
       /*Double check*/
-      if (DoubleCheckRound(Center[layer], layer)) {
-        /*ROUNDABOUT HANDLING*/
-        RoundRoadNow = true;
-        RoundRoad_StartTime = System::Time();
-
-        string s = "Status: Roundabout\n";
-        console.SetCursorRow(1);
-        console.WriteString(s.c_str());
+//      if (DoubleCheckRound(Center[layer], layer)) {
+//        /*ROUNDABOUT HANDLING*/
+//        RoundRoadNow = true;
+//        RoundRoad_StartTime = System::Time();
+//
+//        string s = "Status: Roundabout\n";
+//        console.SetCursorRow(1);
+//        console.WriteString(s.c_str());
 
         for (int x = Center[layer]; x > 0; x--) {
           if (ext_camptr[x][layer] == false) {
@@ -485,8 +486,8 @@ void Moving::NormalMovingTestingVersion3(FutabaS3010& servo, St7735r& lcd) {
         }
         Center[layer] = (Left_edge[layer] + Right_edge[layer]) / 2; // Update new center point
 
-        lcd.SetRegion(Lcd::Rect(Center[layer], layer, 5, 5));
-        lcd.FillColor(Lcd::kRed);
+//        lcd.SetRegion(Lcd::Rect(Center[layer], layer, 5, 5));
+//        lcd.FillColor(Lcd::kRed);
 
         if ((ServoStraightDegree - (Center[layer] - 35) * ServoP) > ServoLeftBoundary) {
           UpdatedDegree = ServoLeftBoundary;
@@ -497,7 +498,7 @@ void Moving::NormalMovingTestingVersion3(FutabaS3010& servo, St7735r& lcd) {
         }
         servo.SetDegree(UpdatedDegree); //Action immediately for this special case
         return;
-      }
+//      }
     }
     ext_camptr[Center[layer]][layer] = 3;
     LayerCount++;
@@ -507,9 +508,11 @@ void Moving::NormalMovingTestingVersion3(FutabaS3010& servo, St7735r& lcd) {
       /*CROSSING DOUBLE CHECK*/
       if (DoubleCheckCrossing(Center[layer], layer)) {
         /*HAS ROAD - GO STRAIGHT*/
-        string s = "Status: Crossing\n";
-        console.SetCursorRow(1);
-        console.WriteString(s.c_str());
+    	  motor_right.SetPower(300);
+    	  motor_left.SetPower(300);
+//        string s = "Status: Crossing\n";
+//        console.SetCursorRow(1);
+//        console.WriteString(s.c_str());
         //			EncounterCrossing = true;
         break;
       }
@@ -524,15 +527,230 @@ void Moving::NormalMovingTestingVersion3(FutabaS3010& servo, St7735r& lcd) {
 
   /*Round road exit handling*/
   // Cancel round road flag after 30s to avoid wrong judgement
-  if ((System::Time() - RoundRoad_StartTime) > 30000) {
-    RoundRoadNow = false;
+//  if ((System::Time() - RoundRoad_StartTime) > 30000) {
+//    RoundRoadNow = false;
+//  }
+//  // Do special arrangement during round road period to help car exit
+//  if (RoundRoadNow && (Center[layer] == false)) {
+//    //Finding new center point
+//    servo.SetDegree(ServoLeftBoundary);
+//    return;
+//  }
+
+  int sum = 0; // Initially 50 - 20
+  for (int L = 55; L > 55 - LayerCount; L--) {
+    sum += Center[L];
   }
-  // Do special arrangement during round road period to help car exit
-  if (RoundRoadNow && (Center[layer] == false)) {
-    //Finding new center point
-    servo.SetDegree(ServoLeftBoundary);
-    return;
+  int Average = sum / LayerCount;
+  //	string s = "Average: " + to_string(Average) + "\n";
+  //	console.WriteString(s.c_str());
+  if ((ServoStraightDegree - (Average - 35) * ServoP) > ServoLeftBoundary) {
+    UpdatedDegree = ServoLeftBoundary;
+  } else if ((ServoStraightDegree - (Average - 35) * ServoP) < ServoRightBoundary) {
+    UpdatedDegree = ServoRightBoundary;
+  } else {
+    UpdatedDegree = ServoStraightDegree - (Average - 35) * ServoP;
   }
+  //Control
+  servo.SetDegree(UpdatedDegree);
+//  string s = "UpdatedDegree: " + to_string(UpdatedDegree) + "\n";
+//  console.SetCursorRow(1);
+//  console.WriteString(s.c_str());
+
+  if(abs(UpdatedDegree-ServoStraightDegree) >50){
+	  motor_right.SetPower(200);
+	  motor_left.SetPower(200);
+  }
+  else{
+	  motor_right.SetPower(300);
+	  motor_left.SetPower(300);
+  }
+}
+
+void Moving::NormalMovingTestingVersion4(FutabaS3010& servo, St7735r& lcd, CarManager::Feature& feature) {
+  // initialize LCD console
+//  LcdConsole::Config console_config;
+//  console_config.lcd = &lcd;
+//  LcdConsole console(console_config);
+  int layer = 55;
+  int LayerCount = 0;
+  bool R_Edge_is_found;
+  bool L_Edge_is_found;
+  bool EncounterCrossing = false;
+//  Timer::TimerInt RoundRoad_StartTime = 0;
+//  bool RoundRoadNow;
+  int UpdatedDegree;
+  const int ServoP = 20;
+  // Find the origin (y=1). (Assume the original layer is accurate every time)-------------------------------------------
+  for (int x = W / 2; x > 1; x--) {
+    if (ext_camptr[x][layer] != ext_camptr[x - 1][layer]) {
+      Left_edge[layer] = x;
+      ext_camptr[x][layer] = 2;
+      break;
+    }
+  }
+  for (int x = W / 2; x < W; x++) {
+    if (ext_camptr[x][layer] != ext_camptr[x + 1][layer]) {
+      Right_edge[layer] = x;
+      ext_camptr[x][layer] = 2;
+      break;
+    }
+  }
+  // Update the center point
+  LayerCount++;
+  Center[layer] = (Left_edge[layer] + Right_edge[layer]) / 2;
+  /*ROUNDABOUT JUDGEMENT*/
+  if (ext_camptr[Center[layer] - 1][layer] || ext_camptr[Center[layer]][layer]
+      || ext_camptr[Center[layer] + 1][layer] == true) {
+    /*Double check*/
+//    if (DoubleCheckRound(Center[layer], layer)) {
+//      /*ROUNDABOUT HANDLING*/
+//      string s = "Status: Roundabout\n";
+//      console.SetCursorRow(1);
+//      console.WriteString(s.c_str());
+	  feature = CarManager::Feature::kRoundabout;
+
+      for (int x = Center[layer]; x > 0; x--) {
+        if (ext_camptr[x][layer] == false) {
+          Right_edge[layer] = x;
+          break;
+        }
+      }
+      for (int x = Right_edge[layer]; x > 0; x--) {
+        Left_edge[layer] = x;
+        if (ext_camptr[x][layer] == true) {
+          break;
+        }
+      }
+      Center[layer] = (Left_edge[layer] + Right_edge[layer]) / 2; // Update new center point
+//      lcd.SetRegion(Lcd::Rect(Center[layer], layer, 5, 5));
+//      lcd.FillColor(Lcd::kRed);
+      if ((ServoStraightDegree - (Center[layer] - 35) * ServoP) > ServoLeftBoundary) {
+        UpdatedDegree = ServoLeftBoundary;
+      } else if ((ServoStraightDegree - (Center[layer] - 35) * ServoP) < ServoRightBoundary) {
+        UpdatedDegree = ServoRightBoundary;
+      } else {
+        UpdatedDegree = ServoStraightDegree - (Center[layer] - 35) * ServoP;
+      }
+      servo.SetDegree(UpdatedDegree); //Action immediately for this special case
+      return;
+//    }
+  }
+  //ext_camptr[Center[layer]][layer] = 3;
+  // Find the rest (Choose the start point based on last layer midpoint)-------------------------------------------
+  for (; --layer > 30;) {
+    R_Edge_is_found = false;
+    L_Edge_is_found = false;
+    //LEFT
+    for (int x = Center[layer + 1]; x > 1; x--) {
+      //Found when change from white to black && new edge is not far away from last edge
+      if ((ext_camptr[x][layer] != ext_camptr[x - 1][layer]) && (abs(x - Left_edge[layer + 1]) <= 5)) {
+        Left_edge[layer] = x;
+        ext_camptr[x][layer] = 2;
+        L_Edge_is_found = true;
+        break;
+      }
+    }
+    if (L_Edge_is_found == false) {
+      //DO CANT FIND THING HERE
+      Left_edge[layer] = Left_edge[layer + 1];
+      ext_camptr[Left_edge[layer]][layer] = 2;
+    }
+    //Right
+    for (int x = Center[layer + 1]; x < W; x++) {
+      if ((ext_camptr[x][layer] != ext_camptr[x + 1][layer]) && (abs(x - Right_edge[layer + 1]) <= 5)) {
+        Right_edge[layer] = x;
+        ext_camptr[x][layer] = 2;
+        R_Edge_is_found = true;
+        break;
+      }
+    }
+    if (R_Edge_is_found == false) {
+      //DO CANT FIND THING HERE
+      Right_edge[layer] = Right_edge[layer + 1];
+      ext_camptr[Right_edge[layer]][layer] = 2;
+    }
+    // Update the center point
+    Center[layer] = (Left_edge[layer] + Right_edge[layer]) / 2;
+    /*Special Case Judgement----------------------------------------------------------*/
+//		if(R_Edge_is_found && L_Edge_is_found){
+    /*ROUNDABOUT JUDGEMENT*/
+    if (ext_camptr[Center[layer] - 1][layer] || ext_camptr[Center[layer]][layer]
+        || ext_camptr[Center[layer] + 1][layer] == true) {
+      /*Double check*/
+//      if (DoubleCheckRound(Center[layer], layer)) {
+//        /*ROUNDABOUT HANDLING*/
+//        RoundRoadNow = true;
+//        RoundRoad_StartTime = System::Time();
+//
+//        string s = "Status: Roundabout\n";
+//        console.SetCursorRow(1);
+//        console.WriteString(s.c_str());
+    	feature = CarManager::Feature::kRoundabout;
+
+        for (int x = Center[layer]; x > 0; x--) {
+          if (ext_camptr[x][layer] == false) {
+            Right_edge[layer] = x;
+            break;
+          }
+        }
+        for (int x = Right_edge[layer]; x > 0; x--) {
+          Left_edge[layer] = x;
+          if (ext_camptr[x][layer] == true) {
+            break;
+          }
+        }
+        Center[layer] = (Left_edge[layer] + Right_edge[layer]) / 2; // Update new center point
+
+//        lcd.SetRegion(Lcd::Rect(Center[layer], layer, 5, 5));
+//        lcd.FillColor(Lcd::kRed);
+
+        if ((ServoStraightDegree - (Center[layer] - 35) * ServoP) > ServoLeftBoundary) {
+          UpdatedDegree = ServoLeftBoundary;
+        } else if ((ServoStraightDegree - (Center[layer] - 35) * ServoP) < ServoRightBoundary) {
+          UpdatedDegree = ServoRightBoundary;
+        } else {
+          UpdatedDegree = ServoStraightDegree - (Center[layer] - 35) * ServoP;
+        }
+        servo.SetDegree(UpdatedDegree); //Action immediately for this special case
+        return;
+//      }
+    }
+    ext_camptr[Center[layer]][layer] = 3;
+    LayerCount++;
+//		}
+    /*CROSSING JUDGEMENT*/
+    if ((L_Edge_is_found || R_Edge_is_found) == false) {
+      /*CROSSING DOUBLE CHECK*/
+      if (DoubleCheckCrossing(Center[layer], layer)) {
+        /*HAS ROAD - GO STRAIGHT*/
+//        string s = "Status: Crossing\n";
+//        console.SetCursorRow(1);
+//        console.WriteString(s.c_str());
+    	  feature = CarManager::Feature::kCross;
+        //			EncounterCrossing = true;
+        break;
+      }
+    }
+  }
+
+  /*CROSSING HANDLING*/
+//	if (HasRoad() && EncounterCrossing == true){
+//		servo.SetDegree(ServoStraightDegree);
+//		return;
+//	}
+
+  /*Round road exit handling*/
+  // Cancel round road flag after 30s to avoid wrong judgement
+//  if ((System::Time() - RoundRoad_StartTime) > 30000) {
+//    RoundRoadNow = false;
+//  }
+//  // Do special arrangement during round road period to help car exit
+//  if (RoundRoadNow && (Center[layer] == false)) {
+//    //Finding new center point
+//    servo.SetDegree(ServoLeftBoundary);
+//    return;
+//  }
 
   int sum = 0; // Initially 50 - 20
   for (int L = 55; L > 55 - LayerCount; L--) {

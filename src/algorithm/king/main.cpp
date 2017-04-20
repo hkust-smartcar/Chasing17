@@ -11,6 +11,7 @@
 #include "libsc/k60/ov7725.h"
 
 #include "bluetooth.h"
+#include "car_manager.h"
 #include "algorithm/king/Moving.h"
 
 using namespace libsc;
@@ -78,8 +79,8 @@ void main(bool has_encoder) {
   motor_left.SetClockwise(true);
   motor_right.SetClockwise(false);
 
-//	motor_left.SetPower(200);
-//	motor_right.SetPower(200);
+	motor_left.SetPower(300);
+	motor_right.SetPower(300);
 //	servo.SetDegree(StraightDegree);
 //	while (true){}
   /*Servo tuning*/
@@ -150,7 +151,7 @@ void main(bool has_encoder) {
         startTime = System::Time();
 ----------------------------------------------------------------*/
         startTime = System::Time();
-
+        CarManager::Feature feature;
         const Byte* camBuffer = camera.LockBuffer();
         led1.Switch();
         // unlock the buffer now that we have the data
@@ -158,7 +159,7 @@ void main(bool has_encoder) {
         car.extract_cam(camBuffer);
         //car.printCameraImage(camBuffer, lcd);
         camera.UnlockBuffer();
-        car.NormalMovingTestingVersion3(servo, lcd);
+        car.NormalMovingTestingVersion3(servo, lcd, motor_right, motor_left);
 
 //						if(car.HasCornerTesting()){
 //							led2.Switch();
@@ -191,7 +192,7 @@ void main(bool has_encoder) {
 //					break;
 //				}
         //Print it on LCD
-        car.Print2Darray(led4, lcd);
+//        car.Print2Darray(led4, lcd);
 //				Timer::TimerInt timeTaken = System::Time() - startTime;
 //				string s = "Time: " + to_string(timeTaken) + "\n";
 //				console.SetCursorRow(0);
@@ -202,9 +203,14 @@ void main(bool has_encoder) {
         string s = "Time: " + to_string(timeTaken) + "\n";
         console.WriteString(s.c_str());
 ---------------------------------------------------------------------------*/
-
-        bluetooth.sendSpeed(motor_left.GetPower() / 10);
-        bluetooth.sendFeature(CarManager::Feature::kStraight);
+//
+//        bluetooth.sendSpeed(motor_left.GetPower() / 10);
+//        if((feature != CarManager::Feature::kRoundabout) && (feature != CarManager::Feature::kCross)){
+//        	bluetooth.sendFeature(feature);
+//        }
+//        else{
+//        	bluetooth.sendFeature(CarManager::Feature::kStraight);
+//        }
       }
     }
   }

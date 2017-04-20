@@ -13,6 +13,8 @@
 #include <cstdint>
 #include <algorithm>
 #include <math.h>
+#include "bluetooth.h"
+#include "car_manager.h"
 
 #include <libbase/k60/mcg.h>
 #include <libbase/k60/gpio.h>
@@ -60,8 +62,8 @@ class Moving {
   bool HasCornerTesting();
   void NormalMovingTestingVersion1(FutabaS3010& servo, St7735r& lcd); /*Move based on midpoint only*/
   void NormalMovingTestingVersion2(FutabaS3010& servo, St7735r& lcd); /*Add roundabout as well as crossing judgement*/
-  void NormalMovingTestingVersion3(FutabaS3010& servo,
-                                   St7735r& lcd); /*Improve the performance of roundabout recognition*/
+  void NormalMovingTestingVersion3(FutabaS3010& servo, St7735r& lcd, AlternateMotor& motor_right, AlternateMotor& motor_left); /*Improve the performance of roundabout recognition*/
+  void NormalMovingTestingVersion4(FutabaS3010& servo, St7735r& lcd, CarManager::Feature& feature); /*Moving + Feature output for Bluetooth testing*/
 
   /*Moving function*/
   bool NormalMoving(FutabaS3010& servo); /*Use center point method to control the car*/
