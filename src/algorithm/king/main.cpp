@@ -53,9 +53,9 @@ void main(bool has_encoder) {
   St7735r lcd(lcdConfig);
 
 //  // initialize LCD console
-//	LcdConsole::Config console_config;
-//	console_config.lcd = &lcd;
-//	LcdConsole console(console_config);
+	LcdConsole::Config console_config;
+	console_config.lcd = &lcd;
+	LcdConsole console(console_config);
 
   // initialize Servo console
   FutabaS3010::Config ServoConfig;
@@ -80,8 +80,8 @@ void main(bool has_encoder) {
   motor_left.SetClockwise(true);
   motor_right.SetClockwise(false);
 
-	motor_left.SetPower(300);
-	motor_right.SetPower(300);
+	motor_left.SetPower(350);
+	motor_right.SetPower(350);
 //	servo.SetDegree(StraightDegree);
 //	while (true){}
   /*Servo tuning*/
@@ -142,12 +142,12 @@ void main(bool has_encoder) {
       // attempt to refresh the buffer at every 10th millisecond
       if ((timeImg % time_ms) == 0) {
         /*Motor Protection*/
-				encoderA.Update();
-				encoderB.Update();
-				if(encoderA.GetCount() == 0 || encoderB.GetCount() == 0){
-					motor_left.SetPower(0);
-					motor_right.SetPower(0);
-				}
+		encoderA.Update();
+		encoderB.Update();
+		if(encoderA.GetCount() == 0 || encoderB.GetCount() == 0){
+			motor_left.SetPower(0);
+			motor_right.SetPower(0);
+		}
         /*--------------------------------------------------------------record the starting time
         startTime = System::Time();
 ----------------------------------------------------------------*/
@@ -158,9 +158,9 @@ void main(bool has_encoder) {
         // unlock the buffer now that we have the data
 
         car.extract_cam(camBuffer);
-        //car.printCameraImage(camBuffer, lcd);
+//        car.printCameraImage(camBuffer, lcd);
         camera.UnlockBuffer();
-        car.NormalMovingTestingVersion3(servo, lcd, motor_right, motor_left);
+        car.NormalMovingTestingVersion5(servo, lcd, motor_right, motor_left);
 
 //						if(car.HasCornerTesting()){
 //							led2.Switch();
@@ -204,6 +204,13 @@ void main(bool has_encoder) {
         string s = "Time: " + to_string(timeTaken) + "\n";
         console.WriteString(s.c_str());
 ---------------------------------------------------------------------------*/
+//        if(timeImg %100 == 0){
+//        	bluetooth.sendSpeed(motor_left.GetPower()/10);
+//        	bluetooth.sendSlopeDeg((servo.GetDegree() - 900)/10);
+//        }
+
+
+
 //
 //        bluetooth.sendSpeed(motor_left.GetPower() / 10);
 //        if((feature != CarManager::Feature::kRoundabout) && (feature != CarManager::Feature::kCross)){
