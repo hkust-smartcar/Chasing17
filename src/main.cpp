@@ -66,7 +66,7 @@ int min(int a,int b){return (a<b?a:b);}
 
 //void analysis(const Byte* buff);
 bool get_bit(const Byte* buff, int x, int y){
-	if (x<0||x>=WIDTH||y<0||y>=HEIGHT) return true; //out of view is black
+	if (x<0||x>=WIDTH-1||y<0||y>=HEIGHT-1) return true; //out of view is black
 	return buff[y*WIDTH/8+x/8] & 0x80>>x%8;
 }
 bool median(const Byte* buff, int x, int y){
@@ -83,7 +83,7 @@ bool median(const Byte* buff, int x, int y){
 }
 
 bool get_pkbit(const Byte* buff, int x, int y){
-	if (x<0||x>=WIDTH||y<0||y>=HEIGHT) return true; //out of view is black
+	if (x<0||x>=WIDTH-1||y<0||y>=HEIGHT-1) return true; //out of view is black
 	y=HEIGHT-1-y;
 	return median(buff,x,y);
 }
@@ -106,19 +106,22 @@ public:
 
 //void JoyStickDebugListen(Joystick::State state);
 
-
-//distortion solver
-//void find_vanish(const Byte* buff);
-//bool get_fixedbit(const Byte* buff, int, int);
-int16_t vanish_x=0,vanish_y=0;
-int yL=0,yR=0;
-
 k60::Ov7725* cam;
 St7735r* lcd;
 AlternateMotor* motor;
 Servo* servo;
+Joystick* joystickptr;
+LcdTypewriter* writerptr;
 
 int servo_target=900, servo_pos=900, motor_target = 200, motor_speed = 200;
+int corner_upper_limit=100;
+Joystick::State jState=Joystick::State::kIdle;
+
+void pause(Joystick& joystick, LcdTypewriter& writer, char* buff){
+	lcd->SetRegion(Lcd::Rect(0,HEIGHT+30,120,15));
+	writer.WriteBuffer(buff, 12);
+	System::DelayMs(300);
+}
 
 bool map[HEIGHT][WIDTH];
 
@@ -180,6 +183,7 @@ int main(void){
 	LcdTypewriter::Config writer_config;
 	writer_config.lcd = &lcd1;
 	LcdTypewriter writer(writer_config);
+	writerptr=&writer;
 
 	//init camera
 	k60::Ov7725::Config cam_config;
@@ -205,8 +209,9 @@ int main(void){
 	joystick_config.is_active_low = true;
 	Joystick joystick(joystick_config);
 	Joystick::State state;
+	joystickptr = &joystick;
 
-	int left_edge[200][2], right_edge[200][2], mid[200][2], left_from[200], right_from[200];
+	int left_edge[400][2], right_edge[400][2], mid[400][2], left_from[400], right_from[400];
 
 	bool found[WIDTH][HEIGHT];
 	for(int i=0;i<WIDTH;i++){
@@ -297,7 +302,7 @@ int main(void){
 				bool find_right=true;
 
 				//loop for finding edge, maximum find 200 points for each edge
-				for (int count=0;count<200-1;count++){
+				for (int count=0;count<400-1;count++){
 					if(left_edge[count][0]==right_edge[count][0]&&left_edge[count][1]==right_edge[count][1]) {
 						lcd->SetRegion(Lcd::Rect(left_edge[count][0],left_edge[count][1],5,5));
 						lcd->FillColor(Lcd::kYellow);
@@ -325,6 +330,7 @@ int main(void){
 
 					//corner
 					if(x>4&&x<WIDTH-5&&y>4&&y<HEIGHT-5){
+
 						int sum=0;
 						int ratio=1;
 						int total=0;
@@ -333,9 +339,10 @@ int main(void){
 								sum+=ratio*get_pkbit(byte,c,r);
 								total++;
 							}
-							ratio+=1;
+							ratio+=2;
 						}
-						if(sum>0&&sum<60){
+
+						if(sum>90&& sum<corner_upper_limit){
 							lcd->SetRegion(Lcd::Rect(x,HEIGHT-y-1,5,5));
 							lcd->FillColor(Lcd::kBlue);
 							while(!get_pkbit(byte,left_edge[count][0],++left_edge[count][1])){
@@ -352,13 +359,16 @@ led1.SetEnable(1);
 					//search in directions, from last direction clockwise to last direction
 					for (int i=left_from[count]+1; i<left_from[count]+9;i++){
 
+						const int j=(8+(i%8))%8;
 
-						const int j=i%8;
+						//char wbuff[12];
+						//sprintf(wbuff,"%d:%d,%d;%d,%d",j,x,y,x+dx[j],y+dy[j]);
+						//pause(joystick, writer, wbuff);
 						if(!get_pkbit(byte, x+dx[j],y+dy[j])){//if the point is white, it is a new point of edge
 							left_edge[count+1][0]=x+dx[j];
 							left_edge[count+1][1]=y+dy[j];
 							flag-=1;
-							left_from[count+1]=j-4;
+							left_from[count+1]=(j+4)%8;
 
 							find_left=1;
 
@@ -410,7 +420,7 @@ led1.SetEnable(1);
 							}
 							ratio++;
 						}
-						if(sum>11&&sum<60){
+						if(sum>50&&sum<60){
 							lcd->SetRegion(Lcd::Rect(x1,HEIGHT-y1-1,5,5));
 							lcd->FillColor(Lcd::kGreen);
 							while(!get_pkbit(byte,right_edge[count][0],++right_edge[count][1])){
@@ -460,9 +470,9 @@ led1.SetEnable(1);
 
 					//break condition: left edge right edge meet or fail to find new edge
 					if(left_edge[count+1][0]==right_edge[count+1][0]&&left_edge[count+1][1]==right_edge[count+1][1]) break;
-					if(flag==0)break;
+					//if(flag==0)break;
 					if(!(find_left||find_right))break;
-					if(System::Time()-timeStart>200)break;
+					//if(System::Time()-timeStart>200)break;
 				}
 
 				//print variables
@@ -471,14 +481,25 @@ led1.SetEnable(1);
 				lcd->SetRegion(Lcd::Rect(0,HEIGHT,100,15));
 				writer.WriteBuffer(buff,10);
 				cam->UnlockBuffer();
-				cam->Stop();
-				cam->Start();
+				//cam->Stop();
+				//cam->Start();
 
 				for(int i=0;i<WIDTH;i++){
 					for(int j=0; j<HEIGHT;j++){
 						found[i][j]=false;
 					}
 				}
+
+				if(jState!=joystick.GetState()){
+					jState=joystick.GetState();
+					if(jState==Joystick::State::kLeft)corner_upper_limit--;
+					else if(jState==Joystick::State::kRight)corner_upper_limit++;
+
+					sprintf(buff," %d ;",corner_upper_limit);
+					lcd->SetRegion(Lcd::Rect(0,HEIGHT+15,100,15));
+					writer.WriteBuffer(buff,10);
+				}
+
 			}
 
 
