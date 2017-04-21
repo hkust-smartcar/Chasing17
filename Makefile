@@ -68,8 +68,7 @@ CCFLAGS+=-Wall -Wextra
 ifeq ($(SCCC_BUILD),DEBUG)
 BIN_SUFFIX:=$(BIN_SUFFIX)-d
 CPPFLAGS+=-DDEBUG=1
-#CCFLAGS+=-O0 -g3
-CCFLAGS+=-O0 -ggdb -gdwarf -g3
+CCFLAGS+=-O0 -g3
 $(info Build = DEBUG)
 
 else ifeq ($(SCCC_BUILD),RELEASE)
@@ -82,7 +81,7 @@ else
 $(warning Unknown build type, defaulting to DEBUG (set SCCC_BUILD))
 BIN_SUFFIX:=$(BIN_SUFFIX)-d
 CPPFLAGS+=-DDEBUG=1
-CCFLAGS+=-O0 -g -gdwarf -g3 -ggdb
+CCFLAGS+=-O0 -g3
 $(info Build = DEBUG)
 
 endif
@@ -129,9 +128,9 @@ endif
 # End of common CCFLAGS
 CXXFLAGS:=$(CCFLAGS)
 
-CCFLAGS+=-std=gnu11
+CCFLAGS+=-std=gnu99
 
-CXXFLAGS+=-std=gnu++14
+CXXFLAGS+=-std=gnu++11
 CXXFLAGS+=-pedantic
 CXXFLAGS+=-fno-exceptions -fno-rtti
 

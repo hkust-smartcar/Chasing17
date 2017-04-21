@@ -50,7 +50,7 @@ class CarManager final {
   enum struct Feature : uint8_t {
     kStraight = 0,
     kRoundabout,
-	kCross
+    kCross
   };
 
   /**
@@ -79,6 +79,11 @@ class CarManager final {
     kBoth
   };
 
+  enum struct Car : bool {
+    kOld,
+    kNew
+  };
+
   /**
    * Configuration struct. Used for initialization of CarInfo.
    *
@@ -92,13 +97,17 @@ class CarManager final {
     std::unique_ptr<libsc::Mpu6050> accel = nullptr;
     std::unique_ptr<libsc::FutabaS3010> servo = nullptr;
     Identity identity;
+    Car car;
   };
 
   struct ServoBounds {
-    static uint16_t kLeftBound;
-    static uint16_t kCenter;
-    static uint16_t kRightBound;
+    uint16_t kLeftBound;
+    uint16_t kCenter;
+    uint16_t kRightBound;
   };
+
+  static ServoBounds old_car;
+  static ServoBounds new_car;
 
   /**
    * Update all parameters of the car (speed, slope, servo angle)
@@ -122,6 +131,10 @@ class CarManager final {
   static Side GetSide() { return side_; }
   static Feature GetFeature() { return feature_; }
   static Identity GetIdentity() { return identity_; }
+  static Car GetCar() { return car_; }
+  static ServoBounds GetServoBounds() {
+    return car_ == CarManager::Car::kOld ? CarManager::old_car : CarManager::new_car;
+  }
 
   // Setters
   // TODO: Decide if we want to make bluetooth a static class
@@ -148,6 +161,7 @@ class CarManager final {
   static Side side_;
   static Feature feature_;
   static Identity identity_;
+  static Car car_;
 
   static std::unique_ptr<util::Mpc> epc_left_;
   static std::unique_ptr<util::Mpc> epc_right_;

@@ -112,6 +112,8 @@ class MpcDual final : protected Mpc {
    *
    * @note The final target speed may not be equal to the given target speed,
    * due to software differential calculations. This is normal.
+   *
+   * @params
    */
   void DoCorrection();
 
