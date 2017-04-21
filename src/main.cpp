@@ -8,11 +8,11 @@
  *
  */
 
-#include <string>
-
 #include "libbase/k60/mcg.h"
 #include "libsc/system.h"
 
+#include "algorithm/bt-demo.h"
+#include "algorithm/receiver.h"
 #include "algorithm/king/main.h"
 #include "algorithm/leslie/main.h"
 
@@ -31,22 +31,44 @@ using libsc::System;
 
 enum struct Algorithm {
   kKing,
-  kLeslie
+  kLeslie,
+  kReceiver,
+  kBluetoothTest,
+  kKingReceive
 };
 
 int main() {
   System::Init();
 
   // modify next line to switch between algorithms
-  constexpr Algorithm a = Algorithm::kKing;
+  constexpr Algorithm a = Algorithm::kKingReceive;
 
   // modify next line to enable/disable encoder
   constexpr bool has_encoder = false;
 
-  if (a == Algorithm::kKing) {
-    algorithm::king::main(has_encoder);
-  } else {
-    algorithm::leslie::main(has_encoder);
+  // modify next line to change which car we're working with
+  CarManager::Car c = CarManager::Car::kOld;
+
+  CarManager::ServoBounds s = c == CarManager::Car::kOld ? CarManager::old_car : CarManager::new_car;
+  switch (a) {
+    case Algorithm::kKing:
+      algorithm::king::main(has_encoder, s);
+      break;
+    case Algorithm::kLeslie:
+      algorithm::leslie::main(has_encoder);
+      break;
+    case Algorithm::kReceiver:
+      algorithm::receiver();
+      break;
+    case Algorithm::kBluetoothTest:
+      algorithm::BluetoothDemo(has_encoder);
+      break;
+    case Algorithm::kKingReceive:
+      algorithm::king::main_receive(has_encoder, s);
+      break;
+    default:
+      // not handled
+      break;
   }
 
   while (true) {
