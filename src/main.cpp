@@ -41,14 +41,18 @@ int main() {
   System::Init();
 
   // modify next line to switch between algorithms
-  constexpr Algorithm a = Algorithm::kReceiver;
+  constexpr Algorithm a = Algorithm::kKingReceive;
 
   // modify next line to enable/disable encoder
   constexpr bool has_encoder = false;
 
+  // modify next line to change which car we're working with
+  CarManager::Car c = CarManager::Car::kOld;
+
+  CarManager::ServoBounds s = c == CarManager::Car::kOld ? CarManager::old_car : CarManager::new_car;
   switch (a) {
     case Algorithm::kKing:
-      algorithm::king::main(has_encoder);
+      algorithm::king::main(has_encoder, s);
       break;
     case Algorithm::kLeslie:
       algorithm::leslie::main(has_encoder);
@@ -60,7 +64,7 @@ int main() {
       algorithm::BluetoothDemo(has_encoder);
       break;
     case Algorithm::kKingReceive:
-      algorithm::king::main_receive(has_encoder);
+      algorithm::king::main_receive(has_encoder, s);
       break;
     default:
       // not handled

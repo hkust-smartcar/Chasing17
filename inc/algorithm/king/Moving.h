@@ -35,9 +35,6 @@
 
 //SELF_DEFINED VARIABLES in .h
 enum Status { kRoundIn, kRoundOut, kCrossing, kNormal, kSshape, Fail };
-const int ServoLeftBoundary = 1050; //Boundary 1050
-const int ServoRightBoundary = 450; //Boundary 410
-const int ServoStraightDegree = 800; // 710
 
 using namespace libsc;
 using namespace libsc::k60;
@@ -60,15 +57,15 @@ class Moving {
 
   Status RoadSituation(); /*Update Left_edge, Right_edge and Center, return current Status */
   bool HasCornerTesting();
-  void NormalMovingTestingVersion1(FutabaS3010& servo, St7735r& lcd); /*Move based on midpoint only*/
-  void NormalMovingTestingVersion2(FutabaS3010& servo, St7735r& lcd); /*Add roundabout as well as crossing judgement*/
-  void NormalMovingTestingVersion3(FutabaS3010& servo, St7735r& lcd, AlternateMotor& motor_right, AlternateMotor& motor_left); /*Improve the performance of roundabout recognition*/
-  void NormalMovingTestingVersion4(FutabaS3010& servo, St7735r& lcd, CarManager::Feature& feature); /*Moving + Feature output for Bluetooth testing*/
+  void NormalMovingTestingVersion1(FutabaS3010& servo, St7735r& lcd, CarManager::ServoBounds); /*Move based on midpoint only*/
+  void NormalMovingTestingVersion2(FutabaS3010& servo, St7735r& lcd, CarManager::ServoBounds); /*Add roundabout as well as crossing judgement*/
+  void NormalMovingTestingVersion3(FutabaS3010& servo, St7735r& lcd, AlternateMotor& motor_right, AlternateMotor& motor_left, CarManager::ServoBounds s); /*Improve the performance of roundabout recognition*/
+  void NormalMovingTestingVersion4(FutabaS3010& servo, St7735r& lcd, CarManager::Feature& feature, CarManager::ServoBounds s); /*Moving + Feature output for Bluetooth testing*/
 
   /*Moving function*/
-  bool NormalMoving(FutabaS3010& servo); /*Use center point method to control the car*/
-  bool RoundMoving(FutabaS3010& servo); /*Turn left when encounter round road*/
-  bool CrossingMoving(FutabaS3010& servo); /*Go straight when encounter crossing*/
+  bool NormalMoving(FutabaS3010& servo, CarManager::ServoBounds s); /*Use center point method to control the car*/
+  bool RoundMoving(FutabaS3010& servo, CarManager::ServoBounds s); /*Turn left when encounter round road*/
+  bool CrossingMoving(FutabaS3010& servo, CarManager::ServoBounds s); /*Go straight when encounter crossing*/
   //bool SshapeMoving(FutabaS3010::Servo & servo);
 
   /*Indicator function*/

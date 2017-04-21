@@ -65,7 +65,7 @@ void receiver() {
 
       led1.SetEnable(time_img % 500 >= 250);
 
-      /*if (time_img % 500) {
+      if (time_img % 500) {
         console.SetCursorRow(0);
         std::string s;
         s += "speed = " + std::to_string(bt.getBufferSpeed()) + "\n";
@@ -74,7 +74,7 @@ void receiver() {
         s += "featu = " + std::to_string(static_cast<int>(bt.getBufferFeature())) + "\n";
         s += "side  = " + std::to_string(static_cast<int>(bt.getBufferSide())) + "\n";
         console.WriteString(s.c_str());
-      }*/
+      }
     }
   }
 }

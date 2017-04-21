@@ -21,7 +21,7 @@ using namespace std;
 
 namespace algorithm {
 namespace king {
-void main(bool has_encoder) {
+void main(bool has_encoder, CarManager::ServoBounds s) {
   // initialize LEDs
   Led::Config ledConfig;
   ledConfig.is_active_low = true;
@@ -127,11 +127,11 @@ void main(bool has_encoder) {
   lcd.Clear();
 //	car.PrintingFrame(lcd,40,30,1,1);
 //	car.PrintingFrame(lcd,40,55,1,1);
-  servo.SetDegree(ServoLeftBoundary);
+  servo.SetDegree(s.kLeftBound);
   System::DelayMs(1000);
-  servo.SetDegree(ServoRightBoundary);
+  servo.SetDegree(s.kRightBound);
   System::DelayMs(1000);
-  servo.SetDegree(ServoStraightDegree);
+  servo.SetDegree(s.kCenter);
   System::DelayMs(1000);
 
   // main loop
@@ -160,7 +160,7 @@ void main(bool has_encoder) {
         car.extract_cam(camBuffer);
         //car.printCameraImage(camBuffer, lcd);
         camera.UnlockBuffer();
-        car.NormalMovingTestingVersion3(servo, lcd, motor_right, motor_left);
+        car.NormalMovingTestingVersion3(servo, lcd, motor_right, motor_left, s);
 
 //						if(car.HasCornerTesting()){
 //							led2.Switch();

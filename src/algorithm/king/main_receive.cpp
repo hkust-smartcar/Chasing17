@@ -26,7 +26,7 @@ using namespace std;
 
 namespace algorithm {
 namespace king {
-void main_receive(bool has_encoder) {
+void main_receive(bool has_encoder, CarManager::ServoBounds s) {
   // initialize LEDs
   Led::Config ledConfig;
   ledConfig.is_active_low = true;
@@ -124,6 +124,7 @@ void main_receive(bool has_encoder) {
   bt_config.id = 0;
   bt_config.baud_rate = Uart::Config::BaudRate::k115200;
   BTComm bluetooth(bt_config);
+  bluetooth.led_ptr = &led2;
 
   camera.Start();
   while (!camera.IsAvailable()) {
@@ -136,11 +137,11 @@ void main_receive(bool has_encoder) {
   lcd.Clear();
 //	car.PrintingFrame(lcd,40,30,1,1);
 //	car.PrintingFrame(lcd,40,55,1,1);
-  servo.SetDegree(ServoLeftBoundary);
+  servo.SetDegree(s.kLeftBound);
   System::DelayMs(1000);
-  servo.SetDegree(ServoRightBoundary);
+  servo.SetDegree(s.kRightBound);
   System::DelayMs(1000);
-  servo.SetDegree(ServoStraightDegree);
+  servo.SetDegree(s.kCenter);
   System::DelayMs(1000);
 
   // main loop
@@ -150,12 +151,16 @@ void main_receive(bool has_encoder) {
       timeImg = System::Time();
       // attempt to refresh the buffer at every 10th millisecond
       if ((timeImg % time_ms) == 0) {
+        led1.SetEnable(timeImg % 500 >= 250);
+
         /*Motor Protection*/
-        encoderA.Update();
-        encoderB.Update();
-        if (encoderA.GetCount() == 0 || encoderB.GetCount() == 0) {
-          motor_left.SetPower(0);
-          motor_right.SetPower(0);
+        if (has_encoder) {
+          encoderA.Update();
+          encoderB.Update();
+          if (encoderA.GetCount() == 0 || encoderB.GetCount() == 0) {
+            motor_left.SetPower(0);
+            motor_right.SetPower(0);
+          }
         }
         /*--------------------------------------------------------------record the starting time
         startTime = System::Time();
@@ -163,13 +168,12 @@ void main_receive(bool has_encoder) {
         startTime = System::Time();
         CarManager::Feature feature;
         const Byte* camBuffer = camera.LockBuffer();
-        led1.Switch();
         // unlock the buffer now that we have the data
 
         car.extract_cam(camBuffer);
         //car.printCameraImage(camBuffer, lcd);
         camera.UnlockBuffer();
-        car.NormalMovingTestingVersion3(servo, lcd, motor_right, motor_left);
+        car.NormalMovingTestingVersion3(servo, lcd, motor_right, motor_left, s);
 
 //						if(car.HasCornerTesting()){
 //							led2.Switch();
@@ -222,7 +226,7 @@ void main_receive(bool has_encoder) {
           s += "servo = " + std::to_string(bluetooth.getBufferSlopeDeg()) + "\n";
           s += "featu = " + std::to_string(static_cast<int>(bluetooth.getBufferFeature())) + "\n";
           s += "side  = " + std::to_string(static_cast<int>(bluetooth.getBufferSide())) + "\n";
-          console.WriteString(s.c_str());
+//          console.WriteString(s.c_str());
         }
 //        if((feature != CarManager::Feature::kRoundabout) && (feature != CarManager::Feature::kCross)){
 //        	bluetooth.sendFeature(feature);
