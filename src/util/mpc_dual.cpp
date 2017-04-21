@@ -12,7 +12,7 @@
 
 #include "car_manager.h"
 
-using std::to_string;
+//using std::to_string;
 
 namespace util {
 void MpcDual::DoCorrection() {
@@ -74,13 +74,13 @@ int32_t MpcDual::GetCurrentSpeed(MotorSide side) const {
 void MpcDualDebug::OutputEncoderMotorValues(libsc::LcdConsole* console, MpcDual::MotorSide side) const {
   std::string s = "";
   if (side == MpcDual::MotorSide::kLeft || side == MpcDual::MotorSide::kBoth) {
-    s += "L: " + to_string(mpc_dual_->mpc_left_->last_encoder_val_) +
-        " " + to_string(mpc_dual_->mpc_left_->motor_->GetPower());
+//    s += "L: " + to_string(mpc_dual_->mpc_left_->last_encoder_val_) +
+//        " " + to_string(mpc_dual_->mpc_left_->motor_->GetPower());
   }
   if (side == MpcDual::MotorSide::kRight || side == MpcDual::MotorSide::kBoth) {
     if (s != "") { s += "\n"; }
-    s += "R: " + to_string(mpc_dual_->mpc_right_->last_encoder_val_) +
-        " " + to_string(mpc_dual_->mpc_right_->motor_->GetPower());
+//    s += "R: " + to_string(mpc_dual_->mpc_right_->last_encoder_val_) +
+//        " " + to_string(mpc_dual_->mpc_right_->motor_->GetPower());
   }
   console->WriteString(s.c_str());
 }
@@ -88,13 +88,13 @@ void MpcDualDebug::OutputEncoderMotorValues(libsc::LcdConsole* console, MpcDual:
 void MpcDualDebug::OutputLastEncoderValues(libsc::LcdConsole* console, MpcDual::MotorSide side) const {
   std::string s = "";
   if (side == MpcDual::MotorSide::kLeft || side == MpcDual::MotorSide::kBoth) {
-    s += "L: " + to_string(mpc_dual_->mpc_left_->last_encoder_duration_) +
-        " " + to_string(mpc_dual_->mpc_left_->last_encoder_val_);
+//    s += "L: " + to_string(mpc_dual_->mpc_left_->last_encoder_duration_) +
+//        " " + to_string(mpc_dual_->mpc_left_->last_encoder_val_);
   }
   if (side == MpcDual::MotorSide::kRight || side == MpcDual::MotorSide::kBoth) {
     if (s != "") { s += "\n"; }
-    s += "R: " + to_string(mpc_dual_->mpc_right_->last_encoder_duration_) +
-        " " + to_string(mpc_dual_->mpc_right_->last_encoder_val_);
+//    s += "R: " + to_string(mpc_dual_->mpc_right_->last_encoder_duration_) +
+//        " " + to_string(mpc_dual_->mpc_right_->last_encoder_val_);
   }
   console->WriteString(s.c_str());
 }

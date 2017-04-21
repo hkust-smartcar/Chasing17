@@ -10,6 +10,7 @@
 
 #include "libbase/k60/mcg.h"
 #include "libsc/system.h"
+#include "libsc/battery_meter.h"
 
 #include "algorithm/bt-demo.h"
 #include "algorithm/receiver.h"
@@ -40,6 +41,12 @@ enum struct Algorithm {
 int main() {
   System::Init();
 
+  BatteryMeter::Config ConfigBM;
+  ConfigBM.voltage_ratio = 0.4;
+  BatteryMeter bm(ConfigBM);
+
+  while (bm.GetVoltage() <= 7.3);
+
   // modify next line to switch between algorithms
   constexpr Algorithm a = Algorithm::kKingReceive;
 
@@ -52,7 +59,7 @@ int main() {
   CarManager::ServoBounds s = c == CarManager::Car::kOld ? CarManager::old_car : CarManager::new_car;
   switch (a) {
     case Algorithm::kKing:
-      algorithm::king::main(has_encoder, s);
+      algorithm::king::main(has_encoder);
       break;
     case Algorithm::kLeslie:
       algorithm::leslie::main(has_encoder);

@@ -91,13 +91,13 @@ void Mpc::UpdateEncoder() {
 }
 
 void MpcDebug::OutputEncoderMotorValues(libsc::LcdConsole* console) const {
-  std::string s = std::to_string(mpc_->last_encoder_val_) + " " + std::to_string(mpc_->motor_->GetPower()) + "\n";
-  console->WriteString(s.c_str());
+//  std::string s = std::to_string(mpc_->last_encoder_val_) + " " + std::to_string(mpc_->motor_->GetPower()) + "\n";
+//  console->WriteString(s.c_str());
 }
 
 void MpcDebug::OutputLastEncoderValues(libsc::LcdConsole* console) const {
-  std::string s = std::to_string(mpc_->last_encoder_duration_) + " " + std::to_string(mpc_->last_encoder_val_) + "\n";
-  console->WriteString(s.c_str());
+//  std::string s = std::to_string(mpc_->last_encoder_duration_) + " " + std::to_string(mpc_->last_encoder_val_) + "\n";
+//  console->WriteString(s.c_str());
 }
 
 void MpcDebug::SetMotorPower(uint16_t power, bool is_clockwise) {

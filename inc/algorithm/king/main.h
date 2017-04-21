@@ -5,7 +5,7 @@
 
 namespace algorithm {
 namespace king {
-void main(bool, CarManager::ServoBounds);
+void main(bool);
 void main_receive(bool, CarManager::ServoBounds);
 }
 }

@@ -173,7 +173,7 @@ void main_receive(bool has_encoder, CarManager::ServoBounds s) {
         car.extract_cam(camBuffer);
         //car.printCameraImage(camBuffer, lcd);
         camera.UnlockBuffer();
-        car.NormalMovingTestingVersion3(servo, lcd, motor_right, motor_left, s);
+//        car.NormalMovingTestingVersion3(servo, lcd, motor_right, motor_left, s);
 
 //						if(car.HasCornerTesting()){
 //							led2.Switch();
@@ -221,11 +221,11 @@ void main_receive(bool has_encoder, CarManager::ServoBounds s) {
         if (timeImg % 1000 == 0) {
           console.SetCursorRow(0);
           std::string s;
-          s += "speed = " + std::to_string(bluetooth.getBufferSpeed()) + "\n";
+//          s += "speed = " + std::to_string(bluetooth.getBufferSpeed()) + "\n";
 //        s += "slope = " + std::to_string(bt.getBufferSlopeDeg()) + "\n";
-          s += "servo = " + std::to_string(bluetooth.getBufferSlopeDeg()) + "\n";
-          s += "featu = " + std::to_string(static_cast<int>(bluetooth.getBufferFeature())) + "\n";
-          s += "side  = " + std::to_string(static_cast<int>(bluetooth.getBufferSide())) + "\n";
+//          s += "servo = " + std::to_string(bluetooth.getBufferSlopeDeg()) + "\n";
+//          s += "featu = " + std::to_string(static_cast<int>(bluetooth.getBufferFeature())) + "\n";
+//          s += "side  = " + std::to_string(static_cast<int>(bluetooth.getBufferSide())) + "\n";
 //          console.WriteString(s.c_str());
         }
 //        if((feature != CarManager::Feature::kRoundabout) && (feature != CarManager::Feature::kCross)){

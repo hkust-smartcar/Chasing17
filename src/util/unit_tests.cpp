@@ -175,8 +175,8 @@ void DirEncoderTest() {
     encoder_left.Update();
     encoder_right.Update();
 
-    std::string s = std::to_string(encoder_left.GetCount()) + " " + std::to_string(encoder_right.GetCount()) + "\n";
-    console.WriteString(s.c_str());
+//    std::string s = std::to_string(encoder_left.GetCount()) + " " + std::to_string(encoder_right.GetCount()) + "\n";
+//    console.WriteString(s.c_str());
 
     System::DelayMs(100);
   }
