@@ -67,7 +67,7 @@ void DirEncoderTest();
  *
  * @note Motor, encoder, and LCD will be initialized within the function.
  */
-void EncoderPControllerTest();
+void MpcTest();
 }  // namespace util
 
 #endif  // CHASING17_UTIL_UNIT_TESTS_H_
