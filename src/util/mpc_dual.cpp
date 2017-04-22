@@ -133,9 +133,9 @@ libsc::Timer::TimerInt MpcDualDebug::GetLastRunDuration(MpcDual::MotorSide side)
 int32_t MpcDualDebug::GetEncoderVal(MpcDual::MotorSide side) const {
   switch (side) {
     case MpcDual::MotorSide::kLeft:
-      return mpc_dual_->mpc_left_->last_encoder_val_;
+      return mpc_dual_->mpc_left_->average_encoder_val_;
     case MpcDual::MotorSide::kRight:
-      return mpc_dual_->mpc_right_->last_encoder_val_;
+      return mpc_dual_->mpc_right_->average_encoder_val_;
     case MpcDual::MotorSide::kBoth:
       return 0;
   }

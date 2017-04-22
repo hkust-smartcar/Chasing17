@@ -2,7 +2,7 @@
  * Copyright (c) 2014-2017 HKUST SmartCar Team
  * Refer to LICENSE for details
  *
- * Author: David Mak (Derppening)
+ * Author: David Mak (Derppening), Peter Tse (mcreng)
  *
  * Implementations for Mpc class.
  *
@@ -22,6 +22,14 @@ using libsc::Timer;
 using std::abs;
 
 namespace util {
+/* Data Sets
+ * {0.0015, 0, 0} (8000 -> ~8000)
+ * {0.0003, 0, 0.000000001} (8000 -> ~9500}, I needed.
+ */
+float Mpc::kP = 0.0003;
+float Mpc::kI = 0;
+float Mpc::kD = 0.000000001;
+
 void Mpc::SetTargetSpeed(const int16_t speed, bool commit_now) {
   target_speed_ = speed;
   if (commit_now) {
@@ -55,20 +63,27 @@ void Mpc::DoCorrection() {
   UpdateEncoder();
 
   // motor protection - turn off motor when motor is on but encoder has null value
-  if (motor_->GetPower() != 0 && last_encoder_val_ == 0) {
+  /*if (motor_->GetPower() != 0 && last_encoder_val_ == 0) {
     motor_->SetPower(0);
     return;
-  }
+  }*/
 
   // checks if the motor direction differs from our target
-  if (!HasSameSign(last_encoder_val_, static_cast<int32_t>(curr_speed_))) {
+  if (!HasSameSign(average_encoder_val_, static_cast<int32_t>(curr_speed_))) {
     motor_->SetClockwise(!motor_->IsClockwise());
   }
 
   // get the speed difference and add power linearly.
   // bigger difference = higher power difference
-  int16_t speed_diff = static_cast<int16_t>(abs(last_encoder_val_) - abs(curr_speed_));
-  motor_->AddPower(-speed_diff / static_cast<uint16_t>(MotorConstants::kDiffFactor));
+  int16_t speed_diff = static_cast<int16_t>(abs(curr_speed_) - abs(average_encoder_val_));
+  motor_->AddPower(speed_diff * kP);
+
+  // add the speed difference to the cumulative error
+  // greater the cumulative error, higher the power
+  cum_error_ += speed_diff * last_encoder_duration_ / 1000.0;
+  motor_->AddPower(static_cast<int16_t>(cum_error_ * kI));
+
+  motor_->AddPower((speed_diff / last_encoder_duration_) * kD);
 
   // hard limit bounds checking
   if (motor_->GetPower() > static_cast<uint16_t>(MotorConstants::kUpperHardLimit)) {
@@ -86,7 +101,16 @@ void Mpc::CommitTargetSpeed() {
 void Mpc::UpdateEncoder() {
   last_encoder_duration_ = GetTimeElapsed();
   encoder_->Update();
-  last_encoder_val_ = encoder_->GetCount() * 1000 / static_cast<int32_t>(last_encoder_duration_);
+  last_ten_encoder_val_.push_back(encoder_->GetCount() * 1000 / static_cast<int32_t>(last_encoder_duration_));
+  while (last_ten_encoder_val_.size() > 10) last_ten_encoder_val_.pop_front();
+  average_encoder_val_ = 0;
+  for (auto&& m : last_ten_encoder_val_){
+	  m;
+	  average_encoder_val_ += m;
+  }
+  average_encoder_val_ /= static_cast<int32_t>(last_ten_encoder_val_.size());
+
+
   time_encoder_start_ = libsc::System::Time();
 }
 

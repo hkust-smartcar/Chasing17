@@ -2,7 +2,7 @@
  * Copyright (c) 2014-2017 HKUST SmartCar Team
  * Refer to LICENSE for details
  *
- * Author: David Mak (Derppening)
+ * Author: David Mak (Derppening), Peter Tse (mcreng)
  *
  * Motor Proportional Controller class
  *
@@ -21,6 +21,7 @@
 
 #include <memory>
 #include <string>
+#include <deque>
 
 #include "libsc/alternate_motor.h"
 #include "libsc/dir_encoder.h"
@@ -89,7 +90,7 @@ class Mpc {
   /**
    * @return Current speed in encoder value per second
    */
-  inline int32_t GetCurrentSpeed() const { return last_encoder_val_; }
+  inline int32_t GetCurrentSpeed() const { return average_encoder_val_; }
 
   /**
    * Does motor power correction using encoder, and resets the encoder count.
@@ -110,14 +111,8 @@ class Mpc {
   /**
    * Constants for encoder to motor value conversions
    */
+  static float kP, kI, kD;
   enum struct MotorConstants {
-    /**
-     * Conversion factor from encoder difference to motor power difference.
-     *
-     * @example If set to 50, for every encoder value difference of 50, the
-     * motor power will increase/decrease by 1.
-     */
-        kDiffFactor = 50,
     /**
      * Lower bound of motor power which should not be used for extended periods
      * of time. [0,1000]
@@ -170,9 +165,17 @@ class Mpc {
    */
   int16_t target_speed_ = 0;
   /**
-   * The value of the encoder in units per second
+   * Queue of latest ten encoder values
    */
-  int32_t last_encoder_val_ = 0;
+  std::deque<int32_t> last_ten_encoder_val_;
+  /**
+   * The average of newest ten values of the encoder in units per second
+   */
+  int32_t average_encoder_val_ = 0;
+  /**
+   * Cumalative error
+   */
+  float cum_error_ = 0;
 
   // Timekeepers
   /**
@@ -235,7 +238,7 @@ class MpcDebug {
   /**
    * @return The encoder value in units per second
    */
-  inline int32_t GetEncoderVal() const { return mpc_->last_encoder_val_; }
+  inline int32_t GetEncoderVal() const { return mpc_->average_encoder_val_; }
 
  protected:
   MpcDebug() {};
