@@ -59,7 +59,7 @@ int main() {
   CarManager::ServoBounds s = c == CarManager::Car::kOld ? CarManager::old_car : CarManager::new_car;
   switch (a) {
     case Algorithm::kKing:
-      algorithm::king::main(has_encoder);
+      algorithm::king::main(has_encoder, s);
       break;
     case Algorithm::kLeslie:
       algorithm::leslie::main(has_encoder);
