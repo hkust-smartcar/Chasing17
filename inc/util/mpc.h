@@ -4,9 +4,9 @@
  *
  * Author: David Mak (Derppening), Peter Tse (mcreng)
  *
- * Motor Proportional Controller class
+ * Motor Power Controller class
  *
- * Implements a Proportional Controller system using encoders to make speed
+ * Implements a PID Controller system using encoders to make speed
  * adjustments to the motor power. Allows getting and target-setting of
  * encoder values.
  *

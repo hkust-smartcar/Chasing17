@@ -73,8 +73,7 @@ int main() {
   Timer::TimerInt time_img = 0;
   System::DelayMs(100);
 
-  mpc.SetTargetSpeed(8000);
-  System::DelayMs(100);
+  mpc.SetTargetSpeed(6000);
 
   char speedChar[15] = {};
 
@@ -87,7 +86,7 @@ int main() {
 		  }
 		  if (time_img % 15 == 6){
 			  int32_t s = mpc.GetCurrentSpeed();
-			  sprintf(speedChar, "%.1f,%d=%.1f\n", 1.0, s, 1.0);
+			  sprintf(speedChar, "%.1f,%d,%.1f=%.1f\n", 1.0, s, 6000.0, 1.0);
 			  std::string speedStr = speedChar;
 			  const Byte speedByte = 85;
 			  bt.SendBuffer(&speedByte, 1);

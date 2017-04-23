@@ -23,12 +23,13 @@ using std::abs;
 
 namespace util {
 /* Data Sets
- * {0.0015, 0, 0} (8000 -> ~8000)
- * {0.0003, 0, 0.000000001} (8000 -> ~9500}, I needed.
+ * kU = 0.003. Tu = 0.148
+ * {0.002222222, 0, 0}
+ * {0.002, 0.0001, 0}
  */
-float Mpc::kP = 0.0003;
-float Mpc::kI = 0;
-float Mpc::kD = 0.000000001;
+float Mpc::kP = 0.002;
+float Mpc::kI = 0.0001;
+float Mpc::kD = 0;
 
 void Mpc::SetTargetSpeed(const int16_t speed, bool commit_now) {
   target_speed_ = speed;
@@ -78,12 +79,14 @@ void Mpc::DoCorrection() {
   int16_t speed_diff = static_cast<int16_t>(abs(curr_speed_) - abs(average_encoder_val_));
   motor_->AddPower(speed_diff * kP);
 
-  // add the speed difference to the cumulative error
+  // add the speed difference in consideration to the cumulative error
   // greater the cumulative error, higher the power
-  cum_error_ += speed_diff * last_encoder_duration_ / 1000.0;
+  cum_error_ += speed_diff * (last_encoder_duration_ / 1000.0);
   motor_->AddPower(static_cast<int16_t>(cum_error_ * kI));
 
-  motor_->AddPower((speed_diff / last_encoder_duration_) * kD);
+  // add the speed difference in consideration to the rate of change of error
+  // greater the change, higher the power
+  motor_->AddPower(static_cast<int16_t>(speed_diff / (last_encoder_duration_ / 1000.0)) * kD);
 
   // hard limit bounds checking
   if (motor_->GetPower() > static_cast<uint16_t>(MotorConstants::kUpperHardLimit)) {
@@ -105,11 +108,9 @@ void Mpc::UpdateEncoder() {
   while (last_ten_encoder_val_.size() > 10) last_ten_encoder_val_.pop_front();
   average_encoder_val_ = 0;
   for (auto&& m : last_ten_encoder_val_){
-	  m;
 	  average_encoder_val_ += m;
   }
   average_encoder_val_ /= static_cast<int32_t>(last_ten_encoder_val_.size());
-
 
   time_encoder_start_ = libsc::System::Time();
 }
