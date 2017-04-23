@@ -224,8 +224,8 @@ void MpcTest() {
   console_config.lcd = lcd.get();
   unique_ptr<LcdConsole> console(new LcdConsole(console_config));
 
-  unique_ptr<Mpc> epc1(new Mpc(encoder1.get(), motor1.get()));
-  unique_ptr<Mpc> epc2(new Mpc(encoder2.get(), motor2.get()));
+  unique_ptr<Mpc> epc1(new Mpc(encoder1.get(), motor1.get(), false));
+  unique_ptr<Mpc> epc2(new Mpc(encoder2.get(), motor2.get(), true));
   unique_ptr<MpcDebug> epc1_d(new MpcDebug(epc1.get()));
   unique_ptr<MpcDebug> epc2_d(new MpcDebug(epc2.get()));
 

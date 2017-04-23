@@ -38,10 +38,12 @@ class Mpc {
    *
    * @param e Pointer to an encoder object
    * @param m Pointer to an AlternateMotor object
+   * @param isClockwise Boolean stating whether the motor is rotating in clockwise direction
    */
-  explicit Mpc(libsc::DirEncoder* e, libsc::AlternateMotor* m)
+  explicit Mpc(libsc::DirEncoder* e, libsc::AlternateMotor* m, bool isClockwise)
       : motor_(m), encoder_(e) {
     motor_->SetPower(0);
+    motor_->SetClockwise(isClockwise);
     UpdateEncoder();
   }
 
@@ -153,7 +155,7 @@ class Mpc {
    * @return True if both variables have the same sign
    */
   template<typename T>
-  bool HasSameSign(T val1, T val2) const { return (val1 >= 0 && val2 >= 0) || (val1 < 0 && val2 < 0); }
+  bool HasSameSign(T val1, T val2) const { return (val1 > 0 && val2 > 0) || (val1 < 0 && val2 < 0); }
 
   // Speed-related variables
   /**

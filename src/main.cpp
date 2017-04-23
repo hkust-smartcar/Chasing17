@@ -64,44 +64,15 @@ int main() {
   ConfigMotor.id = 1;
   AlternateMotor motor(ConfigMotor);
 
-  util::Mpc mpc(&encoder, &motor);
+  util::Mpc mpc(&encoder, &motor, false);
 
   JyMcuBt106::Config ConfigBT;
   ConfigBT.id = 0;
   ConfigBT.baud_rate = libbase::k60::Uart::Config::BaudRate::k115200;
   JyMcuBt106 bt(ConfigBT);
 
-  Timer::TimerInt time_img = 0;
-  System::DelayMs(100);
-
-  float t = 0;
-
-  char speedChar[15] = {};
-
-  while (1){
-	  while (time_img != System::Time()){
-		  time_img = System::Time();
-		  if (time_img % 5 == 0){
-			  //encoder.Update();
-			  mpc.DoCorrection();
-		  }
-		  if (time_img % 15 == 6){
-			  int32_t s = mpc.GetCurrentSpeed();
-			  int32_t de = 6000 * sin(t);
-			  mpc.SetTargetSpeed(de,  true);
-			  t += 0.02;
-			  sprintf(speedChar, "%.1f,%d,%.1f=%.1f\n", 1.0, s, 6000 * sin(t), 1.0);
-			  std::string speedStr = speedChar;
-			  const Byte speedByte = 85;
-			  bt.SendBuffer(&speedByte, 1);
-			  bt.SendStr(speedStr);
-		  }
-	  }
-  }
-
-
   // modify next line to switch between algorithms
-  constexpr Algorithm a = Algorithm::kPeter;
+  constexpr Algorithm a = Algorithm::kKing;
 
   // modify next line to enable/disable encoder
   constexpr bool has_encoder = false;
