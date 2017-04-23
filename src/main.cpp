@@ -282,8 +282,12 @@ int main(void){
 
 				int error=0;
 
+				bool find_left=true;
+				bool find_right=true;
+
 				//locate the base edge
 				//locate the right first
+				/*
 				if(get_pkbit(byte,left_edge[0][0],left_edge[0][1]))
 					while(get_pkbit(byte,++left_edge[0][0],left_edge[0][1]));
 				else
@@ -292,14 +296,42 @@ int main(void){
 					while(get_pkbit(byte,--right_edge[0][0],right_edge[0][1]));
 				else
 					while(!get_pkbit(byte,++right_edge[0][0]+1,right_edge[0][1]));
+					*/
+				const int base_mid_x= (left_edge[0][0]+right_edge[0][0])/2;
+				left_edge[0][0]=base_mid_x;right_edge[0][0]=base_mid_x;
 
+				while(!get_pkbit(byte,--left_edge[0][0]-1,left_edge[0][1])){
+					if(left_edge[0][0]<=0){
+						if(left_edge[0][1]<HEIGHT-1){
+							left_edge[0][1]++;
+							left_edge[0][0]=base_mid_x;
+						}
+						else{
+							find_left=false;
+							find_right=false;
+							left_edge[0][0]=base_mid_x;
+						}
+					}
+				}
+				while(!get_pkbit(byte,++right_edge[0][0]+1,right_edge[0][1])){
+					if(right_edge[0][0]<=0){
+						if(right_edge[0][1]<HEIGHT-1){
+							right_edge[0][1]++;
+							right_edge[0][0]=base_mid_x;
+						}
+						else{
+							find_left=false;
+							find_right=false;
+							right_edge[0][0]=base_mid_x;
+						}
+					}
+				}
 
 				//declare variables for searching in directions
 				const int dx[8]={ 0,-1,-1,-1, 0, 1, 1, 1};
 				const int dy[8]={-1,-1, 0, 1, 1, 1, 0,-1};
 
-				bool find_left=true;
-				bool find_right=true;
+
 
 				//loop for finding edge, maximum find 200 points for each edge
 				for (int count=0;count<400-1;count++){
