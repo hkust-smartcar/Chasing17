@@ -14,6 +14,7 @@
 #include "bluetooth.h"
 #include "car_manager.h"
 #include "algorithm/king/Moving.h"
+//#include "util/mpc.h"
 
 using namespace libsc;
 using namespace libsc::k60;
@@ -77,11 +78,14 @@ void main(bool has_encoder) {
   config.id = 1;
   AlternateMotor motor_right(config);
 
+//  // initialize speed control
+//  Mpc(&encoderA, &motor_left);
+
   motor_left.SetClockwise(true);
   motor_right.SetClockwise(false);
 
-	motor_left.SetPower(350);
-	motor_right.SetPower(350);
+	motor_left.SetPower(250);
+	motor_right.SetPower(250);
 //	servo.SetDegree(StraightDegree);
 //	while (true){}
   /*Servo tuning*/
@@ -117,8 +121,7 @@ void main(bool has_encoder) {
   BTComm bluetooth(bt_config);
 
   camera.Start();
-  while (!camera.IsAvailable()) {
-  }
+  while (!camera.IsAvailable()) {}
   //Initiate a car
   Moving car;
   Timer::TimerInt timeImg = System::Time();  // current execution time
@@ -133,7 +136,6 @@ void main(bool has_encoder) {
   System::DelayMs(1000);
   servo.SetDegree(ServoStraightDegree);
   System::DelayMs(1000);
-
   // main loop
   while (true) {
     //car.Printing4Frames(lcd);
@@ -142,12 +144,12 @@ void main(bool has_encoder) {
       // attempt to refresh the buffer at every 10th millisecond
       if ((timeImg % time_ms) == 0) {
         /*Motor Protection*/
-		encoderA.Update();
-		encoderB.Update();
-		if(encoderA.GetCount() == 0 || encoderB.GetCount() == 0){
-			motor_left.SetPower(0);
-			motor_right.SetPower(0);
-		}
+//		encoderA.Update();
+//		encoderB.Update();
+//		if(encoderA.GetCount() == 0 || encoderB.GetCount() == 0){
+//			motor_left.SetPower(0);
+//			motor_right.SetPower(0);
+//		}
         /*--------------------------------------------------------------record the starting time
         startTime = System::Time();
 ----------------------------------------------------------------*/
@@ -160,7 +162,7 @@ void main(bool has_encoder) {
         car.extract_cam(camBuffer);
 //        car.printCameraImage(camBuffer, lcd);
         camera.UnlockBuffer();
-        car.NormalMovingTestingVersion5(servo, lcd, motor_right, motor_left);
+        car.NormalMovingTestingVersion6(servo, lcd, motor_right, motor_left);
 
 //						if(car.HasCornerTesting()){
 //							led2.Switch();

@@ -64,7 +64,8 @@ class Moving {
   void NormalMovingTestingVersion2(FutabaS3010& servo, St7735r& lcd); /*Add roundabout as well as crossing judgement*/
   void NormalMovingTestingVersion3(FutabaS3010& servo, St7735r& lcd, AlternateMotor& motor_right, AlternateMotor& motor_left); /*Improve the performance of roundabout recognition*/
   void NormalMovingTestingVersion4(FutabaS3010& servo, St7735r& lcd, CarManager::Feature& feature); /*Moving + Feature output for Bluetooth testing*/
-  void NormalMovingTestingVersion5(FutabaS3010& servo, St7735r& lcd, AlternateMotor& motor_right, AlternateMotor& motor_left); /*Speed will change - Target: 1.5m/s*/
+  void NormalMovingTestingVersion5(FutabaS3010& servo, St7735r& lcd, AlternateMotor& motor_right, AlternateMotor& motor_left); /*Speed will change - Target: Back up before vary ServoP*/
+  void NormalMovingTestingVersion6(FutabaS3010& servo, St7735r& lcd, AlternateMotor& motor_right, AlternateMotor& motor_left); /*Speed and Angle change based on ERROR*/
 
   /*Moving function*/
   bool NormalMoving(FutabaS3010& servo); /*Use center point method to control the car*/
