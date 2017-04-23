@@ -8,6 +8,8 @@
  *
  */
 
+#include <cmath>
+
 #include "libbase/k60/mcg.h"
 #include "libsc/system.h"
 #include "libsc/battery_meter.h"
@@ -20,10 +22,6 @@
 #include "algorithm/king/main.h"
 #include "algorithm/leslie/main.h"
 #include "algorithm/peter/main.h"
-
-#include "util/mpc.h"
-
-#include "math.h"
 
 namespace libbase {
 namespace k60 {
@@ -53,23 +51,9 @@ int main() {
   BatteryMeter::Config ConfigBM;
   ConfigBM.voltage_ratio = 0.4;
   BatteryMeter bm(ConfigBM);
-  //Battery Check
+  // Battery Check
+  // TODO(Derppening): Find a better way to halt program when battery is lower than expected
   while (bm.GetVoltage() <= 7.4);
-
-  DirEncoder::Config ConfigEncoder;
-  ConfigEncoder.id = 0;
-  DirEncoder encoder(ConfigEncoder);
-
-  AlternateMotor::Config ConfigMotor;
-  ConfigMotor.id = 1;
-  AlternateMotor motor(ConfigMotor);
-
-  util::Mpc mpc(&encoder, &motor, false);
-
-  JyMcuBt106::Config ConfigBT;
-  ConfigBT.id = 0;
-  ConfigBT.baud_rate = libbase::k60::Uart::Config::BaudRate::k115200;
-  JyMcuBt106 bt(ConfigBT);
 
   // modify next line to switch between algorithms
   constexpr Algorithm a = Algorithm::kKing;
@@ -81,6 +65,7 @@ int main() {
   CarManager::Car c = CarManager::Car::kNew;
 
   CarManager::ServoBounds s = c == CarManager::Car::kOld ? CarManager::old_car : CarManager::new_car;
+
   switch (a) {
     case Algorithm::kKing:
       algorithm::king::main(has_encoder, s);
