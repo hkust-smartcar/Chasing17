@@ -165,6 +165,10 @@ class Mpc {
    */
   int16_t target_speed_ = 0;
   /**
+   * Last encoder value
+   */
+  int32_t last_encoder_val_ = 0;
+  /**
    * Queue of latest ten encoder values
    */
   std::deque<int32_t> last_ten_encoder_val_;
@@ -176,6 +180,10 @@ class Mpc {
    * Cumalative error
    */
   float cum_error_ = 0;
+  /**
+   * Error of previous execution
+   */
+  int32_t prev_error_ = 0;
 
   // Timekeepers
   /**

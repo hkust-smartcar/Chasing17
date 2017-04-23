@@ -29,7 +29,7 @@ namespace util {
  */
 float Mpc::kP = 0.002;
 float Mpc::kI = 0.0001;
-float Mpc::kD = 0;
+float Mpc::kD = 0.000485;
 
 void Mpc::SetTargetSpeed(const int16_t speed, bool commit_now) {
   target_speed_ = speed;
@@ -70,9 +70,12 @@ void Mpc::DoCorrection() {
   }*/
 
   // checks if the motor direction differs from our target
-  if (!HasSameSign(average_encoder_val_, static_cast<int32_t>(curr_speed_))) {
+  /*
+  if (!HasSameSign(last_encoder_val_, static_cast<int32_t>(curr_speed_))) {
     motor_->SetClockwise(!motor_->IsClockwise());
   }
+  */
+  //TODO: Check if the motor direction differs from our target, previous implementation is incorrect.
 
   // get the speed difference and add power linearly.
   // bigger difference = higher power difference
@@ -86,7 +89,8 @@ void Mpc::DoCorrection() {
 
   // add the speed difference in consideration to the rate of change of error
   // greater the change, higher the power
-  motor_->AddPower(static_cast<int16_t>(speed_diff / (last_encoder_duration_ / 1000.0)) * kD);
+  motor_->AddPower(static_cast<int16_t>((speed_diff - prev_error_) / (last_encoder_duration_ / 1000.0)) * kD);
+  prev_error_ = speed_diff;
 
   // hard limit bounds checking
   if (motor_->GetPower() > static_cast<uint16_t>(MotorConstants::kUpperHardLimit)) {
@@ -104,7 +108,8 @@ void Mpc::CommitTargetSpeed() {
 void Mpc::UpdateEncoder() {
   last_encoder_duration_ = GetTimeElapsed();
   encoder_->Update();
-  last_ten_encoder_val_.push_back(encoder_->GetCount() * 1000 / static_cast<int32_t>(last_encoder_duration_));
+  last_encoder_val_ = encoder_->GetCount() * 1000 / static_cast<int32_t>(last_encoder_duration_);
+  last_ten_encoder_val_.push_back(last_encoder_val_);
   while (last_ten_encoder_val_.size() > 10) last_ten_encoder_val_.pop_front();
   average_encoder_val_ = 0;
   for (auto&& m : last_ten_encoder_val_){
