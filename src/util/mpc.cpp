@@ -26,11 +26,11 @@ namespace util {
  * kU = 0.003. Tu = 0.148
  * {0.002222222, 0, 0}
  * {0.002, 0.0001, 0}
- * {0.002, 0.0001, 0.00032} //kinda lags the change a bit
+ * {0.002, 0.0001, 0.00032/0.0005} //kinda lags the change a bit
  */
-float Mpc::kP = 0.002;
-float Mpc::kI = 0.0001;
-float Mpc::kD = 0.0005;//0.000485;
+float Mpc::kP = 0.00198;
+float Mpc::kI = 0.0018;
+float Mpc::kD = 0.00185;//.0001;//0.000485;
 
 void Mpc::SetTargetSpeed(const int16_t speed, bool commit_now) {
   target_speed_ = speed;
@@ -65,10 +65,10 @@ void Mpc::DoCorrection() {
   UpdateEncoder();
 
   // motor protection - turn off motor when motor is on but encoder has null value
-  if (motor_->GetPower() != 0 && last_encoder_val_ == 0) {
-    motor_->SetPower(0);
-    return;
-  }
+//  if (motor_->GetPower() != 0 && last_encoder_val_ == 0) {
+//    motor_->SetPower(0);
+//    return;
+//  }
 
   // get the speed difference and add power linearly.
   // bigger difference = higher power difference

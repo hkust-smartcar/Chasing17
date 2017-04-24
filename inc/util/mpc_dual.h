@@ -55,8 +55,8 @@ class MpcDual final : protected Mpc {
                    libsc::AlternateMotor* motor_right,
                    libsc::DirEncoder* encoder_left,
                    libsc::DirEncoder* encoder_right) {
-    mpc_left_ = util::make_unique<Mpc>(encoder_left, motor_left, false);
-    mpc_right_ = util::make_unique<Mpc>(encoder_right, motor_right, true);
+    mpc_left_ = util::make_unique<Mpc>(encoder_left, motor_left, true);
+    mpc_right_ = util::make_unique<Mpc>(encoder_right, motor_right, false);
   }
 
   ~MpcDual() {
