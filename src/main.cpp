@@ -55,7 +55,8 @@ int main() {
   BatteryMeter::Config ConfigBM;
   ConfigBM.voltage_ratio = 0.4;
   BatteryMeter bm(ConfigBM);
-  //Battery Check
+  // Battery Check
+  // TODO(Derppening): Find a better way to halt program when battery is lower than expected
   while (bm.GetVoltage() <= 7.4);
 
   FutabaS3010::Config ConfigServo;

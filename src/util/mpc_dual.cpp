@@ -24,9 +24,14 @@ void MpcDual::DoCorrection() {
   // calculates the path deviation, then times a factor to account for speed
   // difference between left/right wheels
   // TODO: Reversed implementation of left/right
-  if (servo_diff > 0) {  // turning right
+  if (servo_diff > 0) {  // turning left
     uint16_t motor_speed_diff = servo_diff - (s.kCenter - s.kLeftBound);
     motor_speed_diff *= (82 / 100.0);
+    mpc_right_->AddToTargetSpeed(motor_speed_diff, false);
+    mpc_left_->AddToTargetSpeed(-motor_speed_diff, false);
+  } else if (servo_diff < 0) {  // turning right
+    uint16_t motor_speed_diff = servo_diff - (s.kRightBound - s.kCenter);
+    motor_speed_diff *= (82 / 100);
     mpc_left_->AddToTargetSpeed(motor_speed_diff, false);
     mpc_right_->AddToTargetSpeed(-motor_speed_diff, false);
   } else if (servo_diff < 0) {  // turning left
