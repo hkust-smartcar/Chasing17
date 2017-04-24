@@ -1,0 +1,10 @@
+#ifndef CHASING17_ALGORITHM_SPEED_CTRL
+#define CHASING17_ALGORITHM_SPEED_CTRL
+
+namespace algorithm{
+
+void SpeedCtrl();
+
+}
+
+#endif //CHASING17_ALGORITHM_SPEED_CTRL

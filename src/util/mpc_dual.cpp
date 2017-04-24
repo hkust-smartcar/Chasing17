@@ -31,14 +31,9 @@ void MpcDual::DoCorrection() {
     mpc_left_->AddToTargetSpeed(-motor_speed_diff, false);
   } else if (servo_diff < 0) {  // turning right
     uint16_t motor_speed_diff = servo_diff - (s.kRightBound - s.kCenter);
-    motor_speed_diff *= (82 / 100);
+    motor_speed_diff *= (82 / 100.0);
     mpc_left_->AddToTargetSpeed(motor_speed_diff, false);
     mpc_right_->AddToTargetSpeed(-motor_speed_diff, false);
-  } else if (servo_diff < 0) {  // turning left
-    uint16_t motor_speed_diff = servo_diff - (s.kRightBound - s.kCenter);
-    motor_speed_diff *= (82 / 100.0);
-    mpc_right_->AddToTargetSpeed(motor_speed_diff, false);
-    mpc_left_->AddToTargetSpeed(-motor_speed_diff, false);
   }
 
   mpc_left_->DoCorrection();

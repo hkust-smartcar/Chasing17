@@ -27,10 +27,11 @@ namespace util {
  * {0.002222222, 0, 0}
  * {0.002, 0.0001, 0}
  * {0.002, 0.0001, 0.00032/0.0005} //kinda lags the change a bit
+ * {0.00198, 0.002, 0.00035} //seems to be working quite well, only tiny fluctuations
  */
 float Mpc::kP = 0.00198;
-float Mpc::kI = 0.0018;
-float Mpc::kD = 0.00185;//.0001;//0.000485;
+float Mpc::kI = 0.002;
+float Mpc::kD = 0.00035;
 
 void Mpc::SetTargetSpeed(const int16_t speed, bool commit_now) {
   target_speed_ = speed;
