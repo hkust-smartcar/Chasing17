@@ -39,7 +39,7 @@ void SpeedCtrl(){
 //  ConfigMgr.epc = std::move(mpc);
   CarManager::Init(std::move(ConfigMgr));
 
-  CarManager::SetTargetAngle(CarManager::old_car.kCenter);
+  CarManager::SetTargetAngle(CarManager::old_car.kLeftBound);
 
   k60::JyMcuBt106::Config ConfigBT;
   ConfigBT.id = 0;

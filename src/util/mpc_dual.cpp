@@ -19,21 +19,21 @@ void MpcDual::DoCorrection() {
   CarManager::ServoBounds s = CarManager::GetServoBounds();
 
   uint16_t servo_angle = CarManager::GetServoDeg();
-  int16_t servo_diff = servo_angle - s.kCenter;
+  int16_t servo_diff = s.kCenter - servo_angle;
 
   // calculates the path deviation, then times a factor to account for speed
   // difference between left/right wheels
   // TODO: Reversed implementation of left/right
   if (servo_diff > 0) {  // turning left
-    float motor_speed_diff = servo_diff / (s.kCenter - s.kLeftBound);
-    motor_speed_diff *= (82 / 100.0);
-    mpc_right_->AddToTargetSpeed(motor_speed_diff, false);
-    mpc_left_->AddToTargetSpeed(-motor_speed_diff, false);
+    float motor_speed_diff =  servo_diff / (s.kCenter - s.kLeftBound);
+    motor_speed_diff *= 0.142;
+    mpc_right_->AddToTargetSpeed(mpc_right_->GetCurrentSpeed() * motor_speed_diff, false);
+    mpc_left_->AddToTargetSpeed(mpc_left_->GetCurrentSpeed() * -motor_speed_diff, false);
   } else if (servo_diff < 0) {  // turning right
     float motor_speed_diff = servo_diff / (s.kRightBound - s.kCenter);
-    motor_speed_diff *= (82 / 100.0);
-    mpc_left_->AddToTargetSpeed(motor_speed_diff, false);
-    mpc_right_->AddToTargetSpeed(-motor_speed_diff, false);
+    motor_speed_diff *= 0.142;
+    mpc_left_->AddToTargetSpeed(mpc_left_->GetCurrentSpeed() * motor_speed_diff, false);
+    mpc_right_->AddToTargetSpeed(mpc_right_->GetCurrentSpeed() * -motor_speed_diff, false);
   }
 
   mpc_left_->DoCorrection();
