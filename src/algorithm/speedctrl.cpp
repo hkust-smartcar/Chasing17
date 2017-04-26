@@ -12,9 +12,9 @@
 
 using namespace libsc;
 
-namespace algorithm{
+namespace algorithm {
 
-void SpeedCtrl(){
+void SpeedCtrl() {
   FutabaS3010::Config ConfigServo;
   ConfigServo.id = 0;
   std::unique_ptr<FutabaS3010> servo(new FutabaS3010(ConfigServo));
@@ -31,15 +31,24 @@ void SpeedCtrl(){
   ConfigMotor.id = 1;
   AlternateMotor motor1(ConfigMotor);
 
+  St7735r::Config lcd_config;
+  St7735r lcd(lcd_config);
+
+  LcdConsole::Config console_config;
+  console_config.lcd = &lcd;
+  LcdConsole console(console_config);
+
   util::MpcDual mpc(&motor0, &motor1, &encoder0, &encoder1);
+  util::MpcDualDebug mpc_d(&mpc);
+  mpc.SetTargetSpeed(6000);
 
   CarManager::Config ConfigMgr;
   ConfigMgr.servo = std::move(servo);
-  ConfigMgr.car = CarManager::Car::kOld;
+  ConfigMgr.car = CarManager::Car::kNew;
 //  ConfigMgr.epc = std::move(mpc);
   CarManager::Init(std::move(ConfigMgr));
 
-  CarManager::SetTargetAngle(CarManager::old_car.kLeftBound);
+  CarManager::SetTargetAngle(CarManager::new_car.kCenter);
 
   k60::JyMcuBt106::Config ConfigBT;
   ConfigBT.id = 0;
@@ -51,27 +60,18 @@ void SpeedCtrl(){
 
   char speedChar[15] = {};
 
-  while (1){
-	  while (time_img != System::Time()){
-		  time_img = System::Time();
-		  if (time_img % 5 == 0){
-//			  encoder.Update();
-//			  int t = encoder.GetCount();
-//			  mpc.DoCorrection();
-		  }
-		  if (time_img % 15 == 6){
-			  CarManager::UpdateParameters();
-			  int32_t s = mpc.GetCurrentSpeed(util::MpcDual::MotorSide::kRight);
-			  int32_t de = 6000;
-			  mpc.SetTargetSpeed(de,  true);
-			  t += 0.02;
-			  sprintf(speedChar, "%.1f,%d,%.1f=%.1f\n", 1.0, s, -6000.0, 1.0);
-			  std::string speedStr = speedChar;
-			  const Byte speedByte = 85;
-			  bt.SendBuffer(&speedByte, 1);
-			  bt.SendStr(speedStr);
-		  }
-	  }
+  while (1) {
+    while (time_img != System::Time()) {
+      time_img = System::Time();
+      if (time_img % 10 == 0) {
+        CarManager::UpdateParameters();
+
+        mpc.SetTargetSpeed(6000);
+
+        mpc_d.OutputEncoderMotorValues(&console, util::MpcDual::MotorSide::kBoth);
+//        mpc_d.OutputLastEncoderValues(&console, util::MpcDual::MotorSide::kBoth);
+      }
+    }
   }
 }
 }

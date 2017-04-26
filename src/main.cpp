@@ -56,10 +56,10 @@ int main() {
   constexpr Algorithm a = Algorithm::kSpeedControl;
 
   // modify next line to enable/disable encoder
-  constexpr bool has_encoder = false;
+  constexpr bool has_encoder = true;
 
   // modify next line to change which car we're working with
-  CarManager::Car c = CarManager::Car::kOld;
+  CarManager::Car c = CarManager::Car::kNew;
 
   CarManager::ServoBounds s = c == CarManager::Car::kOld ? CarManager::old_car : CarManager::new_car;
   switch (a) {
