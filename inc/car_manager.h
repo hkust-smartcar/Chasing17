@@ -79,6 +79,9 @@ class CarManager final {
     kBoth
   };
 
+  /**
+   * Enum of car identity, i.e. whether it is old or new
+   */
   enum struct Car : bool {
     kOld,
     kNew

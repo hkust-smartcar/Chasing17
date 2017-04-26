@@ -5,7 +5,7 @@
 #include "libsc/k60/jy_mcu_bt_106.h"
 #include "libsc/futaba_s3010.h"
 
-#include "util/mpc_dual.h"
+#include "util/mpc.h"
 #include "util/util.h"
 #include "car_manager.h"
 #include "algorithm/speedctrl.h"
@@ -31,15 +31,7 @@ void SpeedCtrl(){
   ConfigMotor.id = 1;
   AlternateMotor motor1(ConfigMotor);
 
-  util::MpcDual mpc(&motor0, &motor1, &encoder0, &encoder1);
-
-  CarManager::Config ConfigMgr;
-  ConfigMgr.servo = std::move(servo);
-  ConfigMgr.car = CarManager::Car::kOld;
-//  ConfigMgr.epc = std::move(mpc);
-  CarManager::Init(std::move(ConfigMgr));
-
-  CarManager::SetTargetAngle(CarManager::old_car.kLeftBound);
+  util::Mpc mpc(&encoder0, &motor0, true);
 
   k60::JyMcuBt106::Config ConfigBT;
   ConfigBT.id = 0;
@@ -61,11 +53,11 @@ void SpeedCtrl(){
 		  }
 		  if (time_img % 15 == 6){
 			  CarManager::UpdateParameters();
-			  int32_t s = mpc.GetCurrentSpeed(util::MpcDual::MotorSide::kRight);
+			  int32_t s = mpc.GetCurrentSpeed();
 			  int32_t de = 6000;
 			  mpc.SetTargetSpeed(de,  true);
 			  t += 0.02;
-			  sprintf(speedChar, "%.1f,%d,%.1f=%.1f\n", 1.0, s, -6000.0, 1.0);
+			  sprintf(speedChar, "%.1f,%d,%.1f=%.1f\n", 1.0, s, 6000.0, 1.0);
 			  std::string speedStr = speedChar;
 			  const Byte speedByte = 85;
 			  bt.SendBuffer(&speedByte, 1);
