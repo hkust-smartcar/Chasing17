@@ -117,6 +117,8 @@ class MpcDual final : protected Mpc {
    */
   void DoCorrection();
 
+  float motor_speed_diff_;
+
  private:
   std::unique_ptr<Mpc> mpc_left_;
   std::unique_ptr<Mpc> mpc_right_;
