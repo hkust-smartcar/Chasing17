@@ -50,9 +50,11 @@ const int dy[8]={-1,-1, 0, 1, 1, 1, 0,-1};
  * @param (x,y): coordinate system in which bottom left corner := (0, 0)
  * @return filtered bit
  */
-bool getFilteredBit(const Byte* buff, int x, int y){
-	if (x<0 || x>=CameraSize.w-1 || y < 0 || y >= CameraSize.h-1) return true; // Out of bound = black
+int getFilteredBit(const Byte* buff, int x, int y){
+	if (x<0 || x>CameraSize.w-1 || y < 0 || y > CameraSize.h-1) return -1; // Out of bound = black
 	y = CameraSize.h - 1 - y; // set y = 0 at bottom
+
+	return buff[y*CameraSize.w/8+x/8] & 0x80>>x%8;
 
 	// Median Filter
 	int count=0,total=0;
@@ -64,7 +66,7 @@ bool getFilteredBit(const Byte* buff, int x, int y){
 		}
 	}
 	// Median Filter
-	return count>total/2;
+	return (count>total/2) ? 1 : 0;
 }
 
 /**
@@ -86,10 +88,10 @@ int FindDirection(int j, int d){
  */
 void Capture(){
 	bool failed, found_left, found_right;
-	int left_x, left_y;
-	int right_x, right_y;
+	int left_x = -1, left_y = -1;
+	int right_x = -1, right_y = -1;
 	do{
-		failed = false; found_left = false;
+		failed = false; found_left = false, found_right = false;
 //		while(!pCamera->IsAvailable());
 		CameraBuf = pCamera->LockBuffer();
 		pCamera->UnlockBuffer();
@@ -97,7 +99,7 @@ void Capture(){
 
 		//Search horizontally
 		for (int i = CameraSize.w/2; i >= 0; i--){
-			if (getFilteredBit(CameraBuf, i, 0) == 0){
+			if (getFilteredBit(CameraBuf, i, 0) == 1){
 				left_x = i;
 				left_y = 0;
 				found_left = true;
@@ -108,8 +110,8 @@ void Capture(){
 
 		// Search vertically
 		if (!found_left){
-			for (int i = 0; i < CameraSize.h - 1; i ++){
-				if (getFilteredBit(CameraBuf, 0, i) == 0){
+			for (int i = 0; i < CameraSize.h; i ++){
+				if (getFilteredBit(CameraBuf, 0, i) == 1){
 					left_y = i;
 					left_x = 0;
 					found_left = true;
@@ -118,36 +120,39 @@ void Capture(){
 			}
 		}
 
-		if (!found_left) failed = true;
+//		if (!found_left) failed = true;
 
-		if (!failed){ //right
-			//Search horizontally
-			for (int i = CameraSize.w/2; i < CameraSize.w - 1; i++){
-				if (getFilteredBit(CameraBuf, i, 0) == 0){
-					right_x = i;
-					right_y = 0;
+		//Search horizontally
+		for (int i = CameraSize.w/2; i < CameraSize.w; i++){
+			if (getFilteredBit(CameraBuf, i, 0) == 1){
+				right_x = i;
+				right_y = 0;
+				found_right = true;
+				break;
+			}
+		}
+		if (!found_right){
+			//Search vertically
+			for (int i = 0; i < CameraSize.h; i++){
+				if (getFilteredBit(CameraBuf, CameraSize.w - 1, i) == 1){
+					right_y = i;
+					right_x = CameraSize.w-1;
 					found_right = true;
 					break;
 				}
 			}
-			if (!found_right){
-				//Search vertically
-				for (int i = 0; i < CameraSize.h - 1; i++){
-					if (getFilteredBit(CameraBuf, CameraSize.w - 1, i) == 0){
-						right_y = i;
-						right_x = CameraSize.w-1;
-						found_right = true;
-						break;
-					}
-				}
-			}
 		}
-		if (!found_right) failed = true;
+//		if (!found_right) failed = true;
 		if (left_x == right_x && left_y == right_y) failed = true;
 	} while (failed);
-	left_edge.push(left_x, left_y);
-	right_edge.push(right_x, right_y);
-
+	if (!failed){
+		if (found_right){
+			left_edge.push(left_x, left_y);
+		}
+		if (found_left){
+			right_edge.push(right_x, right_y);
+		}
+	}
 }
 
 /**
@@ -198,7 +203,7 @@ void FindEdges(){
  */
 void PrintEdge(Edges path){
 	for (auto&& entry : path.points){
-		pLcd->SetRegion(Lcd::Rect(entry.first, CameraSize.h - entry.second - 1, 1, 1));
+		pLcd->SetRegion(Lcd::Rect(entry.first, CameraSize.h - entry.second - 1, 2, 2));
 		pLcd->FillColor(Lcd::kRed);
 	}
 
@@ -292,7 +297,7 @@ void main(CarManager::ServoBounds servo_bounds){
 			if (time_img % 50 == 0){
 				Capture(); //Capture until two base points are identified
 				PrintImage(); //Print LCD
-				FindEdges();
+//				FindEdges();
 				PrintEdge(left_edge);
 				PrintEdge(right_edge);
 				IdentifyFeat();
