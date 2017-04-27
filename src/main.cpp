@@ -18,6 +18,7 @@
 #include "algorithm/leslie/main.h"
 #include "algorithm/peter/main.h"
 #include "algorithm/speedctrl.h"
+#include "algorithm/optimal/main.h"
 
 namespace libbase {
 namespace k60 {
@@ -39,7 +40,8 @@ enum struct Algorithm {
   kReceiver,
   kBluetoothTest,
   kKingReceive,
-  kSpeedControl
+  kSpeedControl,
+  kOptimal
 };
 
 int main() {
@@ -53,7 +55,7 @@ int main() {
   while (bm.GetVoltage() <= 7.4);
 
   // modify next line to switch between algorithms
-  constexpr Algorithm a = Algorithm::kSpeedControl;
+  constexpr Algorithm a = Algorithm::kOptimal;
 
   // modify next line to enable/disable encoder
   constexpr bool has_encoder = true;
@@ -83,6 +85,9 @@ int main() {
       break;
     case Algorithm::kSpeedControl:
       algorithm::SpeedCtrl();
+      break;
+    case Algorithm::kOptimal:
+      algorithm::optimal::main(s);
     default:
       // not handled
       break;

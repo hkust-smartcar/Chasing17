@@ -79,21 +79,21 @@ void MpcDualDebug::OutputEncoderMotorValues(libsc::LcdConsole* console, MpcDual:
   console->SetCursorRow(0);
   std::string s = "";
   if (side == MpcDual::MotorSide::kLeft || side == MpcDual::MotorSide::kBoth) {
-    s += "L: " + std::to_string(mpc_dual_->mpc_left_->last_encoder_val_) +
-        " " + std::to_string(mpc_dual_->mpc_left_->motor_->GetPower());
+//    s += "L: " + std::to_string(mpc_dual_->mpc_left_->last_encoder_val_) +
+//        " " + std::to_string(mpc_dual_->mpc_left_->motor_->GetPower());
   }
   if (side == MpcDual::MotorSide::kRight || side == MpcDual::MotorSide::kBoth) {
     if (s != "") { s += "\n"; }
-    s += "R: " + std::to_string(mpc_dual_->mpc_right_->last_encoder_val_) +
-        " " + std::to_string(mpc_dual_->mpc_right_->motor_->GetPower());
+//    s += "R: " + std::to_string(mpc_dual_->mpc_right_->last_encoder_val_) +
+//        " " + std::to_string(mpc_dual_->mpc_right_->motor_->GetPower());
   }
   if (s != "") { s += "\n"; }
   console->WriteString(s.c_str());
   console->SetCursorRow(8);
-  s = "L target: " + std::to_string(mpc_dual_->mpc_left_->GetTargetSpeed()) + "\n";
+//  s = "L target: " + std::to_string(mpc_dual_->mpc_left_->GetTargetSpeed()) + "\n";
   console->WriteString(s.c_str());
   console->SetCursorRow(9);
-  s = "R target: " + std::to_string(mpc_dual_->mpc_right_->GetTargetSpeed()) + "\n";
+//  s = "R target: " + std::to_string(mpc_dual_->mpc_right_->GetTargetSpeed()) + "\n";
   console->WriteString(s.c_str());
 }
 
@@ -101,13 +101,13 @@ void MpcDualDebug::OutputLastEncoderValues(libsc::LcdConsole* console, MpcDual::
   console->SetCursorRow(3);
   std::string s = "";
   if (side == MpcDual::MotorSide::kLeft || side == MpcDual::MotorSide::kBoth) {
-    s += "L: " + std::to_string(mpc_dual_->mpc_left_->last_encoder_duration_) +
-        " " + std::to_string(mpc_dual_->mpc_left_->last_encoder_val_);
+//    s += "L: " + std::to_string(mpc_dual_->mpc_left_->last_encoder_duration_) +
+//        " " + std::to_string(mpc_dual_->mpc_left_->last_encoder_val_);
   }
   if (side == MpcDual::MotorSide::kRight || side == MpcDual::MotorSide::kBoth) {
     if (s != "") { s += "\n"; }
-    s += "R: " + std::to_string(mpc_dual_->mpc_right_->last_encoder_duration_) +
-        " " + std::to_string(mpc_dual_->mpc_right_->last_encoder_val_);
+//    s += "R: " + std::to_string(mpc_dual_->mpc_right_->last_encoder_duration_) +
+//        " " + std::to_string(mpc_dual_->mpc_right_->last_encoder_val_);
   }
   if (s != "") { s += "\n"; }
   console->WriteString(s.c_str());
