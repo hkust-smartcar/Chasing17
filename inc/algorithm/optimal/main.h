@@ -1,3 +1,15 @@
+/*
+ * main.h
+ *
+ * Copyright (c) 2014-2017 HKUST SmartCar Team
+ * Refer to LICENSE for details
+ *
+ * Author: Peter Tse (mcreng)
+ *
+ * Optimal Path Algorithm Header File
+ *
+ */
+
 #include <vector>
 #include <utility>
 #include <cstdint>
@@ -11,12 +23,23 @@ namespace algorithm{
 namespace optimal{
 void main(CarManager::ServoBounds);
 
-typedef struct {
+/**
+ * Edges struct
+ *
+ * An type implementation for storage of Edges
+ * @member points Vector storing the edges sequentially
+ * @member push(int, int) Push a std::pair<int, int> into the vector points
+ * @member size() Return the size of vector points
+ * @member insert(int, int, int) Insert a std::pair<int, int> into some position of vector points
+ * @member insert(int, Edges) Insert an Edges type into some position of vector points
+ */
+struct Edges {
 	std::vector<std::pair<int, int>> points;
 	inline void push(int x, int y) {points.push_back(std::make_pair(x, y));}
 	inline int size() {return points.size();}
 	inline void insert(int pos, int x, int y) {points.emplace(points.begin() + pos, std::make_pair(x,y));}
-} Edges;
+	inline void insert(int pos, Edges edge) {points.insert(points.begin() + pos, edge.points.begin(), edge.points.end());}
+};
 
 struct {
 	uint8_t w = 80, h = 60;

@@ -88,6 +88,7 @@ int main() {
       break;
     case Algorithm::kOptimal:
       algorithm::optimal::main(s);
+      break;
     default:
       // not handled
       break;
