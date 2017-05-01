@@ -149,8 +149,13 @@ void PrintImage(){
  * @brief Find edges
  *
  * Algorithm:
- * 1. Find up to 59 points, would consider boundary as a part of the edge if necessary
- * 2. TODO: Consider how to stop the edges to trespass
+ * 1. Find up to (height-1) points, would consider boundary as a part of the edge if necessary
+ * 2. Fix the trespassing issues (i.e. Left edge got into right edge's way etc)
+ *  - It seems to only happen when it is in a turn
+ *  - For left edge, if the edge is suddenly turning right at (x, y), check if (width/2, y ~ height-1) consists mostly black
+ *  - If so, it is probably a turn; otherwise, it is probably a cross road
+ *  - If it is a turn, do not allow the edge to turn; otherwise it is fine
+ *  - Do the same (but mirrored) actions to right edge
  */
 bool FindEdges(){
 	int error_cnt = -1;
@@ -201,7 +206,7 @@ bool FindEdges(){
 					}
 				}
 			}
-		} while (left_edge.points.size() <= 59 && flag_break == false);
+		} while (left_edge.points.size() <= CameraSize.h-1 && flag_break == false);
 	}
 
 	error_cnt = -1;
@@ -252,7 +257,7 @@ bool FindEdges(){
 					}
 				}
 			}
-		} while (right_edge.points.size() <= 59 && flag_break == false);
+		} while (right_edge.points.size() <= CameraSize.h-1 && flag_break == false);
 	}
 	return true;
 }
@@ -280,6 +285,8 @@ CarManager::Feature IdentifyFeat(){
 /**
  * Path generation
  * 1. Weighted average path ("Center line")
+ *  - Would now only work when both (real) left edge and right edge are within camera
+ *  - Otherwise, the path may go out of edge
  * 2. TODO (mcreng): Naive psuedo-optimal path ("Curve fitting")
  */
 void GenPath(){
