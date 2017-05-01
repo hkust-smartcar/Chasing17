@@ -40,6 +40,10 @@ struct Edges {
 	inline int size() {return points.size();}
 	inline void insert(int pos, int x, int y) {points.emplace(points.begin() + pos, std::make_pair(x,y));}
 	inline void insert(int pos, Edges edge) {points.insert(points.begin() + pos, edge.points.begin(), edge.points.end());}
+	inline Edges reverse() {
+		std::reverse(this->points.begin(), this->points.end());
+		return *this;
+	}
 };
 
 struct {
