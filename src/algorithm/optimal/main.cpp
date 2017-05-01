@@ -53,10 +53,10 @@ const int dy[8]={-1,-1, 0, 1, 1, 1, 0,-1};
  * @return filtered bit
  */
 int getFilteredBit(const Byte* buff, int x, int y){
-	if (x<0 || x>CameraSize.w-1 || y < 0 || y > CameraSize.h-1) return 1; //-1; // Out of bound = black
+	if (x<=0 || x>CameraSize.w-1 || y <= 0 || y > CameraSize.h-1) return -1; //-1; // Out of bound = black
 	y = CameraSize.h - 1 - y; // set y = 0 at bottom
 
-	return buff[y*CameraSize.w/8 + x/8] >> (7 - x) & 1;	//buff[y*CameraSize.w/8+x/8] & 0x80>>x%8;
+	//return buff[y*CameraSize.w/8 + x/8] >> (7 - (x%8)) & 1;	//buff[y*CameraSize.w/8+x/8] & 0x80>>x%8;
 
 	// Median Filter
 	int count=0,total=0;
@@ -64,7 +64,7 @@ int getFilteredBit(const Byte* buff, int x, int y){
 	for(int i=max(0,x-1); i<min(CameraSize.w-1,x+1); i++){
 		for(int j=max(0,y-1); j<min(CameraSize.h-1,y+1); j++){
 			total++;
-			count+=buff[j*CameraSize.w/8 + i/8] >> (7 - i) & 1;
+			count+=buff[j*CameraSize.w/8 + i/8] >> (7 - (i%8)) & 1;
 		}
 	}
 	// Median Filter
@@ -110,10 +110,10 @@ void Capture(){
 		pCamera->UnlockBuffer();
 
 		//Search horizontally
-		for (int i = CameraSize.w/2; i >= 0; i--){
-			if (getFilteredBit(CameraBuf, i, 0) == 1){
+		for (int i = CameraSize.w/2; i > 0; i--){ //TODO: Try to understand why at (0,0) it always return 1
+			if (getFilteredBit(CameraBuf, i, 1) == 1){
 				left_x = i + 1;
-				left_y = 0;
+				left_y = 1;
 				found_left = true;
 				break;
 			}
@@ -121,10 +121,10 @@ void Capture(){
 
 		// Search vertically
 		if (!found_left){
-			for (int i = 0; i < CameraSize.h; i ++){
-				if (getFilteredBit(CameraBuf, 0, i) == 1){
+			for (int i = 1; i < CameraSize.h; i ++){
+				if (getFilteredBit(CameraBuf, 1, i) == 1){
 					left_y = i - 1;
-					left_x = 0;
+					left_x = 1;
 					found_left = true;
 					break;
 				}
@@ -133,9 +133,9 @@ void Capture(){
 
 		//Search horizontally
 		for (int i = CameraSize.w/2; i < CameraSize.w; i++){
-			if (getFilteredBit(CameraBuf, i, 0) == 1){
+			if (getFilteredBit(CameraBuf, i, 1) == 1){
 				right_x = i - 1;
-				right_y = 0;
+				right_y = 1;
 				found_right = true;
 				break;
 			}
@@ -191,7 +191,7 @@ void FindEdges(){
 
 			for (int i=left_from+1; i<left_from+9;i++){
 				const int j=i%8;
-
+				int size = left_edge.size();
 				if(!getFilteredBit(CameraBuf, left_edge.points.back().first + dx[j] , left_edge.points.back().second + dy[j])){//if the point is white, it is a new point of edge
 					left_edge.push(left_edge.points.back().first + dx[j], left_edge.points.back().second + dy[j]);
 					left_from=j+4;
@@ -203,24 +203,26 @@ void FindEdges(){
 
 			if (a.second == CameraSize.h - 1){
 				left_ends = 1;
-			} else if (a.first == 0){
+			} else if (a.first == 1){
 				left_ends = 0;
 			} else if (a.first == CameraSize.w - 1){
 				left_ends = 2;
 			};
 
-		} while (left_ends != -1);
+		} while (left_ends == -1);
 	}
 
 	//Find right edge until hitting boundary
 	if (right_edge.points.size() != 0){
 		do {
 
-			for (int i=right_from+1; i<right_from+9;i++){
+			for (int i=right_from+7; i>=right_from;i--){
 				const int j=i%8;
 
+				int size = right_edge.size();
+
 				if(!getFilteredBit(CameraBuf, right_edge.points.back().first + dx[j] , right_edge.points.back().second + dy[j])){//if the point is white, it is a new point of edge
-					left_edge.push(right_edge.points.back().first + dx[j], right_edge.points.back().second + dy[j]);
+					right_edge.push(right_edge.points.back().first + dx[j], right_edge.points.back().second + dy[j]);
 					right_from=j+4;
 					break;
 				}
@@ -230,17 +232,20 @@ void FindEdges(){
 
 			if (a.second == CameraSize.h - 1){
 				right_ends = 1;
-			} else if (a.first == 0){
+			} else if (a.first == 1){
 				right_ends = 0;
 			} else if (a.first == CameraSize.w - 1){
 				right_ends = 2;
 			};
 
-		} while (right_ends != -1);
+		} while (right_ends == -1);
 	}
+	return;
+	if (left_ends == 0 && right_ends == 2) return;
 
-	if (left_ends == right_ends && ((left_ends == 0) || (left_ends == CameraSize.w - 1))){
-		return; //Halt if both ends at right or both ends at left
+
+	if (left_ends == right_ends){
+		return; //Halt if both ends at the same boundary
 	} else {
 
 		//Find left edge until hitting top edge
@@ -269,7 +274,7 @@ void FindEdges(){
 		if (right_edge.points.size() != 0){
 			while (right_ends != 1){
 
-				for (int i=right_from+1; i<right_from+9;i++){
+				for (int i=right_from+7; i>=right_from;i--){
 					const int j=i%8;
 
 					if(!getFilteredBit(CameraBuf, right_edge.points.back().first + dx[j] , right_edge.points.back().second + dy[j])){//if the point is white, it is a new point of edge
@@ -400,15 +405,15 @@ void main(CarManager::ServoBounds servo_bounds){
 	while (true){
 		while (time_img != System::Time()){
 			time_img = System::Time();
-			if (time_img % 50 == 0){
+			if (time_img % 100 == 0){
 				Capture(); //Capture until two base points are identified
 				PrintImage(); //Print LCD
-//				FindEdges(); //Find edges
+				FindEdges(); //Find edges
 				PrintEdge(left_edge, Lcd::kRed); //Print left_edge
 				PrintEdge(right_edge, Lcd::kBlue); //Print right_edge
-				CarManager::Feature feature = IdentifyFeat(); //Idetnify feature
-				GenPath(); //Generate path
-				PrintEdge(path, Lcd::kGreen); //Print path
+//				CarManager::Feature feature = IdentifyFeat(); //Idetnify feature
+//				GenPath(); //Generate path
+//				PrintEdge(path, Lcd::kGreen); //Print path
 				led0.Switch();
 			}
 		}
