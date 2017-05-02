@@ -2066,9 +2066,9 @@ void Moving::ServoAngleTuning(FutabaS3010& servo, St7735r& lcd){
 					ServoAngle -=10;
 				}
 				servo.SetDegree(ServoAngle);
-				string s = "Angle: " + to_string(ServoAngle) + "\n";
+//				string s = "Angle: " + to_string(ServoAngle) + "\n";
 				console.SetCursorRow(0);
-				console.WriteString(s.c_str());
+//				console.WriteString(s.c_str());
 			}
 		}
 	}

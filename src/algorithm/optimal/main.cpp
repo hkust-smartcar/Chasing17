@@ -35,6 +35,8 @@ namespace optimal{
 Edges left_edge;
 Edges right_edge;
 Edges path;
+Corners left_corners;
+Corners right_corners;
 const Byte* CameraBuf;
 k60::Ov7725* pCamera = nullptr;
 St7735r* pLcd = nullptr;
@@ -190,13 +192,13 @@ bool FindEdges(){
 			} else {
 				for (int i = 7; i >= 0; i--){
 					if(getFilteredBit(CameraBuf, prev_x+dx[i], prev_y+dy[i]) == 0){
-						if (i == 6 && prev_x == 1){
+						if ((i == 6 || i == 5 || i == 7) && prev_x == 1){
 							//need to check for trespassing
 							int cnt_black = 0;
 							for (int j = prev_y; j < CameraSize.h; j++){
 								cnt_black += getFilteredBit(CameraBuf, CameraSize.w/2, j);
 							}
-							if (cnt_black > 0.8 * (CameraSize.h - prev_y)){
+							if (cnt_black > 0.5 * (CameraSize.h - prev_y)){
 								flag_break = true;
 								break;
 							}
@@ -206,6 +208,13 @@ bool FindEdges(){
 					}
 				}
 			}
+		if (left_edge.points.back() == left_edge.points[left_edge.size() - 2]){ //the edge start backtrack
+			left_edge.points.pop_back();
+			flag_break = true;
+		}
+		if (left_edge.points.back().second == CameraSize.h - 1){ //the edge reaches the top
+			flag_break = true;
+		}
 		} while (left_edge.points.size() <= CameraSize.h-1 && flag_break == false);
 	}
 
@@ -241,13 +250,13 @@ bool FindEdges(){
 				for (int i = 0; i < 8; i++){
 
 					if(getFilteredBit(CameraBuf, prev_x+dx[i], prev_y+dy[i]) == 0){
-						if (i == 2 && prev_x == CameraSize.w-1){
+						if ((i == 2 || i == 1 || i == 3) && prev_x == CameraSize.w-1){
 							//need to check for trespassing
 							int cnt_black = 0;
 							for (int j = prev_y; j < CameraSize.h; j++){
 								cnt_black += getFilteredBit(CameraBuf, CameraSize.w/2, j);
 							}
-							if (cnt_black > 0.8 * (CameraSize.h - prev_y)){
+							if (cnt_black > 0.5 * (CameraSize.h - prev_y)){
 								flag_break = true;
 								break;
 							}
@@ -256,6 +265,15 @@ bool FindEdges(){
 						break;
 					}
 				}
+			}
+
+			if (right_edge.points.back() == right_edge.points[right_edge.size() - 2]){ //the edge start backtrack
+				right_edge.points.pop_back();
+				flag_break = true;
+			}
+
+			if (right_edge.points.back().second == CameraSize.h - 1){ //the edge reaches the top
+				flag_break = true;
 			}
 		} while (right_edge.points.size() <= CameraSize.h-1 && flag_break == false);
 	}
@@ -271,6 +289,16 @@ void PrintEdge(Edges path, uint16_t color){
 		pLcd->FillColor(color);
 	}
 
+}
+
+/**
+ * @brief Print corners
+ */
+void PrintCorner(Corners corners, uint16_t color){
+	for (auto&& entry : corners.points){
+		pLcd->SetRegion(Lcd::Rect(entry.first, CameraSize.h - entry.second - 1, 2, 2));
+		pLcd->FillColor(color);
+	}
 }
 
 /**
@@ -355,7 +383,7 @@ void main(CarManager::ServoBounds servo_bounds){
 	k60::JyMcuBt106 bt(ConfigBT);
 
 	St7735r::Config lcdConfig;
-	lcdConfig.is_revert = true;
+	lcdConfig.is_revert = false;
 	St7735r lcd(lcdConfig);
 	pLcd = &lcd;
 
@@ -386,6 +414,8 @@ void main(CarManager::ServoBounds servo_bounds){
 				FindEdges(); //Find edges
 				PrintEdge(left_edge, Lcd::kRed); //Print left_edge
 				PrintEdge(right_edge, Lcd::kBlue); //Print right_edge
+				PrintCorner(left_corners, Lcd::kCyan); //Print left_corner
+				PrintCorner(right_corners, Lcd::kPurple); //Print right_corner
 //				CarManager::Feature feature = IdentifyFeat(); //Idetnify feature
 				GenPath(); //Generate path
 				PrintEdge(path, Lcd::kGreen); //Print path
