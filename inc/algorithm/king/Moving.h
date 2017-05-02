@@ -62,21 +62,14 @@ class Moving {
 
   Status RoadSituation(); /*Update Left_edge, Right_edge and Center, return current Status */
   bool HasCornerTesting();
-<<<<<<< HEAD
-  void NormalMovingTestingVersion1(FutabaS3010& servo, St7735r& lcd); /*Move based on midpoint only*/
-  void NormalMovingTestingVersion2(FutabaS3010& servo, St7735r& lcd); /*Add roundabout as well as crossing judgement*/
-  void NormalMovingTestingVersion3(FutabaS3010& servo, St7735r& lcd, AlternateMotor& motor_right, AlternateMotor& motor_left); /*Improve the performance of roundabout recognition*/
-  void NormalMovingTestingVersion4(FutabaS3010& servo, St7735r& lcd, CarManager::Feature& feature); /*Moving + Feature output for Bluetooth testing*/
-  void NormalMovingTestingVersion5(FutabaS3010& servo, St7735r& lcd, AlternateMotor& motor_right, AlternateMotor& motor_left); /*Speed will change - Target: Back up before vary ServoP*/
-  void NormalMovingTestingVersionOld(FutabaS3010& servo, St7735r& lcd, AlternateMotor& motor_right, AlternateMotor& motor_left); /*Speed and Angle change based on ERROR*/
-  void NormalMovingTestingVersionNew(FutabaS3010& servo, St7735r& lcd, AlternateMotor& motor_right, AlternateMotor& motor_left); /*Speed and Angle change based on ERROR*/
-=======
+
   void NormalMovingTestingVersion1(FutabaS3010& servo, St7735r& lcd, CarManager::ServoBounds); /*Move based on midpoint only*/
   void NormalMovingTestingVersion2(FutabaS3010& servo, St7735r& lcd, CarManager::ServoBounds); /*Add roundabout as well as crossing judgement*/
-  void NormalMovingTestingVersion3(FutabaS3010& servo, St7735r& lcd, AlternateMotor& motor_right, AlternateMotor& motor_left, CarManager::ServoBounds s); /*Improve the performance of roundabout recognition*/
-  void NormalMovingTestingVersion4(FutabaS3010& servo, St7735r& lcd, CarManager::Feature& feature, CarManager::ServoBounds s); /*Moving + Feature output for Bluetooth testing*/
-  void NormalMovingTestingVersion5(FutabaS3010& servo, St7735r& lcd, AlternateMotor& motor_right, AlternateMotor& motor_left, CarManager::ServoBounds s); /*Speed will change - Target: 1.5m/s*/
->>>>>>> 49b619ec88980042504833477d092c406c566dad
+  void NormalMovingTestingVersion3(FutabaS3010& servo, St7735r& lcd, AlternateMotor& motor_right, AlternateMotor& motor_left, CarManager::ServoBounds); /*Improve the performance of roundabout recognition*/
+  void NormalMovingTestingVersion4(FutabaS3010& servo, St7735r& lcd, CarManager::Feature& feature, CarManager::ServoBounds); /*Moving + Feature output for Bluetooth testing*/
+  void NormalMovingTestingVersion5(FutabaS3010& servo, St7735r& lcd, AlternateMotor& motor_right, AlternateMotor& motor_left, CarManager::ServoBounds); /*Speed will change - Target: Back up before vary ServoP*/
+  void NormalMovingTestingVersionOld(FutabaS3010& servo, St7735r& lcd, AlternateMotor& motor_right, AlternateMotor& motor_left); /*Speed and Angle change based on ERROR*/
+  void NormalMovingTestingVersionNew(FutabaS3010& servo, St7735r& lcd, AlternateMotor& motor_right, AlternateMotor& motor_left); /*Speed and Angle change based on ERROR*/
 
   /*Moving function*/
   bool NormalMoving(FutabaS3010& servo, CarManager::ServoBounds s); /*Use center point method to control the car*/

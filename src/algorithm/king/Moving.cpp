@@ -785,29 +785,7 @@ void Moving::NormalMovingTestingVersion4(FutabaS3010& servo, St7735r& lcd, CarMa
 	servo.SetDegree(UpdatedDegree);
 }
 
-<<<<<<< HEAD
-void Moving::NormalMovingTestingVersion5(FutabaS3010& servo, St7735r& lcd, AlternateMotor & motor_right, AlternateMotor& motor_left) {
-=======
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 void Moving::NormalMovingTestingVersion5(FutabaS3010& servo, St7735r& lcd, AlternateMotor & motor_right, AlternateMotor& motor_left, CarManager::ServoBounds s) {
->>>>>>> 49b619ec88980042504833477d092c406c566dad
 	// initialize LCD console
 //	  LcdConsole::Config console_config;
 //	  console_config.lcd = &lcd;

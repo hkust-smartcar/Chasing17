@@ -22,7 +22,7 @@ using namespace std;
 
 namespace algorithm {
 namespace king {
-void main(bool has_encoder) {
+void main(bool has_encoder, CarManager::ServoBounds s) {
 	// initialize LEDs
 	Led::Config ledConfig;
 	ledConfig.is_active_low = true;
