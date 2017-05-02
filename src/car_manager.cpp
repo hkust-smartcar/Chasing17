@@ -4,7 +4,7 @@
  * Copyright (c) 2014-2017 HKUST SmartCar Team
  * Refer to LICENSE for details
  *
- * Author: David Mak (Derppening)
+ * Author: David Mak (Derppening), Peter Tse (mcreng)
  *
  * Implementations for CarManager class.
  *
@@ -36,7 +36,7 @@ CarManager::Feature CarManager::feature_ = CarManager::Feature::kStraight;
 CarManager::Identity CarManager::identity_ = CarManager::Identity::kFront;
 CarManager::Car CarManager::car_ = CarManager::Car::kOld;
 
-CarManager::ServoBounds CarManager::old_car = {1050, 710, 410};
+CarManager::ServoBounds CarManager::old_car = {980, 720, 390};
 CarManager::ServoBounds CarManager::new_car = {1050, 800, 450};
 
 unique_ptr<Mpc> CarManager::epc_left_ = nullptr;

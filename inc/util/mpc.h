@@ -2,11 +2,11 @@
  * Copyright (c) 2014-2017 HKUST SmartCar Team
  * Refer to LICENSE for details
  *
- * Author: David Mak (Derppening)
+ * Author: David Mak (Derppening), Peter Tse (mcreng)
  *
- * Motor Proportional Controller class
+ * Motor Power Controller class
  *
- * Implements a Proportional Controller system using encoders to make speed
+ * Implements a PID Controller system using encoders to make speed
  * adjustments to the motor power. Allows getting and target-setting of
  * encoder values.
  *
@@ -21,6 +21,7 @@
 
 #include <memory>
 #include <string>
+#include <deque>
 
 #include "libsc/alternate_motor.h"
 #include "libsc/dir_encoder.h"
@@ -37,10 +38,12 @@ class Mpc {
    *
    * @param e Pointer to an encoder object
    * @param m Pointer to an AlternateMotor object
+   * @param isClockwise Boolean stating whether the motor is rotating in clockwise direction
    */
-  explicit Mpc(libsc::DirEncoder* e, libsc::AlternateMotor* m)
+  explicit Mpc(libsc::DirEncoder* e, libsc::AlternateMotor* m, bool isClockwise)
       : motor_(m), encoder_(e) {
     motor_->SetPower(0);
+    motor_->SetClockwise(isClockwise);
     UpdateEncoder();
   }
 
@@ -89,7 +92,7 @@ class Mpc {
   /**
    * @return Current speed in encoder value per second
    */
-  inline int32_t GetCurrentSpeed() const { return last_encoder_val_; }
+  inline int32_t GetCurrentSpeed() const { return average_encoder_val_; }
 
   /**
    * Does motor power correction using encoder, and resets the encoder count.
@@ -110,14 +113,8 @@ class Mpc {
   /**
    * Constants for encoder to motor value conversions
    */
+  static float kP, kI, kD;
   enum struct MotorConstants {
-    /**
-     * Conversion factor from encoder difference to motor power difference.
-     *
-     * @example If set to 50, for every encoder value difference of 50, the
-     * motor power will increase/decrease by 1.
-     */
-        kDiffFactor = 50,
     /**
      * Lower bound of motor power which should not be used for extended periods
      * of time. [0,1000]
@@ -158,7 +155,7 @@ class Mpc {
    * @return True if both variables have the same sign
    */
   template<typename T>
-  bool HasSameSign(T val1, T val2) const { return (val1 >= 0 && val2 >= 0) || (val1 < 0 && val2 < 0); }
+  bool HasSameSign(T val1, T val2) const { return (val1 > 0 && val2 > 0) || (val1 < 0 && val2 < 0); }
 
   // Speed-related variables
   /**
@@ -170,9 +167,25 @@ class Mpc {
    */
   int16_t target_speed_ = 0;
   /**
-   * The value of the encoder in units per second
+   * Last encoder value
    */
   int32_t last_encoder_val_ = 0;
+  /**
+   * Queue of latest ten encoder values
+   */
+  std::deque<int32_t> last_ten_encoder_val_;
+  /**
+   * The average of newest ten values of the encoder in units per second
+   */
+  int32_t average_encoder_val_ = 0;
+  /**
+   * Cumalative error
+   */
+  float cum_error_ = 0;
+  /**
+   * Error of previous execution
+   */
+  int32_t prev_error_ = 0;
 
   // Timekeepers
   /**
@@ -235,7 +248,7 @@ class MpcDebug {
   /**
    * @return The encoder value in units per second
    */
-  inline int32_t GetEncoderVal() const { return mpc_->last_encoder_val_; }
+  inline int32_t GetEncoderVal() const { return mpc_->average_encoder_val_; }
 
  protected:
   MpcDebug() {};

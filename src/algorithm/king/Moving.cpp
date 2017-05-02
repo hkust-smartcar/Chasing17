@@ -96,7 +96,7 @@ Status Moving::RoadSituation() {
 	return Status::Fail;
 }
 
-void Moving::NormalMovingTestingVersion1(FutabaS3010& servo, St7735r& lcd) {
+void Moving::NormalMovingTestingVersion1(FutabaS3010& servo, St7735r& lcd, CarManager::ServoBounds s) {
 	//	// initialize LCD console
 	//	LcdConsole::Config console_config;
 	//	console_config.lcd = &lcd;
@@ -180,10 +180,10 @@ void Moving::NormalMovingTestingVersion1(FutabaS3010& servo, St7735r& lcd) {
 	//		servo.SetDegree(StraightDegree);
 	//	}
 
-	servo.SetDegree(ServoStraightDegree - (Average - 35) * ServoP);
+	servo.SetDegree(s.kCenter - (Average - 35) * ServoP);
 }
 
-void Moving::NormalMovingTestingVersion2(FutabaS3010& servo, St7735r& lcd) {
+void Moving::NormalMovingTestingVersion2(FutabaS3010& servo, St7735r& lcd, CarManager::ServoBounds s) {
 	// initialize LCD console
 	LcdConsole::Config console_config;
 	console_config.lcd = &lcd;
@@ -238,12 +238,12 @@ void Moving::NormalMovingTestingVersion2(FutabaS3010& servo, St7735r& lcd) {
 		lcd.SetRegion(Lcd::Rect(Left_edge[layer], layer, 5, 5));
 		lcd.FillColor(Lcd::kRed);
 		Center[layer] = (Left_edge[layer] + Right_edge[layer]) / 2; // Update new center point
-		if ((ServoStraightDegree - (Center[layer] - 35) * ServoP) > ServoLeftBoundary) {
-			UpdatedDegree = ServoLeftBoundary;
-		} else if ((ServoStraightDegree - (Center[layer] - 35) * ServoP) < ServoRightBoundary) {
-			UpdatedDegree = ServoRightBoundary;
+		if ((s.kCenter - (Center[layer] - 35) * ServoP) > s.kLeftBound) {
+			UpdatedDegree = s.kLeftBound;
+		} else if ((s.kCenter - (Center[layer] - 35) * ServoP) < s.kRightBound) {
+			UpdatedDegree = s.kRightBound;
 		} else {
-			UpdatedDegree = ServoStraightDegree - (Center[layer] - 35) * ServoP;
+			UpdatedDegree = s.kCenter - (Center[layer] - 35) * ServoP;
 		}
 		servo.SetDegree(UpdatedDegree); //Action immediately for this special case
 		return;
@@ -308,12 +308,12 @@ void Moving::NormalMovingTestingVersion2(FutabaS3010& servo, St7735r& lcd) {
 			lcd.SetRegion(Lcd::Rect(Left_edge[layer], layer, 5, 5));
 			lcd.FillColor(Lcd::kRed);
 			Center[layer] = (Left_edge[layer] + Right_edge[layer]) / 2; // Update new center point
-			if ((ServoStraightDegree - (Center[layer] - 35) * ServoP) > ServoLeftBoundary) {
-				UpdatedDegree = ServoLeftBoundary;
-			} else if ((ServoStraightDegree - (Center[layer] - 35) * ServoP) < ServoRightBoundary) {
-				UpdatedDegree = ServoRightBoundary;
+			if ((s.kCenter - (Center[layer] - 35) * ServoP) > s.kLeftBound) {
+				UpdatedDegree = s.kLeftBound;
+			} else if ((s.kCenter - (Center[layer] - 35) * ServoP) < s.kRightBound) {
+				UpdatedDegree = s.kRightBound;
 			} else {
-				UpdatedDegree = ServoStraightDegree - (Center[layer] - 35) * ServoP;
+				UpdatedDegree = s.kCenter - (Center[layer] - 35) * ServoP;
 			}
 			servo.SetDegree(UpdatedDegree); //Action immediately for this special case
 			return;
@@ -332,7 +332,7 @@ void Moving::NormalMovingTestingVersion2(FutabaS3010& servo, St7735r& lcd) {
 	}
 	/*CROSSING HANDLING*/
 	if (HasRoad() && EncounterCrossing == true) {
-		servo.SetDegree(ServoStraightDegree);
+		servo.SetDegree(s.kCenter);
 		return;
 	}
 	int sum = 0; // Initially 50 - 20
@@ -342,17 +342,17 @@ void Moving::NormalMovingTestingVersion2(FutabaS3010& servo, St7735r& lcd) {
 	int Average = sum / LayerCount;
 	//	string s = "Average: " + to_string(Average) + "\n";
 	//	console.WriteString(s.c_str());
-	if ((ServoStraightDegree - (Average - 35) * ServoP) > ServoLeftBoundary) {
-		UpdatedDegree = ServoLeftBoundary;
-	} else if ((ServoStraightDegree - (Average - 35) * ServoP) < ServoRightBoundary) {
-		UpdatedDegree = ServoRightBoundary;
+	if ((s.kCenter - (Average - 35) * ServoP) > s.kLeftBound) {
+		UpdatedDegree = s.kLeftBound;
+	} else if ((s.kCenter - (Average - 35) * ServoP) < s.kRightBound) {
+		UpdatedDegree = s.kRightBound;
 	} else {
-		UpdatedDegree = ServoStraightDegree - (Average - 35) * ServoP;
+		UpdatedDegree = s.kCenter - (Average - 35) * ServoP;
 	}
 	servo.SetDegree(UpdatedDegree);
 }
 
-void Moving::NormalMovingTestingVersion3(FutabaS3010& servo, St7735r& lcd, AlternateMotor & motor_right, AlternateMotor& motor_left) {
+void Moving::NormalMovingTestingVersion3(FutabaS3010& servo, St7735r& lcd, AlternateMotor & motor_right, AlternateMotor& motor_left, CarManager::ServoBounds s) {
 	// initialize LCD console
 //	  LcdConsole::Config console_config;
 //	  console_config.lcd = &lcd;
@@ -411,12 +411,12 @@ void Moving::NormalMovingTestingVersion3(FutabaS3010& servo, St7735r& lcd, Alter
 		Center[layer] = (Left_edge[layer] + Right_edge[layer]) / 2; // Update new center point
 		//      lcd.SetRegion(Lcd::Rect(Center[layer], layer, 5, 5));
 		//      lcd.FillColor(Lcd::kRed);
-		if ((ServoStraightDegree - (Center[layer] - 37) * ServoP) > ServoLeftBoundary) {
-			UpdatedDegree = ServoLeftBoundary;
-		} else if ((ServoStraightDegree - (Center[layer] - 37) * ServoP) < ServoRightBoundary) {
-			UpdatedDegree = ServoRightBoundary;
+		if ((s.kCenter - (Center[layer] - 37) * ServoP) > s.kLeftBound) {
+			UpdatedDegree = s.kLeftBound;
+		} else if ((s.kCenter - (Center[layer] - 37) * ServoP) < s.kRightBound) {
+			UpdatedDegree = s.kRightBound;
 		} else {
-			UpdatedDegree = ServoStraightDegree - (Center[layer] - 37) * ServoP;
+			UpdatedDegree = s.kCenter - (Center[layer] - 37) * ServoP;
 		}
 		servo.SetDegree(UpdatedDegree); //Action immediately for this special case
 		return;
@@ -490,12 +490,12 @@ void Moving::NormalMovingTestingVersion3(FutabaS3010& servo, St7735r& lcd, Alter
 			//        lcd.SetRegion(Lcd::Rect(Center[layer], layer, 5, 5));
 			//        lcd.FillColor(Lcd::kRed);
 
-			if ((ServoStraightDegree - (Center[layer] - 37) * ServoP) > ServoLeftBoundary) {
-				UpdatedDegree = ServoLeftBoundary;
-			} else if ((ServoStraightDegree - (Center[layer] - 37) * ServoP) < ServoRightBoundary) {
-				UpdatedDegree = ServoRightBoundary;
+			if ((s.kCenter - (Center[layer] - 37) * ServoP) > s.kLeftBound) {
+				UpdatedDegree = s.kLeftBound;
+			} else if ((s.kCenter - (Center[layer] - 37) * ServoP) < s.kRightBound) {
+				UpdatedDegree = s.kRightBound;
 			} else {
-				UpdatedDegree = ServoStraightDegree - (Center[layer] - 37) * ServoP;
+				UpdatedDegree = s.kCenter - (Center[layer] - 37) * ServoP;
 			}
 			servo.SetDegree(UpdatedDegree); //Action immediately for this special case
 			return;
@@ -522,7 +522,7 @@ void Moving::NormalMovingTestingVersion3(FutabaS3010& servo, St7735r& lcd, Alter
 
 	/*CROSSING HANDLING*/
 	//	if (HasRoad() && EncounterCrossing == true){
-	//		servo.SetDegree(ServoStraightDegree);
+	//		servo.SetDegree(s.kCenter);
 	//		return;
 	//	}
 
@@ -533,7 +533,7 @@ void Moving::NormalMovingTestingVersion3(FutabaS3010& servo, St7735r& lcd, Alter
 	//  }
 	//  if (RoundRoadNow && (Center[layer] == false)) {
 	//  //    //Finding new center point
-	//  //    servo.SetDegree(ServoLeftBoundary);
+	//  //    servo.SetDegree(s.kLeftBound);
 	//  //    return;
 	//	  motor_right.SetPower(200);
 	//	  motor_left.SetPower(200);
@@ -542,7 +542,7 @@ void Moving::NormalMovingTestingVersion3(FutabaS3010& servo, St7735r& lcd, Alter
 	//  // Do special arrangement during round road period to help car exit
 	//  if (RoundRoadNow && (Center[layer] == false)) {
 	//    //Finding new center point
-	//    servo.SetDegree(ServoLeftBoundary);
+	//    servo.SetDegree(s.kLeftBound);
 	//    return;
 	//  }
 
@@ -553,12 +553,12 @@ void Moving::NormalMovingTestingVersion3(FutabaS3010& servo, St7735r& lcd, Alter
 	int Average = sum / LayerCount;
 //	  	string s = "Average: " + to_string(Average) + "\n";
 //	  	console.WriteString(s.c_str());
-	if ((ServoStraightDegree - (Average - 37) * ServoP) > ServoLeftBoundary) {
-		UpdatedDegree = ServoLeftBoundary;
-	} else if ((ServoStraightDegree - (Average - 37) * ServoP) < ServoRightBoundary) {
-		UpdatedDegree = ServoRightBoundary;
+	if ((s.kCenter - (Average - 37) * ServoP) > s.kLeftBound) {
+		UpdatedDegree = s.kLeftBound;
+	} else if ((s.kCenter - (Average - 37) * ServoP) < s.kRightBound) {
+		UpdatedDegree = s.kRightBound;
 	} else {
-		UpdatedDegree = ServoStraightDegree - (Average - 37) * ServoP;
+		UpdatedDegree = s.kCenter - (Average - 37) * ServoP;
 	}
 	/*Servo Control*/
 	servo.SetDegree(UpdatedDegree);
@@ -568,7 +568,7 @@ void Moving::NormalMovingTestingVersion3(FutabaS3010& servo, St7735r& lcd, Alter
 
 
 	/*Motor Control*/
-	if(abs(UpdatedDegree-ServoStraightDegree) >100){
+	if(abs(UpdatedDegree-s.kCenter) >100){
 		motor_right.SetPower(200);
 		motor_left.SetPower(200);
 	}
@@ -583,7 +583,7 @@ void Moving::NormalMovingTestingVersion3(FutabaS3010& servo, St7735r& lcd, Alter
 	}
 }
 
-void Moving::NormalMovingTestingVersion4(FutabaS3010& servo, St7735r& lcd, CarManager::Feature& feature) {
+void Moving::NormalMovingTestingVersion4(FutabaS3010& servo, St7735r& lcd, CarManager::Feature& feature, CarManager::ServoBounds s) {
 	// initialize LCD console
 	//  LcdConsole::Config console_config;
 	//  console_config.lcd = &lcd;
@@ -641,12 +641,12 @@ void Moving::NormalMovingTestingVersion4(FutabaS3010& servo, St7735r& lcd, CarMa
 		Center[layer] = (Left_edge[layer] + Right_edge[layer]) / 2; // Update new center point
 		//      lcd.SetRegion(Lcd::Rect(Center[layer], layer, 5, 5));
 		//      lcd.FillColor(Lcd::kRed);
-		if ((ServoStraightDegree - (Center[layer] - 35) * ServoP) > ServoLeftBoundary) {
-			UpdatedDegree = ServoLeftBoundary;
-		} else if ((ServoStraightDegree - (Center[layer] - 35) * ServoP) < ServoRightBoundary) {
-			UpdatedDegree = ServoRightBoundary;
+		if ((s.kCenter - (Center[layer] - 35) * ServoP) > s.kLeftBound) {
+			UpdatedDegree = s.kLeftBound;
+		} else if ((s.kCenter - (Center[layer] - 35) * ServoP) < s.kRightBound) {
+			UpdatedDegree = s.kRightBound;
 		} else {
-			UpdatedDegree = ServoStraightDegree - (Center[layer] - 35) * ServoP;
+			UpdatedDegree = s.kCenter - (Center[layer] - 35) * ServoP;
 		}
 		servo.SetDegree(UpdatedDegree); //Action immediately for this special case
 		return;
@@ -721,12 +721,12 @@ void Moving::NormalMovingTestingVersion4(FutabaS3010& servo, St7735r& lcd, CarMa
 			//        lcd.SetRegion(Lcd::Rect(Center[layer], layer, 5, 5));
 			//        lcd.FillColor(Lcd::kRed);
 
-			if ((ServoStraightDegree - (Center[layer] - 35) * ServoP) > ServoLeftBoundary) {
-				UpdatedDegree = ServoLeftBoundary;
-			} else if ((ServoStraightDegree - (Center[layer] - 35) * ServoP) < ServoRightBoundary) {
-				UpdatedDegree = ServoRightBoundary;
+			if ((s.kCenter - (Center[layer] - 35) * ServoP) > s.kLeftBound) {
+				UpdatedDegree = s.kLeftBound;
+			} else if ((s.kCenter - (Center[layer] - 35) * ServoP) < s.kRightBound) {
+				UpdatedDegree = s.kRightBound;
 			} else {
-				UpdatedDegree = ServoStraightDegree - (Center[layer] - 35) * ServoP;
+				UpdatedDegree = s.kCenter - (Center[layer] - 35) * ServoP;
 			}
 			servo.SetDegree(UpdatedDegree); //Action immediately for this special case
 			return;
@@ -752,7 +752,7 @@ void Moving::NormalMovingTestingVersion4(FutabaS3010& servo, St7735r& lcd, CarMa
 
 	/*CROSSING HANDLING*/
 	//	if (HasRoad() && EncounterCrossing == true){
-	//		servo.SetDegree(ServoStraightDegree);
+	//		servo.SetDegree(s.kCenter);
 	//		return;
 	//	}
 
@@ -764,7 +764,7 @@ void Moving::NormalMovingTestingVersion4(FutabaS3010& servo, St7735r& lcd, CarMa
 	//  // Do special arrangement during round road period to help car exit
 	//  if (RoundRoadNow && (Center[layer] == false)) {
 	//    //Finding new center point
-	//    servo.SetDegree(ServoLeftBoundary);
+	//    servo.SetDegree(s.kLeftBound);
 	//    return;
 	//  }
 
@@ -775,17 +775,39 @@ void Moving::NormalMovingTestingVersion4(FutabaS3010& servo, St7735r& lcd, CarMa
 	int Average = sum / LayerCount;
 	//	string s = "Average: " + to_string(Average) + "\n";
 	//	console.WriteString(s.c_str());
-	if ((ServoStraightDegree - (Average - 35) * ServoP) > ServoLeftBoundary) {
-		UpdatedDegree = ServoLeftBoundary;
-	} else if ((ServoStraightDegree - (Average - 35) * ServoP) < ServoRightBoundary) {
-		UpdatedDegree = ServoRightBoundary;
+	if ((s.kCenter - (Average - 35) * ServoP) > s.kLeftBound) {
+		UpdatedDegree = s.kLeftBound;
+	} else if ((s.kCenter - (Average - 35) * ServoP) < s.kRightBound) {
+		UpdatedDegree = s.kRightBound;
 	} else {
-		UpdatedDegree = ServoStraightDegree - (Average - 35) * ServoP;
+		UpdatedDegree = s.kCenter - (Average - 35) * ServoP;
 	}
 	servo.SetDegree(UpdatedDegree);
 }
 
+<<<<<<< HEAD
 void Moving::NormalMovingTestingVersion5(FutabaS3010& servo, St7735r& lcd, AlternateMotor & motor_right, AlternateMotor& motor_left) {
+=======
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void Moving::NormalMovingTestingVersion5(FutabaS3010& servo, St7735r& lcd, AlternateMotor & motor_right, AlternateMotor& motor_left, CarManager::ServoBounds s) {
+>>>>>>> 49b619ec88980042504833477d092c406c566dad
 	// initialize LCD console
 //	  LcdConsole::Config console_config;
 //	  console_config.lcd = &lcd;
@@ -866,12 +888,12 @@ void Moving::NormalMovingTestingVersion5(FutabaS3010& servo, St7735r& lcd, Alter
 		Center[layer] = (Left_edge[layer] + Right_edge[layer]) / 2; // Update new center point
 		//      lcd.SetRegion(Lcd::Rect(Center[layer], layer, 5, 5));
 		//      lcd.FillColor(Lcd::kRed);
-		if ((ServoStraightDegree - (Center[layer] - 37) * ServoP) > ServoLeftBoundary) {
-			UpdatedDegree = ServoLeftBoundary;
-		} else if ((ServoStraightDegree - (Center[layer] - 37) * ServoP) < ServoRightBoundary) {
-			UpdatedDegree = ServoRightBoundary;
+		if ((s.kCenter - (Center[layer] - 37) * ServoP) > s.kLeftBound) {
+			UpdatedDegree = s.kLeftBound;
+		} else if ((s.kCenter - (Center[layer] - 37) * ServoP) < s.kRightBound) {
+			UpdatedDegree = s.kRightBound;
 		} else {
-			UpdatedDegree = ServoStraightDegree - (Center[layer] - 37) * ServoP;
+			UpdatedDegree = s.kCenter - (Center[layer] - 37) * ServoP;
 		}
 		servo.SetDegree(UpdatedDegree); //Action immediately for this special case
 		return;
@@ -941,12 +963,12 @@ void Moving::NormalMovingTestingVersion5(FutabaS3010& servo, St7735r& lcd, Alter
 			//        lcd.SetRegion(Lcd::Rect(Center[layer], layer, 5, 5));
 			//        lcd.FillColor(Lcd::kRed);
 
-			if ((ServoStraightDegree - (Center[layer] - 37) * ServoP) > ServoLeftBoundary) {
-				UpdatedDegree = ServoLeftBoundary;
-			} else if ((ServoStraightDegree - (Center[layer] - 37) * ServoP) < ServoRightBoundary) {
-				UpdatedDegree = ServoRightBoundary;
+			if ((s.kCenter - (Center[layer] - 37) * ServoP) > s.kLeftBound) {
+				UpdatedDegree = s.kLeftBound;
+			} else if ((s.kCenter - (Center[layer] - 37) * ServoP) < s.kRightBound) {
+				UpdatedDegree = s.kRightBound;
 			} else {
-				UpdatedDegree = ServoStraightDegree - (Center[layer] - 37) * ServoP;
+				UpdatedDegree = s.kCenter - (Center[layer] - 37) * ServoP;
 			}
 			servo.SetDegree(UpdatedDegree); //Action immediately for this special case
 			return;
@@ -973,7 +995,7 @@ void Moving::NormalMovingTestingVersion5(FutabaS3010& servo, St7735r& lcd, Alter
 
 	/*CROSSING HANDLING*/
 	//	if (HasRoad() && EncounterCrossing == true){
-	//		servo.SetDegree(ServoStraightDegree);
+	//		servo.SetDegree(s.kCenter);
 	//		return;
 	//	}
 
@@ -985,12 +1007,12 @@ void Moving::NormalMovingTestingVersion5(FutabaS3010& servo, St7735r& lcd, Alter
 	int Average = sum / LayerCount;
 //	  	string s = "Average: " + to_string(Average) + "\n";
 //	  	console.WriteString(s.c_str());
-	if ((ServoStraightDegree - (Average - 37) * ServoP) > ServoLeftBoundary) {
-		UpdatedDegree = ServoLeftBoundary;
-	} else if ((ServoStraightDegree - (Average - 37) * ServoP) < ServoRightBoundary) {
-		UpdatedDegree = ServoRightBoundary;
+	if ((s.kCenter - (Average - 37) * ServoP) > s.kLeftBound) {
+		UpdatedDegree = s.kLeftBound;
+	} else if ((s.kCenter - (Average - 37) * ServoP) < s.kRightBound) {
+		UpdatedDegree = s.kRightBound;
 	} else {
-		UpdatedDegree = ServoStraightDegree - (Average - 37) * ServoP;
+		UpdatedDegree = s.kCenter - (Average - 37) * ServoP;
 	}
 	/*Servo Control*/
 	servo.SetDegree(UpdatedDegree);
@@ -1016,13 +1038,13 @@ void Moving::NormalMovingTestingVersion5(FutabaS3010& servo, St7735r& lcd, Alter
 	//  // Do special arrangement during round road period to help car exit
 	//  if (RoundRoadNow && (Center[layer] == false)) {
 	//    //Finding new center point
-	//    servo.SetDegree(ServoLeftBoundary);
+	//    servo.SetDegree(s.kLeftBound);
 	//    return;
 	//  }
 
 	/*Motor Control*/
 	if(!RoundRoadNow){
-		if(abs(UpdatedDegree-ServoStraightDegree) >100){
+		if(abs(UpdatedDegree-s.kCenter) >100){
 			motor_right.SetPower(250);
 			motor_left.SetPower(250);
 		}
@@ -1840,26 +1862,26 @@ bool Moving::HasCornerTesting() {
 
 //---------
 /*Moving function*/
-bool Moving::NormalMoving(FutabaS3010& servo) {
+bool Moving::NormalMoving(FutabaS3010& servo, CarManager::ServoBounds s) {
 	const int ServoPara = 40;
 	int sum = 0;
 	for (int L = 60; L > 30; L--) {
 		sum += Center[L];
 	}
 	int Average = sum / 30;
-	servo.SetDegree(ServoStraightDegree - (Average - 40) * ServoPara);
+	servo.SetDegree(s.kCenter - (Average - 40) * ServoPara);
 	return true;
 }
 
-bool Moving::RoundMoving(FutabaS3010& servo) {
+bool Moving::RoundMoving(FutabaS3010& servo, CarManager::ServoBounds s) {
 	//TURN LEFT ANYWAY
-	servo.SetDegree(ServoLeftBoundary);
+	servo.SetDegree(s.kLeftBound);
 	return true;
 }
 
-bool Moving::CrossingMoving(FutabaS3010& servo) {
+bool Moving::CrossingMoving(FutabaS3010& servo, CarManager::ServoBounds s) {
 	//GO STRAIGHT ANYWAY
-	servo.SetDegree(ServoStraightDegree);
+	servo.SetDegree(s.kCenter);
 	return true;
 }
 

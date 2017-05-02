@@ -55,8 +55,8 @@ class MpcDual final : protected Mpc {
                    libsc::AlternateMotor* motor_right,
                    libsc::DirEncoder* encoder_left,
                    libsc::DirEncoder* encoder_right) {
-    mpc_left_ = util::make_unique<Mpc>(encoder_left, motor_left);
-    mpc_right_ = util::make_unique<Mpc>(encoder_right, motor_right);
+    mpc_left_ = util::make_unique<Mpc>(encoder_left, motor_left, true);
+    mpc_right_ = util::make_unique<Mpc>(encoder_right, motor_right, false);
   }
 
   ~MpcDual() {
@@ -116,6 +116,8 @@ class MpcDual final : protected Mpc {
    * @params
    */
   void DoCorrection();
+
+  float motor_speed_diff_;
 
  private:
   std::unique_ptr<Mpc> mpc_left_;

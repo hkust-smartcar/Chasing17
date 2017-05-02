@@ -18,38 +18,42 @@ namespace util {
 void MpcDual::DoCorrection() {
   CarManager::ServoBounds s = CarManager::GetServoBounds();
 
-  uint16_t servo_angle = CarManager::GetServoDeg();
-  int16_t servo_diff = servo_angle - s.kCenter;
+  float servo_angle = CarManager::GetServoDeg();
+  float servo_diff = s.kCenter - servo_angle;
 
   // calculates the path deviation, then times a factor to account for speed
   // difference between left/right wheels
-  if (servo_diff > 0) {  // turning right
-    uint16_t motor_speed_diff = servo_diff - (s.kCenter - s.kLeftBound);
-    motor_speed_diff *= (82 / 100);
-    mpc_left_->AddToTargetSpeed(motor_speed_diff, false);
-    mpc_right_->AddToTargetSpeed(-motor_speed_diff, false);
-  } else if (servo_diff < 0) {  // turning left
-    uint16_t motor_speed_diff = servo_diff - (s.kRightBound - s.kCenter);
-    motor_speed_diff *= (82 / 100);
-    mpc_right_->AddToTargetSpeed(motor_speed_diff, false);
-    mpc_left_->AddToTargetSpeed(-motor_speed_diff, false);
+  if (servo_diff < 0) {  // turning left
+    float motor_speed_diff = servo_diff / (s.kCenter - s.kLeftBound);
+    motor_speed_diff *= 0.142;
+    motor_speed_diff_ = motor_speed_diff;
+    mpc_right_->AddToTargetSpeed(mpc_right_->GetTargetSpeed() * motor_speed_diff, false);
+    mpc_left_->AddToTargetSpeed(mpc_left_->GetTargetSpeed() * -motor_speed_diff, false);
+  } else if (servo_diff > 0) {  // turning right
+    float motor_speed_diff = servo_diff / (s.kRightBound - s.kCenter);
+    motor_speed_diff *= 0.142;
+    motor_speed_diff_ = motor_speed_diff;
+    mpc_left_->AddToTargetSpeed(mpc_left_->GetTargetSpeed() * motor_speed_diff, false);
+    mpc_right_->AddToTargetSpeed(mpc_right_->GetTargetSpeed() * -motor_speed_diff, false);
   }
 
+  mpc_left_->SetCommitFlag(true);
+  mpc_right_->SetCommitFlag(true);
   mpc_left_->DoCorrection();
   mpc_right_->DoCorrection();
 }
 
 void MpcDual::SetTargetSpeed(const int16_t speed, bool commit_now) {
-  mpc_left_->SetTargetSpeed(speed);
-  mpc_right_->SetTargetSpeed(speed);
+  mpc_left_->SetTargetSpeed(speed, false);
+  mpc_right_->SetTargetSpeed(speed, false);
   if (commit_now) {
     DoCorrection();
   }
 }
 
 void MpcDual::AddToTargetSpeed(const int16_t speed, bool commit_now) {
-  mpc_left_->AddToTargetSpeed(speed);
-  mpc_right_->AddToTargetSpeed(speed);
+  mpc_left_->AddToTargetSpeed(speed, false);
+  mpc_right_->AddToTargetSpeed(speed, false);
   if (commit_now) {
     DoCorrection();
   }
@@ -72,30 +76,40 @@ int32_t MpcDual::GetCurrentSpeed(MotorSide side) const {
 }
 
 void MpcDualDebug::OutputEncoderMotorValues(libsc::LcdConsole* console, MpcDual::MotorSide side) const {
+  console->SetCursorRow(0);
   std::string s = "";
   if (side == MpcDual::MotorSide::kLeft || side == MpcDual::MotorSide::kBoth) {
-//    s += "L: " + to_string(mpc_dual_->mpc_left_->last_encoder_val_) +
-//        " " + to_string(mpc_dual_->mpc_left_->motor_->GetPower());
+//    s += "L: " + std::to_string(mpc_dual_->mpc_left_->last_encoder_val_) +
+//        " " + std::to_string(mpc_dual_->mpc_left_->motor_->GetPower());
   }
   if (side == MpcDual::MotorSide::kRight || side == MpcDual::MotorSide::kBoth) {
     if (s != "") { s += "\n"; }
-//    s += "R: " + to_string(mpc_dual_->mpc_right_->last_encoder_val_) +
-//        " " + to_string(mpc_dual_->mpc_right_->motor_->GetPower());
+//    s += "R: " + std::to_string(mpc_dual_->mpc_right_->last_encoder_val_) +
+//        " " + std::to_string(mpc_dual_->mpc_right_->motor_->GetPower());
   }
+  if (s != "") { s += "\n"; }
+  console->WriteString(s.c_str());
+  console->SetCursorRow(8);
+//  s = "L target: " + std::to_string(mpc_dual_->mpc_left_->GetTargetSpeed()) + "\n";
+  console->WriteString(s.c_str());
+  console->SetCursorRow(9);
+//  s = "R target: " + std::to_string(mpc_dual_->mpc_right_->GetTargetSpeed()) + "\n";
   console->WriteString(s.c_str());
 }
 
 void MpcDualDebug::OutputLastEncoderValues(libsc::LcdConsole* console, MpcDual::MotorSide side) const {
+  console->SetCursorRow(3);
   std::string s = "";
   if (side == MpcDual::MotorSide::kLeft || side == MpcDual::MotorSide::kBoth) {
-//    s += "L: " + to_string(mpc_dual_->mpc_left_->last_encoder_duration_) +
-//        " " + to_string(mpc_dual_->mpc_left_->last_encoder_val_);
+//    s += "L: " + std::to_string(mpc_dual_->mpc_left_->last_encoder_duration_) +
+//        " " + std::to_string(mpc_dual_->mpc_left_->last_encoder_val_);
   }
   if (side == MpcDual::MotorSide::kRight || side == MpcDual::MotorSide::kBoth) {
     if (s != "") { s += "\n"; }
-//    s += "R: " + to_string(mpc_dual_->mpc_right_->last_encoder_duration_) +
-//        " " + to_string(mpc_dual_->mpc_right_->last_encoder_val_);
+//    s += "R: " + std::to_string(mpc_dual_->mpc_right_->last_encoder_duration_) +
+//        " " + std::to_string(mpc_dual_->mpc_right_->last_encoder_val_);
   }
+  if (s != "") { s += "\n"; }
   console->WriteString(s.c_str());
 }
 
@@ -133,9 +147,9 @@ libsc::Timer::TimerInt MpcDualDebug::GetLastRunDuration(MpcDual::MotorSide side)
 int32_t MpcDualDebug::GetEncoderVal(MpcDual::MotorSide side) const {
   switch (side) {
     case MpcDual::MotorSide::kLeft:
-      return mpc_dual_->mpc_left_->last_encoder_val_;
+      return mpc_dual_->mpc_left_->average_encoder_val_;
     case MpcDual::MotorSide::kRight:
-      return mpc_dual_->mpc_right_->last_encoder_val_;
+      return mpc_dual_->mpc_right_->average_encoder_val_;
     case MpcDual::MotorSide::kBoth:
       return 0;
   }

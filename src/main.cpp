@@ -16,6 +16,9 @@
 #include "algorithm/receiver.h"
 #include "algorithm/king/main.h"
 #include "algorithm/leslie/main.h"
+#include "algorithm/peter/main.h"
+#include "algorithm/speedctrl.h"
+#include "algorithm/optimal/main.h"
 
 namespace libbase {
 namespace k60 {
@@ -33,9 +36,12 @@ using libsc::System;
 enum struct Algorithm {
   kKing,
   kLeslie,
+  kPeter,
   kReceiver,
   kBluetoothTest,
-  kKingReceive
+  kKingReceive,
+  kSpeedControl,
+  kOptimal
 };
 
 int main() {
@@ -44,14 +50,15 @@ int main() {
   BatteryMeter::Config ConfigBM;
   ConfigBM.voltage_ratio = 0.4;
   BatteryMeter bm(ConfigBM);
-
-  while (bm.GetVoltage() <= 7.3);
+  // Battery Check
+  // TODO(Derppening): Find a better way to halt program when battery is lower than expected
+  while (bm.GetVoltage() <= 7.4);
 
   // modify next line to switch between algorithms
-  constexpr Algorithm a = Algorithm::kKing;
+  constexpr Algorithm a = Algorithm::kOptimal;
 
   // modify next line to enable/disable encoder
-  constexpr bool has_encoder = false;
+  constexpr bool has_encoder = true;
 
   // modify next line to change which car we're working with
   CarManager::Car c = CarManager::Car::kNew;
@@ -59,10 +66,13 @@ int main() {
   CarManager::ServoBounds s = c == CarManager::Car::kOld ? CarManager::old_car : CarManager::new_car;
   switch (a) {
     case Algorithm::kKing:
-      algorithm::king::main(has_encoder);
+      algorithm::king::main(has_encoder, s);
       break;
     case Algorithm::kLeslie:
       algorithm::leslie::main(has_encoder);
+      break;
+    case Algorithm::kPeter:
+      algorithm::peter::main(has_encoder, s);
       break;
     case Algorithm::kReceiver:
       algorithm::receiver();
@@ -72,6 +82,12 @@ int main() {
       break;
     case Algorithm::kKingReceive:
       algorithm::king::main_receive(has_encoder, s);
+      break;
+    case Algorithm::kSpeedControl:
+      algorithm::SpeedCtrl();
+      break;
+    case Algorithm::kOptimal:
+      algorithm::optimal::main(s);
       break;
     default:
       // not handled

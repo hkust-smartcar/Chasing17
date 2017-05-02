@@ -173,7 +173,7 @@ void main_receive(bool has_encoder, CarManager::ServoBounds s) {
         car.extract_cam(camBuffer);
         //car.printCameraImage(camBuffer, lcd);
         camera.UnlockBuffer();
-//        car.NormalMovingTestingVersion3(servo, lcd, motor_right, motor_left, s);
+        car.NormalMovingTestingVersion3(servo, lcd, motor_right, motor_left, s);
 
 //						if(car.HasCornerTesting()){
 //							led2.Switch();
