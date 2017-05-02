@@ -32,12 +32,14 @@
 #include <libsc/futaba_s3010.h>
 //MOTOR
 #include <libsc/alternate_motor.h>
+//Joystick
+#include "libsc/joystick.h"
 
 //SELF_DEFINED VARIABLES in .h
 enum Status { kRoundIn, kRoundOut, kCrossing, kNormal, kSshape, Fail };
-const int ServoLeftBoundary = 1050; //Boundary 1050
-const int ServoRightBoundary = 450; //Boundary 410
-const int ServoStraightDegree = 800; // 710
+const int ServoLeftBoundary = 1050; //Boundary 1050 980
+const int ServoRightBoundary = 450; //Boundary 450 390
+const int ServoStraightDegree = 800; // 800 720
 
 using namespace libsc;
 using namespace libsc::k60;
@@ -65,7 +67,8 @@ class Moving {
   void NormalMovingTestingVersion3(FutabaS3010& servo, St7735r& lcd, AlternateMotor& motor_right, AlternateMotor& motor_left); /*Improve the performance of roundabout recognition*/
   void NormalMovingTestingVersion4(FutabaS3010& servo, St7735r& lcd, CarManager::Feature& feature); /*Moving + Feature output for Bluetooth testing*/
   void NormalMovingTestingVersion5(FutabaS3010& servo, St7735r& lcd, AlternateMotor& motor_right, AlternateMotor& motor_left); /*Speed will change - Target: Back up before vary ServoP*/
-  void NormalMovingTestingVersion6(FutabaS3010& servo, St7735r& lcd, AlternateMotor& motor_right, AlternateMotor& motor_left); /*Speed and Angle change based on ERROR*/
+  void NormalMovingTestingVersionOld(FutabaS3010& servo, St7735r& lcd, AlternateMotor& motor_right, AlternateMotor& motor_left); /*Speed and Angle change based on ERROR*/
+  void NormalMovingTestingVersionNew(FutabaS3010& servo, St7735r& lcd, AlternateMotor& motor_right, AlternateMotor& motor_left); /*Speed and Angle change based on ERROR*/
 
   /*Moving function*/
   bool NormalMoving(FutabaS3010& servo); /*Use center point method to control the car*/
@@ -89,7 +92,8 @@ class Moving {
   bool DoubleCheckCrossing(int center_xcor,
                            int center_ycor);/*Double check if the car has encountered crossing by looking ahead*/
 
-  /*Testing function*/
+  /*Testing + Tuning function*/
+  void ServoAngleTuning(FutabaS3010& servo, St7735r& lcd); /*Use Joystick to adjust the servo angle*/
   void PrintingFrame(St7735r& lcd, int x, int y, int w, int h); /*Print a rectangle in (x,y) with size of w*h */
   void Printing4Frames(St7735r& lcd); /*Print 4 rectangles for testing*/
   void Printing6Frames(St7735r& lcd); /*Print 6 rectangles for testing*/
