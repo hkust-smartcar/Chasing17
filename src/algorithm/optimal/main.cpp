@@ -160,6 +160,8 @@ void PrintImage(){
  *  - Do the same (but mirrored) actions to right edge
  */
 bool FindEdges(){
+	left_corners.points.clear();
+	right_corners.points.clear();
 	int error_cnt = -1;
 	int prev_size = left_edge.points.size();
 
@@ -217,18 +219,24 @@ bool FindEdges(){
 		}
 
 		//Check corners
-		int CornerCheck = 0;
-		auto last = left_edge.points.back();
-		for (int i = max(0, last.first - 3); i < min(CameraSize.w-1, last.first + 3); i++){
-			for (int j = max(0, last.second - 3); j < min(CameraSize.h-1, last.second + 3); j++){
-				CornerCheck += getFilteredBit(CameraBuf, i, j);
+		{
+			int CornerCheck = 0;
+			int total = 0;
+			auto last = left_edge.points.back();
+			if (last.first - 3 <= 0 || last.first + 3 > CameraSize.w - 1 || last.second - 3 <= 0 || last.second +3 > CameraSize.h -1){
+				continue;
+			}
+			for (int i = (last.first - 3); i < (last.first + 3); i++){
+				for (int j = (last.second - 3); j < (last.second + 3); j++){
+					CornerCheck += getFilteredBit(CameraBuf, i, j);
+					total++;
+				}
+			}
+			//if in this threshold, consider as corner
+			if (CornerCheck > total * 0.01 && CornerCheck < total * 0.20){
+				left_corners.push(last.first, last.second);
 			}
 		}
-		//if in this threshold, consider as corner
-		if (CornerCheck > 6 && CornerCheck < 10){
-			left_corners.push(last.first, last.second);
-		}
-
 		} while (left_edge.points.size() <= CameraSize.h-1 && flag_break == false);
 	}
 
@@ -291,16 +299,23 @@ bool FindEdges(){
 			}
 
 			//Check corners
-			int CornerCheck = 0;
-			auto last = right_edge.points.back();
-			for (int i = max(0, last.first - 3); i < min(CameraSize.w-1, last.first + 3); i++){
-				for (int j = max(0, last.second - 3); j < min(CameraSize.h-1, last.second + 3); j++){
-					CornerCheck += getFilteredBit(CameraBuf, i, j);
+			{
+				int CornerCheck = 0;
+				int total = 0;
+				auto last = right_edge.points.back();
+				if (last.first - 3 <= 0 || last.first + 3 > CameraSize.w - 1 || last.second - 3 <= 0 || last.second +3 > CameraSize.h -1){
+					continue;
 				}
-			}
-			//if in this threshold, consider as corner
-			if (CornerCheck > 6 && CornerCheck < 10){
-				right_edge.push(last.first, last.second);
+				for (int i = max(0, last.first - 3); i < min(CameraSize.w-1, last.first + 3); i++){
+					for (int j = max(0, last.second - 3); j < min(CameraSize.h-1, last.second + 3); j++){
+						CornerCheck += getFilteredBit(CameraBuf, i, j);
+						total++;
+					}
+				}
+				//if in this threshold, consider as corner
+				if (CornerCheck > total * 0.01 && CornerCheck < total * 0.20){
+					right_corners.push(last.first, last.second);
+				}
 			}
 		} while (right_edge.points.size() <= CameraSize.h-1 && flag_break == false);
 	}
@@ -323,7 +338,7 @@ void PrintEdge(Edges path, uint16_t color){
  */
 void PrintCorner(Corners corners, uint16_t color){
 	for (auto&& entry : corners.points){
-		pLcd->SetRegion(Lcd::Rect(entry.first, CameraSize.h - entry.second - 1, 2, 2));
+		pLcd->SetRegion(Lcd::Rect(entry.first, CameraSize.h - entry.second - 1, 4, 4));
 		pLcd->FillColor(color);
 	}
 }
@@ -441,7 +456,7 @@ void main(CarManager::ServoBounds servo_bounds){
 				FindEdges(); //Find edges
 				PrintEdge(left_edge, Lcd::kRed); //Print left_edge
 				PrintEdge(right_edge, Lcd::kBlue); //Print right_edge
-				PrintCorner(left_corners, Lcd::kCyan); //Print left_corner
+				PrintCorner(left_corners, Lcd::kPurple); //Print left_corner
 				PrintCorner(right_corners, Lcd::kPurple); //Print right_corner
 //				CarManager::Feature feature = IdentifyFeat(); //Identify feature
 				GenPath(); //Generate path
