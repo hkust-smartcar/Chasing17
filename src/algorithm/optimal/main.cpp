@@ -215,6 +215,20 @@ bool FindEdges(){
 		if (left_edge.points.back().second == CameraSize.h - 1){ //the edge reaches the top
 			flag_break = true;
 		}
+
+		//Check corners
+		int CornerCheck = 0;
+		auto last = left_edge.points.back();
+		for (int i = max(0, last.first - 3); i < min(CameraSize.w-1, last.first + 3); i++){
+			for (int j = max(0, last.second - 3); j < min(CameraSize.h-1, last.second + 3); j++){
+				CornerCheck += getFilteredBit(CameraBuf, i, j);
+			}
+		}
+		//if in this threshold, consider as corner
+		if (CornerCheck > 6 && CornerCheck < 10){
+			left_corners.push(last.first, last.second);
+		}
+
 		} while (left_edge.points.size() <= CameraSize.h-1 && flag_break == false);
 	}
 
@@ -274,6 +288,19 @@ bool FindEdges(){
 
 			if (right_edge.points.back().second == CameraSize.h - 1){ //the edge reaches the top
 				flag_break = true;
+			}
+
+			//Check corners
+			int CornerCheck = 0;
+			auto last = right_edge.points.back();
+			for (int i = max(0, last.first - 3); i < min(CameraSize.w-1, last.first + 3); i++){
+				for (int j = max(0, last.second - 3); j < min(CameraSize.h-1, last.second + 3); j++){
+					CornerCheck += getFilteredBit(CameraBuf, i, j);
+				}
+			}
+			//if in this threshold, consider as corner
+			if (CornerCheck > 6 && CornerCheck < 10){
+				right_edge.push(last.first, last.second);
 			}
 		} while (right_edge.points.size() <= CameraSize.h-1 && flag_break == false);
 	}
@@ -393,7 +420,7 @@ void main(CarManager::ServoBounds servo_bounds){
 	CarManager::Init(std::move(ConfigMgr));
 
 	Timer::TimerInt time_img = 0;
-
+/*
 	//Servo test
 
 	pServo->SetDegree(servo_bounds.kLeftBound);
@@ -402,7 +429,7 @@ void main(CarManager::ServoBounds servo_bounds){
 	System::DelayMs(1000);
 	pServo->SetDegree(servo_bounds.kCenter);
 	System::DelayMs(1000);
-
+*/
 	camera.Start();
 
 	while (true){
@@ -416,16 +443,14 @@ void main(CarManager::ServoBounds servo_bounds){
 				PrintEdge(right_edge, Lcd::kBlue); //Print right_edge
 				PrintCorner(left_corners, Lcd::kCyan); //Print left_corner
 				PrintCorner(right_corners, Lcd::kPurple); //Print right_corner
-//				CarManager::Feature feature = IdentifyFeat(); //Idetnify feature
+//				CarManager::Feature feature = IdentifyFeat(); //Identify feature
 				GenPath(); //Generate path
 				PrintEdge(path, Lcd::kGreen); //Print path
-				led0.Switch();
+				led0.Switch(); //heart beat
 			}
 		}
 
 	}
-
-
 
 }
 }

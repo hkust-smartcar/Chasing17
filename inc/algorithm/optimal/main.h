@@ -34,7 +34,7 @@ void main(CarManager::ServoBounds);
  * @member size() Return the size of vector points
  * @member insert(int, int, int) Insert a std::pair<int, int> into some position of vector points
  * @member insert(int, Edges) Insert an Edges type into some position of vector points
- * @member reverse() Reverse the Edges
+ * @member grad() Take the gradient of certain Edges
  */
 struct Edges {
 	std::vector<std::pair<int, int>> points;
@@ -43,9 +43,14 @@ struct Edges {
 	inline int size() {return points.size();}
 	inline void insert(int pos, int x, int y) {points.emplace(points.begin() + pos, std::make_pair(x,y));}
 	inline void insert(int pos, Edges edge) {points.insert(points.begin() + pos, edge.points.begin(), edge.points.end());}
-	inline Edges reverse() {
-		std::reverse(this->points.begin(), this->points.end());
-		return *this;
+	Edges grad(){
+		Edges temp;
+		for (int i = 1; i < this->size(); i++){
+			auto last = this->points[i];
+			auto second_last = this->points[i-1];
+			temp.push(last.first - second_last.first, last.second - second_last.second);
+		}
+		return temp;
 	}
 };
 
