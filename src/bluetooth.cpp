@@ -26,6 +26,7 @@ Byte BTComm::dataArray_[6]{0, 0, 0, 0, 0, 0};
 uint8_t BTComm::dataIndex_ = 0;
 uint8_t BTComm::mapIndex_ = 0;
 libsc::Led* BTComm::led_ptr = nullptr;
+bool BTComm::hasStartReq_ = false;
 
 void BTComm::sendData(unsigned char type, uint16_t data) {
   uint8_t ID = (mapIndex_ %= 10)++;
@@ -151,6 +152,10 @@ bool BTComm::BTListener(const Byte* data, size_t size) {
           break;
         case ReqType::kSide:
           sendSide(CarManager::GetSide());
+          break;
+        case ReqType::kStart:
+          hasStartReq_ = true;
+          break;
         default:
           //invalid package
           return true;

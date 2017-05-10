@@ -270,6 +270,20 @@ class BTComm {
   }
 
   /**
+   * Send start request
+   */
+  void sendStartReq(){
+	sendData(DataType::kReq, ReqType::kStart);
+  }
+
+  /**
+   * Check if there is a start request
+   */
+  bool hasStartReq(){
+	return hasStartReq_;
+  }
+
+  /**
    * Resend those information that are unacknowledged.
    *
    * @note should be called with short time intervals.
@@ -304,6 +318,7 @@ class BTComm {
     static constexpr Byte kDist = 0xC2;
     static constexpr Byte kFeature = 0xC3;
     static constexpr Byte kSide = 0xC4;
+    static constexpr Byte kStart = 0xB0;
   };
 
   std::unique_ptr<libsc::k60::JyMcuBt106> bluetooth_;
@@ -324,6 +339,8 @@ class BTComm {
 
   static OvertakeStatus OvertakeReq_;
   static bool SwitchIDReq_;
+
+  static bool hasStartReq_;
 
   static Byte dataArray_[6];
   static uint8_t dataIndex_;
