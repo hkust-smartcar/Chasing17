@@ -27,6 +27,7 @@ uint8_t BTComm::dataIndex_ = 0;
 uint8_t BTComm::mapIndex_ = 0;
 libsc::Led* BTComm::led_ptr = nullptr;
 bool BTComm::hasStartReq_ = false;
+bool BTComm::hasFinishedOvertake_ = false;
 
 void BTComm::sendData(unsigned char type, uint16_t data) {
   uint8_t ID = (mapIndex_ %= 10)++;
@@ -128,6 +129,9 @@ bool BTComm::BTListener(const Byte* data, size_t size) {
       switch (value) {
         case ReqType::kOvertake:
           OvertakeReq_ = OvertakeStatus::kRequested;
+          break;
+        case ReqType::kFinishOvertake:
+          hasFinishedOvertake_ = true;
           break;
         case ReqType::kOvertakeAgr:
           OvertakeReq_ = OvertakeStatus::kAgreed;

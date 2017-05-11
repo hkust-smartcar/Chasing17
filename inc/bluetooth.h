@@ -284,6 +284,20 @@ class BTComm {
   }
 
   /**
+   * Check if the overtake procedure is done
+   */
+  bool hasFinishedOvertake(){
+	  return hasFinishedOvertake_;
+  }
+
+  /**
+   * Reset hasFinishedOvertake_ flag
+   */
+  void resetFinishOvertake(){
+	  hasFinishedOvertake_ = false;
+  }
+
+  /**
    * Resend those information that are unacknowledged.
    *
    * @note should be called with short time intervals.
@@ -310,6 +324,7 @@ class BTComm {
 
   struct ReqType {
     static constexpr Byte kOvertake = 0xE0;
+    static constexpr Byte kFinishOvertake = 0xE1;
     static constexpr Byte kOvertakeRej = 0xEE;
     static constexpr Byte kOvertakeAgr = 0xEF;
     static constexpr Byte kIDSwitch = 0xD0;
@@ -338,8 +353,8 @@ class BTComm {
   static CarManager::Side side_;
 
   static OvertakeStatus OvertakeReq_;
+  static bool hasFinishedOvertake_;
   static bool SwitchIDReq_;
-
   static bool hasStartReq_;
 
   static Byte dataArray_[6];
