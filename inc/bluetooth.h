@@ -284,6 +284,13 @@ class BTComm {
   }
 
   /**
+   * Send signal for finishing overtake
+   */
+  void sendFinishOvertake(){
+	  sendData(DataType::kReq, ReqType::kFinishOvertake);
+  }
+
+  /**
    * Check if the overtake procedure is done
    */
   bool hasFinishedOvertake(){
