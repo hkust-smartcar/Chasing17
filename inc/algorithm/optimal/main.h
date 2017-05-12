@@ -69,9 +69,12 @@ struct Corners {
 };
 
 struct {
-	uint8_t w = 80, h = 60;
+	uint16_t w = 128, h = 480;
 } CameraSize;
 
+struct {
+	uint16_t w = 128, h = 160;
+} WorldSize;
 
 }
 }

@@ -27,6 +27,9 @@
 #include "car_manager.h"
 #include "util/util.h"
 
+#include "debug_console.h"
+#include "img.h"
+
 using namespace libsc;
 
 namespace algorithm{
@@ -38,9 +41,13 @@ Edges path;
 Corners left_corners;
 Corners right_corners;
 const Byte* CameraBuf;
+//Byte WorldBuf[128*20];
 k60::Ov7725* pCamera = nullptr;
 St7735r* pLcd = nullptr;
 Led* pLed3 = nullptr;
+LcdTypewriter* pWriter = nullptr;
+CarManager::ServoBounds* pServoBounds = nullptr;
+FutabaS3010* pServo = nullptr;
 
 int max(int a, int b) {return (a>b ? a : b);}
 int min(int a, int b) {return (a<b ? a : b);}
@@ -48,6 +55,8 @@ int min(int a, int b) {return (a<b ? a : b);}
 // for edge finding, in CCW dir
 const int dx[9] = { 0,-1,-1,-1, 0, 1, 1, 1, 0};
 const int dy[9] = { 1, 1, 0,-1,-1,-1, 0, 1, 1};
+
+
 /**
  * @brief To fetch filtered bit, 1 = black; 0 = white
  * @param buff Camera buffer
@@ -56,7 +65,7 @@ const int dy[9] = { 1, 1, 0,-1,-1,-1, 0, 1, 1};
  */
 int getFilteredBit(const Byte* buff, int x, int y){
 	if (x<=0 || x>CameraSize.w-1 || y <= 0 || y > CameraSize.h-1) return -1; //-1; // Out of bound = black
-	y = CameraSize.h - 1 - y; // set y = 0 at bottom
+	//y = CameraSize.h - 1 - y; // set y = 0 at bottom
 
 	//return buff[y*CameraSize.w/8 + x/8] >> (7 - (x%8)) & 1;	//buff[y*CameraSize.w/8+x/8] & 0x80>>x%8;
 
@@ -87,6 +96,45 @@ int FindDirection(int j, int d){
 	return 4;
 }
 
+
+//test distortion world view
+//w_x,w_y world coordinate 128*160
+//i_x,i_y image coordinate 128*480
+
+//get bit value from camerabuf using camera coordinate system
+bool getBit(int i_x, int i_y){
+	if (i_x<=0 || i_x>CameraSize.w-1 || i_y <= 0 || i_y > CameraSize.h-1) return -1;
+	return CameraBuf[i_y*CameraSize.w/8 + i_x/8] >> (7 - (i_x%8)) & 1;
+}
+
+
+bool getWorldBit(int w_x, int w_y){
+	w_y = 160 - w_y;
+	int i_x,i_y;
+	i_x = transformMatrix[w_x][w_y][0];
+	i_y = transformMatrix[w_x][w_y][1];
+	return getFilteredBit(CameraBuf, i_x,i_y);
+}
+
+void PrintWorldImage(){
+	Byte temp[128/8];
+	for (int i=160; i>0; --i){
+		for (int j=0; j<128; j++){
+			temp[j/8]<<=1;
+			temp[j/8]+=getWorldBit(j,i);
+			//WorldBuf[i*128/8+j/8]<<=1;
+			//WorldBuf[i*128/8+j/8]+=getWorldBit(j,i);
+		}
+		pLcd->SetRegion(Lcd::Rect(0,160-i,128,1));
+		pLcd->FillBits(0x0000,0xFFFF,temp,128);
+		//pLcd->FillColor(getWorldBit(j,i)?Lcd::kBlack:Lcd::kWhite);
+	}
+	return;
+}
+
+//end test distortion
+
+
 /**
  * @brief Capture picture until two base points are identified.
  *
@@ -107,8 +155,8 @@ void Capture(){
 	pCamera->UnlockBuffer();
 
 	//Search horizontally
-	for (int i = CameraSize.w/2; i > 0; i--){ //TODO: Try to understand why at (0,0) it always return 1
-		if (getFilteredBit(CameraBuf, i, 1) == 1){
+	for (int i = WorldSize.w/2; i > 0; i--){ //TODO: Try to understand why at (0,0) it always return 1
+		if (getWorldBit( i, 1) == 1){
 			left_x = i + 1;
 			left_y = 1;
 			found_left = true;
@@ -121,8 +169,8 @@ void Capture(){
 	}
 
 	//Search horizontally
-	for (int i = CameraSize.w/2; i < CameraSize.w; i++){
-		if (getFilteredBit(CameraBuf, i, 1) == 1){
+	for (int i = WorldSize.w/2; i < WorldSize.w; i++){
+		if (getWorldBit(i, 1) == 1){
 			right_x = i - 1;
 			right_y = 1;
 			found_right = true;
@@ -130,7 +178,7 @@ void Capture(){
 		}
 	}
 	if (!found_right){
-		right_x = CameraSize.w-1;
+		right_x = WorldSize.w-1;
 		right_y = 1;
 	}
 
@@ -180,12 +228,12 @@ bool FindEdges(){
 			int prev_y = left_edge.points.back().second;
 
 
-			if (getFilteredBit(CameraBuf, prev_x, prev_y+1) == 0){ //if white, find in CCW
+			if (getWorldBit( prev_x, prev_y+1) == 0){ //if white, find in CCW
 				if (prev_x == 1){
 					left_edge.push(prev_x, prev_y+1);
 				} else {
 					for (int i = 0; i < 8; i++){
-						if(getFilteredBit(CameraBuf, prev_x+dx[i], prev_y+dy[i]) == 1){
+						if(getWorldBit(prev_x+dx[i], prev_y+dy[i]) == 1){
 							left_edge.push(prev_x+dx[i-1], prev_y+dy[i-1]);
 							break;
 						}
@@ -193,14 +241,14 @@ bool FindEdges(){
 				}
 			} else {
 				for (int i = 7; i >= 0; i--){
-					if(getFilteredBit(CameraBuf, prev_x+dx[i], prev_y+dy[i]) == 0){
+					if(getWorldBit(prev_x+dx[i], prev_y+dy[i]) == 0){
 						if ((i == 6 || i == 5 || i == 7) && prev_x == 1){
 							//need to check for trespassing
 							int cnt_black = 0;
-							for (int j = prev_y; j < CameraSize.h; j++){
-								cnt_black += getFilteredBit(CameraBuf, CameraSize.w/2, j);
+							for (int j = prev_y; j < WorldSize.h; j++){
+								cnt_black += getWorldBit(WorldSize.w/2, j);
 							}
-							if (cnt_black > 0.5 * (CameraSize.h - prev_y)){
+							if (cnt_black > 0.5 * (WorldSize.h - prev_y)){
 								flag_break = true;
 								break;
 							}
@@ -214,7 +262,7 @@ bool FindEdges(){
 			left_edge.points.pop_back();
 			flag_break = true;
 		}
-		if (left_edge.points.back().second == CameraSize.h - 1){ //the edge reaches the top
+		if (left_edge.points.back().second == WorldSize.h - 1){ //the edge reaches the top
 			flag_break = true;
 		}
 
@@ -223,12 +271,12 @@ bool FindEdges(){
 			int CornerCheck = 0;
 			int total = 0;
 			auto last = left_edge.points.back();
-			if (last.first - 3 <= 0 || last.first + 3 > CameraSize.w - 1 || last.second - 3 <= 0 || last.second +3 > CameraSize.h -1){
+			if (last.first - 3 <= 0 || last.first + 3 > WorldSize.w - 1 || last.second - 3 <= 0 || last.second +3 > WorldSize.h -1){
 				continue;
 			}
 			for (int i = (last.first - 3); i < (last.first + 3); i++){
 				for (int j = (last.second - 3); j < (last.second + 3); j++){
-					CornerCheck += getFilteredBit(CameraBuf, i, j);
+					CornerCheck += getWorldBit(i, j);
 					total++;
 				}
 			}
@@ -237,7 +285,7 @@ bool FindEdges(){
 				left_corners.push(last.first, last.second);
 			}
 		}
-		} while (left_edge.points.size() <= CameraSize.h-1 && flag_break == false);
+		} while (left_edge.points.size() <= WorldSize.h-1 && flag_break == false);
 	}
 
 	error_cnt = -1;
@@ -257,12 +305,12 @@ bool FindEdges(){
 			int prev_x = right_edge.points.back().first;
 			int prev_y = right_edge.points.back().second;
 
-			if (getFilteredBit(CameraBuf, prev_x, prev_y+1) == 0){ //if white, find in CW
-				if (prev_x == CameraSize.w - 1){
+			if (getWorldBit(prev_x, prev_y+1) == 0){ //if white, find in CW
+				if (prev_x == WorldSize.w - 1){
 					right_edge.push(prev_x, prev_y+1);
 				} else {
 					for (int i = 7; i >= 0; i--){
-						if(getFilteredBit(CameraBuf, prev_x+dx[i], prev_y+dy[i]) == 1){
+						if(getWorldBit(prev_x+dx[i], prev_y+dy[i]) == 1){
 							right_edge.push(prev_x+dx[i+1], prev_y+dy[i+1]);
 							break;
 						}
@@ -271,14 +319,14 @@ bool FindEdges(){
 			} else {
 				for (int i = 0; i < 8; i++){
 
-					if(getFilteredBit(CameraBuf, prev_x+dx[i], prev_y+dy[i]) == 0){
-						if ((i == 2 || i == 1 || i == 3) && prev_x == CameraSize.w-1){
+					if(getWorldBit(prev_x+dx[i], prev_y+dy[i]) == 0){
+						if ((i == 2 || i == 1 || i == 3) && prev_x == WorldSize.w-1){
 							//need to check for trespassing
 							int cnt_black = 0;
-							for (int j = prev_y; j < CameraSize.h; j++){
-								cnt_black += getFilteredBit(CameraBuf, CameraSize.w/2, j);
+							for (int j = prev_y; j < WorldSize.h; j++){
+								cnt_black += getWorldBit(WorldSize.w/2, j);
 							}
-							if (cnt_black > 0.5 * (CameraSize.h - prev_y)){
+							if (cnt_black > 0.5 * (WorldSize.h - prev_y)){
 								flag_break = true;
 								break;
 							}
@@ -294,7 +342,7 @@ bool FindEdges(){
 				flag_break = true;
 			}
 
-			if (right_edge.points.back().second == CameraSize.h - 1){ //the edge reaches the top
+			if (right_edge.points.back().second == WorldSize.h - 1){ //the edge reaches the top
 				flag_break = true;
 			}
 
@@ -303,12 +351,12 @@ bool FindEdges(){
 				int CornerCheck = 0;
 				int total = 0;
 				auto last = right_edge.points.back();
-				if (last.first - 3 <= 0 || last.first + 3 > CameraSize.w - 1 || last.second - 3 <= 0 || last.second +3 > CameraSize.h -1){
+				if (last.first - 3 <= 0 || last.first + 3 > WorldSize.w - 1 || last.second - 3 <= 0 || last.second +3 > WorldSize.h -1){
 					continue;
 				}
-				for (int i = max(0, last.first - 3); i < min(CameraSize.w-1, last.first + 3); i++){
-					for (int j = max(0, last.second - 3); j < min(CameraSize.h-1, last.second + 3); j++){
-						CornerCheck += getFilteredBit(CameraBuf, i, j);
+				for (int i = max(0, last.first - 3); i < min(WorldSize.w-1, last.first + 3); i++){
+					for (int j = max(0, last.second - 3); j < min(WorldSize.h-1, last.second + 3); j++){
+						CornerCheck += getWorldBit(i, j);
 						total++;
 					}
 				}
@@ -317,7 +365,7 @@ bool FindEdges(){
 					right_corners.push(last.first, last.second);
 				}
 			}
-		} while (right_edge.points.size() <= CameraSize.h-1 && flag_break == false);
+		} while (right_edge.points.size() <= WorldSize.h-1 && flag_break == false);
 	}
 	return true;
 }
@@ -327,7 +375,7 @@ bool FindEdges(){
  */
 void PrintEdge(Edges path, uint16_t color){
 	for (auto&& entry : path.points){
-		pLcd->SetRegion(Lcd::Rect(entry.first, CameraSize.h - entry.second - 1, 2, 2));
+		pLcd->SetRegion(Lcd::Rect(entry.first, WorldSize.h - entry.second - 1, 2, 2));
 		pLcd->FillColor(color);
 	}
 
@@ -338,7 +386,7 @@ void PrintEdge(Edges path, uint16_t color){
  */
 void PrintCorner(Corners corners, uint16_t color){
 	for (auto&& entry : corners.points){
-		pLcd->SetRegion(Lcd::Rect(entry.first, CameraSize.h - entry.second - 1, 4, 4));
+		pLcd->SetRegion(Lcd::Rect(entry.first, WorldSize.h - entry.second - 1, 4, 4));
 		pLcd->FillColor(color);
 	}
 }
@@ -381,6 +429,33 @@ void GenPath(){
 
 }
 
+//turning bounded servo degree
+void Turn(int degree){
+	degree=max(pServoBounds->kRightBound,min(degree,pServoBounds->kLeftBound));
+	pServo->SetDegree(degree);
+}
+
+//calculate the error in path
+void Interprete(){
+	int error=0, sum=0,degree=0;
+	for (std::pair<int,int> point : path.points){
+		if(sum>20) break;
+		error+=(point.first-WorldSize.w/2);//*(point.second+24);
+		sum++;
+	}
+
+	char buff[10];
+	sprintf(buff,"%d , %d",error,degree);
+	pLcd->SetRegion(Lcd::Rect(0,0,100,15));
+	pWriter->WriteBuffer(buff,10);
+
+	//Turn(degree);
+}
+
+
+
+
+
 void main(CarManager::ServoBounds servo_bounds){
 	System::Init();
 
@@ -403,7 +478,7 @@ void main(CarManager::ServoBounds servo_bounds){
 	ConfigServo.id = 0;
 	FutabaS3010 servo(ConfigServo);
 //	std::unique_ptr<FutabaS3010> pServo(new FutabaS3010(ConfigServo));
-	FutabaS3010* pServo = &servo;
+	pServo = &servo;
 
 	DirEncoder::Config ConfigEncoder;
 	ConfigEncoder.id = 0;
@@ -417,7 +492,10 @@ void main(CarManager::ServoBounds servo_bounds){
 	ConfigMotor.id = 1;
 	AlternateMotor motor1(ConfigMotor);
 
-	std::unique_ptr<util::MpcDual> pMpc(new util::MpcDual(&motor0, &motor1, &encoder0, &encoder1));
+//	std::unique_ptr<util::MpcDual> pMpc(new util::MpcDual(&motor0, &motor1, &encoder0, &encoder1));
+	util::MpcDual mpc(&motor0, &motor1, &encoder0, &encoder1);
+	util::MpcDual* pMpc = &mpc;
+
 
 	k60::JyMcuBt106::Config ConfigBT;
 	ConfigBT.id = 0;
@@ -425,17 +503,30 @@ void main(CarManager::ServoBounds servo_bounds){
 	k60::JyMcuBt106 bt(ConfigBT);
 
 	St7735r::Config lcdConfig;
-	lcdConfig.is_revert = false;
+	lcdConfig.is_revert = true;
 	St7735r lcd(lcdConfig);
 	pLcd = &lcd;
 
+	LcdTypewriter::Config writerConfig;
+	writerConfig.lcd = pLcd;
+	LcdTypewriter writer(writerConfig);
+	pWriter = &writer;
+
+	Joystick::Config joystick_config;
+	joystick_config.id = 0;
+	joystick_config.is_active_low = true;
+	Joystick joystick(joystick_config);
+
+	DebugConsole console(&joystick,pLcd, &writer);
+
+	/*
 	CarManager::Config ConfigMgr;
-//	ConfigMgr.servo = std::move(pServo);
+	ConfigMgr.servo = std::move(pServo);
 	ConfigMgr.epc = std::move(pMpc);
 	CarManager::Init(std::move(ConfigMgr));
-
+*/
 	Timer::TimerInt time_img = 0;
-/*
+
 	//Servo test
 
 	pServo->SetDegree(servo_bounds.kLeftBound);
@@ -444,15 +535,44 @@ void main(CarManager::ServoBounds servo_bounds){
 	System::DelayMs(1000);
 	pServo->SetDegree(servo_bounds.kCenter);
 	System::DelayMs(1000);
-*/
+
 	camera.Start();
 
+	/*while(true){
+
+
+		if(System::Time()%50==0&&pCamera->IsAvailable()){
+
+			Byte buffer[128*20];
+			CameraBuf = pCamera->LockBuffer();
+			PrintWorldImage();
+			//pLcd->SetRegion(Lcd::Rect(0,0,128,160));
+			//pLcd->FillBits(Lcd::kBlack,Lcd::kWhite,wholeImage(buffer),128*160);
+			pCamera->UnlockBuffer();
+		}
+	}*/
+
+	/*
+		DebugConsole::Item item("set servo");
+		item.setValuePtr(&servo_degree);
+		//item.setListener(SELECT,&updateServo);
+		item.setListener(DOWN_LEFT,&subServo);
+		item.setListener(LONG_LEFT,&subServo);
+		item.setListener(DOWN_RIGHT,&addServo);
+		item.setListener(LONG_RIGHT,&addServo);
+		console.pushItem(item);
+		console.enterDebug();
+		*/
+
+	//pMpc->SetTargetSpeed(100);
 	while (true){
 		while (time_img != System::Time()){
 			time_img = System::Time();
 			if (time_img % 100 == 0){
+				//pMpc->UpdateEncoder();
 				Capture(); //Capture until two base points are identified
-				PrintImage(); //Print LCD
+				//PrintImage(); //Print LCD
+				PrintWorldImage();
 				FindEdges(); //Find edges
 				PrintEdge(left_edge, Lcd::kRed); //Print left_edge
 				PrintEdge(right_edge, Lcd::kBlue); //Print right_edge
@@ -460,6 +580,7 @@ void main(CarManager::ServoBounds servo_bounds){
 				PrintCorner(right_corners, Lcd::kPurple); //Print right_corner
 //				CarManager::Feature feature = IdentifyFeat(); //Identify feature
 				GenPath(); //Generate path
+				Interprete();
 				PrintEdge(path, Lcd::kGreen); //Print path
 				led0.Switch(); //heart beat
 			}
