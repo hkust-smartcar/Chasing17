@@ -18,8 +18,7 @@ namespace util {
 void MpcDual::DoCorrection() {
   CarManager::ServoBounds s = CarManager::GetServoBounds();
 
-  float servo_angle = CarManager::GetServoDeg();
-  float servo_diff = s.kCenter - servo_angle;
+  float servo_diff = s.kCenter - CarManager::GetServoDeg();
 
   // calculates the path deviation, then times a factor to account for speed
   // difference between left/right wheels
@@ -89,6 +88,16 @@ void MpcDualDebug::OutputEncoderMotorValues(libsc::LcdConsole* console, MpcDual:
   }
   if (s != "") { s += "\n"; }
   console->WriteString(s.c_str());
+  if (mpc_dual_->mpc_left_->last_encoder_val_ > 65535) {
+    console->SetCursorRow(6);
+    s = "L > 2^15";
+    console->WriteString(s.c_str());
+  }
+  if (mpc_dual_->mpc_right_->last_encoder_val_ > 65535) {
+    console->SetCursorRow(7);
+    s = "R > 2^15";
+    console->WriteString(s.c_str());
+  }
   console->SetCursorRow(8);
 //  s = "L target: " + std::to_string(mpc_dual_->mpc_left_->GetTargetSpeed()) + "\n";
   console->WriteString(s.c_str());
@@ -129,6 +138,9 @@ void MpcDualDebug::SetMotorPower(uint16_t power, MpcDual::MotorSide side, bool i
       mpc_dual_->mpc_right_->motor_->SetClockwise(is_clockwise);
       mpc_dual_->mpc_right_->motor_->SetPower(power);
       break;
+    default:
+      // all cases covered
+      break;
   }
 }
 
@@ -140,8 +152,10 @@ libsc::Timer::TimerInt MpcDualDebug::GetLastRunDuration(MpcDual::MotorSide side)
       return mpc_dual_->mpc_right_->last_encoder_duration_;
     case MpcDual::MotorSide::kBoth:
       return 0;
+    default:
+      // all cases covered
+      return 0;
   }
-  return 0;
 }
 
 int32_t MpcDualDebug::GetEncoderVal(MpcDual::MotorSide side) const {
@@ -152,7 +166,9 @@ int32_t MpcDualDebug::GetEncoderVal(MpcDual::MotorSide side) const {
       return mpc_dual_->mpc_right_->average_encoder_val_;
     case MpcDual::MotorSide::kBoth:
       return 0;
+    default:
+      // all cases covered
+      return 0;
   }
-  return 0;
 }
 }  // namespace util

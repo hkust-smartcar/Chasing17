@@ -14,6 +14,7 @@
 
 #include "algorithm/bt-demo.h"
 #include "algorithm/receiver.h"
+#include "algorithm/david/main.h"
 #include "algorithm/king/main.h"
 #include "algorithm/leslie/main.h"
 #include "algorithm/peter/main.h"
@@ -41,7 +42,8 @@ enum struct Algorithm {
   kBluetoothTest,
   kKingReceive,
   kSpeedControl,
-  kOptimal
+  kOptimal,
+  kDavid
 };
 
 int main() {
@@ -55,7 +57,7 @@ int main() {
   while (bm.GetVoltage() <= 7.4);
 
   // modify next line to switch between algorithms
-  constexpr Algorithm a = Algorithm::kOptimal;
+  constexpr Algorithm a = Algorithm::kDavid;
 
   // modify next line to enable/disable encoder
   constexpr bool has_encoder = true;
@@ -89,8 +91,11 @@ int main() {
     case Algorithm::kOptimal:
       algorithm::optimal::main(s);
       break;
+    case Algorithm::kDavid:
+      algorithm::david::main();
+      break;
     default:
-      // not handled
+      // all cases covered
       break;
   }
 

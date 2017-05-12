@@ -31,7 +31,7 @@ namespace util {
  */
 float Mpc::kP = 0.00198;
 float Mpc::kI = 0.002;
-float Mpc::kD = 0;
+float Mpc::kD = 0.00035;
 
 void Mpc::SetTargetSpeed(const int16_t speed, bool commit_now) {
   target_speed_ = speed;
@@ -66,7 +66,7 @@ void Mpc::DoCorrection() {
   UpdateEncoder();
 
   // motor protection - turn off motor when motor is on but encoder has null value
-  if (last_encoder_val_ == 0) {
+  if (abs(last_encoder_val_) < 500) {
     motor_->SetPower(0);
     return;
   }
