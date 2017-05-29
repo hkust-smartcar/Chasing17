@@ -119,45 +119,12 @@ float CalcLinearRegressionSlope(const std::vector<int>& x, const std::vector<int
  */
 void Int16To2ByteArray(const uint16_t num, std::array<Byte, 2>& bytes);
 
-namespace distortion {
 /**
- * Distortion constants of the intrinsic matrix used in @p GetUndistortCoord.
+ * Sends an image from the camera via Bluetooth every 5 seconds.
  *
- * @note These vaules should be obtained using some camera calibration software,
- * for example OpenCV and MATLAB.
- *
- * In matrix form, the constants are arranged as follows:
- * [f_x] [ s ] [c_x]
- * [ 0 ] [f_y] [c_y]
- * [ 0 ] [ 0 ] [ 1 ]
+ * @note The function must be called after @code System::Init() @endcode
  */
-struct {
-  float f_x;  // x-axis focal length (px)
-  float f_y;  // y-axis focal length (px)
-  float s;  // axis skew
-  float c_x;  // x-axis principal offset
-  float c_y;  // y-axis principal offset
-} DistortionConstants;
-
-/**
- * Calculates the undistorted coordinates using the @c DistortionConstants
- *
- * @param coords Vector of arrays storing the x and y coordinates.
- * The first and second elements in the array should be the x and y
- * coordinates respectively.
- */
-void GetUndistortCoord(std::vector<std::array<int, 2>> coords);
-/**
- * Calculates the undistorted coordinates using the @c DistortionConstants
- *
- * @note If vector sizes do not match, function will return without altering
- * the vectors.
- *
- * @param x Vector of x values
- * @param y Vector of y values
- */
-void GetUndistortCoord(std::vector<int>* x, std::vector<int>* y);
-}  // namespace distortion
+void BtSendImage();
 
 #if __cplusplus < 201402L
 /**
