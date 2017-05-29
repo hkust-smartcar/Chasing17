@@ -1,4 +1,6 @@
-/* fc_yy_us_v4.h
+/*
+ * fc_yy_us_v4.h
+ *
  * Copyright (c) 2014-2017 HKUST SmartCar Team
  * Refer to LICENSE for details
  *

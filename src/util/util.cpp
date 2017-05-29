@@ -1,8 +1,13 @@
 /*
+ * util.cpp
+ *
  * Copyright (c) 2014-2017 HKUST SmartCar Team
  * Refer to LICENSE for details
  *
  * Author: David Mak (Derppening)
+ *
+ * Function implementations for util.h
+ *
  */
 
 #include "util/util.h"

@@ -1,10 +1,12 @@
 /*
+ * mpc_dual.h
+ *
  * Copyright (c) 2014-2017 HKUST SmartCar Team
  * Refer to LICENSE for details
  *
  * Author: David Mak (Derppening)
  *
- * Dual Motor Proportional Controller class
+ * Dual Motor Power Controller class
  * Implements a dual-motor Proportional Controller system using two Mpc classes
  * to make speed adjustments to motor power. Also adds software differential
  * feature.

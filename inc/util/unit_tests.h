@@ -1,8 +1,14 @@
 /*
+ * unit_tests.h
+ *
  * Copyright (c) 2014-2017 HKUST SmartCar Team
  * Refer to LICENSE for details
  *
  * Author: David Mak (Derppening)
+ *
+ * Tests for different Smartcar components. See each function documentation
+ * for more details.
+ *
  */
 
 #ifndef CHASING17_UTIL_UNIT_TESTS_H_
