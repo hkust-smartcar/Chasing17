@@ -11,7 +11,7 @@ using namespace libsc;
 using namespace std;
 
 namespace algorithm {
-void BluetoothDemo(bool has_encoder) {
+void USIRDemo() {
   Led::Config config_led;
   config_led.is_active_low = true;
   config_led.id = 0;
