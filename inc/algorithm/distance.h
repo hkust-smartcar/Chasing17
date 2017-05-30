@@ -6,6 +6,7 @@
 #define CHASING17_ALGORITHM_DISTANCE_H_
 
 namespace algorithm {
+	void USIRDemo();
 }
 
 #endif  // CHASING17_ALGORITHM_BT_DISTANCE_H_
