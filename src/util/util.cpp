@@ -115,7 +115,7 @@ void BtSendImage() {
       led1.SetEnable(System::Time() % 500 >= 250);
       if (time_img % 1000 == 0) {
         console.SetCursorRow(9);
-        console.WriteString(("Runtime: " + std::to_string(time_img / 1000) + "s").c_str());
+//        console.WriteString(("Runtime: " + std::to_string(time_img / 1000) + "s").c_str());
 
         const Byte* image_ptr = camera.LockBuffer();
         array<Byte, kImageSize> image{};
@@ -134,7 +134,7 @@ void BtSendImage() {
         led4.SetEnable(bt.SendBuffer(&st, 1));
         led2.SetEnable(bt.SendBuffer(image.data(), kImageSize));
         console.SetCursorRow(8);
-        console.WriteString(("Packet " + std::to_string(i++)).c_str());
+//        console.WriteString(("Packet " + std::to_string(i++)).c_str());
 
         led3.SetEnable(false);
       }

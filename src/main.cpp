@@ -20,6 +20,7 @@
 #include "algorithm/peter/main.h"
 #include "algorithm/speedctrl.h"
 #include "algorithm/optimal/main.h"
+#include "util/testground.h"
 
 namespace libbase {
 namespace k60 {
@@ -43,7 +44,8 @@ enum struct Algorithm {
   kKingReceive,
   kSpeedControl,
   kOptimal,
-  kDavid
+  kDavid,
+  kTestGround
 };
 
 int main() {
@@ -54,6 +56,7 @@ int main() {
   BatteryMeter bm(ConfigBM);
   // Battery Check
   // TODO(Derppening): Find a better way to halt program when battery is lower than expected
+
   while (bm.GetVoltage() <= 7.4);
 
   // modify next line to switch between algorithms
@@ -93,6 +96,9 @@ int main() {
       break;
     case Algorithm::kDavid:
       algorithm::david::main();
+      break;
+    case Algorithm::kTestGround:
+      util::testground::main();
       break;
     default:
       // all cases covered

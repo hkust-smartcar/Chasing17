@@ -413,6 +413,38 @@ void GenPath(){
 
 	path.points.clear();
 
+	if (!left_size && !right_size){ //simple validity check
+		return;
+	}
+
+	if (!left_size){
+		//empty left edge => turn left
+		int shift = left_edge.points[0].first / 2;
+		for (auto&& entry : left_edge.points){
+			if (entry.first - shift < 0){
+				break;
+			} else {
+				path.push(entry.first - shift, entry.second);
+			}
+		}
+		return;
+	}
+
+	if (!right_size){
+		//empty right edge => turn right
+		int shift = (WorldSize.w - right_edge.points[0].first) / 2;
+		for (auto&& entry : left_edge.points){
+			if (entry.first + shift >= WorldSize.w){
+				break;
+			} else {
+				path.push(entry.first + shift, entry.second);
+			}
+		}
+		return;
+	}
+
+	//else: (for now) use average path
+
 	if (left_size < right_size){
 		for (int i = 0; i < right_edge.size(); i++){
 			int temp_x = (left_edge.points[(left_size * i) / right_size].first + right_edge.points[i].first) / 2;
