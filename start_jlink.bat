@@ -1,1 +1,1 @@
-"C:\Program Files (x86)\SEGGER\JLink_V614b\JLinkGDBServerCL.exe" -select USB -device MK60FN1M0xxx15 -if JTAG -speed auto -ir
+"C:\Program Files (x86)\SEGGER\JLink_V614h\JLinkGDBServerCL.exe" -select USB -device MK60FN1M0xxx15 -if JTAG -speed auto -ir

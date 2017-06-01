@@ -18,6 +18,8 @@
 #ifndef CHASING17_FCYYUSV4_H_
 #define CHASING17_FCYYUSV4_H_
 
+#include <limits>
+
 #include "libbase/k60/gpio.h"
 
 using libbase::k60::Gpi;
@@ -25,6 +27,9 @@ using libbase::k60::Pin;
 
 class FcYyUsV4 {
  public:
+  static constexpr unsigned int kMinDistance = 0;
+  static constexpr unsigned int kMaxDistance = std::numeric_limits<unsigned int>::max();
+
   /**
    * @param pin Name of Pin connected to the sensor
    */
@@ -33,7 +38,7 @@ class FcYyUsV4 {
   /**
    * @return The distance measured by the sensor (mm)
    */
-  const int GetDistance() const { return distance_; }
+  const unsigned int GetDistance() const { return distance_; }
 
  private:
   static void listener(Gpi* gpi);
@@ -42,7 +47,7 @@ class FcYyUsV4 {
   Gpi::Config gpi_config_;
 
   static uint32_t impulse_start_time_;
-  static int distance_;
+  static unsigned int distance_;
 };
 
 #endif  // CHASING17_FCYYUSV4_H_

@@ -71,6 +71,10 @@ void Mpc::DoCorrection() {
   if (abs(last_encoder_val_) < 500) {
     motor_->SetPower(0);
     return;
+  } else if (last_encoder_val_ > 65530) {
+    // workaround for bug in quad_encoder:
+    // regression where encoder value will rise to 65535 at indeterminate intervals
+    return;
   }
 
   // get the speed difference and add power linearly.
