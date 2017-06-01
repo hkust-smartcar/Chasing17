@@ -44,7 +44,7 @@ enum struct Algorithm {
   kKingReceive,
   kSpeedControl,
   kOptimal,
-  kTestGround
+  kTestGround,
   kDavid,
   kDistance
 };
