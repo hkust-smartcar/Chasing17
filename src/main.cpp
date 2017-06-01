@@ -13,7 +13,6 @@
 #include "libsc/battery_meter.h"
 
 #include "algorithm/bt-demo.h"
-#include "algorithm/distance.h"
 #include "algorithm/receiver.h"
 #include "algorithm/david/main.h"
 #include "algorithm/king/main.h"
@@ -45,15 +44,9 @@ enum struct Algorithm {
   kKingReceive,
   kSpeedControl,
   kOptimal,
-<<<<<<< HEAD
-  kDavid,
   kTestGround
-||||||| merged common ancestors
-  kDavid
-=======
   kDavid,
   kDistance
->>>>>>> 5f184f8c067bc3adae3b0b1a9cb896cce5e85a0c
 };
 
 int main() {
@@ -68,10 +61,10 @@ int main() {
   while (bm.GetVoltage() <= 7.4);
 
   // modify next line to switch between algorithms
-  constexpr Algorithm a = Algorithm::kDistance;
+  constexpr Algorithm a = Algorithm::kDavid;
 
   // modify next line to enable/disable encoder
-  constexpr bool has_encoder = false;
+  constexpr bool has_encoder = true;
 
   // modify next line to change which car we're working with
   CarManager::Car c = CarManager::Car::kOld;
@@ -105,16 +98,12 @@ int main() {
     case Algorithm::kDavid:
       algorithm::david::main();
       break;
-<<<<<<< HEAD
     case Algorithm::kTestGround:
       util::testground::main();
       break;
-||||||| merged common ancestors
-=======
     case Algorithm::kDistance:
       algorithm::USIRDemo();
       break;
->>>>>>> 5f184f8c067bc3adae3b0b1a9cb896cce5e85a0c
     default:
       // all cases covered
       break;
