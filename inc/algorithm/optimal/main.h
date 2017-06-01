@@ -65,7 +65,7 @@ struct Edges {
 struct Corners {
 	std::list<std::pair<int, int>> points;
 	inline void push(int x, int y) {points.push_back(std::make_pair(x, y));}
-	inline int size() {points.size();}
+	inline int size() {return points.size();}
 };
 
 struct {
@@ -75,6 +75,15 @@ struct {
 struct {
 	uint16_t w = 128, h = 160;
 } WorldSize;
+
+/**
+ * TranslateType enum struct
+ *
+ * An enum struct implementation designed for GenPath()
+ */
+enum struct TranslateType {
+	kNone = 0, kLeftNull, kRightNull
+};
 
 }
 }

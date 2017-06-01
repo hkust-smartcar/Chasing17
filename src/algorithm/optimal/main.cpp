@@ -403,9 +403,15 @@ CarManager::Feature IdentifyFeat(){
 /**
  * Path generation
  * 1. Weighted average path ("Center line")
- *  - Would now only work when both (real) left edge and right edge are within camera
- *  - Otherwise, the path may go out of edge
+ *  - If in a range of y such that there exists no left edge: translate right edge towards the left
+ *  - If in a range of y such that there exists no right edge: translate left edge towards the right
+ *  - Otherwise, take the average of x as the the path
+ *  - XXX: The path may be broken as different methods are used to plot the path
  * 2. TODO (mcreng): Naive psuedo-optimal path ("Curve fitting")
+ * Points to take:
+ * 1. Current position (width/2, 0)
+ * 2. Start/End points of shifted curve due to LEFT_NULL or RIGHT_NULL
+ * 3. Under no LEFT_NULL and RIGHT_NULL, the midpt's midpt
  */
 void GenPath(){
 	int left_size = left_edge.size();
@@ -417,45 +423,74 @@ void GenPath(){
 		return;
 	}
 
-	if (!left_size){
-		//empty left edge => turn left
-		int shift = left_edge.points[0].first / 2;
-		for (auto&& entry : left_edge.points){
-			if (entry.first - shift < 0){
-				break;
-			} else {
-				path.push(entry.first - shift, entry.second);
-			}
-		}
-		return;
-	}
-
-	if (!right_size){
-		//empty right edge => turn right
-		int shift = (WorldSize.w - right_edge.points[0].first) / 2;
-		for (auto&& entry : left_edge.points){
-			if (entry.first + shift >= WorldSize.w){
-				break;
-			} else {
-				path.push(entry.first + shift, entry.second);
-			}
-		}
-		return;
-	}
-
-	//else: (for now) use average path
-
 	if (left_size < right_size){
 		for (int i = 0; i < right_edge.size(); i++){
-			int temp_x = (left_edge.points[(left_size * i) / right_size].first + right_edge.points[i].first) / 2;
-			int temp_y = (left_edge.points[(left_size * i) / right_size].second + right_edge.points[i].second) / 2;
-			path.push(temp_x, temp_y);
+			auto curr_left = left_edge.points[(left_size * i) / right_size];
+			auto curr_right = right_edge.points[i];
+			int shift_left_null = 0;
+			int shift_right_null = 0;
+			TranslateType translate_flag = TranslateType::kNone;
+
+			if (curr_left.first == 0 && translate_flag == TranslateType::kNone){
+				translate_flag = TranslateType::kLeftNull;
+				shift_left_null = right_edge.points[i].first / 2;
+			} else if (curr_right.first == 0 && translate_flag == TranslateType::kNone){
+				translate_flag = TranslateType::kRightNull;
+				shift_right_null = (WorldSize.w - left_edge.points[i].first) / 2;
+			//^^^ Start Translation ^^^
+			//vvv  Start Averaging  vvv
+			} else if (curr_left.first != 0 && translate_flag != TranslateType::kNone){
+				translate_flag = TranslateType::kNone;
+			} else if (curr_right.first != 0 && translate_flag != TranslateType::kNone){
+				translate_flag = TranslateType::kNone;
+			}
+
+			//if translate
+			if (translate_flag == TranslateType::kLeftNull){
+				path.push(curr_right.first - shift_left_null, curr_right.second);
+			} else if (translate_flag == TranslateType::kRightNull){
+				path.push(curr_left.first + shift_right_null, curr_left.second);
+			} else {
+			//if average
+				int temp_x = (curr_left.first + curr_right.first) / 2;
+				int temp_y = (curr_left.second + curr_right.second) / 2;
+				path.push(temp_x, temp_y);
+			}
 		}
 	} else {
 		for (int i = 0; i < left_edge.size(); i++){
-			int temp_x = (left_edge.points[i].first + right_edge.points[(right_size * i) / left_size].first) / 2;
-			int temp_y = (left_edge.points[i].second + right_edge.points[(right_size * i) / left_size].second) / 2;
-			path.push(temp_x, temp_y);
+			auto curr_left = left_edge.points[i];
+			auto curr_right = right_edge.points[(right_size * i) / left_size];
+			int shift_left_null = 0;
+			int shift_right_null = 0;
+			TranslateType translate_flag = TranslateType::kNone;
+
+			if (curr_left.first == 0 && translate_flag == TranslateType::kNone){
+				translate_flag = TranslateType::kLeftNull;
+				shift_left_null = right_edge.points[i].first / 2;
+			} else if (curr_right.first == 0 && translate_flag == TranslateType::kNone){
+				translate_flag = TranslateType::kRightNull;
+				shift_right_null = (WorldSize.w - left_edge.points[i].first) / 2;
+			//^^^ Start Translation ^^^
+			//vvv  Start Averaging  vvv
+			} else if (curr_left.first != 0 && translate_flag != TranslateType::kNone){
+				translate_flag = TranslateType::kNone;
+			} else if (curr_right.first != 0 && translate_flag != TranslateType::kNone){
+				translate_flag = TranslateType::kNone;
+			}
+
+			//if translate
+			if (translate_flag == TranslateType::kLeftNull){
+				path.push(curr_right.first - shift_left_null, curr_right.second);
+			} else if (translate_flag == TranslateType::kRightNull){
+				path.push(curr_left.first + shift_right_null, curr_left.second);
+			} else {
+			//if average
+				int temp_x = (curr_left.first + curr_right.first) / 2;
+				int temp_y = (curr_left.second + curr_right.second) / 2;
+				path.push(temp_x, temp_y);
+			}
+
 		}
 	}
 

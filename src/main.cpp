@@ -20,6 +20,7 @@
 #include "algorithm/peter/main.h"
 #include "algorithm/speedctrl.h"
 #include "algorithm/optimal/main.h"
+#include "algorithm/distance.h"
 #include "util/testground.h"
 
 namespace libbase {
