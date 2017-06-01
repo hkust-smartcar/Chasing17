@@ -17,15 +17,19 @@
 using libsc::System;
 
 uint32_t FcYyUsV4::impulse_start_time_ = 0;
-int FcYyUsV4::distance_ = 0;
+unsigned int FcYyUsV4::distance_ = 0;
 
 void FcYyUsV4::listener(Gpi* gpi) {
   if (gpi->Get()) {
-    impulse_start_time_ = System::Time();
+    impulse_start_time_ = System::Time100Us();
   } else {
-    int temp = (System::Time() - impulse_start_time_) * 340;
-    if (temp < 550000 && temp > 20) {
-      distance_ = temp;
+    unsigned int dist = (System::Time100Us() - impulse_start_time_) * 34;
+    if (dist > 5500) {
+      distance_ = kMaxDistance;
+    } else if (dist < 20) {
+      distance_ = kMinDistance;
+    } else {
+      distance_ = dist;
     }
   }
 }
