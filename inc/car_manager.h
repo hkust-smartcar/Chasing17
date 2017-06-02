@@ -83,8 +83,8 @@ class CarManager final {
    * Enum of car identity, i.e. whether it is old or new
    */
   enum struct Car : bool {
-    kOld,
-    kNew
+    kCar1,
+    kCar2
   };
 
   /**
@@ -109,8 +109,16 @@ class CarManager final {
     uint16_t kRightBound;
   };
 
-  static ServoBounds old_car;
-  static ServoBounds new_car;
+  static constexpr ServoBounds kBoundsCar1 = {1040, 755, 470};
+  static constexpr ServoBounds kBoundsCar2 = {1145, 845, 545};
+
+  struct ServoAngles {
+    uint8_t kLeftAngle;
+    uint8_t kRightAngle;
+  };
+
+  static constexpr ServoAngles kAnglesCar1 = {36, 38};
+  static constexpr ServoAngles kAnglesCar2 = {38, 41};
 
   /**
    * Update all parameters of the car (speed, slope, servo angle)
@@ -136,7 +144,10 @@ class CarManager final {
   static Identity GetIdentity() { return identity_; }
   static Car GetCar() { return car_; }
   static ServoBounds GetServoBounds() {
-    return car_ == CarManager::Car::kOld ? CarManager::old_car : CarManager::new_car;
+    return car_ == CarManager::Car::kCar1 ? CarManager::kBoundsCar1 : CarManager::kBoundsCar2;
+  }
+  static ServoAngles GetServoAngles() {
+    return car_ == CarManager::Car::kCar1 ? CarManager::kAnglesCar1 : CarManager::kAnglesCar2;
   }
 
   // Setters

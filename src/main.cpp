@@ -17,7 +17,6 @@
 #include "algorithm/david/main.h"
 #include "algorithm/king/main.h"
 #include "algorithm/leslie/main.h"
-#include "algorithm/peter/main.h"
 #include "algorithm/speedctrl.h"
 #include "algorithm/optimal/main.h"
 #include "algorithm/distance.h"
@@ -39,7 +38,6 @@ using libsc::System;
 enum struct Algorithm {
   kKing,
   kLeslie,
-  kPeter,
   kReceiver,
   kBluetoothTest,
   kKingReceive,
@@ -68,18 +66,15 @@ int main() {
   constexpr bool has_encoder = true;
 
   // modify next line to change which car we're working with
-  CarManager::Car c = CarManager::Car::kOld;
+  CarManager::Car c = CarManager::Car::kCar1;
 
-  CarManager::ServoBounds s = c == CarManager::Car::kOld ? CarManager::old_car : CarManager::new_car;
+  CarManager::ServoBounds s = c == CarManager::Car::kCar1 ? CarManager::kBoundsCar1 : CarManager::kBoundsCar2;
   switch (a) {
     case Algorithm::kKing:
       algorithm::king::main(has_encoder, s);
       break;
     case Algorithm::kLeslie:
       algorithm::leslie::main(has_encoder);
-      break;
-    case Algorithm::kPeter:
-      algorithm::peter::main(has_encoder, s);
       break;
     case Algorithm::kReceiver:
       algorithm::receiver();

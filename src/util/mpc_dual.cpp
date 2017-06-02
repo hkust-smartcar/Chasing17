@@ -19,6 +19,7 @@
 namespace util {
 void MpcDual::DoCorrection() {
   CarManager::ServoBounds s = CarManager::GetServoBounds();
+  CarManager::ServoAngles a = CarManager::GetServoAngles();
 
   float servo_diff = s.kCenter - CarManager::GetServoDeg();
 
@@ -26,12 +27,14 @@ void MpcDual::DoCorrection() {
   // difference between left/right wheels
   if (servo_diff < 0) {  // turning left
     float motor_speed_diff = servo_diff / (s.kCenter - s.kLeftBound);
+    // TODO(Derppening): Fix turning radius ratio
     motor_speed_diff *= 0.142;
     motor_speed_diff_ = motor_speed_diff;
     mpc_right_->AddToTargetSpeed(mpc_right_->GetTargetSpeed() * motor_speed_diff, false);
     mpc_left_->AddToTargetSpeed(mpc_left_->GetTargetSpeed() * -motor_speed_diff, false);
   } else if (servo_diff > 0) {  // turning right
     float motor_speed_diff = servo_diff / (s.kRightBound - s.kCenter);
+    // TODO(Derppening): Fix turning radius ratio
     motor_speed_diff *= 0.142;
     motor_speed_diff_ = motor_speed_diff;
     mpc_left_->AddToTargetSpeed(mpc_left_->GetTargetSpeed() * motor_speed_diff, false);

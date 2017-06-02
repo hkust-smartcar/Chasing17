@@ -14,13 +14,13 @@
 
 #include <cstdint>
 
-constexpr int kNumOfRows = 32;
-constexpr int kImageWidth = 128;
-constexpr int kImageHeight = 160;
-constexpr int kCameraWidth = 128;
-constexpr int kCameraHeight = 480;
+constexpr uint8_t kNumOfRows = 32;
+constexpr uint16_t kImageWidth = 128;
+constexpr uint16_t kImageHeight = 160;
+constexpr uint16_t kCameraWidth = 128;
+constexpr uint16_t kCameraHeight = 480;
 
-constexpr int transformMatrix[128][160][2] =
+constexpr int16_t transformMatrix[128][160][2] =
     {
         {
             {29, 26}, {28, 27}, {28, 27}, {28, 28}, {28, 28}, {27, 29}, {27, 29}, {27, 30}, {27, 30}, {26, 31},

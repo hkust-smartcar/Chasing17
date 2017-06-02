@@ -81,10 +81,10 @@ void main() {
   CarManager::Config car_config;
   car_config.servo = std::move(servo);
   car_config.epc = std::move(mpc_dual);
-  car_config.car = CarManager::Car::kOld;
+  car_config.car = CarManager::Car::kCar1;
   CarManager::Init(std::move(car_config));
 
-  CarManager::SetTargetAngle(CarManager::old_car.kCenter);
+  CarManager::SetTargetAngle(CarManager::kBoundsCar1.kCenter);
 
   auto time_img = System::Time();
 

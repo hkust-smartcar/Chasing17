@@ -34,10 +34,13 @@ int8_t CarManager::slope_deg_ = 0;
 CarManager::Side CarManager::side_ = CarManager::Side::kMiddle;
 CarManager::Feature CarManager::feature_ = CarManager::Feature::kStraight;
 CarManager::Identity CarManager::identity_ = CarManager::Identity::kFront;
-CarManager::Car CarManager::car_ = CarManager::Car::kOld;
+CarManager::Car CarManager::car_ = CarManager::Car::kCar1;
 
-CarManager::ServoBounds CarManager::old_car = {980, 720, 390};
-CarManager::ServoBounds CarManager::new_car = {1050, 800, 450};
+constexpr CarManager::ServoBounds CarManager::kBoundsCar1;
+constexpr CarManager::ServoBounds CarManager::kBoundsCar2;
+
+constexpr CarManager::ServoAngles CarManager::kAnglesCar1;
+constexpr CarManager::ServoAngles CarManager::kAnglesCar2;
 
 unique_ptr<Mpc> CarManager::epc_left_ = nullptr;
 unique_ptr<Mpc> CarManager::epc_right_ = nullptr;
@@ -94,11 +97,11 @@ void CarManager::SetTargetAngle(uint16_t angle) {
   }
   ServoBounds s;
   switch (car_) {
-    case Car::kOld:
-      s = old_car;
+    case Car::kCar1:
+      s = kBoundsCar1;
       break;
-    case Car::kNew:
-      s = new_car;
+    case Car::kCar2:
+      s = kBoundsCar2;
       break;
   }
   if (angle > s.kLeftBound) {
