@@ -49,6 +49,9 @@ LcdTypewriter* pWriter = nullptr;
 CarManager::ServoBounds* pServoBounds = nullptr;
 FutabaS3010* pServo = nullptr;
 
+CarManager::ServoBounds servo_bounds;
+CarManager::Car car;
+
 int max(int a, int b) {return (a>b ? a : b);}
 int min(int a, int b) {return (a<b ? a : b);}
 
@@ -109,6 +112,14 @@ bool getBit(int i_x, int i_y){
 
 
 bool getWorldBit(int w_x, int w_y){
+	switch (car){
+	case CarManager::Car::kCar1:
+		break;
+	case CarManager::Car::kCar2:
+		break;
+	}
+
+
 	w_y = 160 - w_y;
 	int i_x,i_y;
 	i_x = transformMatrix[w_x][w_y][0];
@@ -523,8 +534,11 @@ void Interprete(){
 
 
 
-void main(CarManager::ServoBounds servo_bounds){
+void main(CarManager::Car c){
 	System::Init();
+
+	car = c;
+	servo_bounds = car == CarManager::Car::kCar1 ? CarManager::kBoundsCar1 : CarManager::kBoundsCar2;
 
 	Led::Config ConfigLed;
 	ConfigLed.id = 0;

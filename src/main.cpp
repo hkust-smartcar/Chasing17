@@ -60,13 +60,13 @@ int main() {
   while (bm.GetVoltage() <= 7.4);
 
   // modify next line to switch between algorithms
-  constexpr Algorithm a = Algorithm::kDavid;
+  constexpr Algorithm a = Algorithm::kOptimal;
 
   // modify next line to enable/disable encoder
   constexpr bool has_encoder = true;
 
   // modify next line to change which car we're working with
-  CarManager::Car c = CarManager::Car::kCar1;
+  CarManager::Car c = CarManager::Car::kCar2;
 
   CarManager::ServoBounds s = c == CarManager::Car::kCar1 ? CarManager::kBoundsCar1 : CarManager::kBoundsCar2;
   switch (a) {
@@ -89,7 +89,7 @@ int main() {
       algorithm::SpeedCtrl();
       break;
     case Algorithm::kOptimal:
-      algorithm::optimal::main(s);
+      algorithm::optimal::main(c);
       break;
     case Algorithm::kDavid:
       algorithm::david::main();

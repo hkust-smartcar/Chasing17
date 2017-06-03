@@ -22,7 +22,7 @@
 
 namespace algorithm{
 namespace optimal{
-void main(CarManager::ServoBounds);
+void main(CarManager::Car);
 
 /**
  * Edges struct
