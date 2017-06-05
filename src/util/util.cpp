@@ -40,6 +40,8 @@ using std::string;
 using std::vector;
 
 namespace util {
+constexpr uint8_t kToStringBufferSize = 32;
+
 void BtSendImage() {
   Led::Config led_config;
   led_config.id = 0;
@@ -125,5 +127,59 @@ void Int16To2ByteArray(const uint16_t num, array<Byte, 2>& bytes) {
 
 void ConsoleWriteString(LcdConsole* const console, const string& s) {
   console->WriteString(s.c_str());
+}
+
+string to_string(int val) {
+  array<char, kToStringBufferSize> str;
+  std::sprintf(str.data(), "%d", val);
+  return string(str.data());
+}
+
+string to_string(unsigned val) {
+  array<char, kToStringBufferSize> str;
+  std::sprintf(str.data(), "%u", val);
+  return string(str.data());
+}
+
+string to_string(long val) {
+  array<char, kToStringBufferSize> str;
+  std::sprintf(str.data(), "%ld", val);
+  return string(str.data());
+}
+
+string to_string(unsigned long val) {
+  array<char, kToStringBufferSize> str;
+  std::sprintf(str.data(), "%lu", val);
+  return string(str.data());
+}
+
+string to_string(long long val) {
+  array<char, kToStringBufferSize> str;
+  std::sprintf(str.data(), "%lld", val);
+  return string(str.data());
+}
+
+string to_string(unsigned long long val) {
+  array<char, kToStringBufferSize> str;
+  std::sprintf(str.data(), "%llu", val);
+  return string(str.data());
+}
+
+string to_string(float val) {
+  array<char, kToStringBufferSize> str;
+  std::sprintf(str.data(), "%f", val);
+  return string(str.data());
+}
+
+string to_string(double val) {
+  array<char, kToStringBufferSize> str;
+  std::sprintf(str.data(), "%f", val);
+  return string(str.data());
+}
+
+string to_string(long double val) {
+  array<char, kToStringBufferSize> str;
+  std::sprintf(str.data(), "%Lf", val);
+  return string(str.data());
 }
 }  // namespace util

@@ -36,27 +36,4 @@ bool GetBitValue(const std::array<Byte, size>& a, const std::size_t x_size, cons
   std::size_t pos = y * x_size + x;
   return (a.at(pos / 8) >> (7 - pos % 8)) & 1;
 }
-
-template<class T, typename = enable_if_t <std::is_integral<T>::value>, std::size_t size>
-int FindElement(const std::array<T, size>& arr, int first, int last, T value, bool return_last) {
-  if (last > first) {
-    for (; first <= last; ++first) {
-      if (arr.at(first) == value) {
-        return first;
-      }
-    }
-  } else if (first > last) {
-    for (; first >= last; --first) {
-      if (arr.at(first) == value) {
-        return first;
-      }
-    }
-  } else if (first == last) {
-    if (arr.at(first) == value) {
-      return first;
-    }
-    return return_last ? last : -1;
-  }
-  return return_last ? last : -1;
-}
 }  // namespace util

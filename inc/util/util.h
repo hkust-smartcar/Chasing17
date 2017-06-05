@@ -83,13 +83,17 @@ void BtSendImage();
  */
 void ConsoleWriteString(libsc::LcdConsole* const console, const std::string& s);
 
-#if __cplusplus < 201402L
-/**
- * Backport @c std::enable_if_t from C++14 if we're not compiling with it
- */
-template<bool B, class T = void>
-using enable_if_t = typename std::enable_if<B, T>::type;
+std::string to_string(int val);
+std::string to_string(unsigned val);
+std::string to_string(long val);
+std::string to_string(unsigned long val);
+std::string to_string(long long val);
+std::string to_string(unsigned long long val);
+std::string to_string(float val);
+std::string to_string(double val);
+std::string to_string(long double val);
 
+#if __cplusplus < 201402L
 /**
  * Backport of std::make_unique from C++14
  */
@@ -98,26 +102,8 @@ std::unique_ptr<T> make_unique(Args&& ... args) {
   return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
 #else
-using std::enable_if_t;
 using std::make_unique;
 #endif
-
-/**
- * Finds a specified element in an integer-typed C++ standard array. Searches indices @c [start,end].
- *
- * @note @p start and @p end can be flipped to iterate the array backwards.
- * @note Function does not include bounds checking.
- *
- * @tparam T An integer primitive type
- * @param arr Data array
- * @param first Starting index
- * @param last Ending index
- * @param value The value to find
- * @param return_last If @c true, returns last element if value is not found. Otherwise, returns -1.
- * @return Index of first matching element if found. Otherwise dependent on @p return_last.
- */
-template<class T, typename = enable_if_t<std::is_integral<T>::value>, std::size_t size>
-int FindElement(const std::array<T, size>& arr, int first, int last, T value, bool return_last = true);
 }  // namespace util
 
 #include "util/util.tcc"
