@@ -105,7 +105,7 @@ void CameraTest() {
   while (true) {
     const Byte *pBuffer = camera->LockBuffer();
     std::array<Byte, kBufferSize> buffer_arr{};
-    CopyByteArray(*pBuffer, &buffer_arr);
+    CopyByteArray(pBuffer, buffer_arr);
 
     camera->UnlockBuffer();
     lcd->SetRegion(Lcd::Rect(0, 0, 80, 60));

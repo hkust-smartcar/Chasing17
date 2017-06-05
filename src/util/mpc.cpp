@@ -31,9 +31,9 @@ namespace util {
  * {0.002, 0.0001, 0.00032/0.0005} //kinda lags the change a bit
  * {0.00198, 0.002, 0.00035} //seems to be working quite well, only tiny fluctuations
  */
-float Mpc::kP = 0.00198;
-float Mpc::kI = 0.002;
-float Mpc::kD = 0.00035;
+constexpr float Mpc::kP;
+constexpr float Mpc::kI;
+constexpr float Mpc::kD;
 
 void Mpc::SetTargetSpeed(const int16_t speed, bool commit_now) {
   target_speed_ = speed;
@@ -66,9 +66,13 @@ void Mpc::DoCorrection() {
   }
 
   UpdateEncoder();
+  if (force_start_count_ > 0) {
+    --force_start_count_;
+  }
 
-  // motor protection - turn off motor when motor is on but encoder has null value
-  if (abs(last_encoder_val_) < 500) {
+  // motor protection - turn off motor when encoder has null value
+  // override this if force_start_count is bigger than 0
+  if (abs(last_encoder_val_) < 500 && force_start_count_ == 0) {
     motor_->SetPower(0);
     return;
   } else if (last_encoder_val_ > 65530) {
@@ -105,12 +109,22 @@ void Mpc::CommitTargetSpeed() {
   DoCorrection();
 }
 
+void Mpc::SetForceOverride(bool force_override) {
+  if (force_override) {
+    force_start_count_ = 10;
+  } else {
+    force_start_count_ = 0;
+  }
+}
+
 void Mpc::UpdateEncoder() {
   last_encoder_duration_ = GetTimeElapsed();
+
   encoder_->Update();
   last_encoder_val_ = encoder_->GetCount() * 1000 / static_cast<int32_t>(last_encoder_duration_);
+
   last_ten_encoder_val_.push_back(last_encoder_val_);
-  while (last_ten_encoder_val_.size() > 10) last_ten_encoder_val_.pop_front();
+  while (last_ten_encoder_val_.size() > 10) last_ten_encoder_val_.erase(last_ten_encoder_val_.begin());
   average_encoder_val_ = 0;
   for (auto&& m : last_ten_encoder_val_){
 	  average_encoder_val_ += m;

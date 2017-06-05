@@ -151,13 +151,13 @@ class CarManager final {
   }
 
   // Setters
-  // TODO: Decide if we want to make bluetooth a static class
   static void SetFeature(const Feature f) { feature_ = f; }
   static void SetIdentity(const Identity i) { identity_ = i; }
-  static void SwitchIdentity();
+  static void SetOverrideProtection(const bool override_protection, const MotorSide side);
   static void SetSide(const Side s) { side_ = s; }
   static void SetTargetAngle(uint16_t angle);
   static void SetTargetSpeed(MotorSide src, int16_t speed);
+  static void SwitchIdentity();
 
  private:
   // Static class. Disable constructor

@@ -23,6 +23,7 @@
 #include <vector>
 
 #include "libbase/misc_types.h"
+#include "libsc/lcd_console.h"
 
 namespace util {
 /**
@@ -33,29 +34,7 @@ namespace util {
  * @param dest Destination (C++11-style) array
  */
 template<size_t size>
-void CopyByteArray(const Byte& src, std::array<Byte, size>* dest);
-
-/**
- * Converts a byte array to a C++11-style 1D bit array
- *
- * @tparam size Size of @c dest array
- * @param src Source byte (C++11-style) array
- * @param dest Destination 1D bit (C++11-style) array
- */
-template<size_t size>
-void ByteTo1DBitArray(const std::array<Byte, size / 8>& src, std::array<bool, size>* dest);
-
-/**
- * Converts a byte array to a C++11-style 2D bit array
- *
- * @tparam width Width of the array (size of the interior array)
- * @tparam height Height of the array (size of the exterior array)
- * @param src Source byte (C++11-style) array
- * @param dest Destination bit (C++11-style) array
- */
-template<size_t width, size_t height>
-void ByteTo2DBitArray(const std::array<Byte, width * height / 8>& src,
-                      std::array<std::array<bool, width>, height>* dest);
+void CopyByteArray(const Byte* const src, std::array<Byte, size>& dest);
 
 /**
  * Retrieves the bit value from a byte array, given a 1D coordinate.
@@ -82,38 +61,6 @@ template<size_t size>
 bool GetBitValue(const std::array<Byte, size>& byte_arr, const size_t x_size, const size_t x, const size_t y);
 
 /**
- * Applies median filter to a C++11-style 2D bit array
- *
- * @tparam width Width of the array (size of the interior array)
- * @tparam height Height of the array (size of the exterior array)
- * @param src Source bit (C++11-style) array
- * @param dest Destination bit (C++11-style) array
- */
-template<size_t width, size_t height>
-void MedianFilter(const std::array<std::array<bool, width>, height>& src,
-                  std::array<std::array<bool, width>, height>* dest);
-/**
- * Applies median filter to a C++11-style 2D bit array
- *
- * @tparam width Width of the array (size of the interior array)
- * @tparam height Height of the array (size of the exterior array)
- * @param arr Bit array (C++11-style) to apply filter to
- */
-template<size_t width, size_t height>
-void MedianFilter(std::array<std::array<bool, width>, height>* arr);
-
-/**
- * Calculates the slope of the linear regression line from a given set of points.
- *
- * @note If vector sizes do not match, function will return @c inf.
- *
- * @param x Vector of x values
- * @param y Vector of y values
- * @return Slope of regression line
- */
-float CalcLinearRegressionSlope(const std::vector<int>& x, const std::vector<int>& y);
-
-/**
  * Converts an uint16_t to an array with 2 bytes.
  *
  * @param num The uint16_t number
@@ -127,6 +74,14 @@ void Int16To2ByteArray(const uint16_t num, std::array<Byte, 2>& bytes);
  * @note The function must be called after @code System::Init() @endcode
  */
 void BtSendImage();
+
+/**
+ * Extension function for LcdConsole::WriteString for std::string.
+ *
+ * @param console Pointer to console object
+ * @param s String to be sent
+ */
+void ConsoleWriteString(libsc::LcdConsole* const console, const std::string& s);
 
 #if __cplusplus < 201402L
 /**

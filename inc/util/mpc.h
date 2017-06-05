@@ -22,8 +22,8 @@
 #define CHASING17_UTIL_MPC_H_
 
 #include <memory>
+#include <queue>
 #include <string>
-#include <deque>
 
 #include "libsc/alternate_motor.h"
 #include "libsc/dir_encoder.h"
@@ -81,6 +81,13 @@ class Mpc {
    */
   void AddToTargetSpeed(const int16_t d_speed, bool commit_now = true);
 
+  /**
+   * Set the override flag
+   *
+   * @param force_override Whether to override motor protection
+   */
+  void SetForceOverride(bool force_override);
+
   // Getters
   /**
    * @return The time elapsed between now and last time the encoder values
@@ -115,7 +122,10 @@ class Mpc {
   /**
    * Constants for encoder to motor value conversions
    */
-  static float kP, kI, kD;
+  static constexpr float kP = 0.00198;
+  static constexpr float kI = 0.002;
+  static constexpr float kD = 0.00035;
+
   enum struct MotorConstants {
     /**
      * Lower bound of motor power which should not be used for extended periods
@@ -175,7 +185,7 @@ class Mpc {
   /**
    * Queue of latest ten encoder values
    */
-  std::deque<int32_t> last_ten_encoder_val_;
+  std::vector<int32_t> last_ten_encoder_val_;
   /**
    * The average of newest ten values of the encoder in units per second
    */
@@ -198,6 +208,8 @@ class Mpc {
    * How long the last encoder cycle lasted.
    */
   libsc::Timer::TimerInt last_encoder_duration_ = 0;
+
+  uint8_t force_start_count_ = 0;
 
  private:
   std::shared_ptr<libsc::AlternateMotor> motor_;

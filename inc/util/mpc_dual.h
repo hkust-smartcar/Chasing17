@@ -93,6 +93,14 @@ class MpcDual final : protected Mpc {
    */
   void AddToTargetSpeed(const int16_t speed, bool commit_now = true);
 
+  /**
+   * Set the override flag
+   *
+   * @param force_override Whether to override motor protection
+   * @param side Which side to commit to
+   */
+  void SetForceOverride(bool force_override, MotorSide side = MotorSide::kBoth);
+
   // Getters
   /**
    * @param side Which encoder to retrieve the time from.

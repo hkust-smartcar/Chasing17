@@ -72,6 +72,26 @@ void CarManager::SwitchIdentity() {
   }
 }
 
+void CarManager::SetOverrideProtection(const bool override_protection, const MotorSide side) {
+  if (side == MotorSide::kBoth) {
+    if (epc_ != nullptr) {
+      epc_->SetForceOverride(override_protection);
+      return;
+    }
+    if (epc_left_ != nullptr) {
+      epc_left_->SetForceOverride(override_protection);
+    }
+    if (epc_right_ != nullptr) {
+      epc_right_->SetForceOverride(override_protection);
+    }
+    return;
+  } else if (side == MotorSide::kLeft && epc_left_ != nullptr) {
+    epc_left_->SetForceOverride(override_protection);
+  } else if (side == MotorSide::kRight && epc_right_ != nullptr) {
+    epc_right_->SetForceOverride(override_protection);
+  }
+}
+
 void CarManager::SetTargetSpeed(MotorSide src, int16_t speed) {
   if (epc_ != nullptr) {
     epc_->SetTargetSpeed(speed, false);

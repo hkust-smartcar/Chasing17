@@ -25,7 +25,10 @@ void MpcDual::DoCorrection() {
 
   // calculates the path deviation, then times a factor to account for speed
   // difference between left/right wheels
-  if (servo_diff < 0) {  // turning left
+  if (mpc_left_->GetTargetSpeed() == 0 || mpc_right_->GetTargetSpeed() == 0) {
+    mpc_left_->SetTargetSpeed(0, false);
+    mpc_right_->SetTargetSpeed(0, false);
+  } else if (servo_diff < 0) {  // turning left
     float motor_speed_diff = servo_diff / (s.kCenter - s.kLeftBound);
     // TODO(Derppening): Fix turning radius ratio
     motor_speed_diff *= 0.142;
@@ -76,6 +79,15 @@ int32_t MpcDual::GetCurrentSpeed(MotorSide side) const {
     return mpc_left_->GetCurrentSpeed();
   } else {
     return mpc_right_->GetCurrentSpeed();
+  }
+}
+
+void MpcDual::SetForceOverride(bool force_override, MotorSide side) {
+  if (side == MotorSide::kBoth || side == MotorSide::kLeft) {
+    mpc_left_->SetForceOverride(force_override);
+  }
+  if (side == MotorSide::kBoth || side == MotorSide::kRight) {
+    mpc_right_->SetForceOverride(force_override);
   }
 }
 
