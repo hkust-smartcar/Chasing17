@@ -97,10 +97,6 @@ bool BTComm::BTListener(const Byte* data, size_t size) {
     if (type != 0x00 && value != 0x00) {
       return true;
     }
-    //erase map info
-    /*if (NAKbuffer_.count(dataArray_[1]) > 0) {
-      NAKbuffer_.erase(dataArray_[1]);
-    }*/
     auto find = NAKbuffer_.find(dataArray_[1]);
     if (find != NAKbuffer_.end()) {
       NAKbuffer_.erase(find);

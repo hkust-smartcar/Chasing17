@@ -22,6 +22,7 @@ using libsc::AlternateMotor;
 using libsc::System;
 using libsc::Timer;
 using std::abs;
+using util::to_string;
 
 namespace util {
 /* Data Sets
@@ -34,6 +35,9 @@ namespace util {
 constexpr float Mpc::kP;
 constexpr float Mpc::kI;
 constexpr float Mpc::kD;
+
+constexpr uint8_t Mpc::kOverrideWaitCycles;
+constexpr uint16_t Mpc::kProtectionMinCount;
 
 void Mpc::SetTargetSpeed(const int16_t speed, bool commit_now) {
   target_speed_ = speed;
@@ -72,7 +76,7 @@ void Mpc::DoCorrection() {
 
   // motor protection - turn off motor when encoder has null value
   // override this if force_start_count is bigger than 0
-  if (abs(last_encoder_val_) < 500 && force_start_count_ == 0) {
+  if (abs(last_encoder_val_) < kProtectionMinCount && force_start_count_ == 0) {
     motor_->SetPower(0);
     return;
   } else if (last_encoder_val_ > 65530) {
@@ -135,13 +139,13 @@ void Mpc::UpdateEncoder() {
 }
 
 void MpcDebug::OutputEncoderMotorValues(libsc::LcdConsole* console) const {
-//  std::string s = std::to_string(mpc_->last_encoder_val_) + " " + std::to_string(mpc_->motor_->GetPower()) + "\n";
-//  console->WriteString(s.c_str());
+  std::string s = to_string(mpc_->last_encoder_val_) + " " + to_string(mpc_->motor_->GetPower()) + "\n";
+  console->WriteString(s.c_str());
 }
 
 void MpcDebug::OutputLastEncoderValues(libsc::LcdConsole* console) const {
-//  std::string s = std::to_string(mpc_->last_encoder_duration_) + " " + std::to_string(mpc_->last_encoder_val_) + "\n";
-//  console->WriteString(s.c_str());
+  std::string s = to_string(mpc_->last_encoder_duration_) + " " + to_string(mpc_->last_encoder_val_) + "\n";
+  console->WriteString(s.c_str());
 }
 
 void MpcDebug::SetMotorPower(uint16_t power, bool is_clockwise) {

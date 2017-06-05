@@ -129,8 +129,7 @@ bool Overtake::ExecuteOvertake() {
     us_->Stop();
 
     // TODO(Derppening): calculate speed difference, then +50% to catch up
-    CarManager::SetTargetSpeed(CarManager::MotorSide::kLeft, 40);
-    CarManager::SetTargetSpeed(CarManager::MotorSide::kRight, 40);
+    CarManager::SetTargetSpeed(4000);
 
     if (bluetooth_->hasSwitchIDReq()) {
       CarManager::SwitchIdentity();

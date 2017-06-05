@@ -6,7 +6,7 @@
  *
  * Author: David Mak (Derppening)
  *
- * Implementations for EpcDual class.
+ * Implementations for MpcDual class.
  *
  */
 
@@ -14,7 +14,7 @@
 
 #include "car_manager.h"
 
-//using std::to_string;
+using util::to_string;
 
 namespace util {
 void MpcDual::DoCorrection() {
@@ -92,51 +92,48 @@ void MpcDual::SetForceOverride(bool force_override, MotorSide side) {
 }
 
 void MpcDualDebug::OutputEncoderMotorValues(libsc::LcdConsole* console, MpcDual::MotorSide side) const {
-  console->SetCursorRow(0);
   std::string s = "";
+
+  // display encoder values + motor power
+  console->SetCursorRow(0);
   if (side == MpcDual::MotorSide::kLeft || side == MpcDual::MotorSide::kBoth) {
-//    s += "L: " + std::to_string(mpc_dual_->mpc_left_->last_encoder_val_) +
-//        " " + std::to_string(mpc_dual_->mpc_left_->motor_->GetPower());
+    s += "L: " + to_string(mpc_dual_->mpc_left_->last_encoder_val_) +
+        " " + to_string(mpc_dual_->mpc_left_->motor_->GetPower());
   }
   if (side == MpcDual::MotorSide::kRight || side == MpcDual::MotorSide::kBoth) {
     if (s != "") { s += "\n"; }
-//    s += "R: " + std::to_string(mpc_dual_->mpc_right_->last_encoder_val_) +
-//        " " + std::to_string(mpc_dual_->mpc_right_->motor_->GetPower());
+    s += "R: " + to_string(mpc_dual_->mpc_right_->last_encoder_val_) +
+        " " + to_string(mpc_dual_->mpc_right_->motor_->GetPower());
   }
   if (s != "") { s += "\n"; }
-  console->WriteString(s.c_str());
-  if (mpc_dual_->mpc_left_->last_encoder_val_ > 65535) {
-    console->SetCursorRow(6);
-    s = "L > 2^15";
-    console->WriteString(s.c_str());
-  }
-  if (mpc_dual_->mpc_right_->last_encoder_val_ > 65535) {
-    console->SetCursorRow(7);
-    s = "R > 2^15";
-    console->WriteString(s.c_str());
-  }
+  util::ConsoleWriteString(console, s); 
+
+  // display target speed
   console->SetCursorRow(8);
-//  s = "L target: " + std::to_string(mpc_dual_->mpc_left_->GetTargetSpeed()) + "\n";
+  s = "L target: " + to_string(mpc_dual_->mpc_left_->GetTargetSpeed()) + "\n";
   console->WriteString(s.c_str());
   console->SetCursorRow(9);
-//  s = "R target: " + std::to_string(mpc_dual_->mpc_right_->GetTargetSpeed()) + "\n";
+  s = "R target: " + to_string(mpc_dual_->mpc_right_->GetTargetSpeed()) + "\n";
   console->WriteString(s.c_str());
 }
 
 void MpcDualDebug::OutputLastEncoderValues(libsc::LcdConsole* console, MpcDual::MotorSide side) const {
-  console->SetCursorRow(3);
   std::string s = "";
+
+  // output encoder duration + encoder value
+  console->SetCursorRow(3);
   if (side == MpcDual::MotorSide::kLeft || side == MpcDual::MotorSide::kBoth) {
-//    s += "L: " + std::to_string(mpc_dual_->mpc_left_->last_encoder_duration_) +
-//        " " + std::to_string(mpc_dual_->mpc_left_->last_encoder_val_);
+    s += "L: " + to_string(mpc_dual_->mpc_left_->last_encoder_duration_) +
+        " " + to_string(mpc_dual_->mpc_left_->last_encoder_val_);
   }
   if (side == MpcDual::MotorSide::kRight || side == MpcDual::MotorSide::kBoth) {
     if (s != "") { s += "\n"; }
-//    s += "R: " + std::to_string(mpc_dual_->mpc_right_->last_encoder_duration_) +
-//        " " + std::to_string(mpc_dual_->mpc_right_->last_encoder_val_);
+    s += "R: " + to_string(mpc_dual_->mpc_right_->last_encoder_duration_) +
+        " " + to_string(mpc_dual_->mpc_right_->last_encoder_val_);
   }
   if (s != "") { s += "\n"; }
-  console->WriteString(s.c_str());
+
+  ConsoleWriteString(console, s);
 }
 
 void MpcDualDebug::SetMotorPower(uint16_t power, MpcDual::MotorSide side, bool is_clockwise) {

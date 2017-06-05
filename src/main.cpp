@@ -12,12 +12,9 @@
 #include "libsc/system.h"
 #include "libsc/battery_meter.h"
 
-#include "algorithm/bt-demo.h"
-#include "algorithm/receiver.h"
 #include "algorithm/david/main.h"
 #include "algorithm/king/main.h"
 #include "algorithm/leslie/main.h"
-#include "algorithm/speedctrl.h"
 #include "algorithm/optimal/main.h"
 #include "algorithm/distance.h"
 #include "util/testground.h"
@@ -38,10 +35,7 @@ using libsc::System;
 enum struct Algorithm {
   kKing,
   kLeslie,
-  kReceiver,
-  kBluetoothTest,
   kKingReceive,
-  kSpeedControl,
   kOptimal,
   kTestGround,
   kDavid,
@@ -60,7 +54,7 @@ int main() {
   while (bm.GetVoltage() <= 7.4);
 
   // modify next line to switch between algorithms
-  constexpr Algorithm a = Algorithm::kOptimal;
+  constexpr Algorithm a = Algorithm::kTestGround;
 
   // modify next line to enable/disable encoder
   constexpr bool has_encoder = true;
@@ -76,17 +70,8 @@ int main() {
     case Algorithm::kLeslie:
       algorithm::leslie::main(has_encoder);
       break;
-    case Algorithm::kReceiver:
-      algorithm::receiver();
-      break;
-    case Algorithm::kBluetoothTest:
-      algorithm::BluetoothDemo(has_encoder);
-      break;
     case Algorithm::kKingReceive:
       algorithm::king::main_receive(has_encoder, s);
-      break;
-    case Algorithm::kSpeedControl:
-      algorithm::SpeedCtrl();
       break;
     case Algorithm::kOptimal:
       algorithm::optimal::main(c);

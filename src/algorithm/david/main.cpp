@@ -99,7 +99,7 @@ void main() {
         CarManager::UpdateParameters();
 //        led2.SetEnable(false);
 //        led3.SetEnable(true);
-        CarManager::SetTargetSpeed(CarManager::MotorSide::kBoth, 8000);
+        CarManager::SetTargetSpeed(8000);
 //        led3.SetEnable(false);
 
 //        mpc_dual->SetTargetSpeed(8000);

@@ -20,6 +20,7 @@
 #include "libsc/k60/ov7725.h"
 
 #include <array>
+#include <cstdio>
 #include <cstring>
 #include <string>
 #include <vector>
@@ -34,7 +35,7 @@ using libsc::Timer;
 using libsc::k60::JyMcuBt106;
 using libsc::k60::Ov7725;
 using std::array;
-using std::memcpy;
+using std::sprintf;
 using std::size_t;
 using std::string;
 using std::vector;
@@ -93,7 +94,7 @@ void BtSendImage() {
       led1.SetEnable(System::Time() % 500 >= 250);
       if (time_img % 1000 == 0) {
         console.SetCursorRow(9);
-//        console.WriteString(("Runtime: " + std::to_string(time_img / 1000) + "s").c_str());
+        console.WriteString(("Runtime: " + to_string(time_img / 1000) + "s").c_str());
 
         const Byte* image_ptr = camera.LockBuffer();
         array<Byte, kImageSize> image{};
@@ -104,7 +105,7 @@ void BtSendImage() {
       if (time_img % 5000 == 0) {
         const Byte* image_ptr = camera.LockBuffer();
         array<Byte, kImageSize> image{};
-        memcpy(image.data(), image_ptr, kImageSize);
+        CopyByteArray(image_ptr, image);
         camera.UnlockBuffer();
 
         led3.SetEnable(true);
@@ -112,7 +113,7 @@ void BtSendImage() {
         led4.SetEnable(bt.SendBuffer(&st, 1));
         led2.SetEnable(bt.SendBuffer(image.data(), kImageSize));
         console.SetCursorRow(8);
-//        console.WriteString(("Packet " + std::to_string(i++)).c_str());
+        console.WriteString(("Packet " + to_string(i++)).c_str());
 
         led3.SetEnable(false);
       }
@@ -131,55 +132,55 @@ void ConsoleWriteString(LcdConsole* const console, const string& s) {
 
 string to_string(int val) {
   array<char, kToStringBufferSize> str;
-  std::sprintf(str.data(), "%d", val);
+  sprintf(str.data(), "%d", val);
   return string(str.data());
 }
 
 string to_string(unsigned val) {
   array<char, kToStringBufferSize> str;
-  std::sprintf(str.data(), "%u", val);
+  sprintf(str.data(), "%u", val);
   return string(str.data());
 }
 
 string to_string(long val) {
   array<char, kToStringBufferSize> str;
-  std::sprintf(str.data(), "%ld", val);
+  sprintf(str.data(), "%ld", val);
   return string(str.data());
 }
 
 string to_string(unsigned long val) {
   array<char, kToStringBufferSize> str;
-  std::sprintf(str.data(), "%lu", val);
+  sprintf(str.data(), "%lu", val);
   return string(str.data());
 }
 
 string to_string(long long val) {
   array<char, kToStringBufferSize> str;
-  std::sprintf(str.data(), "%lld", val);
+  sprintf(str.data(), "%lld", val);
   return string(str.data());
 }
 
 string to_string(unsigned long long val) {
   array<char, kToStringBufferSize> str;
-  std::sprintf(str.data(), "%llu", val);
+  sprintf(str.data(), "%llu", val);
   return string(str.data());
 }
 
 string to_string(float val) {
   array<char, kToStringBufferSize> str;
-  std::sprintf(str.data(), "%f", val);
+  sprintf(str.data(), "%f", val);
   return string(str.data());
 }
 
 string to_string(double val) {
   array<char, kToStringBufferSize> str;
-  std::sprintf(str.data(), "%f", val);
+  sprintf(str.data(), "%f", val);
   return string(str.data());
 }
 
 string to_string(long double val) {
   array<char, kToStringBufferSize> str;
-  std::sprintf(str.data(), "%Lf", val);
+  sprintf(str.data(), "%Lf", val);
   return string(str.data());
 }
 }  // namespace util

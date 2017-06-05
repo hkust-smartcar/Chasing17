@@ -4,9 +4,7 @@
  * Copyright (c) 2014-2017 HKUST SmartCar Team
  * Refer to LICENSE for details
  *
- * Author: Peter Tse (mcreng)
- *
- * Testground for whatever you want.
+ * Implementation for testground.h
  *
  */
 
@@ -27,73 +25,95 @@
 #include "car_manager.h"
 #include "util/util.h"
 
-#include "debug_console.h"
 #include "img.h"
 
-namespace util{
-namespace testground{
+using namespace libsc;
+using namespace libsc::k60;
 
-void main(){
-	System::Init();
+namespace util {
+namespace testground {
 
-	Led::Config ConfigLed;
-	ConfigLed.id = 0;
-	Led led0(ConfigLed);
-	ConfigLed.id = 1;
-	Led led1(ConfigLed);
-	ConfigLed.id = 2;
-	Led led2(ConfigLed);
-	ConfigLed.id = 3;
-	Led led3(ConfigLed);
+void main() {
+  Led::Config ConfigLed;
+  ConfigLed.id = 0;
+  Led led0(ConfigLed);
+  ConfigLed.id = 1;
+  Led led1(ConfigLed);
+  ConfigLed.id = 2;
+  Led led2(ConfigLed);
+  ConfigLed.id = 3;
+  Led led3(ConfigLed);
 
-	k60::Ov7725::Config cameraConfig;
-	cameraConfig.id = 0;
-	cameraConfig.w = 80;
-	cameraConfig.h = 60;
-	cameraConfig.fps = k60::Ov7725Configurator::Config::Fps::kHigh;
-	k60::Ov7725 camera(cameraConfig);
+  k60::Ov7725::Config cameraConfig;
+  cameraConfig.id = 0;
+  cameraConfig.w = 80;
+  cameraConfig.h = 60;
+  cameraConfig.fps = k60::Ov7725Configurator::Config::Fps::kHigh;
+  k60::Ov7725 camera(cameraConfig);
 
-	FutabaS3010::Config ConfigServo;
-	ConfigServo.id = 0;
-	FutabaS3010 servo(ConfigServo);
+  FutabaS3010::Config ConfigServo;
+  ConfigServo.id = 0;
+  auto servo = make_unique<FutabaS3010>(ConfigServo);
 
-	DirEncoder::Config ConfigEncoder;
-	ConfigEncoder.id = 0;
-	DirEncoder encoder0(ConfigEncoder);
-	ConfigEncoder.id = 1;
-	DirEncoder encoder1(ConfigEncoder);
+  DirEncoder::Config ConfigEncoder;
+  ConfigEncoder.id = 0;
+  auto encoder0 = make_unique<DirEncoder>(ConfigEncoder);
+  ConfigEncoder.id = 1;
+  auto encoder1 = make_unique<DirEncoder>(ConfigEncoder);
 
-	AlternateMotor::Config ConfigMotor;
-	ConfigMotor.id = 0;
-	AlternateMotor motor0(ConfigMotor);
-	ConfigMotor.id = 1;
-	AlternateMotor motor1(ConfigMotor);
+  AlternateMotor::Config ConfigMotor;
+  ConfigMotor.id = 0;
+  auto motor0 = make_unique<AlternateMotor>(ConfigMotor);
+  ConfigMotor.id = 1;
+  auto motor1 = make_unique<AlternateMotor>(ConfigMotor);
 
-	k60::JyMcuBt106::Config ConfigBT;
-	ConfigBT.id = 0;
-	ConfigBT.baud_rate = libbase::k60::Uart::Config::BaudRate::k115200;
-	k60::JyMcuBt106 bt(ConfigBT);
+  auto mpc_dual = make_unique<MpcDual>(motor0.get(), motor1.get(), encoder0.get(), encoder1.get());
 
-	St7735r::Config lcdConfig;
-	lcdConfig.is_revert = true;
-	St7735r lcd(lcdConfig);
+  k60::JyMcuBt106::Config ConfigBT;
+  ConfigBT.id = 0;
+  ConfigBT.baud_rate = libbase::k60::Uart::Config::BaudRate::k115200;
+  k60::JyMcuBt106 bt(ConfigBT);
 
-	LcdTypewriter::Config writerConfig;
-	writerConfig.lcd = &lcd;
-	LcdTypewriter writer(writerConfig);
+  St7735r::Config lcdConfig;
+  lcdConfig.is_revert = true;
+  St7735r lcd(lcdConfig);
 
-	Joystick::Config joystick_config;
-	joystick_config.id = 0;
-	joystick_config.is_active_low = true;
-	Joystick joystick(joystick_config);
+  LcdConsole::Config console_config;
+  console_config.lcd = &lcd;
+  LcdConsole console(console_config);
 
-	DebugConsole console(&joystick, &lcd, &writer);
+  Joystick::Config joystick_config;
+  joystick_config.id = 0;
+  joystick_config.is_active_low = true;
+  Joystick joystick(joystick_config);
 
-	Timer::TimerInt time_img = 0;
+  CarManager::Config car_config;
+  car_config.servo = std::move(servo);
+  car_config.epc = std::move(mpc_dual);
+  car_config.car = CarManager::Car::kCar1;
+  CarManager::Init(std::move(car_config));
 
-	//testground starts here
-	servo.SetDegree(755);
+  CarManager::SetOverrideProtection(true);
+  CarManager::SetTargetSpeed(6000);
+  CarManager::SetTargetAngle(CarManager::kBoundsCar1.kCenter);
 
+  Timer::TimerInt time_img = 0;
+
+  while (true) {
+    if (time_img != System::Time()) {
+      time_img = System::Time();
+      if (time_img % 10 == 0) {
+        CarManager::UpdateParameters();
+      }
+      if (time_img % 4000 == 2000) {
+        CarManager::SetOverrideProtection(true);
+        CarManager::SetTargetSpeed(6000);
+      }
+      if (time_img % 4000 == 0) {
+        CarManager::SetTargetSpeed(0);
+      }
+    }
+  }
 }
 
 } //namesapce testground

@@ -92,7 +92,7 @@ void CarManager::SetOverrideProtection(const bool override_protection, const Mot
   }
 }
 
-void CarManager::SetTargetSpeed(MotorSide src, int16_t speed) {
+void CarManager::SetTargetSpeed(int16_t speed, MotorSide src) {
   if (epc_ != nullptr) {
     epc_->SetTargetSpeed(speed, false);
     return;

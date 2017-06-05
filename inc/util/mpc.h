@@ -215,6 +215,9 @@ class Mpc {
   std::shared_ptr<libsc::AlternateMotor> motor_;
   std::shared_ptr<libsc::DirEncoder> encoder_;
 
+  static constexpr uint8_t kOverrideWaitCycles = 50;
+  static constexpr uint16_t kProtectionMinCount = 250;
+
   friend class MpcDebug;
   friend class MpcDualDebug;
 };

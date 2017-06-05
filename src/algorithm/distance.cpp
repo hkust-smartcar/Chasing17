@@ -9,6 +9,7 @@
 #include "libsc/system.h"
 
 #include "fc_yy_us_v4.h"
+#include "util/util.h"
 
 using namespace libsc;
 using namespace std;
@@ -42,7 +43,7 @@ void USIRDemo() {
         unsigned int dist = US.GetDistance();
         console.SetCursorRow(0);
         console.Clear(false);
-//        console.WriteString(("\t" + to_string(dist)).c_str());
+        console.WriteString(("\t" + util::to_string(dist)).c_str());
         led4.SetEnable(dist != FcYyUsV4::kMaxDistance && dist != FcYyUsV4::kMinDistance);
         led1.Switch();
       }
