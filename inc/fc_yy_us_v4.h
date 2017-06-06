@@ -4,7 +4,7 @@
  * Copyright (c) 2014-2017 HKUST SmartCar Team
  * Refer to LICENSE for details
  *
- * Author: Leslie Lee (LeeChunHei)
+ * Author: Leslie Lee (LeeChunHei), Peter Tse (mcreng)
  *
  * FcYyUsV4 class
  * Interface for Freecar YingYang Ultrasonic Sensor v4.
@@ -19,6 +19,7 @@
 #define CHASING17_FCYYUSV4_H_
 
 #include <limits>
+#include <vector>
 
 #include "libbase/k60/gpio.h"
 
@@ -28,17 +29,18 @@ using libbase::k60::Pin;
 class FcYyUsV4 {
  public:
   static constexpr unsigned int kMinDistance = 0;
-  static constexpr unsigned int kMaxDistance = std::numeric_limits<unsigned int>::max();
+  static constexpr unsigned int kMaxDistance = 0;//std::numeric_limits<unsigned int>::max();
 
   /**
    * @param pin Name of Pin connected to the sensor
    */
-  FcYyUsV4(Pin::Name pin);
+  FcYyUsV4(Pin::Name pin); //corresponds to I2C0_SCL: kPtb0
 
   /**
    * @return The distance measured by the sensor (mm)
    */
-  const unsigned int GetDistance() const { return distance_; }
+  unsigned int GetDistance() const { return distance_; }
+  unsigned int GetAvgDistance() const { return average_distance_; }
 
  private:
   static void listener(Gpi* gpi);
@@ -48,6 +50,9 @@ class FcYyUsV4 {
 
   static uint32_t impulse_start_time_;
   static unsigned int distance_;
+
+  static std::vector<unsigned int> last_ten_distance_;
+  static unsigned int average_distance_;
 };
 
 #endif  // CHASING17_FCYYUSV4_H_

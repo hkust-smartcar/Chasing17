@@ -40,9 +40,9 @@ void USIRDemo() {
     if (time != System::Time()) {
       time = System::Time();
       if (time % 100 == 0) {
-        unsigned int dist = US.GetDistance();
+        unsigned int dist = US.GetAvgDistance();
         console.SetCursorRow(0);
-        console.Clear(false);
+        console.Clear(true);
         console.WriteString(("\t" + util::to_string(dist)).c_str());
         led4.SetEnable(dist != FcYyUsV4::kMaxDistance && dist != FcYyUsV4::kMinDistance);
         led1.Switch();

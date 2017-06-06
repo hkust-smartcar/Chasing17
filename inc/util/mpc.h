@@ -183,7 +183,7 @@ class Mpc {
    */
   int32_t last_encoder_val_ = 0;
   /**
-   * Queue of latest ten encoder values
+   * Vector of latest ten encoder values
    */
   std::vector<int32_t> last_ten_encoder_val_;
   /**

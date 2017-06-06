@@ -24,6 +24,7 @@
 #include "bluetooth.h"
 #include "car_manager.h"
 #include "util/util.h"
+#include "fc_yy_us_v4.h"
 
 #include "img.h"
 
@@ -44,12 +45,12 @@ void main() {
   ConfigLed.id = 3;
   Led led3(ConfigLed);
 
-  k60::Ov7725::Config cameraConfig;
-  cameraConfig.id = 0;
-  cameraConfig.w = 80;
-  cameraConfig.h = 60;
-  cameraConfig.fps = k60::Ov7725Configurator::Config::Fps::kHigh;
-  k60::Ov7725 camera(cameraConfig);
+//  k60::Ov7725::Config cameraConfig;
+//  cameraConfig.id = 0;
+//  cameraConfig.w = 80;
+//  cameraConfig.h = 60;
+//  cameraConfig.fps = k60::Ov7725Configurator::Config::Fps::kHigh;
+//  k60::Ov7725 camera(cameraConfig);
 
   FutabaS3010::Config ConfigServo;
   ConfigServo.id = 0;
@@ -97,21 +98,24 @@ void main() {
   CarManager::SetTargetSpeed(6000);
   CarManager::SetTargetAngle(CarManager::kBoundsCar1.kCenter);
 
+  FcYyUsV4 usir(libbase::k60::Pin::Name::kPtb0);
+
   Timer::TimerInt time_img = 0;
+
+  char testChar[15] = {};
 
   while (true) {
     if (time_img != System::Time()) {
       time_img = System::Time();
-      if (time_img % 10 == 0) {
-        CarManager::UpdateParameters();
-      }
-      if (time_img % 4000 == 2000) {
-        CarManager::SetOverrideProtection(true);
-        CarManager::SetTargetSpeed(6000);
-      }
-      if (time_img % 4000 == 0) {
-        CarManager::SetTargetSpeed(0);
-      }
+      if (time_img % 100 == 0) led0.Switch();
+		if (time_img % 15 == 0){
+		  int32_t s = usir.GetDistance();
+		  sprintf(testChar, "%.1f,%d,%.1f=%.1f\n", 1.0, s, 0.0, 1.0);
+		  std::string testStr = testChar;
+		  const Byte testByte = 85;
+		  bt.SendBuffer(&testByte, 1);
+		  bt.SendStr(testStr);
+		}
     }
   }
 }

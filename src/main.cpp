@@ -50,11 +50,10 @@ int main() {
   BatteryMeter bm(ConfigBM);
   // Battery Check
   // TODO(Derppening): Find a better way to halt program when battery is lower than expected
-
   while (bm.GetVoltage() <= 7.4);
 
   // modify next line to switch between algorithms
-  constexpr Algorithm a = Algorithm::kTestGround;
+  constexpr Algorithm a = Algorithm::kDistance;
 
   // modify next line to enable/disable encoder
   constexpr bool has_encoder = true;
