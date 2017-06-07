@@ -4,7 +4,7 @@
  * Copyright (c) 2014-2017 HKUST SmartCar Team
  * Refer to LICENSE for details
  *
- * Author: Leslie Lee (LeeChunHei), Peter Tse (mcreng)
+ * Author: Leslie Lee (LeeChunHei), Peter Tse (mcreng), David Mak (Derppening)
  *
  * Implementation for FcYyUsV4 class.
  *

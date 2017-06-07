@@ -109,12 +109,11 @@ void main() {
       time_img = System::Time();
       if (time_img % 100 == 0) led0.Switch();
 		if (time_img % 15 == 0){
-		  int32_t s = usir.GetDistance();
+		  unsigned s = usir.GetDistance();
 		  sprintf(testChar, "%.1f,%d,%.1f=%.1f\n", 1.0, s, 0.0, 1.0);
-		  std::string testStr = testChar;
 		  const Byte testByte = 85;
 		  bt.SendBuffer(&testByte, 1);
-		  bt.SendStr(testStr);
+		  bt.SendStr(std::string(testChar));
 		}
     }
   }

@@ -4,7 +4,7 @@
  * Copyright (c) 2014-2017 HKUST SmartCar Team
  * Refer to LICENSE for details
  *
- * Author: Leslie Lee (LeeChunHei), Peter Tse (mcreng)
+ * Author: Leslie Lee (LeeChunHei), Peter Tse (mcreng), David Mak (Derppening)
  *
  * FcYyUsV4 class
  * Interface for Freecar YingYang Ultrasonic Sensor v4.
@@ -29,7 +29,7 @@ using libbase::k60::Pin;
 class FcYyUsV4 {
  public:
   static constexpr unsigned int kMinDistance = 0;
-  static constexpr unsigned int kMaxDistance = 0;//std::numeric_limits<unsigned int>::max();
+  static constexpr unsigned int kMaxDistance = std::numeric_limits<unsigned int>::max();
 
   /**
    * @param pin Name of Pin connected to the sensor
