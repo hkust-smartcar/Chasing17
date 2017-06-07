@@ -2,7 +2,7 @@
  * mpu9250.h
  *
  * Author: Harrison Ng, Ming Tsang, David Mak
- * Copyright (c) 2014-2015 HKUST SmartCar Team
+ * Copyright (c) 2014-2017 HKUST SmartCar Team
  * Refer to LICENSE for details
  */
 
@@ -17,6 +17,7 @@
 #include "libbase/k60/pin.h"
 #include "libbase/k60/soft_i2c_master.h"
 
+// TODO(Derppening): Find out whether we're using SoftI2c or I2c
 #define USE_SOFT_MPU9250 true
 
 class Mpu9250 {
@@ -29,6 +30,7 @@ class Mpu9250 {
   using I2cMaster = libbase::k60::I2cMaster;
 #endif  // USE_SOFT_MPU9250
 
+  // TODO(Derppening): Pass these values using Mpu9250::Config
   static constexpr libbase::k60::Pin::Name kScl = libbase::k60::Pin::Name::kDisable;
   static constexpr libbase::k60::Pin::Name kSda = libbase::k60::Pin::Name::kDisable;
 

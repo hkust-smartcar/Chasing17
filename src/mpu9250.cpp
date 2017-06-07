@@ -2,7 +2,7 @@
  * mpu9250.cpp
  *
  * Author: Harrison Ng, David Mak
- * Copyright (c) 2014-2015 HKUST SmartCar Team
+ * Copyright (c) 2014-2017 HKUST SmartCar Team
  * Refer to LICENSE for details
  */
 
@@ -46,31 +46,31 @@ Mpu9250::Mpu9250(const Config& config)
   assert(Verify());
   System::DelayUs(1);
 
-  assert(m_i2c->SendByte(MPU9250_DEFAULT_ADDRESS, MPU9250_RA_PWR_MGMT_1, 0x03));
+  assert(m_i2c->SendByte(MPU9250_DEFAULT_ADDRESS, Mpu9250Register::MPU9250_PWR_MGMT_1, 0x03));
   System::DelayUs(1);
 
   //Register 25 – Sample Rate Divider: Sample Rate = Gyroscope Output Rate / (1 + SMPLRT_DIV)
   //Gyroscope Output Rate = 8kHz when the DLPF is disabled (DLPF_CFG = 0 or 7)
-  assert(m_i2c->SendByte(MPU9250_DEFAULT_ADDRESS, MPU9250_RA_SMPLRT_DIV, 0x01));
+  assert(m_i2c->SendByte(MPU9250_DEFAULT_ADDRESS, Mpu9250Register::MPU9250_SMPLRT_DIV, 0x01));
   System::DelayUs(1);
 
   //Register 26 - CONFIG: EXT_SYNC_SET[2:0]<<3 | DLPF_CFG[2:0];
   //EXT_SYNC_SET=0, Input disabled;
   //DLPF_CFG=0, Accel = 260Hz, Gyroscope = 256Hz;
-  assert(m_i2c->SendByte(MPU9250_DEFAULT_ADDRESS, MPU9250_RA_CONFIG, 0x00));
+  assert(m_i2c->SendByte(MPU9250_DEFAULT_ADDRESS, Mpu9250Register::MPU9250_CONFIG, 0x00));
   System::DelayUs(1);
 
   //Register 27 - GYRO_CONFIG: FS_SEL[1:0] << 3;
   //FS_SEL=0, ± 250 °/s; FS_SEL=1, ± 500 °/s; FS_SEL=2, ± 1000 °/s; FS_SEL=3, ± 2000 °/s;
   uint8_t gyro_config = static_cast<int>(m_gyro_range) << 3;
-  assert(m_i2c->SendByte(MPU9250_DEFAULT_ADDRESS, MPU9250_RA_GYRO_CONFIG,
+  assert(m_i2c->SendByte(MPU9250_DEFAULT_ADDRESS, Mpu9250Register::MPU9250_GYRO_CONFIG,
                          gyro_config));
   System::DelayUs(1);
 
   //Register 28 - ACCEL_CONFIG: AFS_SEL[1:0] << 3;
   //AFS_SEL=0, ±2g; AFS_SEL=1, ±4g; AFS_SEL=2, ±8g; AFS_SEL=3, ±16g;
   uint8_t accel_config = static_cast<int>(m_accel_range) << 3;
-  assert(m_i2c->SendByte(MPU9250_DEFAULT_ADDRESS, MPU9250_RA_ACCEL_CONFIG,
+  assert(m_i2c->SendByte(MPU9250_DEFAULT_ADDRESS, Mpu9250Register::MPU9250_ACCEL_CONFIG,
                          accel_config));
   System::DelayUs(1);
 
@@ -89,10 +89,10 @@ Mpu9250::Mpu9250(const Config& config)
 
 bool Mpu9250::Verify() {
   Byte who_am_i;
-  if (!m_i2c->GetByte(MPU9250_DEFAULT_ADDRESS, MPU9250_RA_WHO_AM_I, &who_am_i)) {
+  if (!m_i2c->GetByte(MPU9250_DEFAULT_ADDRESS, Mpu9250Register::MPU9250_WHO_AM_I, &who_am_i)) {
     return false;
   } else {
-    return (who_am_i == 0x68);
+    return (who_am_i == MPU9250_WHO_AM_I_RESULT);
   }
 }
 
@@ -182,7 +182,7 @@ uint16_t Mpu9250::GetAccelScaleFactor() {
 
 bool Mpu9250::Update(const bool clamp_) {
   const vector<Byte>& data = m_i2c->GetBytes(MPU9250_DEFAULT_ADDRESS,
-                                             MPU9250_RA_ACCEL_XOUT_H, 14);
+                                             Mpu9250Register::MPU9250_ACCEL_XOUT_H, 14);
   if (data.empty())
     return false;
 
@@ -209,7 +209,7 @@ bool Mpu9250::Update(const bool clamp_) {
 }
 bool Mpu9250::UpdateF(const bool clamp_) {
   const vector<Byte>& data = m_i2c->GetBytes(MPU9250_DEFAULT_ADDRESS,
-                                             MPU9250_RA_ACCEL_XOUT_H, 14);
+                                             Mpu9250Register::MPU9250_ACCEL_XOUT_H, 14);
   if (data.empty()) {
     return false;
   }
