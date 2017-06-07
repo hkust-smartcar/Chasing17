@@ -41,6 +41,7 @@ class FcYyUsV4 {
    */
   unsigned int GetDistance() const { return distance_; }
   unsigned int GetAvgDistance() const { return average_distance_; }
+  unsigned int GetSD() const { return std_deviation_; }
 
  private:
   static void listener(Gpi* gpi);
@@ -53,6 +54,7 @@ class FcYyUsV4 {
 
   static std::vector<unsigned int> last_ten_distance_;
   static unsigned int average_distance_;
+  static unsigned int std_deviation_;
 };
 
 #endif  // CHASING17_FCYYUSV4_H_

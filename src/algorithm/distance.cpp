@@ -43,7 +43,7 @@ void USIRDemo() {
         unsigned int dist = US.GetAvgDistance();
         console.SetCursorRow(0);
         console.Clear(true);
-        console.WriteString(("\t" + util::to_string(dist)).c_str());
+        console.WriteString(("\t" + util::to_string(dist) + "\t" + util::to_string(US.GetSD())).c_str());
         led4.SetEnable(dist != FcYyUsV4::kMaxDistance && dist != FcYyUsV4::kMinDistance);
         led1.Switch();
       }
