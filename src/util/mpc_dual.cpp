@@ -14,9 +14,24 @@
 
 #include "car_manager.h"
 
+using libsc::AlternateMotor;
+using libsc::DirEncoder;
 using util::to_string;
 
 namespace util {
+MpcDual::MpcDual(AlternateMotor* motor_left,
+                 AlternateMotor* motor_right,
+                 DirEncoder* encoder_left,
+                 DirEncoder* encoder_right) {
+  mpc_left_ = util::make_unique<Mpc>(encoder_left, motor_left, true);
+  mpc_right_ = util::make_unique<Mpc>(encoder_right, motor_right, false);
+}
+
+MpcDual::~MpcDual() {
+  mpc_left_.reset(nullptr);
+  mpc_right_.reset(nullptr);
+}
+
 void MpcDual::DoCorrection() {
   CarManager::ServoBounds s = CarManager::GetServoBounds();
   CarManager::ServoAngles a = CarManager::GetServoAngles();
@@ -90,6 +105,9 @@ void MpcDual::SetForceOverride(bool force_override, MotorSide side) {
     mpc_right_->SetForceOverride(force_override);
   }
 }
+
+MpcDualDebug::MpcDualDebug(MpcDual* mpc_dual) : mpc_dual_(mpc_dual)
+{}
 
 void MpcDualDebug::OutputEncoderMotorValues(libsc::LcdConsole* console, MpcDual::MotorSide side) const {
   std::string s = "";

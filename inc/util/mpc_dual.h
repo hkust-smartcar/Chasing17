@@ -53,18 +53,12 @@ class MpcDual final : protected Mpc {
    * @param encoder_left Pointer to left DirEncoder
    * @param encoder_right Pointer to right DirEncoder
    */
-  explicit MpcDual(libsc::AlternateMotor* motor_left,
+  MpcDual(libsc::AlternateMotor* motor_left,
                    libsc::AlternateMotor* motor_right,
                    libsc::DirEncoder* encoder_left,
-                   libsc::DirEncoder* encoder_right) {
-    mpc_left_ = util::make_unique<Mpc>(encoder_left, motor_left, true);
-    mpc_right_ = util::make_unique<Mpc>(encoder_right, motor_right, false);
-  }
+                   libsc::DirEncoder* encoder_right);
 
-  ~MpcDual() {
-    mpc_left_.reset(nullptr);
-    mpc_right_.reset(nullptr);
-  }
+  ~MpcDual();
 
   // Setters
   /**
@@ -138,7 +132,7 @@ class MpcDual final : protected Mpc {
 
 class MpcDualDebug final : protected MpcDebug {
  public:
-  explicit MpcDualDebug(MpcDual* epc_dual) : mpc_dual_(epc_dual) {};
+  explicit MpcDualDebug(MpcDual* mpc_dual);
 
   void OutputEncoderMotorValues(libsc::LcdConsole* console, MpcDual::MotorSide side) const;
 

@@ -23,9 +23,9 @@ Supported Platforms:
 #ifndef CHASING17_MPU9250_DEVICE_H_
 #define CHASING17_MPU9250_DEVICE_H_
 
-#define MPU9250_ADDRESS_AD0_LOW     0x68 // address pin low (GND), default for InvenSense evaluation board
-#define MPU9250_ADDRESS_AD0_HIGH    0x69 // address pin high (VCC)
-#define MPU9250_DEFAULT_ADDRESS     MPU9250_ADDRESS_AD0_LOW
+constexpr uint8_t MPU9250_ADDRESS_AD0_LOW = 0x68;  // address pin low (GND), default for InvenSense evaluation board
+constexpr uint8_t MPU9250_ADDRESS_AD0_HIGH = 0x69; // address pin high (VCC)
+constexpr uint8_t MPU9250_DEFAULT_ADDRESS = MPU9250_ADDRESS_AD0_LOW;
 
 enum Mpu9250Register {
   MPU9250_SELF_TEST_X_GYRO =  0x00,
@@ -144,8 +144,8 @@ enum GyroConfigBits {
   GYRO_CONFIG_YGYRO_CTEN = 6,
   GYRO_CONFIG_XGYRO_CTEN = 7,
 };
-#define MPU9250_GYRO_FS_SEL_MASK 0x3
-#define MPU9250_GYRO_FCHOICE_MASK 0x3
+constexpr uint8_t MPU9250_GYRO_FS_SEL_MASK = 0x3;
+constexpr uint8_t MPU9250_GYRO_FCHOICE_MASK = 0x3;
 
 enum AccelConfigBits {
   ACCEL_CONFIG_ACCEL_FS_SEL = 3,
@@ -153,7 +153,7 @@ enum AccelConfigBits {
   ACCEL_CONFIG_AY_ST_EN = 6,
   ACCEL_CONFIG_AX_ST_EN = 7,
 };
-#define MPU9250_ACCEL_FS_SEL_MASK 0x3
+constexpr uint8_t MPU9250_ACCEL_FS_SEL_MASK = 0x3;
 
 enum AccelConfig2Bits {
   ACCEL_CONFIG_2_A_DLPFCFG = 0,
@@ -194,9 +194,9 @@ enum IntPinCfgBits {
   INT_PIN_CFG_OPEN = 6,
   INT_PIN_CFG_ACTL = 7,
 };
-#define INT_PIN_CFG_INT_MASK 0xF0
+constexpr uint8_t INT_PIN_CFG_INT_MASK = 0xF0;
 
-#define MPU9250_WHO_AM_I_RESULT 0x71
+constexpr uint8_t MPU9250_WHO_AM_I_RESULT = 0x71;
 
 enum Ak8963Register {
   AK8963_WIA = 0x0,
@@ -219,10 +219,11 @@ enum Ak8963Register {
   AK8963_ASAY = 0x11,
   AK8963_ASAZ = 0x12,
 };
-#define MAG_CTRL_OP_MODE_MASK 0xF
+constexpr uint8_t MAG_CTRL_OP_MODE_MASK = 0xF;
 
-#define AK8963_ST1_DRDY_BIT 0
+constexpr uint8_t AK8963_ST1_DRDY_BIT = 0;
 
-#define AK8963_WHO_AM_I_RESULT 0x48
+// Default value for AK8963_WIA
+constexpr uint8_t AK8963_WHO_AM_I_RESULT = 0x48;
 
 #endif  // CHASING17_MPU9250_DEVICE_H_

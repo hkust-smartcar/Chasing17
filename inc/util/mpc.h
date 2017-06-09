@@ -42,17 +42,9 @@ class Mpc {
    * @param m Pointer to an AlternateMotor object
    * @param isClockwise Boolean stating whether the motor is rotating in clockwise direction
    */
-  explicit Mpc(libsc::DirEncoder* e, libsc::AlternateMotor* m, bool isClockwise)
-      : motor_(m), encoder_(e) {
-    motor_->SetPower(0);
-    motor_->SetClockwise(isClockwise);
-    UpdateEncoder();
-  }
+  explicit Mpc(libsc::DirEncoder* e, libsc::AlternateMotor* m, bool isClockwise);
 
-  ~Mpc() {
-    encoder_.reset();
-    motor_.reset();
-  }
+  ~Mpc();
 
   // Setters
   /**
@@ -185,7 +177,7 @@ class Mpc {
   /**
    * Vector of latest ten encoder values
    */
-  std::vector<int32_t> last_ten_encoder_val_;
+  std::vector<int32_t> last_ten_encoder_val_ = std::vector<int32_t>(11);
   /**
    * The average of newest ten values of the encoder in units per second
    */
@@ -211,7 +203,6 @@ class Mpc {
 
   uint8_t force_start_count_ = 0;
 
- private:
   std::shared_ptr<libsc::AlternateMotor> motor_;
   std::shared_ptr<libsc::DirEncoder> encoder_;
 
@@ -232,7 +223,7 @@ class MpcDebug {
    *
    * @param mpc Pointer to the @c mpc object.
    */
-  explicit MpcDebug(Mpc* mpc) : mpc_(mpc) {};
+  explicit MpcDebug(Mpc* mpc);
   /**
    * Outputs the encoder value (in units per second) and power of the managed motor.
    *

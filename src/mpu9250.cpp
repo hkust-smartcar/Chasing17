@@ -26,10 +26,12 @@
 #include "mpu9250_device.h"
 
 using namespace libbase::k60;
-using namespace std;
 
 using libsc::System;
 using libsc::Timer;
+using std::abs;
+using std::array;
+using std::vector;
 
 Mpu9250::Mpu9250(const Config& config)
     :
@@ -62,14 +64,14 @@ Mpu9250::Mpu9250(const Config& config)
 
   //Register 27 - GYRO_CONFIG: FS_SEL[1:0] << 3;
   //FS_SEL=0, ± 250 °/s; FS_SEL=1, ± 500 °/s; FS_SEL=2, ± 1000 °/s; FS_SEL=3, ± 2000 °/s;
-  uint8_t gyro_config = static_cast<int>(m_gyro_range) << 3;
+  uint8_t gyro_config = static_cast<uint8_t>(m_gyro_range) << 3;
   assert(m_i2c->SendByte(MPU9250_DEFAULT_ADDRESS, Mpu9250Register::MPU9250_GYRO_CONFIG,
                          gyro_config));
   System::DelayUs(1);
 
   //Register 28 - ACCEL_CONFIG: AFS_SEL[1:0] << 3;
   //AFS_SEL=0, ±2g; AFS_SEL=1, ±4g; AFS_SEL=2, ±8g; AFS_SEL=3, ±16g;
-  uint8_t accel_config = static_cast<int>(m_accel_range) << 3;
+  uint8_t accel_config = static_cast<uint8_t>(m_accel_range) << 3;
   assert(m_i2c->SendByte(MPU9250_DEFAULT_ADDRESS, Mpu9250Register::MPU9250_ACCEL_CONFIG,
                          accel_config));
   System::DelayUs(1);
@@ -98,7 +100,7 @@ bool Mpu9250::Verify() {
 
 void Mpu9250::Calibrate() {
   Timer::TimerInt t = 0, pt = 0;
-  std::array<int32_t, 3> omega_sum{};
+  array<int32_t, 3> omega_sum{};
 
   int samples = 0, target_samples = 256;
   while (samples < target_samples) {
@@ -107,7 +109,7 @@ void Mpu9250::Calibrate() {
       pt = t;
       Update(false);
       if (samples >= target_samples / 2) {
-        std::array<int32_t, 3> omega_ = GetOmega();
+        array<int32_t, 3> omega_ = GetOmega();
         for (int i = 0; i < 3; i++)
           omega_sum[i] += omega_[i];
       }
@@ -121,7 +123,7 @@ void Mpu9250::Calibrate() {
 }
 void Mpu9250::CalibrateF() {
   Timer::TimerInt t = 0, pt = 0;
-  std::array<float, 3> omega_sum{};
+  array<float, 3> omega_sum{};
 
   int samples = 0, target_samples = 256;
   while (samples < target_samples) {
@@ -130,7 +132,7 @@ void Mpu9250::CalibrateF() {
       pt = t;
       UpdateF(false);
       if (samples >= target_samples / 2) {
-        std::array<float, 3> omega_ = GetOmegaF();
+        array<float, 3> omega_ = GetOmegaF();
         for (int i = 0; i < 3; i++) {
           omega_sum[i] += omega_[i];
         }
@@ -150,13 +152,10 @@ uint16_t Mpu9250::GetGyroScaleFactor() {
       LOG_EL("Mpu9250 Gyro in illegal state");
     case Config::Range::kSmall:
       return 20960;
-
     case Config::Range::kMid:
       return 10480;
-
     case Config::Range::kLarge:
       return 5248;
-
     case Config::Range::kExtreme:
       return 2624;
   }
@@ -168,13 +167,10 @@ uint16_t Mpu9250::GetAccelScaleFactor() {
       LOG_EL("Mpu9250 Accel in illegal state");
     case Config::Range::kSmall:
       return 16384;
-
     case Config::Range::kMid:
       return 8192;
-
     case Config::Range::kLarge:
       return 4096;
-
     case Config::Range::kExtreme:
       return 2048;
   }
@@ -183,11 +179,12 @@ uint16_t Mpu9250::GetAccelScaleFactor() {
 bool Mpu9250::Update(const bool clamp_) {
   const vector<Byte>& data = m_i2c->GetBytes(MPU9250_DEFAULT_ADDRESS,
                                              Mpu9250Register::MPU9250_ACCEL_XOUT_H, 14);
-  if (data.empty())
+  if (data.empty()) {
     return false;
+  }
 
-  int16_t raw_accel[3] = {0};
-  int16_t raw_gyro[3] = {0};
+  array<int16_t, 3> raw_accel = {0};
+  array<int16_t, 3> raw_gyro = {0};
   for (size_t i = 0; i < data.size(); i += 2) {
     if (i <= 5) {
       const int j = i / 2;
@@ -195,14 +192,14 @@ bool Mpu9250::Update(const bool clamp_) {
       m_accel[j] = raw_accel[j];
     } else if (i == 6) {
       const int16_t raw_temp = (data[i] << 8) | data[i + 1];
-      m_temp = (float) raw_temp / 340 + 36.53;
+      m_temp = static_cast<float>(raw_temp) / 340 + 36.53;
     } else {
       const int j = (i - 8) / 2;
       raw_gyro[j] = (data[i] << 8) | data[i + 1];
       m_omega[j] = raw_gyro[j] * 160;
       m_omega[j] -= m_omega_offset[j];
       if (clamp_)
-        m_omega[j] = (std::abs(m_omega[j]) < 3 * m_gyro_scale_factor) ? 0 : m_omega[j];
+        m_omega[j] = (abs(m_omega[j]) < 3 * m_gyro_scale_factor) ? 0 : m_omega[j];
     }
   }
   return true;
@@ -214,22 +211,23 @@ bool Mpu9250::UpdateF(const bool clamp_) {
     return false;
   }
 
-  int16_t raw_accel[3] = {0};
-  int16_t raw_gyro[3] = {0};
+  array<int16_t, 3> raw_accel = {0};
+  array<int16_t, 3> raw_gyro = {0};
   for (size_t i = 0; i < data.size(); i += 2) {
     if (i <= 5) {
       const int j = i / 2;
       raw_accel[j] = (data[i] << 8) | data[i + 1];
-      m_accel_f[j] = (float) raw_accel[j] / m_accel_scale_factor;
+      m_accel_f[j] = static_cast<float>(raw_accel[j]) / m_accel_scale_factor;
     } else if (i == 6) {
       const int16_t raw_temp = (data[i] << 8) | data[i + 1];
-      m_temp = (float) raw_temp / 340 + 36.53;
+      m_temp = static_cast<float>(raw_temp) / 340 + 36.53;
     } else {
       const int j = (i - 8) / 2;
       raw_gyro[j] = (data[i] << 8) | data[i + 1];
-      m_omega_f[j] = (float) raw_gyro[j] * 160 / m_gyro_scale_factor;
+      m_omega_f[j] = static_cast<float>(raw_gyro[j]) * 160 / m_gyro_scale_factor;
       m_omega_f[j] -= m_omega_offset_f[j];
-      if (clamp_) m_omega_f[j] = abs(m_omega_f[j]) < 3.0f ? 0.0f : m_omega_f[j];
+      if (clamp_)
+        m_omega_f[j] = abs(m_omega_f[j]) < 3.0f ? 0.0f : m_omega_f[j];
     }
   }
   return true;

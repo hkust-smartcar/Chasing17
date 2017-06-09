@@ -39,6 +39,18 @@ constexpr float Mpc::kD;
 constexpr uint8_t Mpc::kOverrideWaitCycles;
 constexpr uint16_t Mpc::kProtectionMinCount;
 
+Mpc::Mpc(libsc::DirEncoder* e, libsc::AlternateMotor* m, bool isClockwise)
+    : motor_(m), encoder_(e) {
+  motor_->SetPower(0);
+  motor_->SetClockwise(isClockwise);
+  UpdateEncoder();
+}
+
+Mpc::~Mpc() {
+  encoder_.reset();
+  motor_.reset();
+}
+
 void Mpc::SetTargetSpeed(const int16_t speed, bool commit_now) {
   target_speed_ = speed;
   if (commit_now) {
@@ -130,13 +142,16 @@ void Mpc::UpdateEncoder() {
   last_ten_encoder_val_.push_back(last_encoder_val_);
   while (last_ten_encoder_val_.size() > 10) last_ten_encoder_val_.erase(last_ten_encoder_val_.begin());
   average_encoder_val_ = 0;
-  for (auto&& m : last_ten_encoder_val_){
+  for (auto& m : last_ten_encoder_val_){
 	  average_encoder_val_ += m;
   }
-  average_encoder_val_ /= static_cast<int32_t>(last_ten_encoder_val_.size());
+  average_encoder_val_ /= last_ten_encoder_val_.size();
 
   time_encoder_start_ = libsc::System::Time();
 }
+
+MpcDebug::MpcDebug(Mpc* mpc) : mpc_(mpc)
+{}
 
 void MpcDebug::OutputEncoderMotorValues(libsc::LcdConsole* console) const {
   std::string s = to_string(mpc_->last_encoder_val_) + " " + to_string(mpc_->motor_->GetPower()) + "\n";
