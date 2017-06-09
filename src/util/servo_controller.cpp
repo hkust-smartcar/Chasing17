@@ -78,7 +78,7 @@ void ServoController::UpdateCompass() {
   last_compass_angle_ /* = compass_->GetValues() */;
 
   last_ten_compass_val_.push_back(last_compass_angle_);
-  while (last_ten_compass_val_.size() > 10) last_ten_compass_val_.erase(last_ten_compass_val_.cbegin());
+  while (last_ten_compass_val_.size() > 10) last_ten_compass_val_.erase(last_ten_compass_val_.begin());
   for (auto& m : last_ten_compass_val_) {
     average_compass_val_ += (m + 360);
   }
