@@ -32,13 +32,14 @@
 #ifndef CHASING17_CARMANAGER_H_
 #define CHASING17_CARMANAGER_H_
 
+#include <cmath>
 #include <memory>
 
 #include "libbase/misc_types.h"
 #include "libsc/dir_encoder.h"
-#include "libsc/mpu6050.h"
 #include "libsc/futaba_s3010.h"
 
+#include "mpu9250.h"
 #include "util/mpc.h"
 #include "util/mpc_dual.h"
 
@@ -97,7 +98,7 @@ class CarManager final {
     std::unique_ptr<util::Mpc> epc_left = nullptr;
     std::unique_ptr<util::Mpc> epc_right = nullptr;
     std::unique_ptr<util::MpcDual> epc = nullptr;
-    std::unique_ptr<libsc::Mpu6050> accel = nullptr;
+    std::unique_ptr<Mpu9250> mpu = nullptr;
     std::unique_ptr<libsc::FutabaS3010> servo = nullptr;
     Identity identity;
     Car car;
@@ -119,6 +120,17 @@ class CarManager final {
 
   static constexpr ServoAngles kAnglesCar1 = {36, 38};
   static constexpr ServoAngles kAnglesCar2 = {38, 41};
+
+  struct SideRatio {
+    float kLeft;
+    float kRight;
+  };
+
+  static constexpr float kWheelbase = 19.65;
+  static constexpr float kAxleLength = 15.2;
+
+  static constexpr SideRatio kRatioCar1 = {std::tan(kAnglesCar1.kLeftAngle), std::tan(kAnglesCar1.kRightAngle)};
+  static constexpr SideRatio kRatioCar2 = {std::tan(kAnglesCar2.kLeftAngle), std::tan(kAnglesCar2.kRightAngle)};
 
   /**
    * Update all parameters of the car (speed, slope, servo angle)
@@ -143,12 +155,8 @@ class CarManager final {
   static Feature GetFeature() { return feature_; }
   static Identity GetIdentity() { return identity_; }
   static Car GetCar() { return car_; }
-  static ServoBounds GetServoBounds() {
-    return car_ == CarManager::Car::kCar1 ? CarManager::kBoundsCar1 : CarManager::kBoundsCar2;
-  }
-  static ServoAngles GetServoAngles() {
-    return car_ == CarManager::Car::kCar1 ? CarManager::kAnglesCar1 : CarManager::kAnglesCar2;
-  }
+  static ServoBounds GetServoBounds();
+  static SideRatio GetSideRatio();
 
   // Setters
   static void SetFeature(const Feature f) { feature_ = f; }
@@ -180,7 +188,7 @@ class CarManager final {
   static std::unique_ptr<util::Mpc> epc_left_;
   static std::unique_ptr<util::Mpc> epc_right_;
   static std::unique_ptr<util::MpcDual> epc_;
-  static std::unique_ptr<libsc::Mpu6050> accel_;
+  static std::unique_ptr<Mpu9250> mpu_;
   static std::unique_ptr<libsc::FutabaS3010> servo_;
 };
 

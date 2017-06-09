@@ -14,13 +14,12 @@
 
 #include <memory>
 
-#include "libsc/mpu6050.h"
 #include "libsc/futaba_s3010.h"
 
+#include "mpu9250.h"
 #include "util/mpc.h"
 #include "util/mpc_dual.h"
 
-using libsc::Mpu6050;
 using libsc::FutabaS3010;
 using std::move;
 using std::unique_ptr;
@@ -42,17 +41,20 @@ constexpr CarManager::ServoBounds CarManager::kBoundsCar2;
 constexpr CarManager::ServoAngles CarManager::kAnglesCar1;
 constexpr CarManager::ServoAngles CarManager::kAnglesCar2;
 
+constexpr CarManager::SideRatio CarManager::kRatioCar1;
+constexpr CarManager::SideRatio CarManager::kRatioCar2;
+
 unique_ptr<Mpc> CarManager::epc_left_ = nullptr;
 unique_ptr<Mpc> CarManager::epc_right_ = nullptr;
 unique_ptr<MpcDual> CarManager::epc_ = nullptr;
-unique_ptr<Mpu6050> CarManager::accel_ = nullptr;
+unique_ptr<Mpu9250> CarManager::mpu_ = nullptr;
 unique_ptr<FutabaS3010> CarManager::servo_ = nullptr;
 
 void CarManager::Init(Config config) {
   epc_left_ = move(config.epc_left);
   epc_right_ = move(config.epc_right);
   epc_ = move(config.epc);
-  accel_ = move(config.accel);
+  mpu_ = move(config.mpu);
   servo_ = move(config.servo);
   identity_ = config.identity;
   car_ = config.car;
@@ -69,6 +71,28 @@ void CarManager::SwitchIdentity() {
     identity_ = Identity::kBack;
   } else {
     identity_ = Identity::kFront;
+  }
+}
+
+CarManager::ServoBounds CarManager::GetServoBounds() {
+  switch (car_) {
+    default:
+      // all cases covered
+    case Car::kCar1:
+      return kBoundsCar1;
+    case Car::kCar2:
+      return kBoundsCar2;
+  }
+}
+
+CarManager::SideRatio CarManager::GetSideRatio() {
+  switch (car_) {
+    default:
+      // all cases covered
+    case Car::kCar1:
+      return kRatioCar1;
+    case Car::kCar2:
+      return kRatioCar2;
   }
 }
 
@@ -157,9 +181,9 @@ void CarManager::UpdateServoAngle() {
 }
 
 void CarManager::UpdateSlope() {
-  if (accel_ == nullptr) {
+  if (mpu_ == nullptr) {
     return;
   }
-  // TODO(Derppening): Replace with call to MPU6050
+  // TODO(Derppening): Replace with call to MPU9250
   slope_deg_ = 0;
 }

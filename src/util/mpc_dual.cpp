@@ -34,7 +34,7 @@ MpcDual::~MpcDual() {
 
 void MpcDual::DoCorrection() {
   CarManager::ServoBounds s = CarManager::GetServoBounds();
-  CarManager::ServoAngles a = CarManager::GetServoAngles();
+  CarManager::SideRatio ratio = CarManager::GetSideRatio();
 
   float servo_diff = s.kCenter - CarManager::GetServoDeg();
 
@@ -45,18 +45,30 @@ void MpcDual::DoCorrection() {
     mpc_right_->SetTargetSpeed(0, false);
   } else if (servo_diff < 0) {  // turning left
     float motor_speed_diff = servo_diff / (s.kCenter - s.kLeftBound);
-    // TODO(Derppening): Fix turning radius ratio
-    motor_speed_diff *= 0.142;
     motor_speed_diff_ = motor_speed_diff;
-    mpc_right_->AddToTargetSpeed(mpc_right_->GetTargetSpeed() * motor_speed_diff, false);
-    mpc_left_->AddToTargetSpeed(mpc_left_->GetTargetSpeed() * -motor_speed_diff, false);
+
+    float turning_radius = CarManager::kWheelbase / ratio.kLeft;
+    float motor_speed_diff_left = motor_speed_diff;
+    float motor_speed_diff_right = motor_speed_diff;
+
+    motor_speed_diff_left *= 1 - ((turning_radius - CarManager::kAxleLength / 2) / turning_radius);
+    motor_speed_diff_right *= 1 - ((turning_radius + CarManager::kAxleLength / 2) / turning_radius);
+
+    mpc_right_->AddToTargetSpeed(mpc_right_->GetTargetSpeed() * motor_speed_diff_right, false);
+    mpc_left_->AddToTargetSpeed(mpc_left_->GetTargetSpeed() * -motor_speed_diff_left, false);
   } else if (servo_diff > 0) {  // turning right
     float motor_speed_diff = servo_diff / (s.kRightBound - s.kCenter);
-    // TODO(Derppening): Fix turning radius ratio
-    motor_speed_diff *= 0.142;
     motor_speed_diff_ = motor_speed_diff;
-    mpc_left_->AddToTargetSpeed(mpc_left_->GetTargetSpeed() * motor_speed_diff, false);
-    mpc_right_->AddToTargetSpeed(mpc_right_->GetTargetSpeed() * -motor_speed_diff, false);
+
+    float turning_radius = CarManager::kWheelbase / ratio.kRight;
+    float motor_speed_diff_left = motor_speed_diff;
+    float motor_speed_diff_right = motor_speed_diff;
+
+    motor_speed_diff_left *= 1 - ((turning_radius - CarManager::kAxleLength / 2) / turning_radius);
+    motor_speed_diff_right *= 1 - ((turning_radius + CarManager::kAxleLength / 2) / turning_radius);
+
+    mpc_left_->AddToTargetSpeed(mpc_left_->GetTargetSpeed() * motor_speed_diff_left, false);
+    mpc_right_->AddToTargetSpeed(mpc_right_->GetTargetSpeed() * -motor_speed_diff_right, false);
   }
 
   mpc_left_->SetCommitFlag(true);
