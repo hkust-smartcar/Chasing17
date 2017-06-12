@@ -27,12 +27,12 @@ unsigned int FcYyUsV4::std_deviation_ = 0;
 
 void FcYyUsV4::listener(Gpi* gpi) {
   if (gpi->Get()) {
-    impulse_start_time_ = System::Time10Us();
+    impulse_start_time_ = System::Time();//Time10Us();
     average_distance_ = 0;
     std_deviation_ = 0;
 
   } else {
-    unsigned int dist = (System::Time10Us() - impulse_start_time_) * 6.8;
+    unsigned int dist = (System::Time() - impulse_start_time_) * 6.8;
     if (dist > 2000) { //max: 5500, filter > 2000mm
       distance_ = kMaxDistance; average_distance_ = 0; return;
     } else if (dist < 20) {

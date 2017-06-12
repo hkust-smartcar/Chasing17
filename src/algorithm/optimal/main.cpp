@@ -28,7 +28,7 @@
 #include "util/util.h"
 
 #include "debug_console.h"
-#include "img.h"
+#include "worldview/img_car1.h"
 
 using namespace libsc;
 
@@ -42,7 +42,7 @@ Corners left_corners;
 Corners right_corners;
 const Byte* CameraBuf;
 //Byte WorldBuf[128*20];
-k60::Ov7725* pCamera = nullptr;
+std::unique_ptr<k60::Ov7725> pCamera = nullptr;
 St7735r* pLcd = nullptr;
 Led* pLed3 = nullptr;
 LcdTypewriter* pWriter = nullptr;
@@ -110,21 +110,33 @@ bool getBit(int i_x, int i_y){
 	return CameraBuf[i_y*CameraSize.w/8 + i_x/8] >> (7 - (i_x%8)) & 1;
 }
 
-
+/**
+ * @brief To fetch filtered bit, 1 = black; 0 = white
+ * @param (x,y): coordinate system in which bottom left corner := (0, 0)
+ * @return world bit
+ */
 bool getWorldBit(int w_x, int w_y){
 	switch (car){
 	case CarManager::Car::kCar1:
+
+		w_y = 160 - w_y;
+		int i_x,i_y;
+		i_x = worldview::car1::transformMatrix[w_x][w_y][0];
+		i_y = worldview::car1::transformMatrix[w_x][w_y][1];
+		return getFilteredBit(CameraBuf, i_x,i_y);
+
 		break;
 	case CarManager::Car::kCar2:
+
+//		w_y = 160 - w_y;
+//		int i_x,i_y;
+//		i_x = transformMatrix2[w_x][w_y][0];
+//		i_y = transformMatrix2[w_x][w_y][1];
+//		return getFilteredBit(CameraBuf, i_x,i_y);
+
 		break;
 	}
 
-
-	w_y = 160 - w_y;
-	int i_x,i_y;
-	i_x = transformMatrix[w_x][w_y][0];
-	i_y = transformMatrix[w_x][w_y][1];
-	return getFilteredBit(CameraBuf, i_x,i_y);
 }
 
 void PrintWorldImage(){
@@ -166,10 +178,10 @@ void Capture(){
 	pCamera->UnlockBuffer();
 
 	//Search horizontally
-	for (int i = WorldSize.w/2; i > 0; i--){ //TODO: Try to understand why at (0,0) it always return 1
-		if (getWorldBit( i, 1) == 1){
+	for (int i = WorldSize.w/2; i > 0; i--){
+		if (getWorldBit( i, 20) == 1){
 			left_x = i + 1;
-			left_y = 1;
+			left_y = 20;
 			found_left = true;
 			break;
 		}
@@ -181,9 +193,9 @@ void Capture(){
 
 	//Search horizontally
 	for (int i = WorldSize.w/2; i < WorldSize.w; i++){
-		if (getWorldBit(i, 1) == 1){
+		if (getWorldBit(i, 20) == 1){
 			right_x = i - 1;
-			right_y = 1;
+			right_y = 20;
 			found_right = true;
 			break;
 		}
@@ -285,14 +297,14 @@ bool FindEdges(){
 			if (last.first - 3 <= 0 || last.first + 3 > WorldSize.w - 1 || last.second - 3 <= 0 || last.second +3 > WorldSize.h -1){
 				continue;
 			}
-			for (int i = (last.first - 3); i < (last.first + 3); i++){
-				for (int j = (last.second - 3); j < (last.second + 3); j++){
+			for (int i = (last.first - 3); i <= (last.first + 3); i++){
+				for (int j = (last.second - 3); j <= (last.second + 3); j++){
 					CornerCheck += getWorldBit(i, j);
 					total++;
 				}
 			}
 			//if in this threshold, consider as corner
-			if (CornerCheck > total * 0.01 && CornerCheck < total * 0.20){
+			if (CornerCheck > total * 0.15 && CornerCheck < total * 0.26){
 				left_corners.push(last.first, last.second);
 			}
 		}
@@ -365,14 +377,15 @@ bool FindEdges(){
 				if (last.first - 3 <= 0 || last.first + 3 > WorldSize.w - 1 || last.second - 3 <= 0 || last.second +3 > WorldSize.h -1){
 					continue;
 				}
-				for (int i = max(0, last.first - 3); i < min(WorldSize.w-1, last.first + 3); i++){
-					for (int j = max(0, last.second - 3); j < min(WorldSize.h-1, last.second + 3); j++){
+				for (int i = max(0, last.first - 3); i <= min(WorldSize.w-1, last.first + 3); i++){
+					for (int j = max(0, last.second - 3); j <= min(WorldSize.h-1, last.second + 3); j++){
 						CornerCheck += getWorldBit(i, j);
 						total++;
 					}
 				}
+
 				//if in this threshold, consider as corner
-				if (CornerCheck > total * 0.01 && CornerCheck < total * 0.20){
+				if (CornerCheck > total * 0.15 && CornerCheck < total * 0.26){
 					right_corners.push(last.first, last.second);
 				}
 			}
@@ -535,8 +548,6 @@ void Interprete(){
 
 
 void main(CarManager::Car c){
-	System::Init();
-
 	car = c;
 	servo_bounds = car == CarManager::Car::kCar1 ? CarManager::kBoundsCar1 : CarManager::kBoundsCar2;
 
@@ -552,8 +563,9 @@ void main(CarManager::Car c){
 	cameraConfig.w = CameraSize.w;
 	cameraConfig.h = CameraSize.h;
 	cameraConfig.fps = k60::Ov7725Configurator::Config::Fps::kHigh;
-	k60::Ov7725 camera(cameraConfig);
-	pCamera = &camera;
+	std::unique_ptr<k60::Ov7725> camera(new k60::Ov7725(cameraConfig));
+	pCamera = std::move(camera);
+	pCamera->Start();
 
 	FutabaS3010::Config ConfigServo;
 	ConfigServo.id = 0;
@@ -600,6 +612,7 @@ void main(CarManager::Car c){
 
 	DebugConsole console(&joystick,pLcd, &writer);
 
+
 	/*
 	CarManager::Config ConfigMgr;
 	ConfigMgr.servo = std::move(pServo);
@@ -616,8 +629,6 @@ void main(CarManager::Car c){
 	System::DelayMs(1000);
 	pServo->SetDegree(servo_bounds.kCenter);
 	System::DelayMs(1000);
-
-	camera.Start();
 
 	/*while(true){
 
@@ -649,6 +660,7 @@ void main(CarManager::Car c){
 	while (true){
 		while (time_img != System::Time()){
 			time_img = System::Time();
+
 			if (time_img % 100 == 0){
 				//pMpc->UpdateEncoder();
 				Capture(); //Capture until two base points are identified

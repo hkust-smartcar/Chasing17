@@ -18,6 +18,7 @@
 #include "algorithm/optimal/main.h"
 #include "algorithm/distance.h"
 #include "util/testground.h"
+#include "util/unit_tests.h"
 
 namespace libbase {
 namespace k60 {
@@ -45,6 +46,8 @@ enum struct Algorithm {
 int main() {
   System::Init();
 
+//  util::CameraTest();
+
   BatteryMeter::Config ConfigBM;
   ConfigBM.voltage_ratio = 0.4;
   BatteryMeter bm(ConfigBM);
@@ -53,13 +56,13 @@ int main() {
   while (bm.GetVoltage() <= 7.4);
 
   // modify next line to switch between algorithms
-  constexpr Algorithm a = Algorithm::kDistance;
+  constexpr Algorithm a = Algorithm::kOptimal;
 
   // modify next line to enable/disable encoder
   constexpr bool has_encoder = true;
 
   // modify next line to change which car we're working with
-  CarManager::Car c = CarManager::Car::kCar2;
+  CarManager::Car c = CarManager::Car::kCar1;
 
   CarManager::ServoBounds s = c == CarManager::Car::kCar1 ? CarManager::kBoundsCar1 : CarManager::kBoundsCar2;
   switch (a) {
