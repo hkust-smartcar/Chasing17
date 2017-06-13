@@ -77,8 +77,8 @@ struct {
 } WorldSize;
 
 struct {
-	uint16_t edge_length = 159;
-	uint16_t corner_min = 15, corner_max = 26;
+	uint16_t edge_length = 159; //max length for an edge
+	uint16_t corner_min = 15, corner_max = 26; //thresold (in %) for corner detection
 } TuningVar;
 
 /**
