@@ -12,7 +12,6 @@
  * Prerequisites:
  * - CarInfo
  * - BTComm
- * - FcYyUsV4
  *
  */
 
@@ -33,7 +32,6 @@ class Overtake final {
  public:
   struct Config {
     std::unique_ptr<BTComm> bluetooth = nullptr;
-    std::unique_ptr<FcYyUsV4> usir = nullptr;
   };
 
   /**
@@ -45,12 +43,6 @@ class Overtake final {
 
   static void Init(Config config);
 
-  /**
-   * Updates all parameters of the car.
-   */
-  static void UpdateParameters();
-
-  static uint16_t GetDist() { return dist_; }
 //  static bool GetFrontIr() { return ir_front_->IsDetected(); }
   static bool GetFrontIr() {
     // TODO(Derppening): Replace with call to IR (if there is one)
@@ -60,11 +52,6 @@ class Overtake final {
  private:
   // Static class. Disable constructor
   Overtake() {}
-
-  /**
-   * Gets the distance between the two cars
-   */
-  static void UpdateDist();
 
   /**
    * Cleanup post-overtake.
@@ -77,7 +64,6 @@ class Overtake final {
    * @note Only called if algorithm is running on the back car
    * @return true if algorithm decides to overtake
    */
-  // TODO(Derppening): decide if we need to return anything
   static bool DecideOvertake();
 
   /**
@@ -90,11 +76,9 @@ class Overtake final {
    */
   static bool is_overtaking_;
 
-  static uint16_t dist_;
   static libsc::Timer::TimerInt time_begin_;
 
   static std::unique_ptr<BTComm> bluetooth_;
-  static std::unique_ptr<FcYyUsV4> usir_;
 };
 
 #endif  // CHASING17_ALGORITHM_OVERTAKE_H_

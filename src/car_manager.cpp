@@ -26,6 +26,7 @@ using std::unique_ptr;
 using util::Mpc;
 using util::MpcDual;
 
+uint16_t CarManager::us_distance_ = 0;
 uint8_t CarManager::left_speed_ = 0;
 uint8_t CarManager::right_speed_ = 0;
 uint16_t CarManager::servo_deg_ = 0;
@@ -47,8 +48,9 @@ constexpr CarManager::SideRatio CarManager::kRatioCar2;
 unique_ptr<Mpc> CarManager::epc_left_ = nullptr;
 unique_ptr<Mpc> CarManager::epc_right_ = nullptr;
 unique_ptr<MpcDual> CarManager::epc_ = nullptr;
-unique_ptr<Mpu9250> CarManager::mpu_ = nullptr;
 unique_ptr<FutabaS3010> CarManager::servo_ = nullptr;
+unique_ptr<FcYyUsV4> CarManager::usir_ = nullptr;
+unique_ptr<Mpu9250> CarManager::mpu_ = nullptr;
 
 void CarManager::Init(Config config) {
   epc_left_ = move(config.epc_left);
@@ -62,8 +64,9 @@ void CarManager::Init(Config config) {
 
 void CarManager::UpdateParameters() {
   UpdateSpeed();
-  UpdateSlope();
   UpdateServoAngle();
+  UpdateDistance();
+  UpdateSlope();
 }
 
 void CarManager::SwitchIdentity() {
@@ -116,7 +119,7 @@ void CarManager::SetOverrideProtection(const bool override_protection, const Mot
   }
 }
 
-void CarManager::SetTargetSpeed(int16_t speed, MotorSide src) {
+void CarManager::SetTargetSpeed(const int16_t speed, MotorSide src) {
   if (epc_ != nullptr) {
     epc_->SetTargetSpeed(speed, false);
     return;
@@ -135,10 +138,11 @@ void CarManager::SetTargetSpeed(int16_t speed, MotorSide src) {
   }
 }
 
-void CarManager::SetTargetAngle(uint16_t angle) {
+void CarManager::SetTargetAngle(const uint16_t angle) {
   if (servo_ == nullptr) {
     return;
   }
+
   ServoBounds s;
   switch (car_) {
     case Car::kCar1:
@@ -148,12 +152,22 @@ void CarManager::SetTargetAngle(uint16_t angle) {
       s = kBoundsCar2;
       break;
   }
-  if (angle > s.kLeftBound) {
-    angle = s.kLeftBound;
-  } else if (angle < s.kRightBound) {
-    angle = s.kRightBound;
+
+  uint16_t new_angle = angle;
+  if (new_angle > s.kLeftBound) {
+    new_angle = s.kLeftBound;
+  } else if (new_angle < s.kRightBound) {
+    new_angle = s.kRightBound;
   }
-  servo_->SetDegree(angle);
+
+  servo_->SetDegree(new_angle);
+}
+
+void CarManager::UpdateDistance() {
+  if (identity_ == Identity::kFront) {
+    us_distance_ = FcYyUsV4::kMinDistance;
+  }
+  us_distance_ = usir_->GetAvgDistance();
 }
 
 void CarManager::UpdateSpeed() {

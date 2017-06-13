@@ -27,10 +27,8 @@ using util::Mpc;
 
 bool Overtake::is_overtaking_ = false;
 Timer::TimerInt Overtake::time_begin_ = 0;
-uint16_t Overtake::dist_ = 0;
 
 unique_ptr<BTComm> Overtake::bluetooth_ = nullptr;
-unique_ptr<FcYyUsV4> Overtake::usir_ = nullptr;
 
 // TODO(Derppening): Separate everything into tinier functions
 
@@ -42,15 +40,15 @@ bool Overtake::DecideOvertake() {
       is_overtaking_ = true;
       return true;
     } else {  // send current data to rear car
-      bluetooth_->sendInfo(CarManager::GetLeftSpeed(), CarManager::GetSlope(), dist_ / 10, CarManager::GetSide());
+      bluetooth_->sendInfo(CarManager::GetLeftSpeed(), CarManager::GetSlope(), CarManager::GetDistance() / 10, CarManager::GetSide());
       bluetooth_->sendFeature(CarManager::GetFeature());
       is_overtaking_ = false;
       return false;
     }
   }
 
-  if (usir_->GetAvgDistance() > FcYyUsV4::kMinDistance &&
-      usir_->GetAvgDistance() < FcYyUsV4::kMaxDistance) {
+  if (CarManager::GetDistance() > FcYyUsV4::kMinDistance &&
+      CarManager::GetDistance() < FcYyUsV4::kMaxDistance) {
     is_overtaking_ = false;
     return false;
   }
@@ -64,6 +62,7 @@ bool Overtake::DecideOvertake() {
 
   // why are we on the same side?
   // why am i in the middle? follow left/right!
+  // TODO(Derppening): Determine whether this algorithm is still needed
   if (CarManager::GetSide() == bluetooth_->getBufferSide() ||
       CarManager::GetSide() == CarManager::Side::kMiddle) {
     is_overtaking_ = false;
@@ -91,9 +90,6 @@ bool Overtake::DecideOvertake() {
 }
 
 bool Overtake::ExecuteOvertake() {
-  // update parameters first. the data will be handy anyways
-  UpdateParameters();
-
   // no agreement on overtaking. decide instead
   if (bluetooth_->getOvertakeReq() != BTComm::OvertakeStatus::kAgreed ||
       !is_overtaking_) {
@@ -114,9 +110,9 @@ bool Overtake::ExecuteOvertake() {
     // TODO(Derppening): Replace with function call to starting usir_
 //    us_->Start();
 
-    bluetooth_->sendInfo(CarManager::GetLeftSpeed(), CarManager::GetSlope(), dist_ / 10, CarManager::GetSide());
+    bluetooth_->sendInfo(CarManager::GetLeftSpeed(), CarManager::GetSlope(), CarManager::GetDistance() / 10, CarManager::GetSide());
 
-    if (dist_ > 50 && dist_ < 100) {
+    if (CarManager::GetDistance() > 50 && CarManager::GetDistance() < 100) {
       CarManager::SwitchIdentity();
       Cleanup(false);
       bluetooth_->ReqSwitchID();
@@ -139,7 +135,6 @@ bool Overtake::ExecuteOvertake() {
 
 void Overtake::Init(Config config) {
   bluetooth_ = move(config.bluetooth);
-  usir_ = move(config.usir);
 }
 
 void Overtake::Cleanup(bool identity) {
@@ -155,17 +150,4 @@ void Overtake::Cleanup(bool identity) {
     }*/
   }
   time_begin_ = 0;
-}
-
-void Overtake::UpdateParameters() {
-  CarManager::UpdateParameters();
-  UpdateDist();
-}
-
-void Overtake::UpdateDist() {
-  if (static_cast<bool>(CarManager::GetIdentity())) {
-    dist_ = FcYyUsV4::kMinDistance;
-  } else {
-    dist_ = usir_->GetAvgDistance();
-  }
 }

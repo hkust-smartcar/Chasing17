@@ -45,8 +45,6 @@ enum struct Algorithm {
 int main() {
   System::Init();
 
-//  util::CameraTest();
-
   BatteryMeter::Config ConfigBM;
   ConfigBM.voltage_ratio = 0.4;
   BatteryMeter bm(ConfigBM);
@@ -65,7 +63,7 @@ int main() {
 	  } else {
 		  console.SetTextColor(Lcd::kGreen);
 	  }
-	  char temp[100];
+	  char temp[32];
 	  sprintf(temp, " Voltage: %.2fV", bm.GetVoltage());
 	  console.WriteString(temp);
 	  System::DelayMs(1000);
@@ -81,6 +79,7 @@ int main() {
   // modify next line to change which car we're working with
   CarManager::Car c = CarManager::Car::kCar1;
 
+  // TODO(Derppening): Refractor all algorithms to get servo bounds from CarManager
   CarManager::ServoBounds s = c == CarManager::Car::kCar1 ? CarManager::kBoundsCar1 : CarManager::kBoundsCar2;
   switch (a) {
     case Algorithm::kKing:
