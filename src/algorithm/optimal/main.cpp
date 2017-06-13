@@ -304,11 +304,11 @@ bool FindEdges(){
 				}
 			}
 			//if in this threshold, consider as corner
-			if (CornerCheck > total * 0.15 && CornerCheck < total * 0.26){
+			if (CornerCheck > total * TuningVar.corner_min / 100 && CornerCheck < total * TuningVar.corner_max / 100){
 				left_corners.push(last.first, last.second);
 			}
 		}
-		} while (left_edge.points.size() <= WorldSize.h-1 && flag_break == false);
+		} while (left_edge.points.size() <= TuningVar.edge_length && flag_break == false);
 	}
 
 	error_cnt = -1;
@@ -365,6 +365,14 @@ bool FindEdges(){
 				flag_break = true;
 			}
 
+			if (right_edge.points.back() == left_edge.points.back()){ //two edges meet
+				for (int i = 0; i < 10; i++){ //discard last 10 points
+					right_edge.points.pop_back();
+					left_edge.points.pop_back();
+				}
+				flag_break = true;
+			}
+
 			if (right_edge.points.back().second == WorldSize.h - 1){ //the edge reaches the top
 				flag_break = true;
 			}
@@ -385,11 +393,11 @@ bool FindEdges(){
 				}
 
 				//if in this threshold, consider as corner
-				if (CornerCheck > total * 0.15 && CornerCheck < total * 0.26){
+				if (CornerCheck > total * TuningVar.corner_min / 100 && CornerCheck < total * TuningVar.corner_max / 100){
 					right_corners.push(last.first, last.second);
 				}
 			}
-		} while (right_edge.points.size() <= WorldSize.h-1 && flag_break == false);
+		} while (right_edge.points.size() <= TuningVar.edge_length && flag_break == false);
 	}
 	return true;
 }

@@ -76,6 +76,11 @@ struct {
 	uint16_t w = 128, h = 160;
 } WorldSize;
 
+struct {
+	uint16_t edge_length = 159;
+	uint16_t corner_min = 15, corner_max = 26;
+} TuningVar;
+
 /**
  * TranslateType enum struct
  *
