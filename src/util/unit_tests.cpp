@@ -85,11 +85,11 @@ void CameraTest() {
   // initialize camera
   Ov7725::Config camera_config;
   camera_config.id = 0;
-  camera_config.w = 80;  // downscale the width to 80
-  camera_config.h = 60;  // downscale the height to 60
+  camera_config.w = 120;  // downscale the width to 80
+  camera_config.h = 160;  // downscale the height to 60
   unique_ptr<Ov7725> camera(new Ov7725(camera_config));
   camera->Start();
-  constexpr Uint kBufferSize = 80 * 60 / 8;
+  constexpr Uint kBufferSize = 120 * 160 / 8;
   if (kBufferSize != camera->GetBufferSize()) {
     return;
   }
@@ -108,7 +108,7 @@ void CameraTest() {
     CopyByteArray(pBuffer, buffer_arr);
 
     camera->UnlockBuffer();
-    lcd->SetRegion(Lcd::Rect(0, 0, 80, 60));
+    lcd->SetRegion(Lcd::Rect(0, 0, 120, 160));
     lcd->FillBits(Lcd::kBlack, Lcd::kWhite, buffer_arr.data(), kBufferSize * 8);
   }
 

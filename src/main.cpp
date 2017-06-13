@@ -7,7 +7,6 @@
  * Program entry point.
  *
  */
-
 #include "libbase/k60/mcg.h"
 #include "libsc/system.h"
 #include "libsc/battery_meter.h"
@@ -87,6 +86,7 @@ int main() {
     case Algorithm::kDistance:
       algorithm::USIRDemo();
       break;
+
     default:
       // all cases covered
       break;
