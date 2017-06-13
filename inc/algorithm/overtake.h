@@ -12,8 +12,7 @@
  * Prerequisites:
  * - CarInfo
  * - BTComm
- * - libsc::InfraRedSensor
- * - libsc::Us100
+ * - FcYyUsV4
  *
  */
 
@@ -23,21 +22,18 @@
 #include <cstdint>
 #include <memory>
 
-#include "libsc/infra_red_sensor.h"
 #include "libsc/system.h"
-#include "libsc/us_100.h"
 
 #include "bluetooth.h"
 #include "car_manager.h"
+#include "fc_yy_us_v4.h"
 #include "util/mpc.h"
 
 class Overtake final {
  public:
   struct Config {
     std::unique_ptr<BTComm> bluetooth = nullptr;
-    std::unique_ptr<libsc::InfraRedSensor> ir_front = nullptr;
-    std::unique_ptr<libsc::InfraRedSensor> ir_rear = nullptr;
-    std::unique_ptr<libsc::Us100> us = nullptr;
+    std::unique_ptr<FcYyUsV4> usir = nullptr;
   };
 
   /**
@@ -45,7 +41,6 @@ class Overtake final {
    *
    * @return true if function should continue running
    */
-  // TODO(Derppening): decide if we need to return anything
   static bool ExecuteOvertake();
 
   static void Init(Config config);
@@ -56,7 +51,11 @@ class Overtake final {
   static void UpdateParameters();
 
   static uint16_t GetDist() { return dist_; }
-  static bool GetFrontIr() { return ir_front_->IsDetected(); }
+//  static bool GetFrontIr() { return ir_front_->IsDetected(); }
+  static bool GetFrontIr() {
+    // TODO(Derppening): Replace with call to IR (if there is one)
+    return false;
+  }
 
  private:
   // Static class. Disable constructor
@@ -82,11 +81,6 @@ class Overtake final {
   static bool DecideOvertake();
 
   /**
-   * Constant for too much distance
-   */
-  static constexpr uint8_t kDistanceInf = 0xFF;
-
-  /**
    * Constant for timeout
    */
   static constexpr uint16_t kOvertakeTimeout = 5000;
@@ -100,9 +94,7 @@ class Overtake final {
   static libsc::Timer::TimerInt time_begin_;
 
   static std::unique_ptr<BTComm> bluetooth_;
-  static std::unique_ptr<libsc::InfraRedSensor> ir_front_;
-  static std::unique_ptr<libsc::InfraRedSensor> ir_rear_;
-  static std::unique_ptr<libsc::Us100> us_;
+  static std::unique_ptr<FcYyUsV4> usir_;
 };
 
 #endif  // CHASING17_ALGORITHM_OVERTAKE_H_
