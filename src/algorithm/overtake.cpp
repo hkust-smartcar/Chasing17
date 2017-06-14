@@ -12,15 +12,19 @@
 
 #include <memory>
 
+#include "libbase/misc_types.h"
+#include "libsc/infra_red_sensor.h"
 #include "libsc/system.h"
+#include "libsc/us_100.h"
 
 #include "bluetooth.h"
 #include "car_manager.h"
-#include "fc_yy_us_v4.h"
 #include "util/mpc.h"
 
+using libsc::InfraRedSensor;
 using libsc::System;
 using libsc::Timer;
+using libsc::Us100;
 using std::move;
 using std::unique_ptr;
 using util::Mpc;
@@ -30,7 +34,9 @@ Timer::TimerInt Overtake::time_begin_ = 0;
 uint16_t Overtake::dist_ = 0;
 
 unique_ptr<BTComm> Overtake::bluetooth_ = nullptr;
-unique_ptr<FcYyUsV4> Overtake::usir_ = nullptr;
+unique_ptr<InfraRedSensor> Overtake::ir_front_ = nullptr;
+unique_ptr<InfraRedSensor> Overtake::ir_rear_ = nullptr;
+unique_ptr<Us100> Overtake::us_ = nullptr;
 
 // TODO(Derppening): Separate everything into tinier functions
 
@@ -49,8 +55,7 @@ bool Overtake::DecideOvertake() {
     }
   }
 
-  if (usir_->GetAvgDistance() > FcYyUsV4::kMinDistance &&
-      usir_->GetAvgDistance() < FcYyUsV4::kMaxDistance) {
+  if (!(ir_front_->IsDetected())) {
     is_overtaking_ = false;
     return false;
   }
@@ -105,33 +110,30 @@ bool Overtake::ExecuteOvertake() {
     time_begin_ = System::Time();
   } else if (Timer::TimeDiff(System::Time(), time_begin_) > kOvertakeTimeout) {
     Cleanup(static_cast<bool>(CarManager::GetIdentity()));
-    return false;
   }
 
   is_overtaking_ = true;
 
   if (static_cast<bool>(CarManager::GetIdentity())) {
-    // TODO(Derppening): Replace with function call to starting usir_
-//    us_->Start();
+    us_->Start();
 
     bluetooth_->sendInfo(CarManager::GetLeftSpeed(), CarManager::GetSlope(), dist_ / 10, CarManager::GetSide());
 
-    if (dist_ > 50 && dist_ < 100) {
+    if (ir_front_->IsDetected() &&
+        dist_ > 50 && dist_ < 100) {
       CarManager::SwitchIdentity();
       Cleanup(false);
       bluetooth_->ReqSwitchID();
     }
   } else {
-    // TODO(Derppening): Replace with function call to stopping usir_
-//    us_->Stop();
+    us_->Stop();
 
-    uint16_t speed = (CarManager::GetLeftSpeed() + CarManager::GetRightSpeed()) / 2;
-    CarManager::SetTargetSpeed(speed * 1.5);
+    // TODO(Derppening): calculate speed difference, then +50% to catch up
+    CarManager::SetTargetSpeed(4000);
 
     if (bluetooth_->hasSwitchIDReq()) {
       CarManager::SwitchIdentity();
       Cleanup(true);
-      return false;
     }
   }
   return true;
@@ -139,20 +141,20 @@ bool Overtake::ExecuteOvertake() {
 
 void Overtake::Init(Config config) {
   bluetooth_ = move(config.bluetooth);
-  usir_ = move(config.usir);
+  ir_front_ = move(config.ir_front);
+  ir_rear_ = move(config.ir_rear);
+  us_ = move(config.us);
 }
 
 void Overtake::Cleanup(bool identity) {
   if (identity) {
-    // TODO(Derppening): Replace with function call to stopping usir_
-    /*if (us_->IsAvailable()) {
+    if (us_->IsAvailable()) {
       us_->Stop();
-    }*/
+    }
   } else {
-    // TODO(Derppening): Replace with function call to starting usir_
-    /*if (!(us_->IsAvailable())) {
+    if (!(us_->IsAvailable())) {
       us_->Start();
-    }*/
+    }
   }
   time_begin_ = 0;
 }
@@ -164,8 +166,8 @@ void Overtake::UpdateParameters() {
 
 void Overtake::UpdateDist() {
   if (static_cast<bool>(CarManager::GetIdentity())) {
-    dist_ = FcYyUsV4::kMinDistance;
+    dist_ = kDistanceInf;
   } else {
-    dist_ = usir_->GetAvgDistance();
+    dist_ = us_->GetDistance();
   }
 }

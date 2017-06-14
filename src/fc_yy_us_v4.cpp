@@ -20,20 +20,19 @@
 using libsc::System;
 
 uint32_t FcYyUsV4::impulse_start_time_ = 0;
-uint16_t FcYyUsV4::distance_ = 0;
-uint16_t FcYyUsV4::average_distance_ = 0;
-std::vector<uint16_t> FcYyUsV4::last_ten_distance_{};
-uint16_t FcYyUsV4::std_deviation_ = 0;
+unsigned int FcYyUsV4::distance_ = 0;
+unsigned int FcYyUsV4::average_distance_ = 0;
+std::vector<unsigned int> FcYyUsV4::last_ten_distance_{};
+unsigned int FcYyUsV4::std_deviation_ = 0;
 
 void FcYyUsV4::listener(Gpi* gpi) {
   if (gpi->Get()) {
-    // TODO(Derppening): Determine why we switched to System::Time() again
-    impulse_start_time_ = System::Time();  // Time10Us();
+    impulse_start_time_ = System::Time();//Time10Us();
     average_distance_ = 0;
     std_deviation_ = 0;
 
   } else {
-    uint16_t dist = (System::Time() - impulse_start_time_) * 6.8;
+    unsigned int dist = (System::Time() - impulse_start_time_) * 6.8;
     if (dist > 2000) { //max: 5500, filter > 2000mm
       distance_ = kMaxDistance; average_distance_ = 0; return;
     } else if (dist < 20) {
@@ -42,8 +41,8 @@ void FcYyUsV4::listener(Gpi* gpi) {
       distance_ = dist;
     }
 
-    uint16_t old_average_distance_ = average_distance_;
-    uint16_t old_std_deviation_ = std_deviation_;
+    unsigned int old_average_distance_ = average_distance_;
+    unsigned int old_std_deviation_ = std_deviation_;
 
     //average the distance
     last_ten_distance_.push_back(distance_);
@@ -61,7 +60,7 @@ void FcYyUsV4::listener(Gpi* gpi) {
     }
     std_deviation_ = std::sqrt(std_deviation_ / last_ten_distance_.size());
 
-    if (std_deviation_ > 150){  // filter outliers
+    if (std_deviation_ > 150){//filter outliers
     	average_distance_ = old_average_distance_;
     	std_deviation_ = old_std_deviation_;
     }
