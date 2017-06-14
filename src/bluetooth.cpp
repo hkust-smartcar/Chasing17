@@ -147,7 +147,7 @@ bool BTComm::BTListener(const Byte* data, size_t size) {
           sendSlopeDeg(CarManager::GetSlope());
           break;
         case ReqType::kDist:
-          sendDist(CarManager::GetDistance());
+          sendDist(Overtake::GetDist());
           break;
         case ReqType::kFeature:
           sendFeature(CarManager::GetFeature());

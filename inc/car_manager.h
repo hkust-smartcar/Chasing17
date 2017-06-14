@@ -39,7 +39,6 @@
 #include "libsc/dir_encoder.h"
 #include "libsc/futaba_s3010.h"
 
-#include "fc_yy_us_v4.h"
 #include "mpu9250.h"
 #include "util/mpc.h"
 #include "util/mpc_dual.h"
@@ -99,9 +98,8 @@ class CarManager final {
     std::unique_ptr<util::Mpc> epc_left = nullptr;
     std::unique_ptr<util::Mpc> epc_right = nullptr;
     std::unique_ptr<util::MpcDual> epc = nullptr;
-    std::unique_ptr<libsc::FutabaS3010> servo = nullptr;
-    std::unique_ptr<FcYyUsV4> usir = nullptr;
     std::unique_ptr<Mpu9250> mpu = nullptr;
+    std::unique_ptr<libsc::FutabaS3010> servo = nullptr;
     Identity identity;
     Car car;
   };
@@ -149,7 +147,6 @@ class CarManager final {
   static void Init(Config config);
 
   // Getters
-  static uint16_t GetDistance() { return us_distance_; }
   static uint8_t GetLeftSpeed() { return left_speed_; }
   static uint8_t GetRightSpeed() { return right_speed_; }
   static uint16_t GetServoDeg() { return servo_deg_; }
@@ -166,8 +163,8 @@ class CarManager final {
   static void SetIdentity(const Identity i) { identity_ = i; }
   static void SetOverrideProtection(const bool override_protection, const MotorSide side = MotorSide::kBoth);
   static void SetSide(const Side s) { side_ = s; }
-  static void SetTargetAngle(const uint16_t angle);
-  static void SetTargetSpeed(const int16_t speed, MotorSide side = MotorSide::kBoth);
+  static void SetTargetAngle(uint16_t angle);
+  static void SetTargetSpeed(int16_t speed, MotorSide side = MotorSide::kBoth);
   static void SwitchIdentity();
 
  private:
@@ -175,12 +172,10 @@ class CarManager final {
   CarManager() {}
 
   // Updaters
-  static void UpdateDistance();
   static void UpdateSpeed();
   static void UpdateSlope();
   static void UpdateServoAngle();
 
-  static uint16_t us_distance_;
   static uint8_t left_speed_;
   static uint8_t right_speed_;
   static uint16_t servo_deg_;
@@ -193,9 +188,8 @@ class CarManager final {
   static std::unique_ptr<util::Mpc> epc_left_;
   static std::unique_ptr<util::Mpc> epc_right_;
   static std::unique_ptr<util::MpcDual> epc_;
-  static std::unique_ptr<libsc::FutabaS3010> servo_;
   static std::unique_ptr<Mpu9250> mpu_;
-  static std::unique_ptr<FcYyUsV4> usir_;
+  static std::unique_ptr<libsc::FutabaS3010> servo_;
 };
 
 #endif  // CHASING17_CARMANAGER_H_
