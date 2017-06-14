@@ -41,6 +41,8 @@ Edges right_edge;
 Edges path;
 Corners left_corners;
 Corners right_corners;
+std::array<std::pair<uint16_t, uint16_t>,2> inc_width_pts; //0:left, 1:right
+bool has_inc_width_pt = false;
 const Byte* CameraBuf;
 //Byte WorldBuf[128*20];
 std::unique_ptr<k60::Ov7725> pCamera = nullptr;
@@ -455,6 +457,19 @@ bool FindEdges(){
 				if (CornerCheck > total * TuningVar.corner_min / 100 && CornerCheck < total * TuningVar.corner_max / 100){
 					right_corners.push(last.first, last.second);
 				}
+			}
+		}
+
+
+		// check if suddenly increase length
+		if (!has_inc_width_pt){
+			if ( (left_edge.points.back().first - right_edge.points.back().first) *
+					(left_edge.points.back().first - right_edge.points.back().first) +
+					(left_edge.points.back().second - right_edge.points.back().second) *
+					(left_edge.points.back().second - right_edge.points.back().second)
+					<= TuningVar.edge_dist_thresold){
+				inc_width_pts.at(0) = left_edge.points.back();
+				inc_width_pts.at(1) = right_edge.points.back();
 			}
 		}
 }
