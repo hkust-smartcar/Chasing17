@@ -22,6 +22,7 @@ class ServoController {
 
   void SetTargetAngle(int16_t change, bool commit_now = true);
 
+  uint16_t GetRawAngle() { return servo_->GetDegree(); }
   libsc::Timer::TimerInt GetTimeElapsed() const { return libsc::System::Time() - time_encoder_start_; }
 
   void DoCorrection();

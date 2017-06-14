@@ -43,8 +43,8 @@ void BTComm::sendData(unsigned char type, uint16_t data) {
   ptrBT_->SendBuffer(dataArray, 6);
   auto a = NAKbuffer_.emplace(ID, std::make_pair(type, data));
   if (!a.second){
-	  NAKbuffer_.erase(a.first);
-	  NAKbuffer_.emplace(ID, std::make_pair(type,data));
+    NAKbuffer_.erase(a.first);
+    NAKbuffer_.emplace(ID, std::make_pair(type,data));
   }
 }
 
@@ -141,13 +141,13 @@ bool BTComm::BTListener(const Byte* data, size_t size) {
           SwitchIDReq_ = true;
           break;
         case ReqType::kSpeed:
-          sendSpeed(CarManager::GetLeftSpeed());
+          sendSpeed((CarManager::GetLeftSpeed() + CarManager::GetRightSpeed()) / 200);
           break;
         case ReqType::kSlopeDeg:
           sendSlopeDeg(CarManager::GetSlope());
           break;
         case ReqType::kDist:
-          sendDist(Overtake::GetDist());
+          sendDist(CarManager::GetDistance());
           break;
         case ReqType::kFeature:
           sendFeature(CarManager::GetFeature());

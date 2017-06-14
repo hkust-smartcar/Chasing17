@@ -94,16 +94,20 @@ void main() {
     if (time_img != System::Time()) {
       time_img = System::Time();
       led1.SetEnable(time_img % 500 >= 250);
-      if (time_img % 10 == 0) {
-//        led2.SetEnable(true);
-        CarManager::UpdateParameters();
-//        led2.SetEnable(false);
-//        led3.SetEnable(true);
-        CarManager::SetTargetSpeed(8000);
-//        led3.SetEnable(false);
 
-//        mpc_dual->SetTargetSpeed(8000);
-//        mpc_dual_debug->OutputEncoderMotorValues(console.get(), MpcDual::MotorSide::kBoth);
+      if (time_img % 10 == 0) {
+        CarManager::UpdateParameters();
+      }
+
+      if (time_img % 1000 == 0) {
+        CarManager::SetTargetSpeed(8000);
+      }
+
+      // servo test
+      if (time_img % 2000 == 0) {
+        CarManager::SetTargetAngle(10);
+      } else if (time_img % 2000 == 1000) {
+        CarManager::SetTargetAngle(-10);
       }
     }
   }

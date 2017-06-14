@@ -7,7 +7,6 @@
  * Program entry point.
  *
  */
-
 #include "libbase/k60/mcg.h"
 #include "libsc/system.h"
 #include "libsc/battery_meter.h"
@@ -46,41 +45,39 @@ enum struct Algorithm {
 int main() {
   System::Init();
 
-//  util::CameraTest();
-
   BatteryMeter::Config ConfigBM;
   ConfigBM.voltage_ratio = 0.4;
   BatteryMeter bm(ConfigBM);
   // Battery Check
   {
-	  St7735r::Config lcd_config;
-	  lcd_config.is_revert = true;
-	  St7735r lcd(lcd_config);
-	  lcd.Clear();
+    St7735r::Config lcd_config;
+    lcd_config.is_revert = true;
+    St7735r lcd(lcd_config);
+    lcd.Clear();
 
-	  LcdConsole::Config console_config;
-	  console_config.lcd = &lcd;
-	  LcdConsole console(console_config);
-	  if (bm.GetVoltage() <= 7.4){
-		  console.SetTextColor(Lcd::kRed);
-	  } else {
-		  console.SetTextColor(Lcd::kGreen);
-	  }
-	  char temp[100];
-	  sprintf(temp, " Voltage: %.2fV", bm.GetVoltage());
-	  console.WriteString(temp);
-	  System::DelayMs(1000);
-	  while (bm.GetVoltage() <= 7.4);
+    LcdConsole::Config console_config;
+    console_config.lcd = &lcd;
+    LcdConsole console(console_config);
+    if (bm.GetVoltage() <= 7.4){
+      console.SetTextColor(Lcd::kRed);
+    } else {
+      console.SetTextColor(Lcd::kGreen);
+    }
+    char temp[32];
+    sprintf(temp, " Voltage: %.2fV", bm.GetVoltage());
+    console.WriteString(temp);
+    System::DelayMs(1000);
+    while (bm.GetVoltage() <= 7.4);
   }
 
   // modify next line to switch between algorithms
-  constexpr Algorithm a = Algorithm::kOptimal;
+  constexpr Algorithm a = Algorithm::kDavid;
 
   // modify next line to enable/disable encoder
   constexpr bool has_encoder = true;
 
   // modify next line to change which car we're working with
-  CarManager::Car c = CarManager::Car::kCar1;
+  CarManager::Car c = CarManager::Car::kCar2;
 
   CarManager::ServoBounds s = c == CarManager::Car::kCar1 ? CarManager::kBoundsCar1 : CarManager::kBoundsCar2;
   switch (a) {
@@ -105,6 +102,7 @@ int main() {
     case Algorithm::kDistance:
       algorithm::USIRDemo();
       break;
+
     default:
       // all cases covered
       break;

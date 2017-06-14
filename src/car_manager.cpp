@@ -25,9 +25,11 @@ using std::move;
 using std::unique_ptr;
 using util::Mpc;
 using util::MpcDual;
+using util::ServoController;
 
-uint8_t CarManager::left_speed_ = 0;
-uint8_t CarManager::right_speed_ = 0;
+uint16_t CarManager::us_distance_ = 0;
+int32_t CarManager::left_speed_ = 0;
+int32_t CarManager::right_speed_ = 0;
 uint16_t CarManager::servo_deg_ = 0;
 int8_t CarManager::slope_deg_ = 0;
 CarManager::Side CarManager::side_ = CarManager::Side::kMiddle;
@@ -47,13 +49,16 @@ constexpr CarManager::SideRatio CarManager::kRatioCar2;
 unique_ptr<Mpc> CarManager::epc_left_ = nullptr;
 unique_ptr<Mpc> CarManager::epc_right_ = nullptr;
 unique_ptr<MpcDual> CarManager::epc_ = nullptr;
-unique_ptr<Mpu9250> CarManager::mpu_ = nullptr;
+unique_ptr<ServoController> CarManager::servo_controller_ = nullptr;
 unique_ptr<FutabaS3010> CarManager::servo_ = nullptr;
+unique_ptr<FcYyUsV4> CarManager::usir_ = nullptr;
+unique_ptr<Mpu9250> CarManager::mpu_ = nullptr;
 
 void CarManager::Init(Config config) {
   epc_left_ = move(config.epc_left);
   epc_right_ = move(config.epc_right);
   epc_ = move(config.epc);
+  servo_controller_ = move(config.servo_controller);
   mpu_ = move(config.mpu);
   servo_ = move(config.servo);
   identity_ = config.identity;
@@ -62,8 +67,9 @@ void CarManager::Init(Config config) {
 
 void CarManager::UpdateParameters() {
   UpdateSpeed();
-  UpdateSlope();
   UpdateServoAngle();
+  UpdateDistance();
+  UpdateSlope();
 }
 
 void CarManager::SwitchIdentity() {
@@ -82,6 +88,17 @@ CarManager::ServoBounds CarManager::GetServoBounds() {
       return kBoundsCar1;
     case Car::kCar2:
       return kBoundsCar2;
+  }
+}
+
+CarManager::ServoAngles CarManager::GetServoAngles() {
+  switch (car_) {
+    default:
+      // all cases covered
+    case Car::kCar1:
+      return kAnglesCar1;
+    case Car::kCar2:
+      return kAnglesCar2;
   }
 }
 
@@ -116,7 +133,7 @@ void CarManager::SetOverrideProtection(const bool override_protection, const Mot
   }
 }
 
-void CarManager::SetTargetSpeed(int16_t speed, MotorSide src) {
+void CarManager::SetTargetSpeed(const int16_t speed, MotorSide src) {
   if (epc_ != nullptr) {
     epc_->SetTargetSpeed(speed, false);
     return;
@@ -135,25 +152,47 @@ void CarManager::SetTargetSpeed(int16_t speed, MotorSide src) {
   }
 }
 
-void CarManager::SetTargetAngle(uint16_t angle) {
-  if (servo_ == nullptr) {
+void CarManager::SetTargetAngle(const int16_t angle) {
+  ServoBounds s = GetServoBounds();
+  ServoAngles a = GetServoAngles();
+
+  if (servo_controller_ != nullptr) {
+    int16_t new_angle = angle;
+
+    if (new_angle > a.kRightAngle) {
+      new_angle = a.kRightAngle;
+    } else if (new_angle < a.kLeftAngle) {
+      new_angle = a.kLeftAngle;
+    }
+
+    servo_controller_->SetTargetAngle(new_angle, false);
     return;
   }
-  ServoBounds s;
-  switch (car_) {
-    case Car::kCar1:
-      s = kBoundsCar1;
-      break;
-    case Car::kCar2:
-      s = kBoundsCar2;
-      break;
+
+  if (servo_ != nullptr) {
+    uint16_t new_angle = s.kCenter;
+    if (new_angle > 0) {
+      new_angle -= (s.kCenter - s.kRightBound) * (new_angle / a.kRightAngle);
+    } else if (new_angle < 0) {
+      new_angle += (s.kLeftBound - s.kCenter) * (new_angle / a.kLeftAngle);
+    }
+
+    if (new_angle > s.kLeftBound) {
+      new_angle = s.kLeftBound;
+    } else if (new_angle < s.kRightBound) {
+      new_angle = s.kRightBound;
+    }
+
+    servo_->SetDegree(new_angle);
+    return;
   }
-  if (angle > s.kLeftBound) {
-    angle = s.kLeftBound;
-  } else if (angle < s.kRightBound) {
-    angle = s.kRightBound;
+}
+
+void CarManager::UpdateDistance() {
+  if (identity_ == Identity::kFront) {
+    us_distance_ = FcYyUsV4::kMinDistance;
   }
-  servo_->SetDegree(angle);
+  us_distance_ = usir_->GetAvgDistance();
 }
 
 void CarManager::UpdateSpeed() {
@@ -174,10 +213,14 @@ void CarManager::UpdateSpeed() {
 }
 
 void CarManager::UpdateServoAngle() {
-  if (servo_ == nullptr) {
+  if (servo_controller_ != nullptr) {
+    servo_deg_ = servo_controller_->GetRawAngle();
     return;
   }
-  servo_deg_ = servo_->GetDegree();
+  if (servo_ != nullptr) {
+    servo_deg_ = servo_->GetDegree();
+    return;
+  }
 }
 
 void CarManager::UpdateSlope() {

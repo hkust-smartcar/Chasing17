@@ -28,8 +28,8 @@ using libbase::k60::Pin;
 
 class FcYyUsV4 {
  public:
-  static constexpr unsigned int kMinDistance = 0;
-  static constexpr unsigned int kMaxDistance = std::numeric_limits<unsigned int>::max();
+  static constexpr uint16_t kMinDistance = 0;
+  static constexpr uint16_t kMaxDistance = std::numeric_limits<unsigned int>::max();
 
   /**
    * @param pin Name of Pin connected to the sensor
@@ -39,9 +39,9 @@ class FcYyUsV4 {
   /**
    * @return The distance measured by the sensor (mm)
    */
-  unsigned int GetDistance() const { return distance_; }
-  unsigned int GetAvgDistance() const { return average_distance_; }
-  unsigned int GetSD() const { return std_deviation_; }
+  uint16_t GetDistance() const { return distance_; }
+  uint16_t GetAvgDistance() const { return average_distance_; }
+  uint16_t GetSD() const { return std_deviation_; }
 
  private:
   static void listener(Gpi* gpi);
@@ -50,11 +50,11 @@ class FcYyUsV4 {
   Gpi::Config gpi_config_;
 
   static uint32_t impulse_start_time_;
-  static unsigned int distance_;
+  static uint16_t distance_;
 
-  static std::vector<unsigned int> last_ten_distance_;
-  static unsigned int average_distance_;
-  static unsigned int std_deviation_;
+  static std::vector<uint16_t> last_ten_distance_;
+  static uint16_t average_distance_;
+  static uint16_t std_deviation_;
 };
 
 #endif  // CHASING17_FCYYUSV4_H_
