@@ -6,7 +6,7 @@
  *
  * Author: Dipsy Wong (dipsywong98)
  *
- * Implementation for DebugConsole class.
+ * Implementation for DebugConsole (v2) class.
  *
  */
 
@@ -18,182 +18,188 @@
 #include "libsc/lcd_typewriter.h"
 #include "libsc/st7735r.h"
 #include "libsc/system.h"
-#include "libutil/misc.h"
 
 using libsc::Joystick;
 using libsc::Lcd;
 using libsc::LcdTypewriter;
 using libsc::St7735r;
 using libsc::System;
-using libutil::Clamp;
-using std::sprintf;
 
-DebugConsole::DebugConsole(Joystick* joystick, St7735r* lcd, LcdTypewriter* writer)
-    : joystick(joystick), lcd(lcd), writer(writer) {
-  Item item(">>exit debug<<");
-  pushItem(item);
+Item* Item::setText(char* t) {
+  text = t;
+  return this;
 }
 
-void DebugConsole::enterDebug() {
-  listItems();
-  int flag = 1, time_next, time_img = 0;
-  Joystick::State key_img;
+Item* Item::setListener(Fptr fptr) {
+  listener = fptr;
+  return this;
+}
+
+Item* Item::setValuePtr(float* v) {
+  value = v;
+  return this;
+}
+
+Item* Item::setValue(float v) {
+  if (value != nullptr) *value = v;
+  return this;
+}
+
+Item* Item::setInterval(float v) {
+  interval = v;
+  return this;
+}
+
+Item* Item::setReadOnly(bool isReadOnly) {
+  readOnly = isReadOnly;
+  return this;
+}
+
+DebugConsole::DebugConsole(Joystick* joystick, St7735r* lcd, LcdTypewriter* writer, int displayLength)
+    : joystick(joystick), lcd(lcd), writer(writer), displayLength(displayLength) {}
+
+void DebugConsole::EnterDebug() {
+  int flag = 1;
+  Item item(">>exit<<");
+  PushItem(item);
+  int index = items.size();
+  ListItems();
   while (flag) {
-    if (System::Time() != time_img) {
-      time_img = System::Time();
-      if (joystick->GetState() != Joystick::State::kIdle) {
-        Joystick::State key = joystick->GetState();
-        Item item = items[focus];
-        if (key != key_img) {
-          key_img = key;
-          flag = listen(key, DOWN);
-          time_next = System::Time() + threshold;
-        } else if (time_img > time_next && time_img % 10 == 0) {
-          flag = listen(key, LONG);
-        }
-
-      } else {
-        flag = listen(key_img, UP);
-        key_img = Joystick::State::kIdle;
-      }
-    }
-
+    Listen();
   }
+  items.erase(items.end() - (index - items.size()));
   clear();
 }
 
-void DebugConsole::pushItem(Item item) {
-  insertItem(item, length - 1);
-}
-
-void DebugConsole::insertItem(Item item, int index) {
-  Clamp<int>(0, index, length);
-  for (int i = length++; i >= index; i--)
-    items[i] = items[i - 1];
-  items[index] = item;
-}
-
-void DebugConsole::listItems(int start) {
-  clear();
-  for (int i = start; i < (length < start + 10 ? length : start + 10); i++) {
-    printItem(i);
+void DebugConsole::Listen() {
+  if (jState != joystick->GetState()) {
+    jState = joystick->GetState();
+    tFlag = System::Time() + threshold;
+    listenerDo(jState);
+  } else if (System::Time() > tFlag) {
+    tFlag = System::Time() + cd;
+    listenerDo(jState);
   }
-  showFocus(0);
 }
 
-void DebugConsole::printItem(int index) {
-  if (items[index].getValuePtr() != NULL) {
+void DebugConsole::ListItems() {
+  clear();
+  for (int i = topIndex; i < (items.size() < topIndex + displayLength ? items.size() : topIndex + displayLength); i++) {
+    printItem(i, i == focus);
+  }
+}
+
+void DebugConsole::ListItemValues() {
+  clear();
+  for (int i = topIndex; i < (items.size() < topIndex + displayLength ? items.size() : topIndex + displayLength); i++) {
+    printItemValue(i, i == focus);
+  }
+}
+
+void DebugConsole::printItem(int index, bool isInverted) {
+  printxy(0, index - topIndex, items[index].getText(), isInverted);
+  printItemValue(index, isInverted);
+}
+
+void DebugConsole::printItemValue(int index, bool isInverted) {
+  if (items[index].getValuePtr() != nullptr) {
     char buff[20];
-    sprintf(buff, "%s%d      ", items[index].getText(), items[index].getValue());
-    printxy(1, index - topIndex, buff);
-  } else
-    printxy(1, index - topIndex, items[index].getText());
+    sprintf(buff, "%.5lf", items[index].getValue());
+    printxy(7, index - topIndex, buff, isInverted);
+  }
 }
 
-void DebugConsole::printxy(int x, int y, char* c, int l) {
-  lcd->SetRegion(Lcd::Rect(x * 10, y * 15, l, 15));
+DebugConsole* DebugConsole::SetDisplayLength(int length) {
+  displayLength = length;
+  return this;
+}
+
+DebugConsole* DebugConsole::SetLongClickThreshold(int threshold) {
+  this->threshold = threshold;
+  return this;
+}
+
+DebugConsole* DebugConsole::SetLongClickCd(int cd) {
+  this->cd = cd;
+  return this;
+}
+
+DebugConsole* DebugConsole::SetOffset(int offset) {
+  this->offset = offset;
+  return this;
+}
+
+void DebugConsole::printxy(int x, int y, char* c, int inverted) {
+  if (inverted) {
+    writer->SetTextColor(0x0000);
+    writer->SetBgColor(0xFFFF);
+  }
+  lcd->SetRegion(Lcd::Rect(5 + x * 10, offset + y * 15, 128 - 5 - x * 10, 15));
   writer->WriteString(c);
-}
-
-void DebugConsole::showFocus(bool flag) {
-  if (flag) writer->WriteString(" ");
-  lcd->SetRegion(Lcd::Rect(0, (focus - topIndex) * 15, 10, 15));
-  writer->WriteString(">");
+  if (inverted) {
+    writer->SetTextColor(0xFFFF);
+    writer->SetBgColor(0x0000);
+  }
 }
 
 void DebugConsole::clear() {
-  lcd->Clear();
+  lcd->SetRegion(Lcd::Rect(0, offset, 128, displayLength * 15));
+  lcd->FillColor(0x0000);
 }
 
-int DebugConsole::listen(Joystick::State key, int state) {
+int DebugConsole::listenerDo(Joystick::State key) {
   Item item = items[focus];
   switch (key) {
     case Joystick::State::kDown:
-      if (state != UP) {
-        printxy(0, focus, " ", 10);
-        focus = (focus + 1) % length;
-        if (focus - topIndex > 8 && focus != length - 1) {
-          topIndex++;
-          listItems(topIndex);
-        } else if (focus == 0) {
-          topIndex = 0;
-          listItems(topIndex);
-        }
+      printItem(focus);    //remove highLighting
+      focus++;                //move down focus
+      if (focus >= items.size()) {    //focus below last item then jump back to first
+        topIndex = 0;
+        focus = 0;
+        ListItems();
+      } else if (focus >= topIndex + displayLength) {    //next page
+        topIndex += displayLength;
+        ListItems();
+      } else {
+        printItem(focus, true);    //update highlighted item
       }
-      printItem(focus);
       break;
     case Joystick::State::kUp:
-      if (state != UP) {
-        printxy(0, focus, " ", 10);
-        if (focus == 0) {
-          focus = length - 1;
-          if (length > 9) {
-            topIndex = length - 10;
-            listItems(topIndex);
-          }
-        } else {
-          focus--;
-          if (focus - topIndex < 1 && topIndex > 0) {
-            topIndex--;
-            listItems(topIndex);
-          }
-        }
-
-      }
       printItem(focus);
+      focus--;
+      if (focus < 0) {
+        focus = items.size() - 1;
+        topIndex = items.size() - displayLength;
+        topIndex = (topIndex > 0 ? topIndex : 0);
+        ListItems();
+      } else if (focus < topIndex) {
+        topIndex -= displayLength;
+        topIndex = (topIndex > 0 ? topIndex : 0);
+        ListItems();
+      } else {
+        printItem(focus, true);
+      }
       break;
     case Joystick::State::kSelect:
-      if (item.getListener(SELECT + state * 4) != NULL) {
-        item.getListener(SELECT + state * 4)();
-        listItems(topIndex);
+      if (item.getListener() != nullptr) {
+        item.getListener()();
       } else if (item.getText() == ">>exit debug<<")
         return 0;
       break;
     case Joystick::State::kLeft:
-      if (item.getListener(LEFT + state * 4) != NULL) {
-        item.getListener(LEFT + state * 4)();
-        listItems(topIndex);
-      } else if (item.getValuePtr() != NULL && state != UP && !item.isReadOnly()) {
-        item.setValue(item.getValue() - 1);
-        printItem(focus);
+      if (item.getValuePtr() != nullptr && !item.isReadOnly()) {
+        item.setValue(item.getValue() - item.getInterval());
+        printItemValue(focus, true);
       }
-
       break;
     case Joystick::State::kRight:
-      if (item.getListener(RIGHT + state * 4) != NULL) {
-        item.getListener(RIGHT + state * 4)();
-        //listItems(topIndex);
-      } else if (item.getValuePtr() != NULL && state != UP && !item.isReadOnly()) {
-        item.setValue(item.getValue() + 1);
-        printItem(focus);
+      if (item.getValuePtr() != nullptr && !item.isReadOnly()) {
+        item.setValue(item.getValue() + item.getInterval());
+        printItemValue(focus, true);
       }
-
       break;
     default:
       return 1;
   }
-  //showFocus(1);
-  printxy(0, focus, ">", 10);
-  //listItems(topIndex);
   return 1;
-}
-
-DebugConsole::Item::Item(char* text, int* value, bool readOnly)
-    : text(text), value(value), readOnly(readOnly) {
-  init();
-}
-
-void DebugConsole::Item::setValue(int v) {
-  if (value == nullptr) return;
-  *value = v;
-}
-
-int DebugConsole::Item::getValue() {
-  if (value == nullptr) return 0;
-  return *value;
-}
-
-void DebugConsole::Item::init() {
-  for (int i = 0; i < 12; i++)
-    listeners[i] = nullptr;
 }
