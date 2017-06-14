@@ -37,7 +37,7 @@ void main(CarManager::Car);
  * @member grad() Take the gradient of certain Edges
  */
 struct Edges {
-	std::vector<std::pair<int, int>> points;
+	std::vector<std::pair<uint16_t, uint16_t>> points;
 	inline void push(int x, int y) {points.push_back(std::make_pair(x, y));}
 	inline void push(Edges edge) {points.insert(points.end(), edge.points.begin(), edge.points.end());}
 	inline int size() {return points.size();}
@@ -63,7 +63,7 @@ struct Edges {
  * @member size() Return the size of list points
  */
 struct Corners {
-	std::list<std::pair<int, int>> points;
+	std::list<std::pair<uint16_t, uint16_t>> points;
 	inline void push(int x, int y) {points.push_back(std::make_pair(x, y));}
 	inline int size() {return points.size();}
 };

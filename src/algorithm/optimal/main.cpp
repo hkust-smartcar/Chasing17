@@ -366,7 +366,20 @@ bool FindEdges(){
 				flag_break = true;
 			}
 
-			if (right_edge.points.back() == left_edge.points.back()){ //two edges meet
+			uint16_t r_back_x = right_edge.points.back().first;
+			uint16_t r_back_y = right_edge.points.back().second;
+			uint16_t l_back_x = left_edge.points.back().first;
+			uint16_t l_back_y = left_edge.points.back().second;
+
+			bool status =
+					(r_back_x == l_back_x - 1 ||
+					r_back_x == l_back_x     ||
+					r_back_x == l_back_x + 1) && (
+					r_back_y == r_back_y - 1 ||
+					r_back_y == r_back_y     ||
+					r_back_y == r_back_y + 1);
+
+			if (status){ //two edges meet
 				for (int i = 0; i < 10; i++){ //discard last 10 points
 					right_edge.points.pop_back();
 					left_edge.points.pop_back();
