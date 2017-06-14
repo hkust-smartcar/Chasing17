@@ -130,6 +130,12 @@ void ConsoleWriteString(LcdConsole* const console, const string& s) {
   console->WriteString(s.c_str());
 }
 
+void ConsoleClearRow(LcdConsole* const console, const uint8_t row) {
+  console->SetCursorRow(row);
+  ConsoleWriteString(console, "\n");
+  console->SetCursorRow(row);
+}
+
 string to_string(int val) {
   array<char, kToStringBufferSize> str;
   sprintf(str.data(), "%d", val);

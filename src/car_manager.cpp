@@ -171,10 +171,10 @@ void CarManager::SetTargetAngle(const int16_t angle) {
 
   if (servo_ != nullptr) {
     uint16_t new_angle = s.kCenter;
-    if (new_angle > 0) {
-      new_angle -= (s.kCenter - s.kRightBound) * (new_angle / a.kRightAngle);
-    } else if (new_angle < 0) {
-      new_angle += (s.kLeftBound - s.kCenter) * (new_angle / a.kLeftAngle);
+    if (angle > 0) {
+      new_angle -= (s.kCenter - s.kRightBound) * (static_cast<float>(angle) / a.kRightAngle);
+    } else if (angle < 0) {
+      new_angle -= (s.kLeftBound - s.kCenter) * (static_cast<float>(angle) / a.kLeftAngle);
     }
 
     if (new_angle > s.kLeftBound) {

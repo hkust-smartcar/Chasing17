@@ -83,6 +83,8 @@ void BtSendImage();
  */
 void ConsoleWriteString(libsc::LcdConsole* const console, const std::string& s);
 
+void ConsoleClearRow(libsc::LcdConsole* const console, const uint8_t row);
+
 std::string to_string(int val);
 std::string to_string(unsigned val);
 std::string to_string(long val);

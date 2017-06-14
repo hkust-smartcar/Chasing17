@@ -84,7 +84,7 @@ void main() {
   car_config.car = CarManager::Car::kCar1;
   CarManager::Init(std::move(car_config));
 
-  CarManager::SetTargetAngle(CarManager::kBoundsCar1.kCenter);
+  CarManager::SetTargetAngle(0);
 
   auto time_img = System::Time();
 
@@ -105,9 +105,15 @@ void main() {
 
       // servo test
       if (time_img % 2000 == 0) {
-        CarManager::SetTargetAngle(10);
+        led4.SetEnable(true);
+        CarManager::SetTargetAngle(10);  // right
+        util::ConsoleClearRow(console.get(), 0);
+        util::ConsoleWriteString(console.get(), util::to_string(CarManager::GetServoDeg()));
       } else if (time_img % 2000 == 1000) {
-        CarManager::SetTargetAngle(-10);
+        led4.SetEnable(false);
+        CarManager::SetTargetAngle(-10);  // left
+        util::ConsoleClearRow(console.get(), 0);
+        util::ConsoleWriteString(console.get(), util::to_string(CarManager::GetServoDeg()));
       }
     }
   }
