@@ -28,7 +28,8 @@
 #include "util/util.h"
 
 #include "debug_console.h"
-#include "worldview/img_car1.h"
+#include "algorithm/optimal/img_car1.h"
+#include "algorithm/optimal/img_car2.h"
 
 using namespace libsc;
 
@@ -118,22 +119,22 @@ bool getBit(int i_x, int i_y){
 bool getWorldBit(int w_x, int w_y){
 	switch (car){
 	case CarManager::Car::kCar1:
-
+	{
 		w_y = 160 - w_y;
 		int i_x,i_y;
 		i_x = worldview::car1::transformMatrix[w_x][w_y][0];
 		i_y = worldview::car1::transformMatrix[w_x][w_y][1];
 		return getFilteredBit(CameraBuf, i_x,i_y);
-
+	}
 		break;
 	case CarManager::Car::kCar2:
-
-//		w_y = 160 - w_y;
-//		int i_x,i_y;
-//		i_x = transformMatrix2[w_x][w_y][0];
-//		i_y = transformMatrix2[w_x][w_y][1];
-//		return getFilteredBit(CameraBuf, i_x,i_y);
-
+	{
+		w_y = 160 - w_y;
+		int i_x,i_y;
+		i_x = worldview::car2::transformMatrix[w_x][w_y][0];
+		i_y = worldview::car2::transformMatrix[w_x][w_y][1];
+		return getFilteredBit(CameraBuf, i_x,i_y);
+	}
 		break;
 	}
 

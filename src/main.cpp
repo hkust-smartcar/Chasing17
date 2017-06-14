@@ -52,8 +52,26 @@ int main() {
   ConfigBM.voltage_ratio = 0.4;
   BatteryMeter bm(ConfigBM);
   // Battery Check
-  // TODO(Derppening): Find a better way to halt program when battery is lower than expected
-  while (bm.GetVoltage() <= 7.4);
+  {
+	  St7735r::Config lcd_config;
+	  lcd_config.is_revert = true;
+	  St7735r lcd(lcd_config);
+	  lcd.Clear();
+
+	  LcdConsole::Config console_config;
+	  console_config.lcd = &lcd;
+	  LcdConsole console(console_config);
+	  if (bm.GetVoltage() <= 7.4){
+		  console.SetTextColor(Lcd::kRed);
+	  } else {
+		  console.SetTextColor(Lcd::kGreen);
+	  }
+	  char temp[100];
+	  sprintf(temp, " Voltage: %.2fV", bm.GetVoltage());
+	  console.WriteString(temp);
+	  System::DelayMs(1000);
+	  while (bm.GetVoltage() <= 7.4);
+  }
 
   // modify next line to switch between algorithms
   constexpr Algorithm a = Algorithm::kOptimal;
