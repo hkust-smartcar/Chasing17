@@ -477,6 +477,50 @@ bool FindEdges(){
 	return true;
 }
 
+
+/**
+ * @brief Feature Identificatipon
+ *
+ * Algorithm:
+ * 1. Two corners connected together
+ * 2. Perpendicular direction, search points @sightDistance away.
+ * 3. Black (1) is roundabout, White (0) is crossing
+ *
+ * @return: Feature: kCrossing, kRound
+ * @note: Execute this function after calling FindEdges()
+ */
+Feature featureIdent (){
+	std::pair<int, int> carMid(WorldSize.w/2,0);
+	std::pair<int, int> cornerMid;
+	const int sightDist = 10; // The distance from which the image pixel should be tested
+	//Normal case
+	if (left_corners.points.size() == 0 && right_corners.points.size() == 0){
+		return Feature::kNormal;
+	}
+	//Two corner case
+	else if(left_corners.points.size() > 0 && right_corners.points.size() > 0){
+		int cornerMid_x = (left_corners.points.front().first + right_corners.points.front().first)/2; //corner midpoint x-cor
+		int cornerMid_y = (left_corners.points.front().second + right_corners.points.front().second)/2; //corner midpoint y-cor
+		int edge3th = sqrt(pow(cornerMid_x-carMid.first,2) + pow(cornerMid_y-carMid.second,2)); //Third edge of right triangle
+		int test_x = sightDist*((cornerMid_x-carMid.first)/edge3th) + cornerMid_x;
+		int test_y = sightDist*((cornerMid_y-carMid.second)/edge3th) + cornerMid_y;
+		if(getWorldBit(test_x,test_y) && getWorldBit(test_x+1,test_y) && getWorldBit(test_x,test_y+1) && getWorldBit(test_x-1,test_y)){
+			//All black
+			return Feature::kRound;
+		}
+		else if(!getWorldBit(test_x,test_y) && !getWorldBit(test_x+1,test_y) && !getWorldBit(test_x,test_y+1) && !getWorldBit(test_x-1,test_y)){
+			return Feature::kCrossing;
+		}
+	}
+	//Special case: Enter crossing with extreme angle - Two corners are on the same side / Only one corner
+	else
+		return Feature::kSpecial;
+
+	//Return kNormal and wait for next testing
+	return Feature::kNormal;
+}
+
+
 /**
  * @brief Print edges
  */

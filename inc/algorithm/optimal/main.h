@@ -91,6 +91,11 @@ enum struct TranslateType {
 	kNone = 0, kLeftNull, kRightNull
 };
 
+enum Feature {
+	kCrossing = 0, kRound, kNormal, kSpecial
+};
+
+
 }
 }
 #endif //CHASING17_ALGORITHM_OPTIMAL_MAIN_H_
