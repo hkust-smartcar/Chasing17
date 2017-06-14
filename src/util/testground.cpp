@@ -26,6 +26,8 @@
 #include "util/util.h"
 #include "fc_yy_us_v4.h"
 
+#include "worldview/img_car1.h"
+
 using namespace libsc;
 using namespace libsc::k60;
 
