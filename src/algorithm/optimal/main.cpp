@@ -28,6 +28,7 @@
 #include "util/util.h"
 
 #include "debug_console.h"
+#include "worldview/img_car1.h"
 
 using namespace libsc;
 
@@ -115,7 +116,27 @@ bool getBit(int i_x, int i_y){
  * @return world bit
  */
 bool getWorldBit(int w_x, int w_y){
-	return getFilteredBit(CameraBuf, w_x, CameraSize.h-w_y);
+	switch (car){
+	case CarManager::Car::kCar1:
+
+		w_y = 160 - w_y;
+		int i_x,i_y;
+		i_x = worldview::car1::transformMatrix[w_x][w_y][0];
+		i_y = worldview::car1::transformMatrix[w_x][w_y][1];
+		return getFilteredBit(CameraBuf, i_x,i_y);
+
+		break;
+	case CarManager::Car::kCar2:
+
+//		w_y = 160 - w_y;
+//		int i_x,i_y;
+//		i_x = transformMatrix2[w_x][w_y][0];
+//		i_y = transformMatrix2[w_x][w_y][1];
+//		return getFilteredBit(CameraBuf, i_x,i_y);
+
+		break;
+	}
+
 }
 
 void PrintWorldImage(){
@@ -158,9 +179,9 @@ void Capture(){
 
 	//Search horizontally
 	for (int i = WorldSize.w/2; i > 0; i--){
-		if (getWorldBit( i, 1) == 1){
+		if (getWorldBit( i, 20) == 1){
 			left_x = i + 1;
-			left_y = 1;
+			left_y = 20;
 			found_left = true;
 			break;
 		}
@@ -172,9 +193,9 @@ void Capture(){
 
 	//Search horizontally
 	for (int i = WorldSize.w/2; i < WorldSize.w; i++){
-		if (getWorldBit(i, 1) == 1){
+		if (getWorldBit(i, 20) == 1){
 			right_x = i - 1;
-			right_y = 1;
+			right_y = 20;
 			found_right = true;
 			break;
 		}

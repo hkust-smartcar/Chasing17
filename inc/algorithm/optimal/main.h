@@ -69,7 +69,7 @@ struct Corners {
 };
 
 struct {
-	uint16_t w = 128, h = 160;
+	uint16_t w = 128, h = 480;
 } CameraSize;
 
 struct {
