@@ -24,8 +24,9 @@
  *
  * Prerequisites:
  * - util::MpcDual OR util::Mpc
- * - libsc::FutubaS3010
- * - libsc::Mpu6050
+ * - util::ServoController OR libsc::FutubaS3010
+ * - FcYyUsV4
+ * - Mpu9250
  *
  */
 
@@ -88,7 +89,7 @@ class CarManager final {
   };
 
   /**
-   * Enum of car identity, i.e. whether it is old or new
+   * Enum of car identity
    */
   enum struct Car : bool {
     kCar1,
@@ -113,6 +114,9 @@ class CarManager final {
     Car car;
   };
 
+  /**
+   * Struct of servo boundaries, stored in servo values
+   */
   struct ServoBounds {
     uint16_t kLeftBound;
     uint16_t kCenter;
@@ -122,6 +126,9 @@ class CarManager final {
   static constexpr ServoBounds kBoundsCar1 = {1040, 755, 470};
   static constexpr ServoBounds kBoundsCar2 = {1145, 845, 545};
 
+  /**
+   * Struct of servo angles, stored in degrees
+   */
   struct ServoAngles {
     uint8_t kLeftAngle;
     uint8_t kRightAngle;
@@ -130,19 +137,22 @@ class CarManager final {
   static constexpr ServoAngles kAnglesCar1 = {36, 38};
   static constexpr ServoAngles kAnglesCar2 = {38, 41};
 
+  static constexpr float kWheelbase = 19.65;
+  static constexpr float kAxleLength = 15.2;
+
+  /**
+   * Struct of side ratios, i.e. the speed ratio between the side of the car and the middle of the car.
+   */
   struct SideRatio {
     float kLeft;
     float kRight;
   };
 
-  static constexpr float kWheelbase = 19.65;
-  static constexpr float kAxleLength = 15.2;
-
   static constexpr SideRatio kRatioCar1 = {std::tan(kAnglesCar1.kLeftAngle), std::tan(kAnglesCar1.kRightAngle)};
   static constexpr SideRatio kRatioCar2 = {std::tan(kAnglesCar2.kLeftAngle), std::tan(kAnglesCar2.kRightAngle)};
 
   /**
-   * Update all parameters of the car (speed, slope, servo angle)
+   * Update all parameters of the car (speed, slope, servo angle, distance)
    */
   static void UpdateParameters();
 
@@ -157,8 +167,17 @@ class CarManager final {
 
   // Getters
   static uint16_t GetDistance() { return us_distance_; }
+  /**
+   * @return Current speed of left wheel in encoder values
+   */
   static int32_t GetLeftSpeed() { return left_speed_; }
+  /**
+   * @return Current speed of right wheel in encoder values
+   */
   static int32_t GetRightSpeed() { return right_speed_; }
+  /**
+   * @return Current servo angle in servo values
+   */
   static uint16_t GetServoDeg() { return servo_deg_; }
   static int8_t GetSlope() { return slope_deg_; }
   static Side GetSide() { return side_; }
@@ -174,7 +193,14 @@ class CarManager final {
   static void SetIdentity(const Identity i) { identity_ = i; }
   static void SetOverrideProtection(const bool override_protection, const MotorSide side = MotorSide::kBoth);
   static void SetSide(const Side s) { side_ = s; }
+  /**
+   * @param angle Target angle in degrees
+   */
   static void SetTargetAngle(const int16_t angle);
+  /**
+   * @param speed Target speed in encoder values
+   * @param side Where the target speed should be committed to
+   */
   static void SetTargetSpeed(const int16_t speed, MotorSide side = MotorSide::kBoth);
   static void SwitchIdentity();
 
