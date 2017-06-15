@@ -77,7 +77,7 @@ int main() {
   constexpr bool has_encoder = true;
 
   // modify next line to change which car we're working with
-  CarManager::Car c = CarManager::Car::kCar1;
+  CarManager::Car c = CarManager::Car::kCar2;
 
   CarManager::ServoBounds s = c == CarManager::Car::kCar1 ? CarManager::kBoundsCar1 : CarManager::kBoundsCar2;
   switch (a) {

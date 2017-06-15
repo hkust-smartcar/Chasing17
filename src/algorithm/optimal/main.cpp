@@ -55,12 +55,16 @@ FutabaS3010* pServo = nullptr;
 CarManager::ServoBounds servo_bounds;
 CarManager::Car car;
 
-int max(int a, int b) { return (a > b ? a : b); }
-int min(int a, int b) { return (a < b ? a : b); }
+int max(int a, int b) {
+	return (a > b ? a : b);
+}
+int min(int a, int b) {
+	return (a < b ? a : b);
+}
 
 // for edge finding, in CCW dir
-const int dx[9] = {0, -1, -1, -1, 0, 1, 1, 1, 0};
-const int dy[9] = {1, 1, 0, -1, -1, -1, 0, 1, 1};
+const int dx[9] = { 0, -1, -1, -1, 0, 1, 1, 1, 0 };
+const int dy[9] = { 1, 1, 0, -1, -1, -1, 0, 1, 1 };
 
 /**
  * @brief To fetch filtered bit, 1 = black; 0 = white
@@ -70,22 +74,23 @@ const int dy[9] = {1, 1, 0, -1, -1, -1, 0, 1, 1};
  * XXX: Suspecting median filter would crash the program occasionally
  */
 int getFilteredBit(const Byte* buff, int x, int y) {
-  if (x <= 0 || x > CameraSize.w - 1 || y <= 0 || y > CameraSize.h - 1) return -1; //-1; // Out of bound = black
-  //y = CameraSize.h - 1 - y; // set y = 0 at bottom
+	if (x <= 0 || x > CameraSize.w - 1 || y <= 0 || y > CameraSize.h - 1)
+		return 1; //-1; // Out of bound = black
+	//y = CameraSize.h - 1 - y; // set y = 0 at bottom
 
-  return buff[y * CameraSize.w / 8 + x / 8] >> (7 - (x % 8)) & 1;    //buff[y*CameraSize.w/8+x/8] & 0x80>>x%8;
+	return buff[y * CameraSize.w / 8 + x / 8] >> (7 - (x % 8)) & 1; //buff[y*CameraSize.w/8+x/8] & 0x80>>x%8;
 
-  // Median Filter
-  int count = 0, total = 0;
+	// Median Filter
+	int count = 0, total = 0;
 
-  for (int i = max(0, x - 1); i < min(CameraSize.w - 1, x + 1); i++) {
-    for (int j = max(0, y - 1); j < min(CameraSize.h - 1, y + 1); j++) {
-      total++;
-      count += buff[j * CameraSize.w / 8 + i / 8] >> (7 - (i % 8)) & 1;
-    }
-  }
-  // Median Filter
-  return (count > total / 2) ? 1 : 0;
+	for (int i = max(0, x - 1); i < min(CameraSize.w - 1, x + 1); i++) {
+		for (int j = max(0, y - 1); j < min(CameraSize.h - 1, y + 1); j++) {
+			total++;
+			count += buff[j * CameraSize.w / 8 + i / 8] >> (7 - (i % 8)) & 1;
+		}
+	}
+	// Median Filter
+	return (count > total / 2) ? 1 : 0;
 }
 
 /**
@@ -95,13 +100,15 @@ int getFilteredBit(const Byte* buff, int x, int y) {
  * @return new left/right-ness
  */
 int FindDirection(int j, int d) {
-  j %= 8;
-  if (j > 0 && j < 4) return -1;
-  if (j > 4)return 1;
-  if (j == 4)return d;
-  return 4;
+	j %= 8;
+	if (j > 0 && j < 4)
+		return -1;
+	if (j > 4)
+		return 1;
+	if (j == 4)
+		return d;
+	return 4;
 }
-
 
 //test distortion world view
 //w_x,w_y world coordinate 128*160
@@ -112,8 +119,10 @@ int FindDirection(int j, int d) {
  * @brief To fetch bit directly from raw data
  */
 bool getBit(int i_x, int i_y) {
-  if (i_x <= 0 || i_x > CameraSize.w - 1 || i_y <= 0 || i_y > CameraSize.h - 1) return -1;
-  return CameraBuf[i_y * CameraSize.w / 8 + i_x / 8] >> (7 - (i_x % 8)) & 1;
+	if (i_x <= 0 || i_x > CameraSize.w - 1 || i_y <= 0
+			|| i_y > CameraSize.h - 1)
+		return -1;
+	return CameraBuf[i_y * CameraSize.w / 8 + i_x / 8] >> (7 - (i_x % 8)) & 1;
 }
 
 /**
@@ -122,24 +131,24 @@ bool getBit(int i_x, int i_y) {
  * @return world bit
  */
 bool getWorldBit(int w_x, int w_y) {
-  switch (car) {
-    case CarManager::Car::kCar1: {
-      w_y = 160 - w_y;
-      int i_x, i_y;
-      i_x = worldview::car1::transformMatrix[w_x][w_y][0];
-      i_y = worldview::car1::transformMatrix[w_x][w_y][1];
-      return getFilteredBit(CameraBuf, i_x, i_y);
-    }
-      break;
-    case CarManager::Car::kCar2: {
-      w_y = 160 - w_y;
-      int i_x, i_y;
-      i_x = worldview::car2::transformMatrix[w_x][w_y][0];
-      i_y = worldview::car2::transformMatrix[w_x][w_y][1];
-      return getFilteredBit(CameraBuf, i_x, i_y);
-    }
-      break;
-  }
+	switch (car) {
+	case CarManager::Car::kCar1: {
+		w_y = 160 - w_y;
+		int i_x, i_y;
+		i_x = worldview::car1::transformMatrix[w_x][w_y][0];
+		i_y = worldview::car1::transformMatrix[w_x][w_y][1];
+		return getFilteredBit(CameraBuf, i_x, i_y);
+	}
+		break;
+	case CarManager::Car::kCar2: {
+		w_y = 160 - w_y;
+		int i_x, i_y;
+		i_x = worldview::car2::transformMatrix[w_x][w_y][0];
+		i_y = worldview::car2::transformMatrix[w_x][w_y][1];
+		return getFilteredBit(CameraBuf, i_x, i_y);
+	}
+		break;
+	}
 
 }
 
@@ -147,23 +156,22 @@ bool getWorldBit(int w_x, int w_y) {
  * @brief print worldview corrected image
  */
 void PrintWorldImage() {
-  Byte temp[128 / 8];
-  for (int i = 160; i > 0; --i) {
-    for (int j = 0; j < 128; j++) {
-      temp[j / 8] <<= 1;
-      temp[j / 8] += getWorldBit(j, i);
-      //WorldBuf[i*128/8+j/8]<<=1;
-      //WorldBuf[i*128/8+j/8]+=getWorldBit(j,i);
-    }
-    pLcd->SetRegion(Lcd::Rect(0, 160 - i, 128, 1));
-    pLcd->FillBits(0x0000, 0xFFFF, temp, 128);
-    //pLcd->FillColor(getWorldBit(j,i)?Lcd::kBlack:Lcd::kWhite);
-  }
-  return;
+	Byte temp[128 / 8];
+	for (int i = 160; i > 0; --i) {
+		for (int j = 0; j < 128; j++) {
+			temp[j / 8] <<= 1;
+			temp[j / 8] += getWorldBit(j, i);
+			//WorldBuf[i*128/8+j/8]<<=1;
+			//WorldBuf[i*128/8+j/8]+=getWorldBit(j,i);
+		}
+		pLcd->SetRegion(Lcd::Rect(0, 160 - i, 128, 1));
+		pLcd->FillBits(0x0000, 0xFFFF, temp, 128);
+		//pLcd->FillColor(getWorldBit(j,i)?Lcd::kBlack:Lcd::kWhite);
+	}
+	return;
 }
 
 //end test distortion
-
 
 /**
  * @brief Capture picture until two base points are identified.
@@ -175,54 +183,54 @@ void PrintWorldImage() {
  * 4. If to no avail, choose (width-1, 1) as starting point
  */
 void Capture() {
-  left_edge.points.clear();
-  right_edge.points.clear();
-  bool found_left = false, found_right = false;
-  int left_x = -1, left_y = -1;
-  int right_x = -1, right_y = -1;
+	left_edge.points.clear();
+	right_edge.points.clear();
+	bool found_left = false, found_right = false;
+	int left_x = -1, left_y = -1;
+	int right_x = -1, right_y = -1;
 //		while(!pCamera->IsAvailable());
-  CameraBuf = pCamera->LockBuffer();
-  pCamera->UnlockBuffer();
+	CameraBuf = pCamera->LockBuffer();
+	pCamera->UnlockBuffer();
 
-  //Search horizontally
-  for (int i = WorldSize.w / 2; i > 0; i--) {
-    if (getWorldBit(i, 20) == 1) {
-      left_x = i + 1;
-      left_y = 20;
-      found_left = true;
-      break;
-    }
-  }
-  if (!found_left) {
-    left_x = 1;
-    left_y = 1;
-  }
+	//Search horizontally
+	for (int i = WorldSize.w / 2; i > 0; i--) {
+		if (getWorldBit(i, 20) == 1) {
+			left_x = i + 1;
+			left_y = 20;
+			found_left = true;
+			break;
+		}
+	}
+	if (!found_left) {
+		left_x = 1;
+		left_y = 1;
+	}
 
-  //Search horizontally
-  for (int i = WorldSize.w / 2; i < WorldSize.w; i++) {
-    if (getWorldBit(i, 20) == 1) {
-      right_x = i - 1;
-      right_y = 20;
-      found_right = true;
-      break;
-    }
-  }
-  if (!found_right) {
-    right_x = WorldSize.w - 1;
-    right_y = 1;
-  }
+	//Search horizontally
+	for (int i = WorldSize.w / 2; i < WorldSize.w; i++) {
+		if (getWorldBit(i, 20) == 1) {
+			right_x = i - 1;
+			right_y = 20;
+			found_right = true;
+			break;
+		}
+	}
+	if (!found_right) {
+		right_x = WorldSize.w - 1;
+		right_y = 1;
+	}
 
-  pLed3->Switch();
-  left_edge.push(left_x, left_y);
-  right_edge.push(right_x, right_y);
+	pLed3->Switch();
+	left_edge.push(left_x, left_y);
+	right_edge.push(right_x, right_y);
 }
 
 /**
  * @brief Print raw image to LCD
  */
 void PrintImage() {
-  pLcd->SetRegion(Lcd::Rect(0, 0, CameraSize.w, CameraSize.h));
-  pLcd->FillBits(0x0000, 0xFFFF, CameraBuf, pCamera->GetBufferSize() * 8);
+	pLcd->SetRegion(Lcd::Rect(0, 0, CameraSize.w, CameraSize.h));
+	pLcd->FillBits(0x0000, 0xFFFF, CameraBuf, pCamera->GetBufferSize() * 8);
 }
 
 /**
@@ -238,129 +246,149 @@ void PrintImage() {
  *  - Consider whether a point is corner by using a 9x9 block
  */
 
-bool FindEdges(){
+bool FindEdges() {
 
 	has_inc_width_pt = false;
 	left_corners.points.clear();
 	right_corners.points.clear();
 
-
 	bool flag_break_left = left_edge.points.size() == 0;
 	bool flag_break_right = right_edge.points.size() == 0;
 
-    while ((!flag_break_left && !flag_break_right) && (left_edge.points.size() <= 150 && right_edge.points.size() <= 150)){
-
-	//LEFT
-	int error_cnt = -1;
-	int prev_size = left_edge.points.size();
-	if (!flag_break_left) {
-		if (prev_size == left_edge.points.size()){
-			error_cnt++;
-			if (error_cnt > 3){
-				return false;
+	uint16_t it_cnt = 0;
+	while (((!flag_break_left || !flag_break_right)
+			&& (left_edge.points.size() <= 350
+					&& right_edge.points.size() <= 350)) && it_cnt <= 500) {
+		it_cnt++; //for idk what happened...
+		if (left_corners.size() > 10 || right_corners.size() > 10)
+			return false;
+		//LEFT
+		int error_cnt = -1;
+		int prev_size = left_edge.points.size();
+		if (!flag_break_left) {
+			if (prev_size == left_edge.points.size()) {
+				error_cnt++;
+				if (error_cnt > 3) {
+					return false;
+				}
 			}
-		}
-		prev_size = left_edge.points.size();
-		int prev_x = left_edge.points.back().first;
-		int prev_y = left_edge.points.back().second;
+			prev_size = left_edge.points.size();
+			int prev_x = left_edge.points.back().first;
+			int prev_y = left_edge.points.back().second;
 
+			if (getWorldBit(prev_x, prev_y + 1) == 0) { //if white, find in CCW
+				if (prev_x == 1) {
+					left_edge.push(prev_x, prev_y + 1);
+				} else {
+					for (int i = 0; i < 8; i++) {
+						if (getWorldBit(prev_x + dx[i], prev_y + dy[i]) == 1) {
+							if (i == 0) {
+								while (1) {
+								}
 
-		if (getWorldBit( prev_x, prev_y+1) == 0){ //if white, find in CCW
-			if (prev_x == 1){
-				left_edge.push(prev_x, prev_y+1);
+							}
+							left_edge.push(prev_x + dx[i - 1],
+									prev_y + dy[i - 1]);
+							break;
+						}
+					}
+				}
 			} else {
-				for (int i = 0; i < 8; i++){
-					if(getWorldBit(prev_x+dx[i], prev_y+dy[i]) == 1){
-						left_edge.push(prev_x+dx[i-1], prev_y+dy[i-1]);
+				for (int i = 7; i >= 0; i--) {
+					if (getWorldBit(prev_x + dx[i], prev_y + dy[i]) == 0) {
+						if (/*(i == 6 || i == 5 || i == 7) &&*/prev_x == 1) {
+							//need to check for trespassing
+							int cnt_black = 0;
+							for (int j = prev_y; j < WorldSize.h; j++) {
+								cnt_black += getWorldBit(WorldSize.w / 2, j);
+							}
+							if (cnt_black > 0.5 * (WorldSize.h - prev_y)) {
+								flag_break_left = true;
+								break;
+							}
+						}
+						left_edge.push(prev_x + dx[i], prev_y + dy[i]);
 						break;
 					}
 				}
 			}
-		} else {
-			for (int i = 7; i >= 0; i--){
-				if(getWorldBit(prev_x+dx[i], prev_y+dy[i]) == 0){
-					if ((i == 6 || i == 5 || i == 7) && prev_x == 1){
-						//need to check for trespassing
-						int cnt_black = 0;
-						for (int j = prev_y; j < WorldSize.h; j++){
-							cnt_black += getWorldBit(WorldSize.w/2, j);
-						}
-						if (cnt_black > 0.5 * (WorldSize.h - prev_y)){
-							flag_break_left = true;
-							break;
-						}
+			if (left_edge.points.back()
+					== left_edge.points[left_edge.size() - 2]) { //the edge start backtrack
+				left_edge.points.pop_back();
+				flag_break_left = true;
+			}
+			if (left_edge.points.back().second == WorldSize.h - 1) { //the edge reaches the top
+				flag_break_left = true;
+			}
+			{
+				uint16_t r_back_x = right_edge.points.back().first;
+				uint16_t r_back_y = right_edge.points.back().second;
+				uint16_t l_back_x = left_edge.points.back().first;
+				uint16_t l_back_y = left_edge.points.back().second;
+				bool status = (r_back_x == l_back_x - 1 || r_back_x == l_back_x
+						|| r_back_x == l_back_x + 1)
+						&& (r_back_y == r_back_y - 1 || r_back_y == r_back_y
+								|| r_back_y == r_back_y + 1);
+
+				if (status) { //two edges meet
+					for (int i = 0;
+							i
+									< min(10,
+											min(right_edge.size() / 2,
+													left_edge.size() / 2));
+							i++) { //discard last 10 points
+						right_edge.points.pop_back();
+						left_edge.points.pop_back();
 					}
-					left_edge.push(prev_x+dx[i], prev_y+dy[i]);
-					break;
+					flag_break_left = true;
 				}
 			}
-		}
-	if (left_edge.points.back() == left_edge.points[left_edge.size() - 2]){ //the edge start backtrack
-		left_edge.points.pop_back();
-		flag_break_left = true;
-	}
-	if (left_edge.points.back().second == WorldSize.h - 1){ //the edge reaches the top
-		flag_break_left = true;
-	}
-	{
-		uint16_t r_back_x = right_edge.points.back().first;
-		uint16_t r_back_y = right_edge.points.back().second;
-		uint16_t l_back_x = left_edge.points.back().first;
-		uint16_t l_back_y = left_edge.points.back().second;
-		bool status =
-				(r_back_x == l_back_x - 1 ||
-				r_back_x == l_back_x     ||
-				r_back_x == l_back_x + 1) && (
-				r_back_y == r_back_y - 1 ||
-				r_back_y == r_back_y     ||
-				r_back_y == r_back_y + 1);
 
-		if (status){ //two edges meet
-			for (int i = 0; i < min(10, min(right_edge.size(), left_edge.size())); i++){ //discard last 10 points
-				right_edge.points.pop_back();
-				left_edge.points.pop_back();
+			if (left_edge.points.back() == left_edge.points.front()) { //the edge loops back
+				for (int i = 0; i < left_edge.points.size() / 2; i++) {
+					left_edge.points.pop_back();
+				}
+				flag_break_left = true;
 			}
-			flag_break_left = true;
-		}
-	}
 
-	if (left_edge.points.back() == left_edge.points.front()){ //the edge loops back
-		for (int i = 0; i < left_edge.points.size()/2; i++){
-			left_edge.points.pop_back();
-		}
-		flag_break_left = true;
-	}
-
-	//Check corners
-	{
-		int CornerCheck = 0;
-		int total = 0;
-		auto last = left_edge.points.back();
-		if (last.first - 5 <= 0 || last.first + 5 > WorldSize.w - 1 || last.second - 5 <= 0 || last.second + 5 > WorldSize.h -1){
-			continue;
-		}
-		for (int i = (last.first - 5); i <= (last.first + 5); i++){
-			for (int j = (last.second - 5); j <= (last.second + 5); j++){
-				CornerCheck += getWorldBit(i, j);
-				total++;
+			//Check corners
+			if (!flag_break_left
+					&& left_edge.points.back().second <= WorldSize.h / 2.5) {
+				int CornerCheck = 0;
+				int total = 0;
+				auto last = left_edge.points.back();
+				if (last.first - 5 <= 0 || last.first + 5 > WorldSize.w - 1
+						|| last.second - 5 <= 0
+						|| last.second + 5 > WorldSize.h - 1) {
+					continue;
+				}
+				for (int i = (last.first - 5); i <= (last.first + 5); i++) {
+					for (int j = (last.second - 5); j <= (last.second + 5);
+							j++) {
+						CornerCheck += getWorldBit(i, j);
+						total++;
+					}
+				}
+				//if in this threshold, consider as corner
+				if (CornerCheck > total * TuningVar.corner_min / 100
+						&& CornerCheck < total * TuningVar.corner_max / 100) {
+					// TODO: Remove redundant statement below
+					left_corners.size();
+					left_corners.push(last.first, last.second);
+				}
 			}
-		}
-		//if in this threshold, consider as corner
-		if (CornerCheck > total * TuningVar.corner_min / 100 && CornerCheck < total * TuningVar.corner_max / 100){
-			left_corners.push(last.first, last.second);
-		}
-	}
-	}
 
-	//RIGHT
+		}
 
-	error_cnt = -1;
-	prev_size = right_edge.points.size();
+		//RIGHT
+
+		error_cnt = -1;
+		prev_size = right_edge.points.size();
 
 		if (!flag_break_right) {
-			if (prev_size == right_edge.points.size()){
+			if (prev_size == right_edge.points.size()) {
 				error_cnt++;
-				if (error_cnt > 3){
+				if (error_cnt > 3) {
 					return false;
 				}
 			}
@@ -368,39 +396,42 @@ bool FindEdges(){
 			int prev_x = right_edge.points.back().first;
 			int prev_y = right_edge.points.back().second;
 
-			if (getWorldBit(prev_x, prev_y+1) == 0){ //if white, find in CW
-				if (prev_x == WorldSize.w - 1){
-					right_edge.push(prev_x, prev_y+1);
+			if (getWorldBit(prev_x, prev_y + 1) == 0) { //if white, find in CW
+				if (prev_x == WorldSize.w - 1) {
+					right_edge.push(prev_x, prev_y + 1);
 				} else {
-					for (int i = 7; i >= 0; i--){
-						if(getWorldBit(prev_x+dx[i], prev_y+dy[i]) == 1){
-							right_edge.push(prev_x+dx[i+1], prev_y+dy[i+1]);
+					for (int i = 7; i >= 0; i--) {
+						if (getWorldBit(prev_x + dx[i], prev_y + dy[i]) == 1) {
+							right_edge.push(prev_x + dx[i + 1],
+									prev_y + dy[i + 1]);
 							break;
 						}
 					}
 				}
 			} else {
-				for (int i = 0; i < 8; i++){
+				for (int i = 0; i < 8; i++) {
 
-					if(getWorldBit(prev_x+dx[i], prev_y+dy[i]) == 0){
-						if ((i == 2 || i == 1 || i == 3) && prev_x == WorldSize.w-1){
+					if (getWorldBit(prev_x + dx[i], prev_y + dy[i]) == 0) {
+						if (/*(i == 2 || i == 1 || i == 3) &&*/prev_x
+								== WorldSize.w - 1) {
 							//need to check for trespassing
 							int cnt_black = 0;
-							for (int j = prev_y; j < WorldSize.h; j++){
-								cnt_black += getWorldBit(WorldSize.w/2, j);
+							for (int j = prev_y; j < WorldSize.h; j++) {
+								cnt_black += getWorldBit(WorldSize.w / 2, j);
 							}
-							if (cnt_black > 0.5 * (WorldSize.h - prev_y)){
+							if (cnt_black > 0.5 * (WorldSize.h - prev_y)) {
 								flag_break_right = true;
 								break;
 							}
 						}
-						right_edge.push(prev_x+dx[i], prev_y+dy[i]);
+						right_edge.push(prev_x + dx[i], prev_y + dy[i]);
 						break;
 					}
 				}
 			}
 
-			if (right_edge.points.back() == right_edge.points[right_edge.size() - 2]){ //the edge start backtrack
+			if (right_edge.points.back()
+					== right_edge.points[right_edge.size() - 2]) { //the edge start backtrack
 				right_edge.points.pop_back();
 				flag_break_right = true;
 			}
@@ -410,16 +441,16 @@ bool FindEdges(){
 				uint16_t r_back_y = right_edge.points.back().second;
 				uint16_t l_back_x = left_edge.points.back().first;
 				uint16_t l_back_y = left_edge.points.back().second;
-				bool status =
-						(r_back_x == l_back_x - 1 ||
-						r_back_x == l_back_x     ||
-						r_back_x == l_back_x + 1) && (
-						r_back_y == r_back_y - 1 ||
-						r_back_y == r_back_y     ||
-						r_back_y == r_back_y + 1);
+				bool status = (r_back_x == l_back_x - 1 || r_back_x == l_back_x
+						|| r_back_x == l_back_x + 1)
+						&& (r_back_y == r_back_y - 1 || r_back_y == r_back_y
+								|| r_back_y == r_back_y + 1);
 
-				if (status){ //two edges meet
-					for (int i = 0; i < (10, min(right_edge.size(), left_edge.size())); i++){ //discard last 10 points
+				if (status) { //two edges meet
+					for (int i = 0;
+							i
+									< (10, min(right_edge.size() / 2,
+											left_edge.size() / 2)); i++) { //discard last 10 points
 						right_edge.points.pop_back();
 						left_edge.points.pop_back();
 					}
@@ -427,53 +458,62 @@ bool FindEdges(){
 				}
 			}
 
-			if (right_edge.points.back().second == WorldSize.h - 1){ //the edge reaches the top
+			if (right_edge.points.back().second == WorldSize.h - 1) { //the edge reaches the top
 				flag_break_right = true;
 			}
 
-			if (right_edge.points.back() == right_edge.points.front()){ //the edge loops back
-				for (int i = 0; i < right_edge.points.size()/2; i++){
+			if (right_edge.points.back() == right_edge.points.front()) { //the edge loops back
+				for (int i = 0; i < right_edge.points.size() / 2.5; i++) {
 					right_edge.points.pop_back();
 				}
 				flag_break_right = true;
 			}
 
 			//Check corners
-			{
+			if (!flag_break_right
+					&& right_edge.points.back().second <= WorldSize.h / 2) {
 				int CornerCheck = 0;
 				int total = 0;
 				auto last = right_edge.points.back();
-				if (last.first - 5 <= 0 || last.first + 5 > WorldSize.w - 1 || last.second - 5 <= 0 || last.second + 5 > WorldSize.h -1){
+				if (last.first - 5 <= 0 || last.first + 5 > WorldSize.w - 1
+						|| last.second - 5 <= 0
+						|| last.second + 5 > WorldSize.h - 1) {
 					continue;
 				}
-				for (int i = max(0, last.first - 5); i <= min(WorldSize.w-1, last.first + 5); i++){
-					for (int j = max(0, last.second - 5); j <= min(WorldSize.h-1, last.second + 5); j++){
+				for (int i = max(0, last.first - 5);
+						i <= min(WorldSize.w - 1, last.first + 5); i++) {
+					for (int j = max(0, last.second - 5);
+							j <= min(WorldSize.h - 1, last.second + 5); j++) {
 						CornerCheck += getWorldBit(i, j);
 						total++;
 					}
 				}
 
 				//if in this threshold, consider as corner
-				if (CornerCheck > total * TuningVar.corner_min / 100 && CornerCheck < total * TuningVar.corner_max / 100){
+				if (CornerCheck > total * TuningVar.corner_min / 100
+						&& CornerCheck < total * TuningVar.corner_max / 100) {
+					right_corners.size();
 					right_corners.push(last.first, last.second);
 				}
 			}
 		}
 
-
 		// check if suddenly increase length
-		if (!has_inc_width_pt){
-			if ( (left_edge.points.back().first - right_edge.points.back().first) *
-					(left_edge.points.back().first - right_edge.points.back().first) +
-					(left_edge.points.back().second - right_edge.points.back().second) *
-					(left_edge.points.back().second - right_edge.points.back().second)
-					<= TuningVar.edge_dist_thresold){
+		if (!has_inc_width_pt) {
+			if ((left_edge.points.back().first - right_edge.points.back().first)
+					* (left_edge.points.back().first
+							- right_edge.points.back().first)
+					+ (left_edge.points.back().second
+							- right_edge.points.back().second)
+							* (left_edge.points.back().second
+									- right_edge.points.back().second)
+					<= TuningVar.edge_dist_thresold) {
 				inc_width_pts.at(0) = left_edge.points.back();
 				inc_width_pts.at(1) = right_edge.points.back();
 				has_inc_width_pt = true;
 			}
 		}
-}
+	}
 
 	return true;
 
@@ -490,23 +530,33 @@ bool FindEdges(){
  * @return: Feature: kCrossing, kRound...
  * @note: Execute this function after calling FindEdges() only when width sudden increase is detected
  */
-Feature featureIdent_Width (){
-	std::pair<int, int> carMid(WorldSize.w/2,0);
+Feature featureIdent_Width() {
+	std::pair<int, int> carMid(WorldSize.w / 2, 0);
 	std::pair<int, int> cornerMid;
 	//Width increase case
-	if(has_inc_width_pt){
+	if (has_inc_width_pt) {
 		//TODO: The conditions ensuring the width increase is reasonable case
-		if(true){
-			int cornerMid_x = (inc_width_pts.at(0).first + inc_width_pts.at(1).first)/2; //corner midpoint x-cor
-			int cornerMid_y = (inc_width_pts.at(0).second + inc_width_pts.at(1).second)/2; //corner midpoint y-cor
-			int edge3th = sqrt(pow(cornerMid_x-carMid.first,2) + pow(cornerMid_y-carMid.second,2)); //Third edge of right triangle
-			int test_x = TuningVar.sightDist*((cornerMid_x-carMid.first)/edge3th) + cornerMid_x;
-			int test_y = TuningVar.sightDist*((cornerMid_y-carMid.second)/edge3th) + cornerMid_y;
-			if(getWorldBit(test_x,test_y) && getWorldBit(test_x+1,test_y) && getWorldBit(test_x,test_y+1) && getWorldBit(test_x-1,test_y)){
+		if (true) {
+			int cornerMid_x = (inc_width_pts.at(0).first
+					+ inc_width_pts.at(1).first) / 2; //corner midpoint x-cor
+			int cornerMid_y = (inc_width_pts.at(0).second
+					+ inc_width_pts.at(1).second) / 2; //corner midpoint y-cor
+			int edge3th = sqrt(
+					pow(cornerMid_x - carMid.first, 2)
+							+ pow(cornerMid_y - carMid.second, 2)); //Third edge of right triangle
+			int test_x = TuningVar.sightDist
+					* ((cornerMid_x - carMid.first) / edge3th) + cornerMid_x;
+			int test_y = TuningVar.sightDist
+					* ((cornerMid_y - carMid.second) / edge3th) + cornerMid_y;
+			if (getWorldBit(test_x, test_y) && getWorldBit(test_x + 1, test_y)
+					&& getWorldBit(test_x, test_y + 1)
+					&& getWorldBit(test_x - 1, test_y)) {
 				//All black
 				return Feature::kRound;
-			}
-			else if(!getWorldBit(test_x,test_y) && !getWorldBit(test_x+1,test_y) && !getWorldBit(test_x,test_y+1) && !getWorldBit(test_x-1,test_y)){
+			} else if (!getWorldBit(test_x, test_y)
+					&& !getWorldBit(test_x + 1, test_y)
+					&& !getWorldBit(test_x, test_y + 1)
+					&& !getWorldBit(test_x - 1, test_y)) {
 				return Feature::kCrossing;
 			}
 		}
@@ -519,7 +569,6 @@ Feature featureIdent_Width (){
 	return Feature::kNormal;
 }
 
-
 /**
  * @brief Feature Identification by corners
  *
@@ -531,25 +580,36 @@ Feature featureIdent_Width (){
  * @return: Feature: kCrossing, kRound
  * @note: Execute this function after calling FindEdges()
  */
-Feature featureIdent_Corner (){
-	std::pair<int, int> carMid(WorldSize.w/2,0);
+Feature featureIdent_Corner() {
+	std::pair<int, int> carMid(WorldSize.w / 2, 0);
 	std::pair<int, int> cornerMid;
 	//Normal case
-	if (left_corners.points.size() == 0 && right_corners.points.size() == 0){
+	if (left_corners.points.size() == 0 && right_corners.points.size() == 0) {
 		return Feature::kNormal;
 	}
 	//Two corner case
-	else if(left_corners.points.size() > 0 && right_corners.points.size() > 0){
-		int cornerMid_x = (left_corners.points.front().first + right_corners.points.front().first)/2; //corner midpoint x-cor
-		int cornerMid_y = (left_corners.points.front().second + right_corners.points.front().second)/2; //corner midpoint y-cor
-		int edge3th = sqrt(pow(cornerMid_x-carMid.first,2) + pow(cornerMid_y-carMid.second,2)); //Third edge of right triangle
-		int test_x = TuningVar.sightDist*((cornerMid_x-carMid.first)/edge3th) + cornerMid_x;
-		int test_y = TuningVar.sightDist*((cornerMid_y-carMid.second)/edge3th) + cornerMid_y;
-		if(getWorldBit(test_x,test_y) && getWorldBit(test_x+1,test_y) && getWorldBit(test_x,test_y+1) && getWorldBit(test_x-1,test_y)){
+	else if (left_corners.points.size() > 0
+			&& right_corners.points.size() > 0) {
+		int cornerMid_x = (left_corners.points.front().first
+				+ right_corners.points.front().first) / 2; //corner midpoint x-cor
+		int cornerMid_y = (left_corners.points.front().second
+				+ right_corners.points.front().second) / 2; //corner midpoint y-cor
+		int edge3th = sqrt(
+				pow(cornerMid_x - carMid.first, 2)
+						+ pow(cornerMid_y - carMid.second, 2)); //Third edge of right triangle
+		int test_x = TuningVar.sightDist
+				* ((cornerMid_x - carMid.first) / edge3th) + cornerMid_x;
+		int test_y = TuningVar.sightDist
+				* ((cornerMid_y - carMid.second) / edge3th) + cornerMid_y;
+		if (getWorldBit(test_x, test_y) && getWorldBit(test_x + 1, test_y)
+				&& getWorldBit(test_x, test_y + 1)
+				&& getWorldBit(test_x - 1, test_y)) {
 			//All black
 			return Feature::kRound;
-		}
-		else if(!getWorldBit(test_x,test_y) && !getWorldBit(test_x+1,test_y) && !getWorldBit(test_x,test_y+1) && !getWorldBit(test_x-1,test_y)){
+		} else if (!getWorldBit(test_x, test_y)
+				&& !getWorldBit(test_x + 1, test_y)
+				&& !getWorldBit(test_x, test_y + 1)
+				&& !getWorldBit(test_x - 1, test_y)) {
 			return Feature::kCrossing;
 		}
 	}
@@ -566,10 +626,11 @@ Feature featureIdent_Corner (){
  * @brief Print edges
  */
 void PrintEdge(Edges path, uint16_t color) {
-  for (auto&& entry : path.points) {
-    pLcd->SetRegion(Lcd::Rect(entry.first, WorldSize.h - entry.second - 1, 2, 2));
-    pLcd->FillColor(color);
-  }
+	for (auto&& entry : path.points) {
+		pLcd->SetRegion(
+				Lcd::Rect(entry.first, WorldSize.h - entry.second - 1, 2, 2));
+		pLcd->FillColor(color);
+	}
 
 }
 
@@ -577,10 +638,11 @@ void PrintEdge(Edges path, uint16_t color) {
  * @brief Print corners
  */
 void PrintCorner(Corners corners, uint16_t color) {
-  for (auto&& entry : corners.points) {
-    pLcd->SetRegion(Lcd::Rect(entry.first, WorldSize.h - entry.second - 1, 4, 4));
-    pLcd->FillColor(color);
-  }
+	for (auto&& entry : corners.points) {
+		pLcd->SetRegion(
+				Lcd::Rect(entry.first, WorldSize.h - entry.second - 1, 4, 4));
+		pLcd->FillColor(color);
+	}
 }
 
 /**
@@ -589,7 +651,7 @@ void PrintCorner(Corners corners, uint16_t color) {
  */
 CarManager::Feature IdentifyFeat() {
 
-  return CarManager::Feature::kStraight;
+	return CarManager::Feature::kStraight;
 }
 
 /**
@@ -606,85 +668,97 @@ CarManager::Feature IdentifyFeat() {
  * 3. Under no LEFT_NULL and RIGHT_NULL, the midpt's midpt
  */
 void GenPath() {
-  int left_size = left_edge.size();
-  int right_size = right_edge.size();
+	int left_size = left_edge.size();
+	int right_size = right_edge.size();
 
-  path.points.clear();
+	path.points.clear();
 
-  if (!left_size && !right_size) { //simple validity check
-    return;
-  }
+	if (!left_size && !right_size) { //simple validity check
+		return;
+	}
 
-  if (left_size < right_size) {
-    for (int i = 0; i < right_edge.size(); i++) {
-      auto curr_left = left_edge.points[(left_size * i) / right_size];
-      auto curr_right = right_edge.points[i];
-      int shift_left_null = 0;
-      int shift_right_null = 0;
-      TranslateType translate_flag = TranslateType::kNone;
+	if (left_size < right_size) {
+		for (int i = 0; i < right_edge.size(); i++) {
+			auto curr_left = left_edge.points[(left_size * i) / right_size];
+			auto curr_right = right_edge.points[i];
+			int shift_left_null = 0;
+			int shift_right_null = 0;
+			TranslateType translate_flag = TranslateType::kNone;
 
-      if (curr_left.first == 0 && translate_flag == TranslateType::kNone) {
-        translate_flag = TranslateType::kLeftNull;
-        shift_left_null = right_edge.points[i].first / 2;
-      } else if (curr_right.first == 0 && translate_flag == TranslateType::kNone) {
-        translate_flag = TranslateType::kRightNull;
-        shift_right_null = (WorldSize.w - left_edge.points[i].first) / 2;
-        //^^^ Start Translation ^^^
-        //vvv  Start Averaging  vvv
-      } else if (curr_left.first != 0 && translate_flag != TranslateType::kNone) {
-        translate_flag = TranslateType::kNone;
-      } else if (curr_right.first != 0 && translate_flag != TranslateType::kNone) {
-        translate_flag = TranslateType::kNone;
-      }
+			if (curr_left.first == 0
+					&& translate_flag == TranslateType::kNone) {
+				translate_flag = TranslateType::kLeftNull;
+				shift_left_null = right_edge.points[i].first / 2;
+			} else if (curr_right.first == 0
+					&& translate_flag == TranslateType::kNone) {
+				translate_flag = TranslateType::kRightNull;
+				shift_right_null = (WorldSize.w - left_edge.points[i].first)
+						/ 2;
+				//^^^ Start Translation ^^^
+				//vvv  Start Averaging  vvv
+			} else if (curr_left.first != 0
+					&& translate_flag != TranslateType::kNone) {
+				translate_flag = TranslateType::kNone;
+			} else if (curr_right.first != 0
+					&& translate_flag != TranslateType::kNone) {
+				translate_flag = TranslateType::kNone;
+			}
 
-      //if translate
-      if (translate_flag == TranslateType::kLeftNull) {
-        path.push(curr_right.first - shift_left_null, curr_right.second);
-      } else if (translate_flag == TranslateType::kRightNull) {
-        path.push(curr_left.first + shift_right_null, curr_left.second);
-      } else {
-        //if average
-        int temp_x = (curr_left.first + curr_right.first) / 2;
-        int temp_y = (curr_left.second + curr_right.second) / 2;
-        path.push(temp_x, temp_y);
-      }
-    }
-  } else {
-    for (int i = 0; i < left_edge.size(); i++) {
-      auto curr_left = left_edge.points[i];
-      auto curr_right = right_edge.points[(right_size * i) / left_size];
-      int shift_left_null = 0;
-      int shift_right_null = 0;
-      TranslateType translate_flag = TranslateType::kNone;
+			//if translate
+			if (translate_flag == TranslateType::kLeftNull) {
+				path.push(curr_right.first - shift_left_null,
+						curr_right.second);
+			} else if (translate_flag == TranslateType::kRightNull) {
+				path.push(curr_left.first + shift_right_null, curr_left.second);
+			} else {
+				//if average
+				int temp_x = (curr_left.first + curr_right.first) / 2;
+				int temp_y = (curr_left.second + curr_right.second) / 2;
+				path.push(temp_x, temp_y);
+			}
+		}
+	} else {
+		for (int i = 0; i < left_edge.size(); i++) {
+			auto curr_left = left_edge.points[i];
+			auto curr_right = right_edge.points[(right_size * i) / left_size];
+			int shift_left_null = 0;
+			int shift_right_null = 0;
+			TranslateType translate_flag = TranslateType::kNone;
 
-      if (curr_left.first == 0 && translate_flag == TranslateType::kNone) {
-        translate_flag = TranslateType::kLeftNull;
-        shift_left_null = right_edge.points[i].first / 2;
-      } else if (curr_right.first == 0 && translate_flag == TranslateType::kNone) {
-        translate_flag = TranslateType::kRightNull;
-        shift_right_null = (WorldSize.w - left_edge.points[i].first) / 2;
-        //^^^ Start Translation ^^^
-        //vvv  Start Averaging  vvv
-      } else if (curr_left.first != 0 && translate_flag != TranslateType::kNone) {
-        translate_flag = TranslateType::kNone;
-      } else if (curr_right.first != 0 && translate_flag != TranslateType::kNone) {
-        translate_flag = TranslateType::kNone;
-      }
+			if (curr_left.first == 0
+					&& translate_flag == TranslateType::kNone) {
+				translate_flag = TranslateType::kLeftNull;
+				shift_left_null = right_edge.points[i].first / 2;
+			} else if (curr_right.first == 0
+					&& translate_flag == TranslateType::kNone) {
+				translate_flag = TranslateType::kRightNull;
+				shift_right_null = (WorldSize.w - left_edge.points[i].first)
+						/ 2;
+				//^^^ Start Translation ^^^
+				//vvv  Start Averaging  vvv
+			} else if (curr_left.first != 0
+					&& translate_flag != TranslateType::kNone) {
+				translate_flag = TranslateType::kNone;
+			} else if (curr_right.first != 0
+					&& translate_flag != TranslateType::kNone) {
+				translate_flag = TranslateType::kNone;
+			}
 
-      //if translate
-      if (translate_flag == TranslateType::kLeftNull) {
-        path.push(curr_right.first - shift_left_null, curr_right.second);
-      } else if (translate_flag == TranslateType::kRightNull) {
-        path.push(curr_left.first + shift_right_null, curr_left.second);
-      } else {
-        //if average
-        int temp_x = (curr_left.first + curr_right.first) / 2;
-        int temp_y = (curr_left.second + curr_right.second) / 2;
-        path.push(temp_x, temp_y);
-      }
+			//if translate
+			if (translate_flag == TranslateType::kLeftNull) {
+				path.push(curr_right.first - shift_left_null,
+						curr_right.second);
+			} else if (translate_flag == TranslateType::kRightNull) {
+				path.push(curr_left.first + shift_right_null, curr_left.second);
+			} else {
+				//if average
+				int temp_x = (curr_left.first + curr_right.first) / 2;
+				int temp_y = (curr_left.second + curr_right.second) / 2;
+				path.push(temp_x, temp_y);
+			}
 
-    }
-  }
+		}
+	}
 
 }
 
@@ -692,156 +766,161 @@ void GenPath() {
  * @brief Calculate the servo angle diff
  */
 int16_t Interpret() {
-  int16_t error = 0, sum = 0, degree = 0;
-  for (std::pair<int, int> point : path.points) {
-    if (sum > 20) break;
-    error += (point.first - WorldSize.w / 2);//*(point.second+24);
-    sum++;
-  }
+	int16_t error = 0, sum = 0, degree = 0;
+	for (std::pair<int, int> point : path.points) {
+		if (sum > 20)
+			break;
+		error += (point.first - WorldSize.w / 2);        //*(point.second+24);
+		sum++;
+	}
 
-  char buff[10];
-  sprintf(buff, "%d , %d", error, degree);
-  pLcd->SetRegion(Lcd::Rect(0, 0, 100, 15));
-  pWriter->WriteBuffer(buff, 10);
+	char buff[10];
+	sprintf(buff, "%d , %d", error, degree);
+	pLcd->SetRegion(Lcd::Rect(0, 0, 100, 15));
+	pWriter->WriteBuffer(buff, 10);
 
-  return error;
-  //Turn(degree);
+	return error;
+	//Turn(degree);
 }
 
 void main(CarManager::Car c) {
-  car = c;
-  servo_bounds = car == CarManager::Car::kCar1 ? CarManager::kBoundsCar1 : CarManager::kBoundsCar2;
+	car = c;
+	servo_bounds =
+			car == CarManager::Car::kCar1 ?
+					CarManager::kBoundsCar1 : CarManager::kBoundsCar2;
 
-  Led::Config ConfigLed;
-  ConfigLed.id = 0;
-  Led led0(ConfigLed);
-  ConfigLed.id = 3;
-  Led led3(ConfigLed);
-  pLed3 = &led3;
+	Led::Config ConfigLed;
+	ConfigLed.id = 0;
+	Led led0(ConfigLed);
+	ConfigLed.id = 3;
+	Led led3(ConfigLed);
+	pLed3 = &led3;
 
-  k60::Ov7725::Config cameraConfig;
-  cameraConfig.id = 0;
-  cameraConfig.w = CameraSize.w;
-  cameraConfig.h = CameraSize.h;
-  cameraConfig.fps = k60::Ov7725Configurator::Config::Fps::kHigh;
-  std::unique_ptr<k60::Ov7725> camera(new k60::Ov7725(cameraConfig));
-  pCamera = std::move(camera);
-  pCamera->Start();
+	k60::Ov7725::Config cameraConfig;
+	cameraConfig.id = 0;
+	cameraConfig.w = CameraSize.w;
+	cameraConfig.h = CameraSize.h;
+	cameraConfig.fps = k60::Ov7725Configurator::Config::Fps::kHigh;
+	std::unique_ptr<k60::Ov7725> camera(new k60::Ov7725(cameraConfig));
+	pCamera = std::move(camera);
+	pCamera->Start();
 
-  FutabaS3010::Config ConfigServo;
-  ConfigServo.id = 0;
-  FutabaS3010 servo(ConfigServo);
+	FutabaS3010::Config ConfigServo;
+	ConfigServo.id = 0;
+	FutabaS3010 servo(ConfigServo);
 //	std::unique_ptr<FutabaS3010> pServo(new FutabaS3010(ConfigServo));
-  pServo = &servo;
+	pServo = &servo;
 
-  DirEncoder::Config ConfigEncoder;
-  ConfigEncoder.id = 0;
-  DirEncoder encoder0(ConfigEncoder);
-  ConfigEncoder.id = 1;
-  DirEncoder encoder1(ConfigEncoder);
+	DirEncoder::Config ConfigEncoder;
+	ConfigEncoder.id = 0;
+	DirEncoder encoder0(ConfigEncoder);
+	ConfigEncoder.id = 1;
+	DirEncoder encoder1(ConfigEncoder);
 
-  AlternateMotor::Config ConfigMotor;
-  ConfigMotor.id = 0;
-  AlternateMotor motor0(ConfigMotor);
-  ConfigMotor.id = 1;
-  AlternateMotor motor1(ConfigMotor);
+	AlternateMotor::Config ConfigMotor;
+	ConfigMotor.id = 0;
+	AlternateMotor motor0(ConfigMotor);
+	ConfigMotor.id = 1;
+	AlternateMotor motor1(ConfigMotor);
 
 //	std::unique_ptr<util::MpcDual> pMpc(new util::MpcDual(&motor0, &motor1, &encoder0, &encoder1));
-  util::MpcDual mpc(&motor0, &motor1, &encoder0, &encoder1);
-  util::MpcDual* pMpc = &mpc;
+	util::MpcDual mpc(&motor0, &motor1, &encoder0, &encoder1);
+	util::MpcDual* pMpc = &mpc;
 
-  k60::JyMcuBt106::Config ConfigBT;
-  ConfigBT.id = 0;
-  ConfigBT.baud_rate = libbase::k60::Uart::Config::BaudRate::k115200;
-  k60::JyMcuBt106 bt(ConfigBT);
+	k60::JyMcuBt106::Config ConfigBT;
+	ConfigBT.id = 0;
+	ConfigBT.baud_rate = libbase::k60::Uart::Config::BaudRate::k115200;
+	k60::JyMcuBt106 bt(ConfigBT);
 
-  St7735r::Config lcdConfig;
-  lcdConfig.is_revert = true;
-  St7735r lcd(lcdConfig);
-  pLcd = &lcd;
+	St7735r::Config lcdConfig;
+	lcdConfig.is_revert = true;
+	St7735r lcd(lcdConfig);
+	pLcd = &lcd;
 
-  LcdTypewriter::Config writerConfig;
-  writerConfig.lcd = pLcd;
-  LcdTypewriter writer(writerConfig);
-  pWriter = &writer;
+	LcdTypewriter::Config writerConfig;
+	writerConfig.lcd = pLcd;
+	LcdTypewriter writer(writerConfig);
+	pWriter = &writer;
 
-  Joystick::Config joystick_config;
-  joystick_config.id = 0;
-  joystick_config.is_active_low = true;
-  Joystick joystick(joystick_config);
+	Joystick::Config joystick_config;
+	joystick_config.id = 0;
+	joystick_config.is_active_low = true;
+	Joystick joystick(joystick_config);
 
-  // TODO: Determine the correct value for 4th parameter
-  DebugConsole console(&joystick, &lcd, &writer, 10);
+	// TODO: Determine the correct value for 4th parameter
+	DebugConsole console(&joystick, &lcd, &writer, 10);
+
+	/*
+	 CarManager::Config ConfigMgr;
+	 ConfigMgr.servo = std::move(pServo);
+	 ConfigMgr.epc = std::move(pMpc);
+	 CarManager::Init(std::move(ConfigMgr));
+	 */
+	Timer::TimerInt time_img = 0;
+
+	//Servo test
+
+	pServo->SetDegree(servo_bounds.kLeftBound);
+	System::DelayMs(1000);
+	pServo->SetDegree(servo_bounds.kRightBound);
+	System::DelayMs(1000);
+	pServo->SetDegree(servo_bounds.kCenter);
+	System::DelayMs(1000);
+
+	/*while(true){
 
 
-  /*
-  CarManager::Config ConfigMgr;
-  ConfigMgr.servo = std::move(pServo);
-  ConfigMgr.epc = std::move(pMpc);
-  CarManager::Init(std::move(ConfigMgr));
-*/
-  Timer::TimerInt time_img = 0;
+	 if(System::Time()%50==0&&pCamera->IsAvailable()){
 
-  //Servo test
+	 Byte buffer[128*20];
+	 CameraBuf = pCamera->LockBuffer();
+	 PrintWorldImage();
+	 //pLcd->SetRegion(Lcd::Rect(0,0,128,160));
+	 //pLcd->FillBits(Lcd::kBlack,Lcd::kWhite,wholeImage(buffer),128*160);
+	 pCamera->UnlockBuffer();
+	 }
+	 }*/
 
-  pServo->SetDegree(servo_bounds.kLeftBound);
-  System::DelayMs(1000);
-  pServo->SetDegree(servo_bounds.kRightBound);
-  System::DelayMs(1000);
-  pServo->SetDegree(servo_bounds.kCenter);
-  System::DelayMs(1000);
+	/*
+	 DebugConsole::Item item("set servo");
+	 item.setValuePtr(&servo_degree);
+	 //item.setListener(SELECT,&updateServo);
+	 item.setListener(DOWN_LEFT,&subServo);
+	 item.setListener(LONG_LEFT,&subServo);
+	 item.setListener(DOWN_RIGHT,&addServo);
+	 item.setListener(LONG_RIGHT,&addServo);
+	 console.pushItem(item);
+	 console.enterDebug();
+	 */
 
-  /*while(true){
+	//pMpc->SetTargetSpeed(100);
+	while (true) {
+		while (time_img != System::Time()) {
+			time_img = System::Time();
 
-
-      if(System::Time()%50==0&&pCamera->IsAvailable()){
-
-          Byte buffer[128*20];
-          CameraBuf = pCamera->LockBuffer();
-          PrintWorldImage();
-          //pLcd->SetRegion(Lcd::Rect(0,0,128,160));
-          //pLcd->FillBits(Lcd::kBlack,Lcd::kWhite,wholeImage(buffer),128*160);
-          pCamera->UnlockBuffer();
-      }
-  }*/
-
-  /*
-      DebugConsole::Item item("set servo");
-      item.setValuePtr(&servo_degree);
-      //item.setListener(SELECT,&updateServo);
-      item.setListener(DOWN_LEFT,&subServo);
-      item.setListener(LONG_LEFT,&subServo);
-      item.setListener(DOWN_RIGHT,&addServo);
-      item.setListener(LONG_RIGHT,&addServo);
-      console.pushItem(item);
-      console.enterDebug();
-      */
-
-  //pMpc->SetTargetSpeed(100);
-  while (true) {
-    while (time_img != System::Time()) {
-      time_img = System::Time();
-
-      if (time_img % 100 == 0) {
-        //pMpc->UpdateEncoder();
-        Capture(); //Capture until two base points are identified
-        //PrintImage(); //Print LCD
-        PrintWorldImage();
-        FindEdges(); //Find edges
-        PrintEdge(left_edge, Lcd::kRed); //Print left_edge
-        PrintEdge(right_edge, Lcd::kBlue); //Print right_edge
-        PrintCorner(left_corners, Lcd::kPurple); //Print left_corner
-        PrintCorner(right_corners, Lcd::kPurple); //Print right_corner
+			if (time_img % 100 == 0) {
+				start:
+				//pMpc->UpdateEncoder();
+				Capture(); //Capture until two base points are identified
+				//PrintImage(); //Print LCD
+				PrintWorldImage();
+				if (!FindEdges()) {
+					goto start;
+				}; //Find edges
+				PrintEdge(left_edge, Lcd::kRed); //Print left_edge
+				PrintEdge(right_edge, Lcd::kBlue); //Print right_edge
+				PrintCorner(left_corners, Lcd::kPurple); //Print left_corner
+				PrintCorner(right_corners, Lcd::kPurple); //Print right_corner
 //				CarManager::Feature feature = IdentifyFeat(); //Identify feature
-        GenPath(); //Generate path
+				GenPath(); //Generate path
 
 //				pServo->SetDegree(servo_bounds.kCenter-Interpret());
-//				PrintEdge(path, Lcd::kGreen); //Print path
-        led0.Switch(); //heart beat
-      }
-    }
+				PrintEdge(path, Lcd::kGreen); //Print path
+				led0.Switch(); //heart beat
+			}
+		}
 
-  }
+	}
 
 }
 }
