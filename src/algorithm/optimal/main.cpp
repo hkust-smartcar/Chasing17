@@ -241,6 +241,8 @@ void PrintImage(){
  *  - Consider whether a point is corner by using a 9x9 block
  */
 bool FindEdges(){
+
+	has_inc_width_pt = false;
 	left_corners.points.clear();
 	right_corners.points.clear();
 
@@ -470,6 +472,7 @@ bool FindEdges(){
 					<= TuningVar.edge_dist_thresold){
 				inc_width_pts.at(0) = left_edge.points.back();
 				inc_width_pts.at(1) = right_edge.points.back();
+				has_inc_width_pt = true;
 			}
 		}
 }
@@ -479,7 +482,48 @@ bool FindEdges(){
 
 
 /**
- * @brief Feature Identificatipon
+ * @brief Feature Identification by edges width
+ *
+ * Algorithm:
+ * 1. Width increases suddenly (inc_width_pts serves as "corners")
+ * 2. Perpendicular direction, search points @sightDistance away.
+ * 3. Black (1) is roundabout, White (0) is crossing
+ *
+ * @return: Feature: kCrossing, kRound...
+ * @note: Execute this function after calling FindEdges() only when width sudden increase is detected
+ */
+Feature featureIdent_Width (){
+	std::pair<int, int> carMid(WorldSize.w/2,0);
+	std::pair<int, int> cornerMid;
+	//Width increase case
+	if(has_inc_width_pt){
+		//TODO: The conditions ensuring the width increase is reasonable case
+		if(true){
+			int cornerMid_x = (inc_width_pts.at(0).first + inc_width_pts.at(1).first)/2; //corner midpoint x-cor
+			int cornerMid_y = (inc_width_pts.at(0).second + inc_width_pts.at(1).second)/2; //corner midpoint y-cor
+			int edge3th = sqrt(pow(cornerMid_x-carMid.first,2) + pow(cornerMid_y-carMid.second,2)); //Third edge of right triangle
+			int test_x = TuningVar.sightDist*((cornerMid_x-carMid.first)/edge3th) + cornerMid_x;
+			int test_y = TuningVar.sightDist*((cornerMid_y-carMid.second)/edge3th) + cornerMid_y;
+			if(getWorldBit(test_x,test_y) && getWorldBit(test_x+1,test_y) && getWorldBit(test_x,test_y+1) && getWorldBit(test_x-1,test_y)){
+				//All black
+				return Feature::kRound;
+			}
+			else if(!getWorldBit(test_x,test_y) && !getWorldBit(test_x+1,test_y) && !getWorldBit(test_x,test_y+1) && !getWorldBit(test_x-1,test_y)){
+				return Feature::kCrossing;
+			}
+		}
+		//Special case: Enter crossing with extreme angle - Two corners are on the same side / Only one corner
+		else
+			return Feature::kSpecial;
+	}
+
+	//Return kNormal and wait for next testing
+	return Feature::kNormal;
+}
+
+
+/**
+ * @brief Feature Identification by corners
  *
  * Algorithm:
  * 1. Two corners connected together
@@ -489,10 +533,9 @@ bool FindEdges(){
  * @return: Feature: kCrossing, kRound
  * @note: Execute this function after calling FindEdges()
  */
-Feature featureIdent (){
+Feature featureIdent_Corner (){
 	std::pair<int, int> carMid(WorldSize.w/2,0);
 	std::pair<int, int> cornerMid;
-	const int sightDist = 10; // The distance from which the image pixel should be tested
 	//Normal case
 	if (left_corners.points.size() == 0 && right_corners.points.size() == 0){
 		return Feature::kNormal;
@@ -502,8 +545,8 @@ Feature featureIdent (){
 		int cornerMid_x = (left_corners.points.front().first + right_corners.points.front().first)/2; //corner midpoint x-cor
 		int cornerMid_y = (left_corners.points.front().second + right_corners.points.front().second)/2; //corner midpoint y-cor
 		int edge3th = sqrt(pow(cornerMid_x-carMid.first,2) + pow(cornerMid_y-carMid.second,2)); //Third edge of right triangle
-		int test_x = sightDist*((cornerMid_x-carMid.first)/edge3th) + cornerMid_x;
-		int test_y = sightDist*((cornerMid_y-carMid.second)/edge3th) + cornerMid_y;
+		int test_x = TuningVar.sightDist*((cornerMid_x-carMid.first)/edge3th) + cornerMid_x;
+		int test_y = TuningVar.sightDist*((cornerMid_y-carMid.second)/edge3th) + cornerMid_y;
 		if(getWorldBit(test_x,test_y) && getWorldBit(test_x+1,test_y) && getWorldBit(test_x,test_y+1) && getWorldBit(test_x-1,test_y)){
 			//All black
 			return Feature::kRound;
