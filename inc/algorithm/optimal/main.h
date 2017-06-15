@@ -78,7 +78,7 @@ struct {
 
 struct {
 	uint16_t edge_length = 159; //max length for an edge
-	uint16_t corner_min = 15, corner_max = 28; //thresold (in %) for corner detection
+	uint16_t corner_min = 15, corner_max = 30; //thresold (in %) for corner detection
 	uint16_t edge_dist_thresold = 30; //needed to be tuned, thresold for consideration of sudden change in edge width
 } TuningVar;
 

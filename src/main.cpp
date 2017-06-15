@@ -71,7 +71,7 @@ int main() {
   }
 
   // modify next line to switch between algorithms
-  constexpr Algorithm a = Algorithm::kDavid;
+  constexpr Algorithm a = Algorithm::kOptimal;
 
   // modify next line to enable/disable encoder
   constexpr bool has_encoder = true;

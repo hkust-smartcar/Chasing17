@@ -336,11 +336,11 @@ bool FindEdges(){
 		int CornerCheck = 0;
 		int total = 0;
 		auto last = left_edge.points.back();
-		if (last.first - 4 <= 0 || last.first + 4 > WorldSize.w - 1 || last.second - 4 <= 0 || last.second + 4 > WorldSize.h -1){
+		if (last.first - 5 <= 0 || last.first + 5 > WorldSize.w - 1 || last.second - 5 <= 0 || last.second + 5 > WorldSize.h -1){
 			continue;
 		}
-		for (int i = (last.first - 4); i <= (last.first + 4); i++){
-			for (int j = (last.second - 4); j <= (last.second + 4); j++){
+		for (int i = (last.first - 5); i <= (last.first + 5); i++){
+			for (int j = (last.second - 5); j <= (last.second + 5); j++){
 				CornerCheck += getWorldBit(i, j);
 				total++;
 			}
@@ -443,11 +443,11 @@ bool FindEdges(){
 				int CornerCheck = 0;
 				int total = 0;
 				auto last = right_edge.points.back();
-				if (last.first - 4 <= 0 || last.first + 4 > WorldSize.w - 1 || last.second - 4 <= 0 || last.second + 4 > WorldSize.h -1){
+				if (last.first - 5 <= 0 || last.first + 5 > WorldSize.w - 1 || last.second - 5 <= 0 || last.second + 5 > WorldSize.h -1){
 					continue;
 				}
-				for (int i = max(0, last.first - 4); i <= min(WorldSize.w-1, last.first + 4); i++){
-					for (int j = max(0, last.second - 4); j <= min(WorldSize.h-1, last.second + 4); j++){
+				for (int i = max(0, last.first - 5); i <= min(WorldSize.w-1, last.first + 5); i++){
+					for (int j = max(0, last.second - 5); j <= min(WorldSize.h-1, last.second + 5); j++){
 						CornerCheck += getWorldBit(i, j);
 						total++;
 					}

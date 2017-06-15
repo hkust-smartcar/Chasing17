@@ -104,16 +104,13 @@ void main() {
 
   char testChar[15] = {};
 
+  CarManager::SetTargetSpeed(8250);
   while (true) {
     if (time_img != System::Time()) {
       time_img = System::Time();
       if (time_img % 100 == 0) led0.Switch();
 		if (time_img % 15 == 0){
-		  unsigned s = usir.GetDistance();
-		  sprintf(testChar, "%.1f,%d,%.1f=%.1f\n", 1.0, s, 0.0, 1.0);
-		  const Byte testByte = 85;
-		  bt.SendBuffer(&testByte, 1);
-		  bt.SendStr(std::string(testChar));
+			CarManager::UpdateParameters();
 		}
     }
   }
