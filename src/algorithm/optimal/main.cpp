@@ -237,7 +237,7 @@ void PrintImage() {
  *    * two edge crosses each other (within the 3x3 range)
  *  - Consider whether a point is corner by using a 9x9 block
  */
-<<<<<<< HEAD
+
 bool FindEdges(){
 
 	has_inc_width_pt = false;
@@ -476,244 +476,7 @@ bool FindEdges(){
 }
 
 	return true;
-=======
-bool FindEdges() {
-  left_corners.points.clear();
-  right_corners.points.clear();
 
-  bool flag_break_left = left_edge.points.size() == 0;
-  bool flag_break_right = right_edge.points.size() == 0;
-
-  while ((!flag_break_left && !flag_break_right)
-      && (left_edge.points.size() <= 150 && right_edge.points.size() <= 150)) {
-
-    //LEFT
-    int error_cnt = -1;
-    int prev_size = left_edge.points.size();
-    if (!flag_break_left) {
-      if (prev_size == left_edge.points.size()) {
-        error_cnt++;
-        if (error_cnt > 3) {
-          return false;
-        }
-      }
-      prev_size = left_edge.points.size();
-      int prev_x = left_edge.points.back().first;
-      int prev_y = left_edge.points.back().second;
-
-      if (getWorldBit(prev_x, prev_y + 1) == 0) { //if white, find in CCW
-        if (prev_x == 1) {
-          left_edge.push(prev_x, prev_y + 1);
-        } else {
-          for (int i = 0; i < 8; i++) {
-            if (getWorldBit(prev_x + dx[i], prev_y + dy[i]) == 1) {
-              left_edge.push(prev_x + dx[i - 1], prev_y + dy[i - 1]);
-              break;
-            }
-          }
-        }
-      } else {
-        for (int i = 7; i >= 0; i--) {
-          if (getWorldBit(prev_x + dx[i], prev_y + dy[i]) == 0) {
-            if ((i == 6 || i == 5 || i == 7) && prev_x == 1) {
-              //need to check for trespassing
-              int cnt_black = 0;
-              for (int j = prev_y; j < WorldSize.h; j++) {
-                cnt_black += getWorldBit(WorldSize.w / 2, j);
-              }
-              if (cnt_black > 0.5 * (WorldSize.h - prev_y)) {
-                flag_break_left = true;
-                break;
-              }
-            }
-            left_edge.push(prev_x + dx[i], prev_y + dy[i]);
-            break;
-          }
-        }
-      }
-      if (left_edge.points.back() == left_edge.points[left_edge.size() - 2]) { //the edge start backtrack
-        left_edge.points.pop_back();
-        flag_break_left = true;
-      }
-      if (left_edge.points.back().second == WorldSize.h - 1) { //the edge reaches the top
-        flag_break_left = true;
-      }
-      {
-        uint16_t r_back_x = right_edge.points.back().first;
-        uint16_t r_back_y = right_edge.points.back().second;
-        uint16_t l_back_x = left_edge.points.back().first;
-        uint16_t l_back_y = left_edge.points.back().second;
-        bool status =
-            (r_back_x == l_back_x - 1 ||
-                r_back_x == l_back_x ||
-                r_back_x == l_back_x + 1) && (
-                r_back_y == r_back_y - 1 ||
-                    r_back_y == r_back_y ||
-                    r_back_y == r_back_y + 1);
-
-        if (status) { //two edges meet
-          for (int i = 0; i < min(10, min(right_edge.size(), left_edge.size())); i++) { //discard last 10 points
-            right_edge.points.pop_back();
-            left_edge.points.pop_back();
-          }
-          flag_break_left = true;
-        }
-      }
-
-      if (left_edge.points.back() == left_edge.points.front()) { //the edge loops back
-        for (int i = 0; i < left_edge.points.size() / 2; i++) {
-          left_edge.points.pop_back();
-        }
-        flag_break_left = true;
-      }
-
-      //Check corners
-      {
-        int CornerCheck = 0;
-        int total = 0;
-        auto last = left_edge.points.back();
-        if (last.first - 4 <= 0 || last.first + 4 > WorldSize.w - 1 || last.second - 4 <= 0
-            || last.second + 4 > WorldSize.h - 1) {
-          continue;
-        }
-        for (int i = (last.first - 4); i <= (last.first + 4); i++) {
-          for (int j = (last.second - 4); j <= (last.second + 4); j++) {
-            CornerCheck += getWorldBit(i, j);
-            total++;
-          }
-        }
-        //if in this threshold, consider as corner
-        if (CornerCheck > total * TuningVar.corner_min / 100 && CornerCheck < total * TuningVar.corner_max / 100) {
-          left_corners.push(last.first, last.second);
-        }
-      }
-    }
-
-    //RIGHT
-
-    error_cnt = -1;
-    prev_size = right_edge.points.size();
-
-    if (!flag_break_right) {
-      if (prev_size == right_edge.points.size()) {
-        error_cnt++;
-        if (error_cnt > 3) {
-          return false;
-        }
-      }
-      prev_size = right_edge.points.size();
-      int prev_x = right_edge.points.back().first;
-      int prev_y = right_edge.points.back().second;
-
-      if (getWorldBit(prev_x, prev_y + 1) == 0) { //if white, find in CW
-        if (prev_x == WorldSize.w - 1) {
-          right_edge.push(prev_x, prev_y + 1);
-        } else {
-          for (int i = 7; i >= 0; i--) {
-            if (getWorldBit(prev_x + dx[i], prev_y + dy[i]) == 1) {
-              right_edge.push(prev_x + dx[i + 1], prev_y + dy[i + 1]);
-              break;
-            }
-          }
-        }
-      } else {
-        for (int i = 0; i < 8; i++) {
-
-          if (getWorldBit(prev_x + dx[i], prev_y + dy[i]) == 0) {
-            if ((i == 2 || i == 1 || i == 3) && prev_x == WorldSize.w - 1) {
-              //need to check for trespassing
-              int cnt_black = 0;
-              for (int j = prev_y; j < WorldSize.h; j++) {
-                cnt_black += getWorldBit(WorldSize.w / 2, j);
-              }
-              if (cnt_black > 0.5 * (WorldSize.h - prev_y)) {
-                flag_break_right = true;
-                break;
-              }
-            }
-            right_edge.push(prev_x + dx[i], prev_y + dy[i]);
-            break;
-          }
-        }
-      }
-
-      if (right_edge.points.back() == right_edge.points[right_edge.size() - 2]) { //the edge start backtrack
-        right_edge.points.pop_back();
-        flag_break_right = true;
-      }
-
-      {
-        uint16_t r_back_x = right_edge.points.back().first;
-        uint16_t r_back_y = right_edge.points.back().second;
-        uint16_t l_back_x = left_edge.points.back().first;
-        uint16_t l_back_y = left_edge.points.back().second;
-        bool status =
-            (r_back_x == l_back_x - 1 ||
-                r_back_x == l_back_x ||
-                r_back_x == l_back_x + 1) && (
-                r_back_y == r_back_y - 1 ||
-                    r_back_y == r_back_y ||
-                    r_back_y == r_back_y + 1);
-
-        if (status) { //two edges meet
-          for (int i = 0; i < (10, min(right_edge.size(), left_edge.size())); i++) { //discard last 10 points
-            right_edge.points.pop_back();
-            left_edge.points.pop_back();
-          }
-          flag_break_right = true;
-        }
-      }
-
-      if (right_edge.points.back().second == WorldSize.h - 1) { //the edge reaches the top
-        flag_break_right = true;
-      }
-
-      if (right_edge.points.back() == right_edge.points.front()) { //the edge loops back
-        for (int i = 0; i < right_edge.points.size() / 2; i++) {
-          right_edge.points.pop_back();
-        }
-        flag_break_right = true;
-      }
-
-      //Check corners
-      {
-        int CornerCheck = 0;
-        int total = 0;
-        auto last = right_edge.points.back();
-        if (last.first - 4 <= 0 || last.first + 4 > WorldSize.w - 1 || last.second - 4 <= 0
-            || last.second + 4 > WorldSize.h - 1) {
-          continue;
-        }
-        for (int i = max(0, last.first - 4); i <= min(WorldSize.w - 1, last.first + 4); i++) {
-          for (int j = max(0, last.second - 4); j <= min(WorldSize.h - 1, last.second + 4); j++) {
-            CornerCheck += getWorldBit(i, j);
-            total++;
-          }
-        }
-
-        //if in this threshold, consider as corner
-        if (CornerCheck > total * TuningVar.corner_min / 100 && CornerCheck < total * TuningVar.corner_max / 100) {
-          right_corners.push(last.first, last.second);
-        }
-      }
-    }
-
-
-    // check if suddenly increase length
-    if (!has_inc_width_pt) {
-      if ((left_edge.points.back().first - right_edge.points.back().first) *
-          (left_edge.points.back().first - right_edge.points.back().first) +
-          (left_edge.points.back().second - right_edge.points.back().second) *
-              (left_edge.points.back().second - right_edge.points.back().second)
-          <= TuningVar.edge_dist_thresold) {
-        inc_width_pts.at(0) = left_edge.points.back();
-        inc_width_pts.at(1) = right_edge.points.back();
-      }
-    }
-  }
-
-  return true;
->>>>>>> f412ba61a35198740df19c3593eac2de5e4744b1
 }
 
 /**
@@ -768,7 +531,6 @@ Feature featureIdent_Width (){
  * @return: Feature: kCrossing, kRound
  * @note: Execute this function after calling FindEdges()
  */
-<<<<<<< HEAD
 Feature featureIdent_Corner (){
 	std::pair<int, int> carMid(WorldSize.w/2,0);
 	std::pair<int, int> cornerMid;
@@ -797,41 +559,7 @@ Feature featureIdent_Corner (){
 
 	//Return kNormal and wait for next testing
 	return Feature::kNormal;
-=======
-Feature featureIdent() {
-  std::pair<int, int> carMid(WorldSize.w / 2, 0);
-  std::pair<int, int> cornerMid;
-  const int sightDist = 10; // The distance from which the image pixel should be tested
-  //Normal case
-  if (left_corners.points.size() == 0 && right_corners.points.size() == 0) {
-    return Feature::kNormal;
-  }
-    //Two corner case
-  else if (left_corners.points.size() > 0 && right_corners.points.size() > 0) {
-    int cornerMid_x =
-        (left_corners.points.front().first + right_corners.points.front().first) / 2; //corner midpoint x-cor
-    int cornerMid_y =
-        (left_corners.points.front().second + right_corners.points.front().second) / 2; //corner midpoint y-cor
-    int edge3th =
-        sqrt(pow(cornerMid_x - carMid.first, 2) + pow(cornerMid_y - carMid.second, 2)); //Third edge of right triangle
-    int test_x = sightDist * ((cornerMid_x - carMid.first) / edge3th) + cornerMid_x;
-    int test_y = sightDist * ((cornerMid_y - carMid.second) / edge3th) + cornerMid_y;
-    if (getWorldBit(test_x, test_y) && getWorldBit(test_x + 1, test_y) && getWorldBit(test_x, test_y + 1)
-        && getWorldBit(test_x - 1, test_y)) {
-      //All black
-      return Feature::kRound;
-    } else if (!getWorldBit(test_x, test_y) && !getWorldBit(test_x + 1, test_y) && !getWorldBit(test_x, test_y + 1)
-        && !getWorldBit(test_x - 1, test_y)) {
-      return Feature::kCrossing;
-    }
-  }
-    //Special case: Enter crossing with extreme angle - Two corners are on the same side / Only one corner
-  else
-    return Feature::kSpecial;
 
-  //Return kNormal and wait for next testing
-  return Feature::kNormal;
->>>>>>> f412ba61a35198740df19c3593eac2de5e4744b1
 }
 
 /**
