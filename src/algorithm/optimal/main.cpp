@@ -510,6 +510,10 @@ bool FindEdges() {
 					<= TuningVar.edge_dist_thresold) {
 				inc_width_pts.at(0) = left_edge.points.back();
 				inc_width_pts.at(1) = right_edge.points.back();
+				pLcd->SetRegion(Lcd::Rect(inc_width_pts.at(0).first, WorldSize.h - inc_width_pts.at(0).second - 1, 4, 4));
+				pLcd->FillColor(Lcd::kYellow);
+				pLcd->SetRegion(Lcd::Rect(inc_width_pts.at(1).first, WorldSize.h - inc_width_pts.at(1).second - 1, 4, 4));
+				pLcd->FillColor(Lcd::kYellow);
 				has_inc_width_pt = true;
 			}
 		}
