@@ -1,53 +1,63 @@
-//
-// Created by david on 8/6/2017.
-//
+/*
+ * servo_controller.cpp
+ *
+ * Copyright (c) 2014-2017 HKUST SmartCar Team
+ * Refer to LICENSE for details
+ *
+ * Author: David Mak (Derppening)
+ *
+ * Implementations for ServoController class.
+ *
+ */
 
 #include "util/servo_controller.h"
+
+#include "util/util.h"
+
+using libsc::LcdConsole;
 
 namespace util {
 
 constexpr float ServoController::kP;
-constexpr float ServoController::kI;
 constexpr float ServoController::kD;
 
-ServoController::ServoController(Mpu9250* c, libsc::FutabaS3010* s)
-    : compass_(c), servo_(s) {}
+ServoController::ServoController(libsc::FutabaS3010* s)
+    : servo_(s) {}
 
 ServoController::~ServoController() {
   servo_.reset();
-  compass_.reset();
 }
 
 void ServoController::DoCorrection() {
-  // sets the target compass angle to the new value, if committing
+  last_servo_duration_ = GetTimeElapsed();
+
   if (commit_target_flag_) {
-    target_compass_angle_ += servo_change_target_;
-    target_compass_angle_ %= 360;
+    curr_servo_target_ = servo_target_;
     commit_target_flag_ = false;
   }
 
-  UpdateCompass();
+  last_servo_vals_.push_back(curr_servo_target_);
+  while (last_servo_vals_.size() > 5) last_servo_vals_.erase(last_servo_vals_.begin());
+  average_servo_val_ = 0;
+  for (auto& m : last_servo_vals_) {
+    average_servo_val_ += m;
+  }
+  average_servo_val_ /= last_servo_vals_.size();
 
-  int16_t angle_diff = CalcAngleDiff(target_compass_angle_, last_compass_angle_);
-  prev_error_ = angle_diff;
-  int8_t left_speed = CarManager::GetLeftSpeed();
-  int8_t right_speed = CarManager::GetRightSpeed();
+  CarManager::ServoBounds s = CarManager::GetServoBounds();
+  CarManager::ServoAngles a = CarManager::GetServoAngles();
 
-  uint16_t new_angle = servo_->GetDegree();
-  new_angle -= angle_diff * kP;
-  new_angle -= (angle_diff - prev_error_) / (last_compass_duration_ / 1000.0) * kD;
+  int16_t target_angle_change = curr_servo_target_;
+  uint16_t new_angle = s.kCenter;
 
-  CarManager::ServoBounds s;
-  switch (CarManager::GetCar()) {
-    case CarManager::Car::kCar1:
-      s = CarManager::kBoundsCar1;
-      break;
-    case CarManager::Car::kCar2:
-      s = CarManager::kBoundsCar2;
-      break;
-    default:
-      // all cases covered
-      break;
+  target_angle_change *= kP;
+  last_servo_error_ = ((target_angle_change - average_servo_val_) / (last_servo_duration_ / 1000.0)) * kD;
+  target_angle_change += ((target_angle_change - average_servo_val_) / (last_servo_duration_ / 1000.0)) * kD;
+
+  if (target_angle_change > 0) {
+    new_angle -= (s.kCenter - s.kRightBound) * (static_cast<float>(curr_servo_target_) / a.kRightAngle);
+  } else if (curr_servo_target_ < 0) {
+    new_angle -= (s.kLeftBound - s.kCenter) * (static_cast<float>(curr_servo_target_) / a.kLeftAngle);
   }
 
   if (new_angle > s.kLeftBound) {
@@ -57,10 +67,13 @@ void ServoController::DoCorrection() {
   }
 
   servo_->SetDegree(new_angle);
+
+  last_servo_target_ = curr_servo_target_;
+  time_servo_start_ = libsc::System::Time();
 }
 
 void ServoController::SetTargetAngle(int16_t change, bool commit_now) {
-  servo_change_target_ = change;
+  servo_target_ = change;
   if (commit_now) {
     CommitTargetAngle();
   }
@@ -71,21 +84,28 @@ void ServoController::CommitTargetAngle() {
   DoCorrection();
 }
 
-void ServoController::UpdateCompass() {
-  last_compass_duration_ = GetTimeElapsed();
+ServoControllerDebug::ServoControllerDebug(ServoController* servo_ctrl) : servo_controller_(servo_ctrl)
+{}
 
-  // TODO(Derppening): Replace with function call to Mpu9250
-  last_compass_angle_ /* = compass_->GetValues() */;
-
-  last_ten_compass_val_.push_back(last_compass_angle_);
-  while (last_ten_compass_val_.size() > 10) last_ten_compass_val_.erase(last_ten_compass_val_.begin());
-  for (auto& m : last_ten_compass_val_) {
-    average_compass_val_ += (m + 360);
+void ServoControllerDebug::OutputErrorValues(LcdConsole* console) const {
+  std::string s = "";
+  for (auto& a : servo_controller_->last_servo_vals_) {
+    s += util::to_string(a) + " ";
   }
-  average_compass_val_ %= 360;
-  average_compass_val_ /= last_ten_compass_val_.size();
-
-  time_encoder_start_ = libsc::System::Time();
+  util::ConsoleClearRow(console, 5);
+  util::ConsoleWriteString(console, "5avg: " + util::to_string(servo_controller_->average_servo_val_));
+  util::ConsoleClearRow(console, 6);
+  util::ConsoleWriteString(console, "v: " + s);
 }
 
+void ServoControllerDebug::OutputServoValues(LcdConsole* console) const {
+  util::ConsoleClearRow(console, 0);
+  util::ConsoleWriteString(console, "raw: " + util::to_string(servo_controller_->GetRawAngle()));
+  util::ConsoleClearRow(console, 1);
+  util::ConsoleWriteString(console, "trgt: " + util::to_string(servo_controller_->curr_servo_target_));
+  util::ConsoleClearRow(console, 2);
+  util::ConsoleWriteString(console, "last: " + util::to_string(servo_controller_->last_servo_target_));
+  util::ConsoleClearRow(console, 3);
+  util::ConsoleWriteString(console, "s_err: " + util::to_string(servo_controller_->last_servo_error_));
+}
 }  // namespace util
