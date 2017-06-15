@@ -36,7 +36,7 @@ namespace util {
 class Mpc {
  public:
   /**
-   * Constructor accepting an already-created encoder object.
+   * Default constructor
    *
    * @param e Pointer to an encoder object
    * @param m Pointer to an AlternateMotor object
@@ -50,7 +50,7 @@ class Mpc {
   /**
    * Sets @c commit_target_flag.
    *
-   * @param b If true, next call to @c DoCorrection() will use the target speed
+   * @param flag If true, next call to @c DoCorrection() will use the target speed
    * for correction. Otherwise the current speed will be used.
    */
   void SetCommitFlag(bool flag) { commit_target_flag_ = flag; }
@@ -97,7 +97,7 @@ class Mpc {
 
   /**
    * Does motor power correction using encoder, and resets the encoder count.
-   * Also commits the user-given target speed if @c commit_target_flag is true.
+   * Also commits the user-given target speed if @c commit_target_flag_ is true.
    */
   void DoCorrection();
 
@@ -201,13 +201,22 @@ class Mpc {
    */
   libsc::Timer::TimerInt last_encoder_duration_ = 0;
 
+  /**
+   * Motor protection override count, in no. of cycles.
+   */
   uint8_t force_start_count_ = 0;
+
+  /**
+   * Number of cycles to wait when overriding motor protection
+   */
+  static constexpr uint8_t kOverrideWaitCycles = 50;
+  /**
+   * The minimum encoder value before motor protection kicks in
+   */
+  static constexpr uint16_t kProtectionMinCount = 250;
 
   std::shared_ptr<libsc::AlternateMotor> motor_;
   std::shared_ptr<libsc::DirEncoder> encoder_;
-
-  static constexpr uint8_t kOverrideWaitCycles = 50;
-  static constexpr uint16_t kProtectionMinCount = 250;
 
   friend class MpcDebug;
   friend class MpcDualDebug;
@@ -219,7 +228,7 @@ class Mpc {
 class MpcDebug {
  public:
   /**
-   * Constructor which accepts an already-created @c Mpc object.
+   * Default constructor.
    *
    * @param mpc Pointer to the @c mpc object.
    */

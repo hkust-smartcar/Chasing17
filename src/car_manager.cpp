@@ -161,8 +161,8 @@ void CarManager::SetTargetAngle(const int16_t angle) {
 
     if (new_angle > a.kRightAngle) {
       new_angle = a.kRightAngle;
-    } else if (new_angle < a.kLeftAngle) {
-      new_angle = a.kLeftAngle;
+    } else if (new_angle < -a.kLeftAngle) {
+      new_angle = -a.kLeftAngle;
     }
 
     servo_controller_->SetTargetAngle(new_angle, false);
@@ -203,10 +203,12 @@ void CarManager::UpdateSpeed() {
     return;
   }
   if (epc_left_ != nullptr) {
+    epc_left_->SetCommitFlag(true);
     epc_left_->DoCorrection();
     left_speed_ = epc_left_->GetCurrentSpeed() / 100;
   }
   if (epc_right_ != nullptr) {
+    epc_right_->SetCommitFlag(true);
     epc_right_->DoCorrection();
     right_speed_ = epc_right_->GetCurrentSpeed() / 100;
   }
@@ -214,6 +216,8 @@ void CarManager::UpdateSpeed() {
 
 void CarManager::UpdateServoAngle() {
   if (servo_controller_ != nullptr) {
+    servo_controller_->SetCommitFlag(true);
+    servo_controller_->DoCorrection();
     servo_deg_ = servo_controller_->GetRawAngle();
     return;
   }
