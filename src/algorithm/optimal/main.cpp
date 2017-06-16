@@ -416,7 +416,7 @@ bool FindEdges(){
 							+ (left_edge.points.back().second - right_edge.points.back().second)
 							* (left_edge.points.back().second - right_edge.points.back().second);
 			//Straight line + Starting line judgement
-			if(dist <= TuningVar.track_width_threshold + 5 && dist >= TuningVar.track_width_threshold - 5){
+			if(left_edge.points.size() > 1 && right_edge.points.size() > 1 && abs(dist-prev_track_width) < 3 ){
 				staright_line_edge_count++;
 				//Starting line judgement
 				uint16_t black_count = 0;
@@ -508,7 +508,10 @@ CarManager::Feature featureIdent_Width() {
  */
 CarManager::Feature featureIdent_Corner() {
 	std::pair<int, int> carMid(WorldSize.w / 2, 0);
-	std::pair<int, int> cornerMid;
+	/*FOR DEBUGGING*/
+	pLcd->SetRegion(Lcd::Rect(carMid.first, WorldSize.h - carMid.second - 1, 2, 2));
+	pLcd->FillColor(Lcd::kRed);
+	/*END OF DEBUGGING*/
 	//1. Straight line
 	if(is_staright_line) {
 		return CarManager::Feature::kStraight;
@@ -539,9 +542,17 @@ CarManager::Feature featureIdent_Corner() {
 				+ right_corners.points.front().first) / 2; //corner midpoint x-cor
 		int cornerMid_y = (left_corners.points.front().second
 				+ right_corners.points.front().second) / 2; //corner midpoint y-cor
-		int edge3th = sqrt(pow(cornerMid_x - carMid.first, 2) + pow(cornerMid_y - carMid.second, 2)); //Third edge of right triangle
-		int test_x = TuningVar.sightDist * ((cornerMid_x - carMid.first) / edge3th) + cornerMid_x;
+		/*FOR DEBUGGING*/
+		pLcd->SetRegion(Lcd::Rect(cornerMid_x, WorldSize.h - cornerMid_y - 1, 2, 2));
+		pLcd->FillColor(Lcd::kRed);
+		/*END OF DEBUGGING*/
+		int edge3th = sqrt(pow(abs(cornerMid_x - carMid.first), 2) + pow(abs(cornerMid_y - carMid.second), 2)); //Third edge of right triangle
+		int test_x = TuningVar.sightDist * ((cornerMid_x - carMid.first) / edge3th) + cornerMid_x; //'-': The image is in opposite direction
 		int test_y = TuningVar.sightDist * ((cornerMid_y - carMid.second) / edge3th) + cornerMid_y;
+		/*FOR DEBUGGING*/
+		pLcd->SetRegion(Lcd::Rect(test_x, WorldSize.h - test_y - 1, 4, 4));
+		pLcd->FillColor(Lcd::kRed);
+		/*END OF DEBUGGING*/
 		if (getWorldBit(test_x, test_y)
 				&& getWorldBit(test_x + 1, test_y)
 				&& getWorldBit(test_x, test_y + 1)
@@ -586,15 +597,6 @@ void PrintCorner(Corners corners, uint16_t color) {
 				Lcd::Rect(entry.first, WorldSize.h - entry.second - 1, 4, 4));
 		pLcd->FillColor(color);
 	}
-}
-
-/**
- * @brief Identify feature
- * TODO (King)
- */
-CarManager::Feature IdentifyFeat() {
-
-	return CarManager::Feature::kStraight;
 }
 
 /**
@@ -753,6 +755,8 @@ void main(CarManager::Car c) {
 	cameraConfig.w = CameraSize.w;
 	cameraConfig.h = CameraSize.h;
 	cameraConfig.fps = k60::Ov7725Configurator::Config::Fps::kHigh;
+	cameraConfig.contrast = 0x3D;
+	cameraConfig.brightness = 0x00;
 	std::unique_ptr<k60::Ov7725> camera(new k60::Ov7725(cameraConfig));
 	pCamera = std::move(camera);
 	pCamera->Start();
@@ -865,27 +869,27 @@ void main(CarManager::Car c) {
 				CarManager::Feature a = featureIdent_Corner();
 				switch(a){
 				case CarManager::Feature::kCross:
-					pLcd->SetRegion(Lcd::Rect(0,128,14,14));
+					pLcd->SetRegion(Lcd::Rect(0,0,128,15));
 					pWriter->WriteString("Crossing");
 					break;
 				case CarManager::Feature::kRoundabout:
-					pLcd->SetRegion(Lcd::Rect(0,128,14,14));
+					pLcd->SetRegion(Lcd::Rect(0,0,128,15));
 					pWriter->WriteString("Roundabout");
 					break;
 				case CarManager::Feature::kNormal:
-					pLcd->SetRegion(Lcd::Rect(0,128,14,14));
+					pLcd->SetRegion(Lcd::Rect(0,0,128,15));
 					pWriter->WriteString("Normal");
 					break;
 				case CarManager::Feature::kSpecial:
-					pLcd->SetRegion(Lcd::Rect(0,128,14,14));
+					pLcd->SetRegion(Lcd::Rect(0,0,128,15));
 					pWriter->WriteString("Special(Exit of Roundabout)");
 					break;
 				case CarManager::Feature::kStart:
-					pLcd->SetRegion(Lcd::Rect(0,128,14,14));
+					pLcd->SetRegion(Lcd::Rect(0,0,128,15));
 					pWriter->WriteString("Starting line");
 					break;
 				case CarManager::Feature::kStraight:
-					pLcd->SetRegion(Lcd::Rect(0,128,14,14));
+					pLcd->SetRegion(Lcd::Rect(0,0,128,15));
 					pWriter->WriteString("Straight");
 					break;
 				}
