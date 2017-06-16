@@ -77,10 +77,17 @@ struct {
 } WorldSize;
 
 struct {
+	uint16_t starting_y = 10; //the starting y for edge detection
 	uint16_t edge_length = 159; //max length for an edge
-	uint16_t corner_min = 20, corner_max = 30; //thresold (in %) for corner detection
-	uint16_t edge_dist_thresold = 1600; //needed to be tuned, thresold for consideration of sudden change in edge width
-	uint16_t sightDist = 50; // The distance from which the image pixel should be tested
+
+	uint16_t corner_range = 5; //the square for detection would be in size corener_range*2+1
+	float 	 corner_height_ratio = 2.7; //the max height for detection would be WorldSize.h/corner_height_ratio
+	uint16_t corner_min = 15, corner_max = 33; //threshold (in %) for corner detection
+	uint16_t min_corners_dist = 7; // Manhattan dist threshold for consecutive corners
+	uint16_t min_edges_dist = 7; // Manhattan dist threshold for edges
+	uint16_t track_width_threshold = 1800; //track width threshold for consideration of sudden change
+	uint16_t track_width_change_threshold = 600; //track width cahgne treshold for consideration of sudden change
+	uint16_t sightDist = 10; // The distance from which the image pixel should be tested
 } TuningVar;
 
 /**
