@@ -498,6 +498,7 @@ bool FindEdges() {
 			}
 		}
 
+
 		// check if suddenly increase length
 		if (!has_inc_width_pt) {
 			if ((left_edge.points.back().first - right_edge.points.back().first)
@@ -507,13 +508,13 @@ bool FindEdges() {
 							- right_edge.points.back().second)
 							* (left_edge.points.back().second
 									- right_edge.points.back().second)
-					<= TuningVar.edge_dist_thresold) {
+					>= TuningVar.edge_dist_thresold) {
 				inc_width_pts.at(0) = left_edge.points.back();
 				inc_width_pts.at(1) = right_edge.points.back();
 				pLcd->SetRegion(Lcd::Rect(inc_width_pts.at(0).first, WorldSize.h - inc_width_pts.at(0).second - 1, 4, 4));
-				pLcd->FillColor(Lcd::kYellow);
+				pLcd->FillColor(Lcd::kCyan);
 				pLcd->SetRegion(Lcd::Rect(inc_width_pts.at(1).first, WorldSize.h - inc_width_pts.at(1).second - 1, 4, 4));
-				pLcd->FillColor(Lcd::kYellow);
+				pLcd->FillColor(Lcd::kCyan);
 				has_inc_width_pt = true;
 			}
 		}
@@ -581,7 +582,7 @@ Feature featureIdent_Width() {
  * 2. Perpendicular direction, search points @sightDistance away.
  * 3. Black (1) is roundabout, White (0) is crossing
  *
- * @return: Feature: kCrossing, kRound
+ * @return: Feature: kCrossing, kRound, kStart
  * @note: Execute this function after calling FindEdges()
  */
 Feature featureIdent_Corner() {
@@ -591,9 +592,25 @@ Feature featureIdent_Corner() {
 	if (left_corners.points.size() == 0 && right_corners.points.size() == 0) {
 		return Feature::kNormal;
 	}
-	//Two corner case
+
 	else if (left_corners.points.size() > 0
 			&& right_corners.points.size() > 0) {
+		//Only assume the first two corners are useful
+		//TODO: Double check corner "candidates" - slope<=0 (OR move this judging to FeatureIdent_Corner() func.)
+		std::vector<std::pair<uint16_t, uint16_t>>::iterator it;
+		//Check left edge
+		it = find (left_edge.points.begin(),left_edge.points.end(), right_corners.points.front());
+		std::pair<uint16_t, uint16_t> edge_corner_front;
+		std::pair<uint16_t, uint16_t> edge_corner_back;
+		if (it != left_edge.points.end() && (it+3 < left_edge.points.end()) && (it-3 > left_edge.points.begin())){
+			edge_corner_front  = *(it+3);
+			edge_corner_back = *(it-3);
+		}
+		//Check right edge
+
+
+
+		//Two corner case
 		int cornerMid_x = (left_corners.points.front().first
 				+ right_corners.points.front().first) / 2; //corner midpoint x-cor
 		int cornerMid_y = (left_corners.points.front().second
@@ -618,6 +635,7 @@ Feature featureIdent_Corner() {
 		}
 	}
 	//Special case: Enter crossing with extreme angle - Two corners are on the same side / Only one corner
+	//TODO: Distinguish the starting line below
 	else
 		return Feature::kSpecial;
 
@@ -913,13 +931,21 @@ void main(CarManager::Car c) {
 				}; //Find edges
 				PrintEdge(left_edge, Lcd::kRed); //Print left_edge
 				PrintEdge(right_edge, Lcd::kBlue); //Print right_edge
+				if (featureIdent_Corner() == Feature::kCrossing){
+					pLcd->SetRegion(Lcd::Rect(0,0,128,15));
+					pWriter->WriteString("Crossing");
+				}
+				else if(featureIdent_Corner() == Feature::kRound){
+					pLcd->SetRegion(Lcd::Rect(0,0,128,15));
+					pWriter->WriteString("Roundabout");
+				}
 				PrintCorner(left_corners, Lcd::kPurple); //Print left_corner
 				PrintCorner(right_corners, Lcd::kPurple); //Print right_corner
 //				CarManager::Feature feature = IdentifyFeat(); //Identify feature
-				GenPath(); //Generate path
+//				GenPath(); //Generate path
 
 //				pServo->SetDegree(servo_bounds.kCenter-Interpret());
-				PrintEdge(path, Lcd::kGreen); //Print path
+//				PrintEdge(path, Lcd::kGreen); //Print path
 				led0.Switch(); //heart beat
 			}
 		}
