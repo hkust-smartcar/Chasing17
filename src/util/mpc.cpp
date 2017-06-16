@@ -12,6 +12,7 @@
 
 #include "util/mpc.h"
 
+#include <cmath>
 #include <cstdint>
 
 #include "libsc/alternate_motor.h"
@@ -59,7 +60,7 @@ void Mpc::SetTargetSpeed(const int16_t speed, bool commit_now) {
 }
 
 void Mpc::AddToTargetSpeed(const int16_t d_speed, bool commit_now) {
-  target_speed_ += d_speed;
+  target_speed_ += target_speed_ > 0 ? d_speed : -d_speed;
   if (commit_now) {
     CommitTargetSpeed();
   }
@@ -99,7 +100,7 @@ void Mpc::DoCorrection() {
 
   // get the speed difference and add power linearly.
   // bigger difference = higher power difference
-  int16_t speed_diff = static_cast<int16_t>(abs(curr_speed_) - abs(average_encoder_val_));
+  int16_t speed_diff = static_cast<int16_t>(abs(curr_speed_) - std::fabs(average_encoder_val_));
   motor_->AddPower(speed_diff * kP);
 
   // add the speed difference in consideration to the cumulative error
@@ -127,7 +128,7 @@ void Mpc::CommitTargetSpeed() {
 
 void Mpc::SetForceOverride(bool force_override) {
   if (force_override) {
-    force_start_count_ = 10;
+    force_start_count_ = kOverrideWaitCycles;
   } else {
     force_start_count_ = 0;
   }
@@ -142,7 +143,7 @@ void Mpc::UpdateEncoder() {
   last_ten_encoder_val_.push_back(last_encoder_val_);
   while (last_ten_encoder_val_.size() > 10) last_ten_encoder_val_.erase(last_ten_encoder_val_.begin());
   average_encoder_val_ = 0;
-  for (auto& m : last_ten_encoder_val_){
+  for (auto& m : last_ten_encoder_val_) {
 	  average_encoder_val_ += m;
   }
   average_encoder_val_ /= last_ten_encoder_val_.size();
