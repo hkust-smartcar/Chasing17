@@ -59,7 +59,10 @@ class CarManager final {
   enum struct Feature : uint8_t {
     kStraight = 0,
     kRoundabout,
-    kCross
+    kCross,
+	kNormal,
+	kStart,
+	kSpecial
   };
 
   /**

@@ -84,9 +84,12 @@ struct {
 	uint16_t corner_min = 15, corner_max = 33; //threshold (in %) for corner detection
 	uint16_t min_corners_dist = 7; // Manhattan dist threshold for consecutive corners
 	uint16_t min_edges_dist = 7; // Manhattan dist threshold for edges
-	uint16_t track_width_threshold = 1800; //track width threshold for consideration of sudden change
-	uint16_t track_width_change_threshold = 600; //track width cahgne treshold for consideration of sudden change
-	uint16_t sightDist = 10; // The distance from which the image pixel should be tested
+	uint16_t track_width_threshold = 1800; //track width threshold for consideration of sudden change (square)
+	uint16_t track_width_change_threshold = 600; //track width change threshold for consideration of sudden change
+	uint16_t sightDist = 50; // The distance from which the image pixel should be tested
+	uint16_t straight_line_threshold = 150; // The threshold num. of equal width for straight line detection
+	uint16_t stop_distance = 10; // The distance away from starting line - for stopping
+	float black_div_length_ratio_thresold = 0.5; // ratio for black points/edge length. Used for detecting starting line
 } TuningVar;
 
 /**
@@ -98,9 +101,6 @@ enum struct TranslateType {
 	kNone = 0, kLeftNull, kRightNull
 };
 
-enum Feature {
-	kCrossing = 0, kRound, kNormal, kSpecial
-};
 
 
 }

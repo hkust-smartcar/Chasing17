@@ -43,6 +43,8 @@ Corners left_corners;
 Corners right_corners;
 std::array<std::pair<uint16_t, uint16_t>, 2> inc_width_pts; //0:left, 1:right
 bool has_inc_width_pt = false;
+bool is_staright_line = false;
+bool is_start_line = false;
 uint16_t prev_track_width = 0;
 const Byte* CameraBuf;
 //Byte WorldBuf[128*20];
@@ -380,10 +382,14 @@ bool FindOneRightEdge(){
  * - Stops if two edges are getting close
  */
 bool FindEdges(){
+	is_staright_line = false;
+	has_inc_width_pt = false;
+	is_start_line = false;
 	left_corners.points.clear();
 	right_corners.points.clear();
 	bool flag_break_left = left_edge.points.size() == 0;
 	bool flag_break_right = right_edge.points.size() == 0;
+	uint16_t staright_line_edge_count = 0; // Track the num. of equal width
 	while (left_edge.points.size() <= 100 && right_edge.points.size() <= 100 && (!flag_break_left || !flag_break_right)){
 		if (!flag_break_left)	flag_break_left = !FindOneLeftEdge();
 		if (!flag_break_right)	flag_break_right = !FindOneRightEdge();
@@ -409,14 +415,31 @@ bool FindEdges(){
 							* (left_edge.points.back().first - right_edge.points.back().first)
 							+ (left_edge.points.back().second - right_edge.points.back().second)
 							* (left_edge.points.back().second - right_edge.points.back().second);
+			//Straight line + Starting line judgement
+			if(dist <= TuningVar.track_width_threshold + 5 && dist >= TuningVar.track_width_threshold - 5){
+				staright_line_edge_count++;
+				//Starting line judgement
+				uint16_t black_count = 0;
+				for (uint16_t i = left_edge.points.front().first; i< right_edge.points.front().first ; i++){
+					if(getWorldBit(i, (left_edge.points.front().second + right_edge.points.front().second)/2 ) == 1){
+						black_count++;
+					}
+				}
+				//calculate the ratio
+				if(black_count/abs(left_edge.points.front().first - right_edge.points.front().first) > TuningVar.black_div_length_ratio_thresold){
+					is_start_line = true;
+				}
+			}
 			if (dist >= TuningVar.track_width_threshold && dist - prev_track_width >= TuningVar.track_width_change_threshold) {
 				inc_width_pts.at(0) = left_edge.points.back();
 				inc_width_pts.at(1) = right_edge.points.back();
 				has_inc_width_pt = true;
 			} else prev_track_width = dist;
 		}
-
-
+	}
+	//Straight line judgement
+	if (staright_line_edge_count >= TuningVar.straight_line_threshold){
+		is_staright_line = true;
 	}
 	return true;
 }
@@ -432,7 +455,7 @@ bool FindEdges(){
  * @return: Feature: kCrossing, kRound...
  * @note: Execute this function after calling FindEdges() only when width sudden increase is detected
  */
-Feature featureIdent_Width() {
+CarManager::Feature featureIdent_Width() {
 	std::pair<int, int> carMid(WorldSize.w / 2, 0);
 	std::pair<int, int> cornerMid;
 	//Width increase case
@@ -450,25 +473,26 @@ Feature featureIdent_Width() {
 					* ((cornerMid_x - carMid.first) / edge3th) + cornerMid_x;
 			int test_y = TuningVar.sightDist
 					* ((cornerMid_y - carMid.second) / edge3th) + cornerMid_y;
-			if (getWorldBit(test_x, test_y) && getWorldBit(test_x + 1, test_y)
+			if (getWorldBit(test_x, test_y)
+					&& getWorldBit(test_x + 1, test_y)
 					&& getWorldBit(test_x, test_y + 1)
 					&& getWorldBit(test_x - 1, test_y)) {
 				//All black
-				return Feature::kRound;
+				return CarManager::Feature::kRoundabout;
 			} else if (!getWorldBit(test_x, test_y)
 					&& !getWorldBit(test_x + 1, test_y)
 					&& !getWorldBit(test_x, test_y + 1)
 					&& !getWorldBit(test_x - 1, test_y)) {
-				return Feature::kCrossing;
+				return CarManager::Feature::kCross;
 			}
 		}
 		//Special case: Enter crossing with extreme angle - Two corners are on the same side / Only one corner
 		else
-			return Feature::kSpecial;
+			return CarManager::Feature::kSpecial;
 	}
 
 	//Return kNormal and wait for next testing
-	return Feature::kNormal;
+	return CarManager::Feature::kNormal;
 }
 
 /**
@@ -482,46 +506,63 @@ Feature featureIdent_Width() {
  * @return: Feature: kCrossing, kRound
  * @note: Execute this function after calling FindEdges()
  */
-Feature featureIdent_Corner() {
+CarManager::Feature featureIdent_Corner() {
 	std::pair<int, int> carMid(WorldSize.w / 2, 0);
 	std::pair<int, int> cornerMid;
-	//Normal case
-	if (left_corners.points.size() == 0 && right_corners.points.size() == 0) {
-		return Feature::kNormal;
+	//1. Straight line
+	if(is_staright_line) {
+		return CarManager::Feature::kStraight;
 	}
-	//Two corner case
-	else if (left_corners.points.size() > 0
-			&& right_corners.points.size() > 0) {
+
+	//2. Start line
+	if (is_start_line) {
+		return CarManager::Feature::kStart;
+	}
+
+	/*Only assume the first two corners are useful*/
+	if (left_corners.points.size() > 0 && right_corners.points.size() > 0) {
+		/*TODO: Double check corner "candidates" - slope<=0
+		std::vector<std::pair<uint16_t, uint16_t>>::iterator it;
+		//Check left edge
+		it = find (left_edge.points.begin(),left_edge.points.end(), right_corners.points.front());
+		std::pair<uint16_t, uint16_t> edge_corner_front;
+		std::pair<uint16_t, uint16_t> edge_corner_back;
+		if (it != left_edge.points.end() && (it+3 < left_edge.points.end()) && (it-3 > left_edge.points.begin())){
+			edge_corner_front  = *(it+3);
+			edge_corner_back = *(it-3);
+		}
+		//Check right edge
+		**/
+
+		//3. More than two valid corner case
 		int cornerMid_x = (left_corners.points.front().first
 				+ right_corners.points.front().first) / 2; //corner midpoint x-cor
 		int cornerMid_y = (left_corners.points.front().second
 				+ right_corners.points.front().second) / 2; //corner midpoint y-cor
-		int edge3th = sqrt(
-				pow(cornerMid_x - carMid.first, 2)
-						+ pow(cornerMid_y - carMid.second, 2)); //Third edge of right triangle
-		int test_x = TuningVar.sightDist
-				* ((cornerMid_x - carMid.first) / edge3th) + cornerMid_x;
-		int test_y = TuningVar.sightDist
-				* ((cornerMid_y - carMid.second) / edge3th) + cornerMid_y;
-		if (getWorldBit(test_x, test_y) && getWorldBit(test_x + 1, test_y)
+		int edge3th = sqrt(pow(cornerMid_x - carMid.first, 2) + pow(cornerMid_y - carMid.second, 2)); //Third edge of right triangle
+		int test_x = TuningVar.sightDist * ((cornerMid_x - carMid.first) / edge3th) + cornerMid_x;
+		int test_y = TuningVar.sightDist * ((cornerMid_y - carMid.second) / edge3th) + cornerMid_y;
+		if (getWorldBit(test_x, test_y)
+				&& getWorldBit(test_x + 1, test_y)
 				&& getWorldBit(test_x, test_y + 1)
 				&& getWorldBit(test_x - 1, test_y)) {
 			//All black
-			return Feature::kRound;
+			return CarManager::Feature::kRoundabout;
 		} else if (!getWorldBit(test_x, test_y)
 				&& !getWorldBit(test_x + 1, test_y)
 				&& !getWorldBit(test_x, test_y + 1)
 				&& !getWorldBit(test_x - 1, test_y)) {
-			return Feature::kCrossing;
+			return CarManager::Feature::kCross;
 		}
 	}
-	//Special case: Enter crossing with extreme angle - Two corners are on the same side / Only one corner
-	else
-		return Feature::kSpecial;
 
-	//Return kNormal and wait for next testing
-	return Feature::kNormal;
+	//4. Only one corner case: Enter crossing with extreme angle - Two corners are on the same side / Only one corner
+	else if (left_corners.points.size() > 0 || right_corners.points.size() > 0){
+		return CarManager::Feature::kSpecial;
+	}
 
+	//5. Nothing special: Return kNormal and wait for next testing
+	return CarManager::Feature::kNormal;
 }
 
 /**
@@ -821,7 +862,34 @@ void main(CarManager::Car c) {
 				PrintEdge(right_edge, Lcd::kBlue); //Print right_edge
 				PrintCorner(left_corners, Lcd::kPurple); //Print left_corner
 				PrintCorner(right_corners, Lcd::kPurple); //Print right_corner
-				PrintSuddenChangeTrackWidthLocation(Lcd::kYellow); //Print sudden change track width location
+				CarManager::Feature a = featureIdent_Corner();
+				switch(a){
+				case CarManager::Feature::kCross:
+					pLcd->SetRegion(Lcd::Rect(0,128,14,14));
+					pWriter->WriteString("Crossing");
+					break;
+				case CarManager::Feature::kRoundabout:
+					pLcd->SetRegion(Lcd::Rect(0,128,14,14));
+					pWriter->WriteString("Roundabout");
+					break;
+				case CarManager::Feature::kNormal:
+					pLcd->SetRegion(Lcd::Rect(0,128,14,14));
+					pWriter->WriteString("Normal");
+					break;
+				case CarManager::Feature::kSpecial:
+					pLcd->SetRegion(Lcd::Rect(0,128,14,14));
+					pWriter->WriteString("Special(Exit of Roundabout)");
+					break;
+				case CarManager::Feature::kStart:
+					pLcd->SetRegion(Lcd::Rect(0,128,14,14));
+					pWriter->WriteString("Starting line");
+					break;
+				case CarManager::Feature::kStraight:
+					pLcd->SetRegion(Lcd::Rect(0,128,14,14));
+					pWriter->WriteString("Straight");
+					break;
+				}
+//				PrintSuddenChangeTrackWidthLocation(Lcd::kYellow); //Print sudden change track width location
 //				CarManager::Feature feature = IdentifyFeat(); //Identify feature
 				GenPath(); //Generate path
 
