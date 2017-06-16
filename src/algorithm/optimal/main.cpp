@@ -70,9 +70,8 @@ int min(int a, int b) {
 }
 
 // for edge finding, in CCW dir
-const int dx[9] = { 0, -1, -1, -1, 0, 1, 1, 1, 0 };
-const int dy[9] = { 1, 1, 0, -1, -1, -1, 0, 1, 1 };
-
+const int dx[9] = { 0,-1,-1,-1, 0, 1, 1, 1, 0};
+const int dy[9] = { 1, 1, 0,-1,-1,-1, 0, 1, 1};
 /**
  * @brief To fetch filtered bit, 1 = black; 0 = white
  * @param buff Camera buffer
@@ -253,17 +252,34 @@ bool FindOneLeftEdge(){
 			for (int i = 1; i < 8; i++){
 				if (getWorldBit(prev_x + dx[i], prev_y + dy[i]) == 1){ //if black
 					left_edge.push(prev_x + dx[i-1], prev_y + dy[i-1]); //consider last point edge
+					goto endelsel1;
+				}
+			}
+			//if still couldnt find next point, try search towards left
+			for (int i = prev_x; i > max(prev_x - TuningVar.edge_hor_search_max, 1); i--){
+				if (getWorldBit(i, prev_y) == 1){
+					left_edge.push(i+1, prev_y);
 					break;
 				}
 			}
+			endelsel1:;
 		}
 	} else { //if black, find in CW until white
 		for (int i = 7; i > 0; i--){
 			if (getWorldBit(prev_x + dx[i], prev_y + dy[i]) == 0){ //if white
 				left_edge.push(prev_x + dx[i], prev_y + dy[i]);
+				goto endelsel2;
+			}
+		}
+		//if still couldnt find next point, try search towards right
+		for (int i = prev_x; i < min(prev_x + TuningVar.edge_hor_search_max, WorldSize.w-1); i++){
+			if (getWorldBit(i, prev_y) == 1){
+				left_edge.push(i-1, prev_y);
 				break;
 			}
 		}
+
+		endelsel2:;
 	}
 
 	if (left_edge.points.size() == prev_size) return false; //unchaged suze
@@ -314,17 +330,34 @@ bool FindOneRightEdge(){
 			for (int i = 7; i > 0; i--){
 				if (getWorldBit(prev_x+dx[i], prev_y+dy[i]) == 1){ //if white
 					right_edge.push(prev_x+dx[i+1], prev_y+dy[i+1]); //consider the last point
+					goto endelser1;
+				}
+			}
+			//if still couldnt find next point, try search towards right
+			for (int i = prev_x; i < min(prev_x + TuningVar.edge_hor_search_max, WorldSize.w-1); i++){
+				if (getWorldBit(i, prev_y) == 1){
+					right_edge.push(i-1, prev_y);
 					break;
 				}
 			}
+
+			endelser1:;
 		}
 	} else {//if white find in CCW until white
 		for (int i = 1; i < 8; i++){
 			if (getWorldBit(prev_x+dx[i], prev_y+dy[i]) == 0){ //if black
 				right_edge.push(prev_x+dx[i], prev_y+dy[i]);
+				goto endelser2;
+			}
+		}
+		//if still couldnt find next point, try search towards left
+		for (int i = prev_x; i > max(prev_x - TuningVar.edge_hor_search_max, 1); i--){
+			if (getWorldBit(i, prev_y) == 1){
+				right_edge.push(i+1, prev_y);
 				break;
 			}
 		}
+		endelser2:;
 	}
 
 	if (right_edge.points.size() == prev_size) return false; //unchaged size
@@ -816,7 +849,7 @@ void main(CarManager::Car c) {
 	cameraConfig.w = CameraSize.w;
 	cameraConfig.h = CameraSize.h;
 	cameraConfig.fps = k60::Ov7725Configurator::Config::Fps::kHigh;
-	cameraConfig.contrast = 0x3D;
+	cameraConfig.contrast = 0x2C;
 	cameraConfig.brightness = 0x00;
 	std::unique_ptr<k60::Ov7725> camera(new k60::Ov7725(cameraConfig));
 	pCamera = std::move(camera);
