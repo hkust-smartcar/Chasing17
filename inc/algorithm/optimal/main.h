@@ -79,7 +79,6 @@ struct {
 struct {
 	uint16_t starting_y = 10; //the starting y for edge detection
 	uint16_t edge_length = 159; //max length for an edge
-
 	uint16_t corner_range = 5; //the square for detection would be in size corener_range*2+1
 	float 	 corner_height_ratio = 2.7; //the max height for detection would be WorldSize.h/corner_height_ratio
 	uint16_t corner_min = 15, corner_max = 33; //threshold (in %) for corner detection
