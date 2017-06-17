@@ -40,36 +40,47 @@ void MpcDual::DoCorrection() {
 
   // calculates the path deviation, then times a factor to account for speed
   // difference between left/right wheels
-  if (mpc_left_->GetTargetSpeed() == 0 || mpc_right_->GetTargetSpeed() == 0) {
+  if (mpc_left_->GetTargetSpeed() == 0 || mpc_right_->GetTargetSpeed() == 0) {  // stopping
+    // set the target speeds to 0
     mpc_left_->SetTargetSpeed(0, false);
     mpc_right_->SetTargetSpeed(0, false);
+
   } else if (servo_diff < 0) {  // turning left
+    // calculate the ratio of current steering angle to max steering angle
     float motor_speed_diff = static_cast<float>(servo_diff) / (s.kCenter - s.kLeftBound);
     motor_speed_diff_ = motor_speed_diff;
 
+    // get the left turning radius
     float turning_radius = CarManager::kWheelbase / ratio.kLeft;
     float motor_speed_diff_left = motor_speed_diff;
     float motor_speed_diff_right = motor_speed_diff;
 
+    // calculate the speed difference relative to the center of the car
     motor_speed_diff_left *= 1 - ((turning_radius - CarManager::kAxleLength / 2) / turning_radius);
     motor_speed_diff_right *= 1 - ((turning_radius + CarManager::kAxleLength / 2) / turning_radius);
 
+    // add to the current target speed
     mpc_right_->AddToTargetSpeed(mpc_right_->GetTargetSpeed() * motor_speed_diff_right, false);
     mpc_left_->AddToTargetSpeed(mpc_left_->GetTargetSpeed() * -motor_speed_diff_left, false);
   } else if (servo_diff > 0) {  // turning right
+    // calculate the ratio of current steering angle to max steering angle
     float motor_speed_diff = static_cast<float>(servo_diff)  / (s.kCenter - s.kRightBound);
     motor_speed_diff_ = motor_speed_diff;
 
+    // get the right turning radius
     float turning_radius = CarManager::kWheelbase / ratio.kRight;
     float motor_speed_diff_left = motor_speed_diff;
     float motor_speed_diff_right = motor_speed_diff;
 
+    // calculate the speed difference relative to the center of the car
     motor_speed_diff_left *= 1 - ((turning_radius - CarManager::kAxleLength / 2) / turning_radius);
     motor_speed_diff_right *= 1 - ((turning_radius + CarManager::kAxleLength / 2) / turning_radius);
 
+    // add to the current target speed
     mpc_left_->AddToTargetSpeed(mpc_left_->GetTargetSpeed() * motor_speed_diff_left, false);
     mpc_right_->AddToTargetSpeed(mpc_right_->GetTargetSpeed() * -motor_speed_diff_right, false);
-  } else {
+  } else {  // straight
+    // just set them as they are
     mpc_left_->SetTargetSpeed(mpc_left_->GetTargetSpeed(), false);
     mpc_right_->SetTargetSpeed(mpc_right_->GetTargetSpeed(), false);
   }

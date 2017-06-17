@@ -29,13 +29,17 @@ ServoController::~ServoController() {
 }
 
 void ServoController::DoCorrection() {
+  // get the time difference between last call and now
   last_servo_duration_ = GetTimeElapsed();
 
+  // set the correction target angle to the new angle, if commit_target_flag_
+  // is true
   if (commit_target_flag_) {
     curr_servo_target_ = servo_target_;
     commit_target_flag_ = false;
   }
 
+  // calculate the average of the previous 5 values
   last_servo_vals_.push_back(curr_servo_target_);
   while (last_servo_vals_.size() > 5) last_servo_vals_.erase(last_servo_vals_.begin());
   average_servo_val_ = 0;
@@ -44,27 +48,27 @@ void ServoController::DoCorrection() {
   }
   average_servo_val_ /= last_servo_vals_.size();
 
+  // get the servo boundaries and equivalent compass angles
   CarManager::ServoBounds s = CarManager::GetServoBounds();
   CarManager::ServoAngles a = CarManager::GetServoAngles();
 
   int16_t target_angle_change = curr_servo_target_;
   uint16_t new_angle = s.kCenter;
 
+  // introduce PD correction into target servo angle
   target_angle_change *= kP;
   last_servo_error_ = ((target_angle_change - average_servo_val_) / (last_servo_duration_ / 1000.0)) * kD;
   target_angle_change += last_servo_error_;
 
+  // convert the target servo angle to target servo value
   if (target_angle_change > 0) {
     new_angle -= (s.kCenter - s.kRightBound) * (static_cast<float>(target_angle_change) / a.kRightAngle);
   } else if (target_angle_change < 0) {
     new_angle -= (s.kLeftBound - s.kCenter) * (static_cast<float>(target_angle_change) / a.kLeftAngle);
   }
 
-  if (new_angle > s.kLeftBound) {
-    new_angle = s.kLeftBound;
-  } else if (new_angle < s.kRightBound) {
-    new_angle = s.kRightBound;
-  }
+  // ensure the target servo values do not go out of bounds
+  new_angle = util::clamp<uint16_t>(new_angle, s.kRightBound, s.kLeftBound);
 
   servo_->SetDegree(new_angle);
 

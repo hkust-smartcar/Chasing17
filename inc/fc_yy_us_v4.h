@@ -29,7 +29,7 @@ using libbase::k60::Pin;
 class FcYyUsV4 {
  public:
   static constexpr uint16_t kMinDistance = 0;
-  static constexpr uint16_t kMaxDistance = std::numeric_limits<unsigned int>::max();
+  static constexpr uint16_t kMaxDistance = std::numeric_limits<uint16_t>::max();
 
   /**
    * @param pin Name of Pin connected to the sensor

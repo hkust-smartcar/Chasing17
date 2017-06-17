@@ -69,11 +69,7 @@ void Mpc::AddToTargetSpeed(const int16_t d_speed, bool commit_now) {
 void Mpc::DoCorrection() {
   // cleanup from previous cycle if it is out of range
   // [kMotorLowerBound,kMotorUpperBound]
-  if (motor_->GetPower() > static_cast<uint16_t>(MotorConstants::kUpperBound)) {
-    motor_->SetPower(static_cast<uint16_t>(MotorConstants::kUpperBound));
-  } else if (motor_->GetPower() < static_cast<uint16_t>(MotorConstants::kLowerBound)) {
-    motor_->SetPower(static_cast<uint16_t>(MotorConstants::kLowerBound));
-  }
+  motor_->SetPower(util::clamp<uint16_t>(motor_->GetPower(), MotorConstants.kLowerBound, MotorConstants.kUpperBound));
 
   // sets the correction target speed to the new speed, if
   // commit_target_flag_ is true.
@@ -114,11 +110,9 @@ void Mpc::DoCorrection() {
   prev_error_ = speed_diff;
 
   // hard limit bounds checking
-  if (motor_->GetPower() > static_cast<uint16_t>(MotorConstants::kUpperHardLimit)) {
-    motor_->SetPower(static_cast<uint16_t>(MotorConstants::kUpperHardLimit));
-  } else if (motor_->GetPower() < static_cast<uint16_t>(MotorConstants::kLowerHardLimit)) {
-    motor_->SetPower(static_cast<uint16_t>(MotorConstants::kLowerHardLimit));
-  }
+  motor_->SetPower(util::clamp<uint16_t>(motor_->GetPower(),
+                                         MotorConstants.kLowerHardLimit,
+                                         MotorConstants.kUpperHardLimit));
 }
 
 void Mpc::CommitTargetSpeed() {
@@ -144,15 +138,14 @@ void Mpc::UpdateEncoder() {
   while (last_ten_encoder_val_.size() > 10) last_ten_encoder_val_.erase(last_ten_encoder_val_.begin());
   average_encoder_val_ = 0;
   for (auto& m : last_ten_encoder_val_) {
-	  average_encoder_val_ += m;
+    average_encoder_val_ += m;
   }
   average_encoder_val_ /= last_ten_encoder_val_.size();
 
   time_encoder_start_ = libsc::System::Time();
 }
 
-MpcDebug::MpcDebug(Mpc* mpc) : mpc_(mpc)
-{}
+MpcDebug::MpcDebug(Mpc* mpc) : mpc_(mpc) {}
 
 void MpcDebug::OutputEncoderMotorValues(libsc::LcdConsole* console) const {
   std::string s = to_string(mpc_->last_encoder_val_) + " " + to_string(mpc_->motor_->GetPower()) + "\n";

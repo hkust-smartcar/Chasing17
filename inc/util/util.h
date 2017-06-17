@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <array>
 #include <bitset>
+#include <cassert>
 #include <iterator>
 #include <memory>
 #include <string>
@@ -83,6 +84,12 @@ void BtSendImage();
  */
 void ConsoleWriteString(libsc::LcdConsole* const console, const std::string& s);
 
+/**
+ * Extension function for LcdConsole::ClearRow for one row only
+ *
+ * @param console Pointer to console object
+ * @param row Row of text to clear
+ */
 void ConsoleClearRow(libsc::LcdConsole* const console, const uint8_t row);
 
 std::string to_string(int val);
@@ -95,7 +102,10 @@ std::string to_string(float val);
 std::string to_string(double val);
 std::string to_string(long double val);
 
-#if __cplusplus < 201402L
+#if __cplusplus > 201103L
+using std::make_unique;
+#else
+
 /**
  * Backport of std::make_unique from C++14
  */
@@ -103,9 +113,30 @@ template<typename T, typename... Args>
 std::unique_ptr<T> make_unique(Args&& ... args) {
   return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
+
+#endif  // __cplusplus > 201103L (check for C++14 support)
+
+#if __cplusplus > 201402L
+using std::clamp;
 #else
-using std::make_unique;
-#endif
+
+/**
+ * Backport of std::clamp from C++17
+ *
+ * @tparam T Any value type with @c operator<
+ * @param v Value to be clamped
+ * @param lo Lower limit of the value
+ * @param hi Higher limit of the value
+ * @return Clamped value
+ */
+template<class T>
+constexpr const T& clamp(const T& v, const T& lo, const T& hi) {
+  return assert(!(hi < lo)),
+      (v < lo) ? lo : (hi < v) ? hi : v;
+}
+
+#endif  // __cplusplus > 201402L (check for C++17 support)
+
 }  // namespace util
 
 #include "util/util.tcc"
