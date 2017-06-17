@@ -79,7 +79,14 @@ int main() {
   // modify next line to change which car we're working with
   CarManager::Car c = CarManager::Car::kCar1;
 
-  CarManager::ServoBounds s = c == CarManager::Car::kCar1 ? CarManager::kBoundsCar1 : CarManager::kBoundsCar2;
+//  CarManager::ServoBounds s = c == CarManager::Car::kCar1 ? CarManager::kBoundsCar1 : CarManager::kBoundsCar2;
+  CarManager::ServoBounds s;
+  if(c==CarManager::Car::kCar1){
+	  s = CarManager::kBoundsCar1;
+  }
+  else{
+	  s = CarManager::kBoundsCar2;
+  }
   switch (a) {
     case Algorithm::kKing:
       algorithm::king::main(has_encoder, s);
