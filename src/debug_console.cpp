@@ -64,11 +64,12 @@ void DebugConsole::EnterDebug() {
   Item item(">>exit<<");
   PushItem(item);
   int index = items.size();
+  Load();
   ListItems();
   while (flag) {
     Listen();
 //    if(System::Time()%100==0)
-//    	Save();
+    	Save();
   }
   items.erase(items.end() - (index - items.size()));
   Clear();
@@ -121,10 +122,11 @@ void DebugConsole::Load(){
 	for(int i=0;i<items.size();i++){
 		if(!items[i].IsFlashable()) continue;
 		float* v=items[i].GetValuePtr();
+		float temp=0;
 		if(v==nullptr)continue;
-		memcpy((unsigned char*) v, buff+start, 4);
+		memcpy((unsigned char*) &temp, buff+start, 4);
 		start+=4;
-		if(*v!=*v)*v=0;
+		if(temp==temp)*v=temp;
 	}
 	delete [] buff;
 }

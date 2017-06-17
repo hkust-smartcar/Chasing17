@@ -16,6 +16,7 @@
 #include <cstdint>
 
 #include "car_manager.h"
+#include "debug_console.h"
 
 #ifndef CHASING17_ALGORITHM_OPTIMAL_MAIN_H_
 #define CHASING17_ALGORITHM_OPTIMAL_MAIN_H_

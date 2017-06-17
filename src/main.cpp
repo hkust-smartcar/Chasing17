@@ -11,6 +11,9 @@
 #include "libsc/system.h"
 #include "libsc/battery_meter.h"
 
+#include "libbase/k60/flash.h"
+#include "debug_console.h"
+
 #include "algorithm/david/main.h"
 #include "algorithm/king/main.h"
 #include "algorithm/leslie/main.h"
@@ -68,6 +71,51 @@ int main() {
     console.WriteString(temp);
     System::DelayMs(1000);
     while (bm.GetVoltage() <= 7.4);
+  }
+
+
+
+  {
+	St7735r::Config lcd_config;
+	lcd_config.is_revert = true;
+	St7735r lcd(lcd_config);
+	lcd.Clear();
+    LcdTypewriter::Config writerconfig;
+	writerconfig.lcd = &lcd;
+	LcdTypewriter writer(writerconfig);
+
+	Joystick::Config joystick_config;
+	joystick_config.id = 0;
+	joystick_config.is_active_low = true;
+	Joystick joystick(joystick_config);
+
+	Flash::Config flash_config;
+	Flash flash(flash_config);
+
+    DebugConsole console(&joystick,&lcd,&writer,5);
+
+	Item item("distract");
+//	console.PushItem(item);
+	console.PushItem(Item("startY" ,&algorithm::optimal::TuningVar.starting_y,true));
+	console.PushItem(Item("edgeLen",&algorithm::optimal::TuningVar.edge_length,true));
+	console.PushItem(Item("crnrRng",&algorithm::optimal::TuningVar.corner_range,true));
+	console.PushItem(Item("crnrHgtRatio",&algorithm::optimal::TuningVar.corner_height_ratio,true));
+	console.PushItem(Item("crnrMin",&algorithm::optimal::TuningVar.corner_min,true));
+	console.PushItem(Item("crnrMax",&algorithm::optimal::TuningVar.corner_max,true));
+	console.PushItem(Item("minCrnrD",&algorithm::optimal::TuningVar.min_corners_dist,true));
+	console.PushItem(Item("minEdgeD",&algorithm::optimal::TuningVar.min_edges_dist,true));
+	console.PushItem(Item("trckWdThrsh",&algorithm::optimal::TuningVar.track_width_threshold,true));
+	console.PushItem(Item("trckWdCThrs",&algorithm::optimal::TuningVar.track_width_change_threshold,true));
+	console.PushItem(Item("sightDist",&algorithm::optimal::TuningVar.sightDist,true));
+	console.PushItem(Item("strgtLThrs",&algorithm::optimal::TuningVar.straight_line_threshold,true));
+	console.PushItem(Item("stopDist",&algorithm::optimal::TuningVar.stop_distance,true));
+	console.PushItem(Item("blkDvLRtT",&algorithm::optimal::TuningVar.black_div_length_ratio_thresold,true));
+
+	console.SetOffset(0);
+	console.SetFlash(&flash);
+
+	//Load();
+	console.EnterDebug();
   }
 
   // modify next line to switch between algorithms
