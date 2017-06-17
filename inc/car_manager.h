@@ -62,7 +62,7 @@ class CarManager final {
     kCross,
 	kNormal,
 	kStart,
-	kSpecial
+	kRoundaboutExit
   };
 
   /**
