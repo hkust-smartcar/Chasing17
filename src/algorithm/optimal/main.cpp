@@ -298,36 +298,38 @@ bool FindOneLeftEdge() {
 	if (left_edge.points.back().first == WorldSize.w - 1)
 		return false; //reaches right
 
-	switch (car) { //reaches worldview boundaries
-	case CarManager::Car::kCar1:
-		if (worldview::car1::transformMatrix[min(
-				left_edge.points.back().first + 1, WorldSize.w - 1)][WorldSize.h
-				- left_edge.points.back().second][0] == -1) {
-			left_edge.points.pop_back();
-			return false;
+//	if (left_edge.points.back().second > TuningVar.edge_min_worldview_bound_check){
+		switch (car) { //reaches worldview boundaries
+		case CarManager::Car::kCar1:
+			if (worldview::car1::transformMatrix[min(
+					left_edge.points.back().first + 1, WorldSize.w - 1)][WorldSize.h
+					- left_edge.points.back().second][0] == -1) {
+				left_edge.points.pop_back();
+				return false;
+			}
+			if (worldview::car1::transformMatrix[max(
+					left_edge.points.back().first - 1, 1)][WorldSize.h
+					- left_edge.points.back().second][0] == -1) {
+				left_edge.points.pop_back();
+				return false;
+			}
+			break;
+		case CarManager::Car::kCar2:
+			if (worldview::car2::transformMatrix[min(
+					left_edge.points.back().first + 1, WorldSize.w - 1)][WorldSize.h
+					- left_edge.points.back().second][0] == -1) {
+				left_edge.points.pop_back();
+				return false;
+			}
+			if (worldview::car2::transformMatrix[max(
+					left_edge.points.back().first - 1, 1)][WorldSize.h
+					- left_edge.points.back().second][0] == -1) {
+				left_edge.points.pop_back();
+				return false;
+			}
+			break;
 		}
-		if (worldview::car1::transformMatrix[max(
-				left_edge.points.back().first - 1, 1)][WorldSize.h
-				- left_edge.points.back().second][0] == -1) {
-			left_edge.points.pop_back();
-			return false;
-		}
-		break;
-	case CarManager::Car::kCar2:
-		if (worldview::car2::transformMatrix[min(
-				left_edge.points.back().first + 1, WorldSize.w - 1)][WorldSize.h
-				- left_edge.points.back().second][0] == -1) {
-			left_edge.points.pop_back();
-			return false;
-		}
-		if (worldview::car2::transformMatrix[max(
-				left_edge.points.back().first - 1, 1)][WorldSize.h
-				- left_edge.points.back().second][0] == -1) {
-			left_edge.points.pop_back();
-			return false;
-		}
-		break;
-	}
+//	}
 
 	//find corners
 	if (left_edge.points.back().second
@@ -423,35 +425,37 @@ bool FindOneRightEdge() {
 	if (right_edge.points.back().first == WorldSize.w - 1)
 		return false; //reaches right
 
-	switch (car) { //reaches worldview boundaries
-	case CarManager::Car::kCar1:
-		if (worldview::car1::transformMatrix[min(
-				right_edge.points.back().first + 1, WorldSize.w - 1)][WorldSize.h
-				- right_edge.points.back().second][0] == -1) {
-			right_edge.points.pop_back();
-			return false;
+	if (right_edge.points.back().second > TuningVar.edge_min_worldview_bound_check){
+		switch (car) { //reaches worldview boundaries
+		case CarManager::Car::kCar1:
+			if (worldview::car1::transformMatrix[min(
+					right_edge.points.back().first + 1, WorldSize.w - 1)][WorldSize.h
+					- right_edge.points.back().second][0] == -1) {
+				right_edge.points.pop_back();
+				return false;
+			}
+			if (worldview::car1::transformMatrix[max(
+					right_edge.points.back().first - 1, 1)][WorldSize.h
+					- right_edge.points.back().second][0] == -1) {
+				right_edge.points.pop_back();
+				return false;
+			}
+			break;
+		case CarManager::Car::kCar2:
+			if (worldview::car2::transformMatrix[min(
+					right_edge.points.back().first + 1, WorldSize.w - 1)][WorldSize.h
+					- right_edge.points.back().second][0] == -1) {
+				right_edge.points.pop_back();
+				return false;
+			}
+			if (worldview::car2::transformMatrix[max(
+					right_edge.points.back().first - 1, 1)][WorldSize.h
+					- right_edge.points.back().second][0] == -1) {
+				right_edge.points.pop_back();
+				return false;
+			}
+			break;
 		}
-		if (worldview::car1::transformMatrix[max(
-				right_edge.points.back().first - 1, 1)][WorldSize.h
-				- right_edge.points.back().second][0] == -1) {
-			right_edge.points.pop_back();
-			return false;
-		}
-		break;
-	case CarManager::Car::kCar2:
-		if (worldview::car2::transformMatrix[min(
-				right_edge.points.back().first + 1, WorldSize.w - 1)][WorldSize.h
-				- right_edge.points.back().second][0] == -1) {
-			right_edge.points.pop_back();
-			return false;
-		}
-		if (worldview::car2::transformMatrix[max(
-				right_edge.points.back().first - 1, 1)][WorldSize.h
-				- right_edge.points.back().second][0] == -1) {
-			right_edge.points.pop_back();
-			return false;
-		}
-		break;
 	}
 
 	//find corners
@@ -810,11 +814,11 @@ void GenPath(CarManager::Feature feature) {
 
 				//if translate
 				if (translate_flag == TranslateType::kLeftNull) {
-					path.push(curr_right.first - shift_left_null,
-							curr_right.second);
+					path.push(right_edge.points[i].first - shift_left_null,
+							right_edge.points[i].second);
 				} else if (translate_flag == TranslateType::kRightNull) {
-					path.push(curr_left.first + shift_right_null,
-							curr_left.second);
+					path.push(left_edge.points[i].first + shift_right_null,
+							left_edge.points[i].second);
 				} else {
 					//if average
 					int temp_x = (curr_left.first + curr_right.first) / 2;
@@ -852,11 +856,11 @@ void GenPath(CarManager::Feature feature) {
 
 				//if translate
 				if (translate_flag == TranslateType::kLeftNull) {
-					path.push(curr_right.first - shift_left_null,
-							curr_right.second);
+					path.push(right_edge.points[i].first - shift_left_null,
+							right_edge.points[i].second);
 				} else if (translate_flag == TranslateType::kRightNull) {
-					path.push(curr_left.first + shift_right_null,
-							curr_left.second);
+					path.push(left_edge.points[i].first + shift_right_null,
+							left_edge.points[i].second);
 				} else {
 					//if average
 					int temp_x = (curr_left.first + curr_right.first) / 2;
