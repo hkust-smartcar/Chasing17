@@ -22,6 +22,7 @@
 #include "libsc/system.h"
 #include "libsc/k60/ov7725.h"
 #include "libsc/joystick.h"
+#include "libutil/misc.h"
 
 #include "bluetooth.h"
 #include "car_manager.h"
@@ -941,7 +942,7 @@ void PrintSuddenChangeTrackWidthLocation(uint16_t color) {
 /**
  * @brief Calculate the servo angle diff
  */
-int16_t Interpret() {
+int16_t CalcAngleDiff() {
 	int16_t error = 0, sum = 0;
 	for (std::pair<int, int> point : path.points) {
 		if (sum > 20) //consider first 20 points
@@ -950,10 +951,10 @@ int16_t Interpret() {
 		sum++;
 	}
 
-	char buff[10];
-	sprintf(buff, "Servo:%d", error);
-	pLcd->SetRegion(Lcd::Rect(0, 0, 100, 15));
-	pWriter->WriteBuffer(buff, 10);
+//	char buff[10];
+//	sprintf(buff, "Servo:%d", error);
+//	pLcd->SetRegion(Lcd::Rect(0, 0, 100, 15));
+//	pWriter->WriteBuffer(buff, 10);
 
 	return error;
 }
@@ -1087,11 +1088,11 @@ void main(CarManager::Car c) {
 				char timestr[100];
 				sprintf(timestr, "time: %dms", System::Time() - new_time);
 				pWriter->WriteString(timestr);
-				PrintWorldImage();
-				PrintEdge(left_edge, Lcd::kRed); //Print left_edge
-				PrintEdge(right_edge, Lcd::kBlue); //Print right_edge
-				PrintCorner(left_corners, Lcd::kPurple); //Print left_corner
-				PrintCorner(right_corners, Lcd::kPurple); //Print right_corner
+//				PrintWorldImage();
+//				PrintEdge(left_edge, Lcd::kRed); //Print left_edge
+//				PrintEdge(right_edge, Lcd::kBlue); //Print right_edge
+//				PrintCorner(left_corners, Lcd::kPurple); //Print left_corner
+//				PrintCorner(right_corners, Lcd::kPurple); //Print right_corner
 
 				switch (a) {
 				case CarManager::Feature::kCross:
@@ -1119,10 +1120,10 @@ void main(CarManager::Car c) {
 					pWriter->WriteString("Straight");
 					break;
 				}
-				PrintSuddenChangeTrackWidthLocation(Lcd::kYellow); //Print sudden change track width location
+//				PrintSuddenChangeTrackWidthLocation(Lcd::kYellow); //Print sudden change track width location
 
-//				pServo->SetDegree(servo_bounds.kCenter-Interpret());
-				PrintEdge(path, Lcd::kGreen); //Print path
+				pServo->SetDegree(libutil::Clamp((int)servo_bounds.kRightBound, servo_bounds.kCenter-CalcAngleDiff(), (int)servo_bounds.kLeftBound));
+//				PrintEdge(path, Lcd::kGreen); //Print path
 				led0.Switch(); //heart beat
 			}
 		}
