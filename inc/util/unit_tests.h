@@ -66,7 +66,7 @@ void AltMotorTest();
  */
 void DirEncoderTest();
 /**
- * Tests the EncoderPController class
+ * Tests the Mpc class
  *
  * Turns on both alternate motors, keep the motor running at 4500 val/sec,
  * and displays the encoder value (in val/sec) and motor power on the LCD.
