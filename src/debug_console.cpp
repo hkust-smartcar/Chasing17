@@ -59,10 +59,10 @@ Item* Item::SetReadOnly(bool isReadOnly) {
 DebugConsole::DebugConsole(Joystick* joystick, St7735r* lcd, LcdTypewriter* writer, int displayLength)
     : joystick(joystick), lcd(lcd), writer(writer), displayLength(displayLength) {}
 
-void DebugConsole::EnterDebug() {
+void DebugConsole::EnterDebug(char* leave_msg) {
   flag = true;
-  Item item(">>exit<<");
-  PushItem(item);
+  Item item(leave_msg);
+  InsertItem(item);
   int index = items.size();
   Load();
   ListItems();
@@ -71,7 +71,7 @@ void DebugConsole::EnterDebug() {
 //    if(System::Time()%100==0)
     	Save();
   }
-  items.erase(items.end() - (index - items.size()));
+  items.erase(items.begin());
   Clear();
 }
 
@@ -226,11 +226,11 @@ void DebugConsole::ListenerDo(Joystick::State key) {
     case Joystick::State::kSelect:
       if (item.GetListener() != nullptr) {
         item.GetListener()();
-      } else if (item.GetText() == ">>exit<<")
+      } else if (flag&&focus==0)//leave item click
         flag=false;
       break;
     case Joystick::State::kLeft:
-      if (item.GetText() == ">>exit<<")
+      if (flag&&focus==0)//leave item click
         flag=false;
       if (item.GetValuePtr() != nullptr && !item.IsReadOnly()) {
         item.SetValue(item.GetValue() - item.GetInterval());
@@ -238,7 +238,7 @@ void DebugConsole::ListenerDo(Joystick::State key) {
       }
       break;
     case Joystick::State::kRight:
-      if (item.GetText() == ">>exit<<")
+      if (flag&&focus==0)//leave item click
         flag=false;
       if (item.GetValuePtr() != nullptr && !item.IsReadOnly()) {
         item.SetValue(item.GetValue() + item.GetInterval());

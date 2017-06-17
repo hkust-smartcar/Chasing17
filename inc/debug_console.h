@@ -74,7 +74,7 @@ class DebugConsole {
   /**
    * pause and start debugging
    */
-  void EnterDebug();
+  void EnterDebug(char* leave_msg);
 
   /**
    * just listen and do, no pause

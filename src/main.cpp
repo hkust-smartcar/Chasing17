@@ -115,7 +115,7 @@ int main() {
 	console.SetFlash(&flash);
 
 	//Load();
-	console.EnterDebug();
+	console.EnterDebug(">enter program<");
   }
 
   // modify next line to switch between algorithms

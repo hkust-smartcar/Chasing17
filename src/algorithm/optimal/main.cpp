@@ -988,7 +988,7 @@ void main(CarManager::Car c) {
 				}
 //				PrintSuddenChangeTrackWidthLocation(Lcd::kYellow); //Print sudden change track width location
 //				CarManager::Feature feature = IdentifyFeat(); //Identify feature
-				GenPath(); //Generate path
+//				GenPath(); //Generate path
 
 //				pServo->SetDegree(servo_bounds.kCenter-Interpret());
 				PrintEdge(path, Lcd::kGreen); //Print path
