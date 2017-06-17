@@ -22,6 +22,7 @@
 #include "libsc/system.h"
 #include "libsc/k60/ov7725.h"
 #include "libsc/joystick.h"
+#include "libbase/k60/flash.h"
 
 #include "bluetooth.h"
 #include "car_manager.h"
@@ -58,6 +59,9 @@ LcdTypewriter* pWriter = nullptr;
 CarManager::ServoBounds* pServoBounds = nullptr;
 FutabaS3010* pServo = nullptr;
 k60::JyMcuBt106* pBT = nullptr;
+libbase::k60::Flash* pFlash = nullptr;
+
+DebugConsole* pConsole = nullptr;
 
 CarManager::ServoBounds servo_bounds;
 CarManager::Car car;
@@ -835,7 +839,13 @@ int16_t Interpret() {
 
 void main(CarManager::Car c) {
 	car = c;
-	servo_bounds = car == CarManager::Car::kCar1 ? CarManager::kBoundsCar1 : CarManager::kBoundsCar2;
+	CarManager::ServoBounds s;
+	if(c==CarManager::Car::kCar1){
+	    s = CarManager::kBoundsCar1;
+	}
+	else{
+	    s = CarManager::kBoundsCar2;
+	}
 
 	Led::Config ConfigLed;
 	ConfigLed.id = 0;
@@ -899,7 +909,29 @@ void main(CarManager::Car c) {
 	Joystick joystick(joystick_config);
 
 	// TODO: Determine the correct value for 4th parameter
+	libbase::k60::Flash::Config flash_config;
+	libbase::k60::Flash flash(flash_config);
+	pFlash = &flash;
+	float hi=0;
 	DebugConsole console(&joystick, &lcd, &writer, 10);
+	pConsole = &console;
+//	console.SetFlash(pFlash);
+	console.PushItem(Item("startY" ,&TuningVar.starting_y,true));
+	console.PushItem(Item("edgeLen",&TuningVar.edge_length,true));
+	console.PushItem(Item("crnrRng",&TuningVar.corner_range,true));
+	console.PushItem(Item("crnrHgtRatio",&TuningVar.corner_height_ratio,true));
+	console.PushItem(Item("crnrMin",&TuningVar.corner_min,true));
+	console.PushItem(Item("crnrMax",&TuningVar.corner_max,true));
+	console.PushItem(Item("minCrnrD",&TuningVar.min_corners_dist,true));
+	console.PushItem(Item("minEdgeD",&TuningVar.min_edges_dist,true));
+	console.PushItem(Item("trckWdThrsh",&TuningVar.track_width_threshold,true));
+	console.PushItem(Item("trckWdCThrs",&TuningVar.track_width_change_threshold,true));
+	console.PushItem(Item("sightDist",&TuningVar.sightDist,true));
+	console.PushItem(Item("strgtLThrs",&TuningVar.straight_line_threshold,true));
+	console.PushItem(Item("stopDist",&TuningVar.stop_distance,true));
+	console.PushItem(Item("blkDvLRtT",&TuningVar.black_div_length_ratio_thresold,true));
+//	console.Load();
+	console.EnterDebug();
 
 	/*
 	 CarManager::Config ConfigMgr;
@@ -932,17 +964,6 @@ void main(CarManager::Car c) {
 	 }
 	 }*/
 
-	/*
-	 DebugConsole::Item item("set servo");
-	 item.setValuePtr(&servo_degree);
-	 //item.setListener(SELECT,&updateServo);
-	 item.setListener(DOWN_LEFT,&subServo);
-	 item.setListener(LONG_LEFT,&subServo);
-	 item.setListener(DOWN_RIGHT,&addServo);
-	 item.setListener(LONG_RIGHT,&addServo);
-	 console.pushItem(item);
-	 console.enterDebug();
-	 */
 
 	//pMpc->SetTargetSpeed(100);
 	while (true) {
@@ -994,9 +1015,13 @@ void main(CarManager::Car c) {
 //				pServo->SetDegree(servo_bounds.kCenter-Interpret());
 				PrintEdge(path, Lcd::kGreen); //Print path
 				led0.Switch(); //heart beat
+
 			}
+
 		}
 
+		if(joystick.GetState()!=Joystick::State::kIdle)
+			console.EnterDebug();
 	}
 
 }
