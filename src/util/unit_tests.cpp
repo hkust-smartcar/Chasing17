@@ -69,7 +69,7 @@ void LcdTest() {
   St7735r::Config config;
   config.fps = 10;
   config.is_revert = true;
-  unique_ptr<St7735r> lcd(new St7735r(config));
+  unique_ptr<St7735r> lcd = util::make_unique<St7735r>(config);
 
   while (true) {
     lcd->SetRegion(Lcd::Rect(0, 0, 128, 80));
@@ -87,7 +87,7 @@ void CameraTest() {
   camera_config.id = 0;
   camera_config.w = 80;  // downscale the width to 80
   camera_config.h = 60;  // downscale the height to 60
-  unique_ptr<Ov7725> camera(new Ov7725(camera_config));
+  unique_ptr<Ov7725> camera = util::make_unique<Ov7725>(camera_config);
   camera->Start();
   constexpr Uint kBufferSize = 80 * 60 / 8;
   if (kBufferSize != camera->GetBufferSize()) {
@@ -98,7 +98,7 @@ void CameraTest() {
   St7735r::Config lcd_config;
   lcd_config.fps = 50;
   lcd_config.is_revert = true;
-  unique_ptr<St7735r> lcd(new St7735r(lcd_config));
+  unique_ptr<St7735r> lcd = util::make_unique<St7735r>(lcd_config);
 
   while (!camera->IsAvailable()) {}
 
@@ -205,46 +205,48 @@ void MpcTest() {
 
   AlternateMotor::Config motor_config;
   motor_config.id = 0;
-  unique_ptr<AlternateMotor> motor1(new AlternateMotor(motor_config));
+  unique_ptr<AlternateMotor> motor1 = util::make_unique<AlternateMotor>(motor_config);
   motor_config.id = 1;
-  unique_ptr<AlternateMotor> motor2(new AlternateMotor(motor_config));
+  unique_ptr<AlternateMotor> motor2 = util::make_unique<AlternateMotor>(motor_config);
 
   FutabaS3010::Config servo_config;
   servo_config.id = 0;
-  unique_ptr<FutabaS3010> servo(new FutabaS3010(servo_config));
+  unique_ptr<FutabaS3010> servo = util::make_unique<FutabaS3010>(servo_config);
 
   DirEncoder::Config encoder_config;
   encoder_config.id = 0;
-  unique_ptr<DirEncoder> encoder1(new DirEncoder(encoder_config));
+  unique_ptr<DirEncoder> encoder1 = util::make_unique<DirEncoder>(encoder_config);
   encoder_config.id = 1;
-  unique_ptr<DirEncoder> encoder2(new DirEncoder(encoder_config));
+  unique_ptr<DirEncoder> encoder2 = util::make_unique<DirEncoder>(encoder_config);
 
   St7735r::Config lcd_config;
   lcd_config.fps = 10;
   lcd_config.is_revert = true;
-  unique_ptr<St7735r> lcd(new St7735r(lcd_config));
+  unique_ptr<St7735r> lcd = util::make_unique<St7735r>(lcd_config);
   lcd->Clear();
 
   LcdConsole::Config console_config;
   console_config.lcd = lcd.get();
-  unique_ptr<LcdConsole> console(new LcdConsole(console_config));
+  unique_ptr<LcdConsole> console = util::make_unique<LcdConsole>(console_config);
 
-  unique_ptr<Mpc> epc1(new Mpc(encoder1.get(), motor1.get(), false));
-  unique_ptr<Mpc> epc2(new Mpc(encoder2.get(), motor2.get(), true));
-  unique_ptr<MpcDebug> epc1_d(new MpcDebug(epc1.get()));
-  unique_ptr<MpcDebug> epc2_d(new MpcDebug(epc2.get()));
+  unique_ptr<Mpc> epc1 = util::make_unique<Mpc>(encoder1.get(), motor1.get(), false);
+  unique_ptr<Mpc> epc2 = util::make_unique<Mpc>(encoder2.get(), motor2.get(), false);
+  unique_ptr<MpcDebug> epc1_d = util::make_unique<MpcDebug>(epc1.get());
+  unique_ptr<MpcDebug> epc2_d = util::make_unique<MpcDebug>(epc2.get());
 
   led4.SetEnable(false);
 
   while (true) {
-    epc1->SetTargetSpeed(4000);
-    epc2->SetTargetSpeed(-4000);
+    epc1->SetTargetSpeed(8000);
+    epc2->SetTargetSpeed(-8000);
     servo->SetDegree(665);
 
-    epc1_d->OutputEncoderMotorValues(console.get());
-    epc2_d->OutputEncoderMotorValues(console.get());
+//    epc1_d->OutputEncoderMotorValues(console.get());
+//    epc2_d->OutputEncoderMotorValues(console.get());
+    util::ConsoleWriteString(console.get(), util::to_string(epc1->GetTargetSpeed()));
+    util::ConsoleWriteString(console.get(), util::to_string(epc2->GetTargetSpeed()));
 
-    System::DelayMs(100);
+    System::DelayMs(10);
   }
 }
 }  // namespace util

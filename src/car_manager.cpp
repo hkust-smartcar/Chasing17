@@ -69,7 +69,7 @@ void CarManager::UpdateParameters() {
   UpdateSpeed();
   UpdateServoAngle();
   UpdateDistance();
-  UpdateSlope();
+//  UpdateSlope();
 }
 
 void CarManager::SwitchIdentity() {
@@ -134,20 +134,21 @@ void CarManager::SetOverrideProtection(const bool override_protection, const Mot
 }
 
 void CarManager::SetTargetSpeed(const int16_t speed, MotorSide src) {
-  if (epc_ != nullptr) {
+  if (src == MotorSide::kBoth && epc_ != nullptr) {
     epc_->SetTargetSpeed(speed, false);
     return;
   }
+
   if (src == MotorSide::kLeft && epc_left_ != nullptr) {
     epc_left_->SetTargetSpeed(speed, false);
   } else if (src == MotorSide::kRight && epc_right_ != nullptr) {
-    epc_right_->SetTargetSpeed(speed, false);
+    epc_right_->SetTargetSpeed(-speed, false);
   } else if (src == MotorSide::kBoth) {
     if (epc_left_ != nullptr) {
       epc_left_->SetTargetSpeed(speed, false);
     }
     if (epc_right_ != nullptr) {
-      epc_right_->SetTargetSpeed(speed, false);
+      epc_right_->SetTargetSpeed(-speed, false);
     }
   }
 }
@@ -198,19 +199,20 @@ void CarManager::UpdateDistance() {
 void CarManager::UpdateSpeed() {
   if (epc_ != nullptr) {
     epc_->DoCorrection();
-    left_speed_ = epc_->GetCurrentSpeed(MpcDual::MotorSide::kLeft) / 100;
-    right_speed_ = epc_->GetCurrentSpeed(MpcDual::MotorSide::kRight) / 100;
+    left_speed_ = epc_->GetCurrentSpeed(MpcDual::MotorSide::kLeft);
+    right_speed_ = epc_->GetCurrentSpeed(MpcDual::MotorSide::kRight);
     return;
   }
+
   if (epc_left_ != nullptr) {
     epc_left_->SetCommitFlag(true);
     epc_left_->DoCorrection();
-    left_speed_ = epc_left_->GetCurrentSpeed() / 100;
+    left_speed_ = epc_left_->GetCurrentSpeed();
   }
   if (epc_right_ != nullptr) {
     epc_right_->SetCommitFlag(true);
     epc_right_->DoCorrection();
-    right_speed_ = epc_right_->GetCurrentSpeed() / 100;
+    right_speed_ = epc_right_->GetCurrentSpeed();
   }
 }
 

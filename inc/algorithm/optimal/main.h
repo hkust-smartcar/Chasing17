@@ -77,9 +77,11 @@ struct {
 } WorldSize;
 
 struct {
+
 	float starting_y = 20; //the starting y for edge detection
 	float edge_length = 159; //max length for an edge
 	float corner_range = 5; //the square for detection would be in size corener_range*2+1
+	uint16_t edge_hor_search_max = 4; //max for horizontal search of edge if next edge point cannot be found
 	float 	 corner_height_ratio = 2.7; //the max height for detection would be WorldSize.h/corner_height_ratio
 	float corner_min = 15, corner_max = 33; //threshold (in %) for corner detection
 	float min_corners_dist = 7; // Manhattan dist threshold for consecutive corners

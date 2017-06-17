@@ -115,7 +115,7 @@ class ServoController {
   /**
    * Vector of latest five encoder values
    */
-  std::vector<int16_t> last_servo_vals_ = std::vector<int16_t>(6);
+  std::vector<int16_t> last_servo_vals_ = std::vector<int16_t>();
 
   /**
    * When the current servo cycle started.
