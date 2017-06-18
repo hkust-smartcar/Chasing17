@@ -17,6 +17,7 @@
 #include "algorithm/optimal/main.h"
 #include "algorithm/distance.h"
 #include "util/testground.h"
+#include "util/util.h"
 
 namespace libbase {
 namespace k60 {
@@ -58,18 +59,20 @@ int main() {
     LcdConsole::Config console_config;
     console_config.lcd = &lcd;
     LcdConsole console(console_config);
-    if (bm.GetVoltage() <= 7.4){
-      console.SetTextColor(Lcd::kRed);
-    } else {
-      console.SetTextColor(Lcd::kGreen);
-    }
 
-    char temp[32];
-    sprintf(temp, "Voltage: %.2fV", bm.GetVoltage());
-    console.WriteString(temp);
+    float voltage;
+    do {
+      voltage = bm.GetVoltage();
+      
+      console.SetTextColor(voltage <= 7.4 ? Lcd::kRed : Lcd::kGreen);
 
-    System::DelayMs(1000);
-    while (bm.GetVoltage() <= 7.4);
+      char temp[32];
+      sprintf(temp, "Voltage: %.2fV", voltage);
+      util::ConsoleClearRow(&console, 0);
+      console.WriteString(temp);
+
+      System::DelayMs(1000);
+    } while (voltage <= 7.4);
   }
 
   // modify next line to switch between algorithms
