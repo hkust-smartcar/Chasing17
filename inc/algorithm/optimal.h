@@ -1,5 +1,5 @@
 /*
- * main.h
+ * optimal.h
  *
  * Copyright (c) 2014-2017 HKUST SmartCar Team
  * Refer to LICENSE for details
@@ -18,8 +18,8 @@
 #include "car_manager.h"
 #include "libsc/system.h"
 
-#ifndef CHASING17_ALGORITHM_OPTIMAL_MAIN_H_
-#define CHASING17_ALGORITHM_OPTIMAL_MAIN_H_
+#ifndef CHASING17_ALGORITHM_OPTIMAL_H_
+#define CHASING17_ALGORITHM_OPTIMAL_H_
 
 namespace algorithm{
 namespace optimal{
@@ -114,4 +114,4 @@ enum struct TranslateType {
 
 }
 }
-#endif //CHASING17_ALGORITHM_OPTIMAL_MAIN_H_
+#endif //CHASING17_ALGORITHM_OPTIMAL_H_

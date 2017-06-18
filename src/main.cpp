@@ -14,7 +14,7 @@
 #include "libsc/st7735r.h"
 #include "libsc/system.h"
 
-#include "algorithm/optimal/main.h"
+#include "algorithm/optimal.h"
 #include "algorithm/distance.h"
 #include "util/testground.h"
 #include "util/util.h"
@@ -63,7 +63,7 @@ int main() {
     float voltage;
     do {
       voltage = bm.GetVoltage();
-      
+
       console.SetTextColor(voltage <= 7.4 ? Lcd::kRed : Lcd::kGreen);
 
       char temp[32];

@@ -1,5 +1,5 @@
 /*
- * main.cpp
+ * optimal.cpp
  *
  * Copyright (c) 2014-2017 HKUST SmartCar Team
  * Refer to LICENSE for details
@@ -10,7 +10,7 @@
  *
  */
 
-#include "algorithm/optimal/main.h"
+#include "algorithm/optimal.h"
 
 #include "libsc/alternate_motor.h"
 #include "libsc/dir_encoder.h"
@@ -29,8 +29,8 @@
 #include "util/util.h"
 
 #include "debug_console.h"
-#include "algorithm/optimal/img_car1.h"
-#include "algorithm/optimal/img_car2.h"
+#include "algorithm/worldview/car1.h"
+#include "algorithm/worldview/car2.h"
 
 using namespace libsc;
 
@@ -1093,7 +1093,6 @@ void main(CarManager::Car c) {
 
 //	std::unique_ptr<util::MpcDual> pMpc(new util::MpcDual(&motor0, &motor1, &encoder0, &encoder1));
 	util::MpcDual mpc(&motor0, &motor1, &encoder0, &encoder1);
-	util::MpcDual* pMpc = &mpc;
 
 	k60::JyMcuBt106::Config ConfigBT;
 	ConfigBT.id = 0;
@@ -1116,7 +1115,6 @@ void main(CarManager::Car c) {
 	joystick_config.is_active_low = true;
 	Joystick joystick(joystick_config);
 
-	// TODO: Determine the correct value for 4th parameter
 	DebugConsole console(&joystick, &lcd, &writer, 10);
 
 	/*
@@ -1230,4 +1228,4 @@ void main(CarManager::Car c) {
 
 }
 }
-} // namespace algorithm::optimal
+} // namespace algorithm::worldview
