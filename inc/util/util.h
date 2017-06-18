@@ -131,8 +131,7 @@ using std::clamp;
  */
 template<class T>
 constexpr const T& clamp(const T& v, const T& lo, const T& hi) {
-  return assert(!(hi < lo)),
-      (v < lo) ? lo : (hi < v) ? hi : v;
+  return (v < lo) ? lo : (hi < v) ? hi : v;
 }
 
 #endif  // __cplusplus > 201402L (check for C++17 support)
