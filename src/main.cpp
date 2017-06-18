@@ -67,7 +67,7 @@ int main() {
       console.SetTextColor(voltage <= 7.4 ? Lcd::kRed : Lcd::kGreen);
 
       char temp[32];
-      sprintf(temp, "Voltage: %.2fV", voltage);
+      sprintf(temp, " Voltage: %.2fV", voltage);
       util::ConsoleClearRow(&console, 0);
       console.WriteString(temp);
 
