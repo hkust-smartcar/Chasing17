@@ -100,8 +100,6 @@ void main() {
 
   Timer::TimerInt time_img = 0;
 
-  char testChar[15] = {};
-
   CarManager::SetTargetSpeed(8250);
   while (true) {
     if (time_img != System::Time()) {
