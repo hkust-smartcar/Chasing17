@@ -63,6 +63,8 @@ bool stop_the_car_on_start_line = false;
 int roundaboutStatus = 0; // 0: Before 1: Detected 2: Inside (After one corner)
 int crossingStatus = 0; // 0: Before 1: Detected/Inside
 uint16_t prev_track_width = 0;
+uint16_t corner_temp_x; //Remember the enter corner_cor after entering the crossing
+uint16_t corner_temp_y;
 Timer::TimerInt feature_start_time;
 std::pair<int, int> carMid(WorldSize.w / 2, 0);
 const Byte* CameraBuf;
@@ -742,6 +744,8 @@ CarManager::Feature featureIdent_Corner() {
         && !getWorldBit(test_x, test_y + 1)
         && !getWorldBit(test_x - 1, test_y)) {
       crossingStatus = 1; //Detected
+      corner_temp_x = cornerMid_x; //store the entering corners
+	  corner_temp_y = cornerMid_y;
       feature_start_time = System::Time(); // Mark the startTime of latest enter time
       roundaboutStatus = 0;// Avoid failure of detecting roundabout exit
       return CarManager::Feature::kCross;
@@ -822,13 +826,36 @@ void GenPath(CarManager::Feature feature) {
   if (!left_size && !right_size) { //simple validity check
     return;
   }
-  if (crossingStatus == 1 && abs(System::Time() - feature_start_time) > TuningVar.feature_inside_time) {
-    crossingStatus = 0;
+  /*Time delay for entering crossing*/
+  if (crossingStatus == 1 && abs(System::Time() - feature_start_time) > TuningVar.feature_inside_time) {//&& encoder pass crossing
+	  crossingStatus = 0;
   }
-  if (crossingStatus == 1) {
-    path.push(carMid.first, carMid.second); //Go straight anyway inside crossing
+  if (crossingStatus == 1) { //Gen new path by searching midpoint
+//	uint16_t new_right_x;
+//	uint16_t new_left_x;
+//	// find new right edge
+//	for (uint16_t i = carMid.first; ; i++){
+//		if(getWorldBit(i, carMid.second+TuningVar.cross_cal_level) == 1){
+//			new_right_x = i;
+//			break;
+//		}
+//	}
+//	// find new left edge
+//	for (uint16_t i = carMid.first; ; i--){
+//		if(getWorldBit(i, carMid.second+TuningVar.cross_cal_level) == 1){
+//			new_left_x = i;
+//			break;
+//		}
+//	}
+    /*FOR DEBUGGING*/
+//		pLcd->SetRegion(Lcd::Rect((new_left_x + new_right_x)/2,WorldSize.h - (carMid.second+TuningVar.cross_cal_level) - 1, 4, 4));
+//		pLcd->FillColor(Lcd::kRed);
+    /*END OF DEBUGGING*/
+//    path.push((new_left_x + new_right_x)/2, carMid.second+TuningVar.cross_cal_level); //follow the new midpoint
+	  path.push(carMid.first,carMid.second);
     return;
   }
+  /*End of time delay*/
   // When entering the roundabout, keep roundabout method untill completely enter
   if (roundaboutStatus == 1 && abs(System::Time() - feature_start_time) < TuningVar.feature_inside_time) {
     feature = CarManager::Feature::kRoundabout;
@@ -1052,21 +1079,21 @@ void PrintSuddenChangeTrackWidthLocation(uint16_t color) {
 /**
  * @brief Calculate the servo angle diff
  */
-int16_t CalcAngleDiff() {
-  int16_t error = 0, sum = 0;
-  for (auto&& point : path.points) {
-    if (sum > 20) //consider first 20 points
-      break;
-    error += (point.first - WorldSize.w / 2);
-    sum++;
-  }
+int16_t CalcAngleDiff(CarManager::Feature f) {
+	int16_t error = 0, sum = 0;
+	for (auto&& point : path.points) {
+		if (sum > TuningVar.general_cal_num) //consider first 20 points
+			break;
+		error += (point.first - WorldSize.w / 2);
+		sum++;
+	}
 
-//	char buff[10];
-//	sprintf(buff, "Servo:%d", error);
-//	pLcd->SetRegion(Lcd::Rect(0, 0, 100, 15));
-//	pWriter->WriteBuffer(buff, 10);
+	//	char buff[10];
+	//	sprintf(buff, "Servo:%d", error);
+	//	pLcd->SetRegion(Lcd::Rect(0, 0, 100, 15));
+	//	pWriter->WriteBuffer(buff, 10);
 
-  return error;
+	return error;
 }
 
 }  // namespace
@@ -1157,6 +1184,8 @@ void main(CarManager::Car c) {
   pServo->SetDegree(servo_bounds.kCenter);
   System::DelayMs(1000);
 
+  motor0.SetPower(200);
+  motor1.SetPower(200);
   /*while(true){
 
 
@@ -1197,18 +1226,18 @@ void main(CarManager::Car c) {
         GenPath(a); //Generate path
         /*FOR DEBUGGING*/
 //				pLcd->SetRegion(Lcd::Rect(0, 16, 128, 15));
-//				char timestr[100];
+				char timestr[100];
 //				sprintf(timestr, "time: %dms", System::Time() - new_time);
 //				pLcd->SetRegion(Lcd::Rect(0, 32, 128, 15));
 //				sprintf(timestr, "feature: %dms", feature_start_time);
 //				pLcd->SetRegion(Lcd::Rect(0, 64, 128, 15));
-//				(roundaboutStatus == 1)?pWriter->WriteString("Inside"):pWriter->WriteString("Before");
+//				(crossingStatus == 1)?pWriter->WriteString("Inside"):pWriter->WriteString("Before");
 //				PrintWorldImage();
 //				PrintEdge(left_edge, Lcd::kRed); //Print left_edge
 //				PrintEdge(right_edge, Lcd::kBlue); //Print right_edge
 //				PrintCorner(left_corners, Lcd::kPurple); //Print left_corner
 //				PrintCorner(right_corners, Lcd::kPurple); //Print right_corner
-//
+
 //				switch (a) {
 //				case CarManager::Feature::kCross:
 //					pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
@@ -1237,10 +1266,12 @@ void main(CarManager::Car c) {
 //				}
 //				PrintSuddenChangeTrackWidthLocation(Lcd::kYellow); //Print sudden change track width location
         /*END OF DEBUGGING*/
-        pServo->SetDegree(util::clamp(static_cast<uint16_t>(servo_bounds.kCenter - CalcAngleDiff()),
+//		pLcd->SetRegion(Lcd::Rect(0, 32, 128, 15));
+//		sprintf(timestr, "error: %dms", CalcAngleDiff(a));
+        pServo->SetDegree(util::clamp(static_cast<uint16_t>(servo_bounds.kCenter - CalcAngleDiff(a)),
                                       servo_bounds.kRightBound,
                                       servo_bounds.kLeftBound));
-//				PrintEdge(path, Lcd::kGreen); //Print path
+//		PrintEdge(path, Lcd::kGreen); //Print path
         led0.Switch(); //heart beat
       }
     }
