@@ -1318,18 +1318,22 @@ void main(CarManager::Car c) {
 //				PrintSuddenChangeTrackWidthLocation(Lcd::kYellow); //Print sudden change track width location
         /*END OF DEBUGGING*/
         // TODO: Modify CalcAngleDiff() to return angle difference, instead of servo value difference
-        pServo->SetDegree(libutil::ClampVal(static_cast<uint16_t>(servo_bounds.kCenter - CalcAngleDiff()),
-                                      servo_bounds.kRightBound,
-                                      servo_bounds.kLeftBound));
+        pServo->SetDegree(libutil::ClampVal(servo_bounds.kRightBound,
+        		static_cast<uint16_t>(servo_bounds.kCenter - 1.2f*CalcAngleDiff()),
+                servo_bounds.kLeftBound));
+        char servo_text[100];
+        sprintf(servo_text, "Servo:%d %d", servo_bounds.kLeftBound, pServo->GetDegree());
+        pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
+        pWriter->WriteString(servo_text);
         encoder0.Update();
         encoder1.Update();
-       if(std::abs(encoder0.GetCount())<10||std::abs(encoder1.GetCount())<10){
-    	   motor0.SetPower(0);
-    	   motor1.SetPower(0);
-       }else{
-    	   motor0.SetPower(300);
-    	   motor1.SetPower(300);
-       }
+//       if(std::abs(encoder0.GetCount())<10||std::abs(encoder1.GetCount())<10){
+//    	   motor0.SetPower(0);
+//    	   motor1.SetPower(0);
+//       }else{
+//    	   motor0.SetPower(300);
+//    	   motor1.SetPower(300);
+//       }
 //				PrintEdge(path, Lcd::kGreen); //Print path
 //        CarManager::UpdateParameters();
       }
