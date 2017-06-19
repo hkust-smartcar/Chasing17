@@ -42,6 +42,11 @@ constexpr uint16_t Mpc::kProtectionMinCount;
 
 Mpc::Mpc(libsc::DirEncoder* e, libsc::AlternateMotor* m, bool isClockwise)
     : motor_(m), encoder_(e) {
+  static_assert(MotorConstants::kLowerHardLimit < MotorConstants::kUpperHardLimit,
+                "Hard Lower Bound should be smaller than Hard Upper Bound");
+  static_assert(MotorConstants::kLowerBound < MotorConstants::kUpperBound,
+                "Lower Bound should be smaller than Upper Bound");
+
   motor_->SetPower(0);
   motor_->SetClockwise(isClockwise);
   UpdateEncoder();
@@ -69,7 +74,7 @@ void Mpc::AddToTargetSpeed(const int16_t d_speed, bool commit_now) {
 void Mpc::DoCorrection() {
   // cleanup from previous cycle if it is out of range
   // [kMotorLowerBound,kMotorUpperBound]
-  motor_->SetPower(util::clamp<uint16_t>(motor_->GetPower(), MotorConstants.kLowerBound, MotorConstants.kUpperBound));
+  motor_->SetPower(util::clamp<uint16_t>(motor_->GetPower(), MotorConstants::kLowerBound, MotorConstants::kUpperBound));
 
   // sets the correction target speed to the new speed, if
   // commit_target_flag_ is true.
@@ -111,8 +116,8 @@ void Mpc::DoCorrection() {
 
   // hard limit bounds checking
   motor_->SetPower(util::clamp<uint16_t>(motor_->GetPower(),
-                                         MotorConstants.kLowerHardLimit,
-                                         MotorConstants.kUpperHardLimit));
+                                         MotorConstants::kLowerHardLimit,
+                                         MotorConstants::kUpperHardLimit));
 }
 
 void Mpc::CommitTargetSpeed() {

@@ -75,13 +75,15 @@ struct Corners {
   std::list<std::pair<uint16_t, uint16_t>> points;
 };
 
-struct {
-  const uint16_t w = 128, h = 480;
-} CameraSize;
+struct CameraSize {
+  static constexpr uint16_t w = 128;
+  static constexpr uint16_t h = 480;
+};
 
-struct {
-  const uint16_t w = 128, h = 160;
-} WorldSize;
+struct WorldSize {
+  static constexpr uint16_t w = 128;
+  static constexpr uint16_t h = 160;
+};
 
 struct {
   bool roundabout_turn_left = true; //Used for GenPath()

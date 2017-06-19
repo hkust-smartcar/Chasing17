@@ -55,6 +55,11 @@ unique_ptr<FcYyUsV4> CarManager::usir_ = nullptr;
 unique_ptr<Mpu9250> CarManager::mpu_ = nullptr;
 
 void CarManager::Init(Config config) {
+  static_assert(kBoundsCar1.kLeftBound > kBoundsCar1.kCenter && kBoundsCar1.kCenter > kBoundsCar1.kRightBound,
+                "Incorrect car 1 servo boundaries");
+  static_assert(kBoundsCar2.kLeftBound > kBoundsCar2.kCenter && kBoundsCar2.kCenter > kBoundsCar2.kRightBound,
+                "Incorrect car 2 servo boundaries");
+
   epc_left_ = move(config.epc_left);
   epc_right_ = move(config.epc_right);
   epc_ = move(config.epc);
