@@ -57,14 +57,14 @@ Corners left_corners;
 Corners right_corners;
 std::array<std::pair<uint16_t, uint16_t>, 2> inc_width_pts; //0:left, 1:right
 bool has_inc_width_pt = false;
-bool is_staright_line = false;
+bool is_straight_line = false;
 bool is_start_line = false;
 bool stop_the_car_on_start_line = false;
 int roundaboutStatus = 0; // 0: Before 1: Detected 2: Inside (After one corner)
 int crossingStatus = 0; // 0: Before 1: Detected/Inside
 uint16_t prev_track_width = 0;
 Timer::TimerInt feature_start_time;
-std::pair<int, int> carMid(WorldSize.w / 2, 0);
+std::pair<int, int> carMid(WorldSize::w / 2, 0);
 const Byte* CameraBuf;
 //Byte WorldBuf[128*20];
 std::unique_ptr<Ov7725> pCamera = nullptr;
@@ -110,19 +110,19 @@ void PrintWorldImage();
  * XXX: Suspecting median filter would crash the program occasionally
  */
 int getFilteredBit(const Byte* buff, int x, int y) {
-  if (x <= 0 || x > CameraSize.w - 1 || y <= 0 || y > CameraSize.h - 1)
+  if (x <= 0 || x > CameraSize::w - 1 || y <= 0 || y > CameraSize::h - 1)
     return 1; //-1; // Out of bound = black
-  //y = CameraSize.h - 1 - y; // set y = 0 at bottom
+  //y = CameraSize::h - 1 - y; // set y = 0 at bottom
 
-  return buff[y * CameraSize.w / 8 + x / 8] >> (7 - (x % 8)) & 1; //buff[y*CameraSize.w/8+x/8] & 0x80>>x%8;
+  return buff[y * CameraSize::w / 8 + x / 8] >> (7 - (x % 8)) & 1; //buff[y*CameraSize::w/8+x/8] & 0x80>>x%8;
 
   // Median Filter
   int count = 0, total = 0;
 
-  for (int i = max(0, x - 1); i < min(CameraSize.w - 1, x + 1); i++) {
-    for (int j = max(0, y - 1); j < min(CameraSize.h - 1, y + 1); j++) {
+  for (int i = max(0, x - 1); i < min(CameraSize::w - 1, x + 1); i++) {
+    for (int j = max(0, y - 1); j < min(CameraSize::h - 1, y + 1); j++) {
       total++;
-      count += buff[j * CameraSize.w / 8 + i / 8] >> (7 - (i % 8)) & 1;
+      count += buff[j * CameraSize::w / 8 + i / 8] >> (7 - (i % 8)) & 1;
     }
   }
   // Median Filter
@@ -155,10 +155,10 @@ int FindDirection(int j, int d) {
  * @brief To fetch bit directly from raw data
  */
 bool getBit(int i_x, int i_y) {
-  if (i_x <= 0 || i_x > CameraSize.w - 1 || i_y <= 0
-      || i_y > CameraSize.h - 1)
+  if (i_x <= 0 || i_x > CameraSize::w - 1 || i_y <= 0
+      || i_y > CameraSize::h - 1)
     return -1;
-  return CameraBuf[i_y * CameraSize.w / 8 + i_x / 8] >> (7 - (i_x % 8)) & 1;
+  return CameraBuf[i_y * CameraSize::w / 8 + i_x / 8] >> (7 - (i_x % 8)) & 1;
 }
 
 /**
@@ -229,7 +229,7 @@ void Capture() {
   pCamera->UnlockBuffer();
 
   //Search horizontally
-  for (int i = WorldSize.w / 2; i > 0; i--) {
+  for (int i = CameraSize::w / 2; i > 0; i--) {
     if (getWorldBit(i, TuningVar.starting_y) == 1) {
       left_x = i + 1;
       left_y = TuningVar.starting_y;
@@ -243,7 +243,7 @@ void Capture() {
   }
 
   //Search horizontally
-  for (int i = WorldSize.w / 2; i < WorldSize.w; i++) {
+  for (int i = CameraSize::w / 2; i < CameraSize::w; i++) {
     if (getWorldBit(i, TuningVar.starting_y) == 1) {
       right_x = i - 1;
       right_y = TuningVar.starting_y;
@@ -252,7 +252,7 @@ void Capture() {
     }
   }
   if (!found_right) {
-    right_x = WorldSize.w - 1;
+    right_x = CameraSize::w - 1;
     right_y = TuningVar.starting_y;
   }
 
@@ -265,7 +265,7 @@ void Capture() {
  * @brief Print raw image to LCD
  */
 void PrintImage() {
-  pLcd->SetRegion(Lcd::Rect(0, 0, CameraSize.w, CameraSize.h));
+  pLcd->SetRegion(Lcd::Rect(0, 0, CameraSize::w, CameraSize::h));
   pLcd->FillBits(0x0000, 0xFFFF, CameraBuf, pCamera->GetBufferSize() * 8);
 }
 
@@ -302,7 +302,7 @@ bool FindOneLeftEdge() {
     }
     //if still couldnt find next point, try search towards right
     for (int i = prev_x;
-         i < min(prev_x + TuningVar.edge_hor_search_max, WorldSize.w - 1);
+         i < min(prev_x + TuningVar.edge_hor_search_max, CameraSize::w - 1);
          i++) {
       if (getWorldBit(i, prev_y) == 1) {
         left_edge.push(i - 1, prev_y);
@@ -320,24 +320,24 @@ bool FindOneLeftEdge() {
     left_edge.points.pop_back();
     return false;
   }
-  if (left_edge.points.back().second == WorldSize.h - 1)
+  if (left_edge.points.back().second == CameraSize::h - 1)
     return false; //reaches top
   if (left_edge.points.back().first == 1)
     return false; //reaches left
-  if (left_edge.points.back().first == WorldSize.w - 1)
+  if (left_edge.points.back().first == CameraSize::w - 1)
     return false; //reaches right
 
 //	if (left_edge.points.back().second > TuningVar.edge_min_worldview_bound_check){
   switch (car) { //reaches worldview boundaries
     case CarManager::Car::kCar1:
       if (worldview::car1::transformMatrix[min(
-          left_edge.points.back().first + 1, WorldSize.w - 1)][WorldSize.h
+          left_edge.points.back().first + 1, CameraSize::w - 1)][CameraSize::h
           - left_edge.points.back().second][0] == -1) {
         left_edge.points.pop_back();
         return false;
       }
       if (worldview::car1::transformMatrix[max(
-          left_edge.points.back().first - 1, 1)][WorldSize.h
+          left_edge.points.back().first - 1, 1)][CameraSize::h
           - left_edge.points.back().second][0] == -1) {
         left_edge.points.pop_back();
         return false;
@@ -345,13 +345,13 @@ bool FindOneLeftEdge() {
       break;
     case CarManager::Car::kCar2:
       if (worldview::car2::transformMatrix[min(
-          left_edge.points.back().first + 1, WorldSize.w - 1)][WorldSize.h
+          left_edge.points.back().first + 1, CameraSize::w - 1)][CameraSize::h
           - left_edge.points.back().second][0] == -1) {
         left_edge.points.pop_back();
         return false;
       }
       if (worldview::car2::transformMatrix[max(
-          left_edge.points.back().first - 1, 1)][WorldSize.h
+          left_edge.points.back().first - 1, 1)][CameraSize::h
           - left_edge.points.back().second][0] == -1) {
         left_edge.points.pop_back();
         return false;
@@ -362,14 +362,14 @@ bool FindOneLeftEdge() {
 
   //find corners
   if (left_edge.points.back().second
-      <= WorldSize.h / TuningVar.corner_height_ratio) {
+      <= CameraSize::h / TuningVar.corner_height_ratio) {
     int CornerCheck = 0;
     int total = 0;
     auto last = left_edge.points.back();
     if (last.first - TuningVar.corner_range <= 0
-        || last.first + TuningVar.corner_range > WorldSize.w - 1
+        || last.first + TuningVar.corner_range > CameraSize::w - 1
         || last.second - TuningVar.corner_range <= 0
-        || last.second + TuningVar.corner_range > WorldSize.h - 1)
+        || last.second + TuningVar.corner_range > CameraSize::h - 1)
       return true;
     for (int i = (last.first - TuningVar.corner_range);
          i <= (last.first + TuningVar.corner_range); i++) {
@@ -400,7 +400,7 @@ bool FindOneRightEdge() {
   uint16_t prev_size = right_edge.points.size();
 
   if (getWorldBit(prev_x, prev_y + 1) == 0) { //if white, find in CW until black
-    if (prev_x == WorldSize.w - 1) { //if align with left bound
+    if (prev_x == CameraSize::w - 1) { //if align with left bound
       right_edge.push(prev_x, prev_y + 1);
     } else {
       for (int i = 7; i > 0; i--) {
@@ -410,7 +410,7 @@ bool FindOneRightEdge() {
         }
       }
       //if still couldnt find next point, try search towards right
-      for (int i = prev_x; i < min(prev_x + TuningVar.edge_hor_search_max, WorldSize.w - 1); i++) {
+      for (int i = prev_x; i < min(prev_x + TuningVar.edge_hor_search_max, CameraSize::w - 1); i++) {
         if (getWorldBit(i, prev_y) == 1) {
           right_edge.push(i - 1, prev_y);
           break;
@@ -442,11 +442,11 @@ bool FindOneRightEdge() {
     right_edge.points.pop_back();
     return false;
   }
-  if (right_edge.points.back().second == WorldSize.h - 1)
+  if (right_edge.points.back().second == CameraSize::h - 1)
     return false; //reaches top
   if (right_edge.points.back().first == 1)
     return false; //reaches left
-  if (right_edge.points.back().first == WorldSize.w - 1)
+  if (right_edge.points.back().first == CameraSize::w - 1)
     return false; //reaches right
 
   if (right_edge.points.back().second
@@ -454,13 +454,13 @@ bool FindOneRightEdge() {
     switch (car) { //reaches worldview boundaries
       case CarManager::Car::kCar1:
         if (worldview::car1::transformMatrix[min(
-            right_edge.points.back().first + 1, WorldSize.w - 1)][WorldSize.h
+            right_edge.points.back().first + 1, CameraSize::w - 1)][CameraSize::h
             - right_edge.points.back().second][0] == -1) {
           right_edge.points.pop_back();
           return false;
         }
         if (worldview::car1::transformMatrix[max(
-            right_edge.points.back().first - 1, 1)][WorldSize.h
+            right_edge.points.back().first - 1, 1)][CameraSize::h
             - right_edge.points.back().second][0] == -1) {
           right_edge.points.pop_back();
           return false;
@@ -468,13 +468,13 @@ bool FindOneRightEdge() {
         break;
       case CarManager::Car::kCar2:
         if (worldview::car2::transformMatrix[min(
-            right_edge.points.back().first + 1, WorldSize.w - 1)][WorldSize.h
+            right_edge.points.back().first + 1, CameraSize::w - 1)][CameraSize::h
             - right_edge.points.back().second][0] == -1) {
           right_edge.points.pop_back();
           return false;
         }
         if (worldview::car2::transformMatrix[max(
-            right_edge.points.back().first - 1, 1)][WorldSize.h
+            right_edge.points.back().first - 1, 1)][CameraSize::h
             - right_edge.points.back().second][0] == -1) {
           right_edge.points.pop_back();
           return false;
@@ -485,14 +485,14 @@ bool FindOneRightEdge() {
 
   //find corners
   if (right_edge.points.back().second
-      <= WorldSize.h / TuningVar.corner_height_ratio) {
+      <= CameraSize::h / TuningVar.corner_height_ratio) {
     int CornerCheck = 0;
     int total = 0;
     auto last = right_edge.points.back();
     if (last.first - TuningVar.corner_range <= 0
-        || last.first + TuningVar.corner_range > WorldSize.w - 1
+        || last.first + TuningVar.corner_range > CameraSize::w - 1
         || last.second - TuningVar.corner_range <= 0
-        || last.second + TuningVar.corner_range > WorldSize.h - 1)
+        || last.second + TuningVar.corner_range > CameraSize::h - 1)
       return true;
     for (int i = (last.first - TuningVar.corner_range);
          i <= (last.first + TuningVar.corner_range); i++) {
@@ -528,7 +528,7 @@ bool FindOneRightEdge() {
  * - Stops if two edges are getting close
  */
 bool FindEdges() {
-  is_staright_line = false;
+  is_straight_line = false;
   has_inc_width_pt = false;
   is_start_line = false;
   left_corners.points.clear();
@@ -607,7 +607,7 @@ bool FindEdges() {
   }
   //Straight line judgement
   if (staright_line_edge_count >= TuningVar.straight_line_threshold) {
-    is_staright_line = true;
+    is_straight_line = true;
   }
   return true;
 }
@@ -624,7 +624,7 @@ bool FindEdges() {
  * @note: Execute this function after calling FindEdges() only when width sudden increase is detected
  */
 CarManager::Feature featureIdent_Width() {
-  std::pair<int, int> carMid(WorldSize.w / 2, 0);
+  std::pair<int, int> carMid(CameraSize::w / 2, 0);
   std::pair<int, int> cornerMid;
   //Width increase case
   if (has_inc_width_pt) {
@@ -676,11 +676,11 @@ CarManager::Feature featureIdent_Width() {
 CarManager::Feature featureIdent_Corner() {
   /*FOR DEBUGGING*/
 //	pLcd->SetRegion(
-//			Lcd::Rect(carMid.first, WorldSize.h - carMid.second - 1, 2, 2));
+//			Lcd::Rect(carMid.first, CameraSize::h - carMid.second - 1, 2, 2));
 //	pLcd->FillColor(Lcd::kRed);
   /*END OF DEBUGGING*/
   //1. Straight line
-  if (is_staright_line) {
+  if (is_straight_line) {
     roundaboutStatus = 0;// Avoid failure of detecting roundabout exit
     return CarManager::Feature::kStraight;
   }
@@ -713,7 +713,7 @@ CarManager::Feature featureIdent_Corner() {
         + right_corners.points.front().second) / 2; //corner midpoint y-cor
     /*FOR DEBUGGING*/
 //		pLcd->SetRegion(
-//				Lcd::Rect(cornerMid_x, WorldSize.h - cornerMid_y - 1, 2, 2));
+//				Lcd::Rect(cornerMid_x, CameraSize::h - cornerMid_y - 1, 2, 2));
 //		pLcd->FillColor(Lcd::kRed);
     /*END OF DEBUGGING*/
     if (abs(carMid.second - cornerMid_y) > TuningVar.action_distance) {
@@ -727,7 +727,7 @@ CarManager::Feature featureIdent_Corner() {
     uint16_t test_y = TuningVar.sightDist
         * ((cornerMid_y - carMid.second) / edge3th) + cornerMid_y;
     /*FOR DEBUGGING*/
-//		pLcd->SetRegion(Lcd::Rect(test_x, WorldSize.h - test_y - 1, 4, 4));
+//		pLcd->SetRegion(Lcd::Rect(test_x, CameraSize::h - test_y - 1, 4, 4));
 //		pLcd->FillColor(Lcd::kRed);
     /*END OF DEBUGGING*/
     if (getWorldBit(test_x, test_y) && getWorldBit(test_x + 1, test_y)
@@ -773,7 +773,7 @@ CarManager::Feature featureIdent_Corner() {
 void PrintEdge(Edges path, uint16_t color) {
   for (auto&& entry : path.points) {
     pLcd->SetRegion(
-        Lcd::Rect(entry.first, WorldSize.h - entry.second - 1, 2, 2));
+        Lcd::Rect(entry.first, CameraSize::h - entry.second - 1, 2, 2));
     pLcd->FillColor(color);
   }
 
@@ -785,7 +785,7 @@ void PrintEdge(Edges path, uint16_t color) {
 void PrintCorner(Corners corners, uint16_t color) {
   for (auto&& entry : corners.points) {
     pLcd->SetRegion(
-        Lcd::Rect(entry.first, WorldSize.h - entry.second - 1, 4, 4));
+        Lcd::Rect(entry.first, CameraSize::h - entry.second - 1, 4, 4));
     pLcd->FillColor(color);
   }
 }
@@ -852,7 +852,7 @@ void GenPath(CarManager::Feature feature) {
           } else if (curr_right.first == 0
               && translate_flag == TranslateType::kNone) {
             translate_flag = TranslateType::kRightNull;
-            shift_right_null = (WorldSize.w - left_edge.points[i].first)
+            shift_right_null = (CameraSize::w - left_edge.points[i].first)
                 / 2;
             //^^^ Start Translation ^^^
             //vvv  Start Averaging  vvv
@@ -894,7 +894,7 @@ void GenPath(CarManager::Feature feature) {
           } else if (curr_right.first == 0
               && translate_flag == TranslateType::kNone) {
             translate_flag = TranslateType::kRightNull;
-            shift_right_null = (WorldSize.w - left_edge.points[i].first)
+            shift_right_null = (CameraSize::w - left_edge.points[i].first)
                 / 2;
             //^^^ Start Translation ^^^
             //vvv  Start Averaging  vvv
@@ -1040,11 +1040,11 @@ void PrintSuddenChangeTrackWidthLocation(uint16_t color) {
   if (has_inc_width_pt) {
     pLcd->SetRegion(
         Lcd::Rect(inc_width_pts.at(0).first,
-                  WorldSize.h - inc_width_pts.at(0).second - 1, 4, 4));
+                  CameraSize::h - inc_width_pts.at(0).second - 1, 4, 4));
     pLcd->FillColor(color);
     pLcd->SetRegion(
         Lcd::Rect(inc_width_pts.at(1).first,
-                  WorldSize.h - inc_width_pts.at(1).second - 1, 4, 4));
+                  CameraSize::h - inc_width_pts.at(1).second - 1, 4, 4));
     pLcd->FillColor(color);
   }
 }
@@ -1057,7 +1057,7 @@ int16_t CalcAngleDiff() {
   for (auto&& point : path.points) {
     if (sum > 20) //consider first 20 points
       break;
-    error += (point.first - WorldSize.w / 2);
+    error += (point.first - CameraSize::w / 2);
     sum++;
   }
 
@@ -1075,8 +1075,8 @@ void main(CarManager::Car c) {
   CarManager::Config car_config;
   car_config.car = c;
 
-  car = c;
-  servo_bounds = car == CarManager::Car::kCar1 ? CarManager::kBoundsCar1 : CarManager::kBoundsCar2;
+//  car = c;
+//  servo_bounds = car == CarManager::Car::kCar1 ? CarManager::kBoundsCar1 : CarManager::kBoundsCar2;
 
   Led::Config ConfigLed;
   ConfigLed.id = 0;
@@ -1087,8 +1087,8 @@ void main(CarManager::Car c) {
 
   Ov7725::Config cameraConfig;
   cameraConfig.id = 0;
-  cameraConfig.w = CameraSize.w;
-  cameraConfig.h = CameraSize.h;
+  cameraConfig.w = CameraSize::w;
+  cameraConfig.h = CameraSize::h;
   cameraConfig.fps = Ov7725Configurator::Config::Fps::kHigh;
   cameraConfig.contrast = 0x2C;
   cameraConfig.brightness = 0x00;
@@ -1098,9 +1098,10 @@ void main(CarManager::Car c) {
 
   FutabaS3010::Config ConfigServo;
   ConfigServo.id = 0;
-  FutabaS3010 servo(ConfigServo);
+  auto pServo = util::make_unique<FutabaS3010>(ConfigServo);
+//  FutabaS3010 servo(ConfigServo);
 //	std::unique_ptr<FutabaS3010> pServo(new FutabaS3010(ConfigServo));
-  pServo = &servo;
+//  pServo = &servo;
 
   DirEncoder::Config ConfigEncoder;
   ConfigEncoder.id = 0;
@@ -1114,8 +1115,8 @@ void main(CarManager::Car c) {
   ConfigMotor.id = 1;
   AlternateMotor motor1(ConfigMotor);
 
-//	std::unique_ptr<util::MpcDual> pMpc(new util::MpcDual(&motor0, &motor1, &encoder0, &encoder1));
-  util::MpcDual mpc(&motor0, &motor1, &encoder0, &encoder1);
+  auto pMpc = util::make_unique<util::MpcDual>(&motor0, &motor1, &encoder0, &encoder1);
+//  util::MpcDual mpc(&motor0, &motor1, &encoder0, &encoder1);
 
   JyMcuBt106::Config ConfigBT;
   ConfigBT.id = 0;
@@ -1140,21 +1141,27 @@ void main(CarManager::Car c) {
 
   DebugConsole console(&joystick, &lcd, &writer, 10);
 
-  /*
-   CarManager::Config ConfigMgr;
-   ConfigMgr.servo = std::move(pServo);
-   ConfigMgr.epc = std::move(pMpc);
-   CarManager::Init(std::move(ConfigMgr));
-   */
+  /*CarManager::Config ConfigMgr;
+  ConfigMgr.servo = std::move(pServo);
+  ConfigMgr.epc = std::move(pMpc);
+  CarManager::Init(std::move(ConfigMgr));*/
+  car_config.servo = std::move(pServo);
+  car_config.epc = std::move(pMpc);
+  CarManager::Init(std::move(car_config));
+
   Timer::TimerInt time_img = 0;
 
-  //Servo test
+  servo_bounds = CarManager::GetServoBounds();
 
-  pServo->SetDegree(servo_bounds.kLeftBound);
+  //Servo test
+//  pServo->SetDegree(servo_bounds.kLeftBound);
+  CarManager::SetTargetAngle(CarManager::GetServoAngles().kLeftAngle);
   System::DelayMs(1000);
-  pServo->SetDegree(servo_bounds.kRightBound);
+//  pServo->SetDegree(servo_bounds.kRightBound);
+  CarManager::SetTargetAngle(CarManager::GetServoAngles().kRightAngle);
   System::DelayMs(1000);
-  pServo->SetDegree(servo_bounds.kCenter);
+//  pServo->SetDegree(servo_bounds.kCenter);
+  CarManager::SetTargetAngle(0);
   System::DelayMs(1000);
 
   /*while(true){
@@ -1189,7 +1196,7 @@ void main(CarManager::Car c) {
     while (time_img != System::Time()) {
       time_img = System::Time();
       if (time_img % 10 == 0) {
-        Timer::TimerInt new_time = System::Time();
+//        Timer::TimerInt new_time = System::Time();
         //pMpc->UpdateEncoder();
         Capture(); //Capture until two base points are identified
         FindEdges();
@@ -1237,10 +1244,12 @@ void main(CarManager::Car c) {
 //				}
 //				PrintSuddenChangeTrackWidthLocation(Lcd::kYellow); //Print sudden change track width location
         /*END OF DEBUGGING*/
+        // TODO: Modify CalcAngleDiff() to return angle difference, instead of servo value difference
         pServo->SetDegree(util::clamp(static_cast<uint16_t>(servo_bounds.kCenter - CalcAngleDiff()),
                                       servo_bounds.kRightBound,
                                       servo_bounds.kLeftBound));
 //				PrintEdge(path, Lcd::kGreen); //Print path
+        CarManager::UpdateParameters();
         led0.Switch(); //heart beat
       }
     }

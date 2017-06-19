@@ -16,7 +16,6 @@
 #include <algorithm>
 #include <array>
 #include <bitset>
-#include <cassert>
 #include <iterator>
 #include <memory>
 #include <string>
