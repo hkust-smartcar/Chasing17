@@ -97,17 +97,17 @@ struct {
   uint16_t min_corners_dist = 7; // Manhattan dist threshold for consecutive corners
   uint16_t min_edges_dist = 7; // Manhattan dist threshold for edges
   uint16_t track_width_threshold = 900; //track width threshold for consideration of sudden change (square)
-  uint16_t track_width_change_threshold = 10; //track width change threshold for consideration of sudden change
+  uint16_t track_width_change_threshold = 350; //track width change threshold for consideration of sudden change
   uint16_t sightDist = 40; // The distance from which the image pixel should be tested
   uint16_t sightDist_exitRound = 60; //The distance from which the image pixel is used for exit testing
   uint16_t straight_line_threshold = 50; // The threshold num. of equal width for straight line detection
   uint16_t action_distance = 25; // The condition in which the car start handling this feature when meeting it
   uint16_t stop_distance = 10; // The distance away from starting line - for stopping
   float black_div_length_ratio_threshold = 0.5; // ratio for black points/edge length. Used for detecting starting line
-  libsc::Timer::TimerInt feature_inside_time = 500; // freezing time for feature extraction, the time for entering the entrance
-  uint16_t cross_cal_level = 35; //The num of path points considered for servo angle decision in crossing
+  libsc::Timer::TimerInt feature_inside_time = 450; // freezing time for feature extraction, the time for entering the entrance
+  uint16_t cross_cal_level = 65; //The num of path points considered for servo angle decision in crossing
   uint16_t general_cal_num = 20; //The num of path points considered for servo angle decision except crossing
-
+  uint16_t cross_encoder_count = 2600; // The hardcoded encoder count that car must reach in crossroad
 
 } TuningVar;
 

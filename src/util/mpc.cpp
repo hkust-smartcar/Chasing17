@@ -40,6 +40,11 @@ constexpr float Mpc::kD;
 constexpr uint8_t Mpc::kOverrideWaitCycles;
 constexpr uint16_t Mpc::kProtectionMinCount;
 
+constexpr uint16_t Mpc::MotorConstants::kUpperBound;
+constexpr uint16_t Mpc::MotorConstants::kLowerBound;
+constexpr uint16_t Mpc::MotorConstants::kUpperHardLimit;
+constexpr uint16_t Mpc::MotorConstants::kLowerHardLimit;
+
 Mpc::Mpc(libsc::DirEncoder* e, libsc::AlternateMotor* m, bool isClockwise)
     : motor_(m), encoder_(e) {
   static_assert(MotorConstants::kLowerHardLimit < MotorConstants::kUpperHardLimit,

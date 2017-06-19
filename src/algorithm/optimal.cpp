@@ -65,6 +65,7 @@ int crossingStatus = 0; // 0: Before 1: Detected/Inside
 uint16_t prev_track_width = 0;
 uint16_t corner_temp_x; //Remember the enter corner_cor after entering the crossing
 uint16_t corner_temp_y;
+int encoder_total = 0; //for crossroad
 Timer::TimerInt feature_start_time;
 std::pair<int, int> carMid(WorldSize::w / 2, 0);
 const Byte* CameraBuf;
@@ -76,6 +77,8 @@ LcdTypewriter* pWriter = nullptr;
 CarManager::ServoBounds* pServoBounds = nullptr;
 FutabaS3010* pServo = nullptr;
 JyMcuBt106* pBT = nullptr;
+DirEncoder* pEncoder0 = nullptr;
+DirEncoder* pEncoder1 = nullptr;
 
 CarManager::ServoBounds servo_bounds;
 CarManager::Car car;
@@ -573,6 +576,12 @@ bool FindEdges() {
               - right_edge.points.back().second)
               * (left_edge.points.back().second
                   - right_edge.points.back().second);
+//      /*FOR DEBUGGING*/
+//      char temp[100];
+//      sprintf(temp, "_dist:%d", dist - prev_track_width);
+//      pLcd->SetRegion(Lcd::Rect(0, 54, 128, 15));
+//      pWriter->WriteString(temp);
+
       //Straight line + Starting line judgement
       if (left_edge.points.size() > 1 && right_edge.points.size() > 1
           && abs(dist - prev_track_width) < 3) {
@@ -598,8 +607,7 @@ bool FindEdges() {
         }
       }
       if (dist >= TuningVar.track_width_threshold
-          && dist - prev_track_width
-              >= TuningVar.track_width_change_threshold) {
+          && dist - prev_track_width >= TuningVar.track_width_change_threshold) {
         inc_width_pts.at(0) = left_edge.points.back();
         inc_width_pts.at(1) = right_edge.points.back();
         has_inc_width_pt = true;
@@ -747,6 +755,8 @@ CarManager::Feature featureIdent_Corner() {
       corner_temp_x = cornerMid_x; //store the entering corners
 	  corner_temp_y = cornerMid_y;
       feature_start_time = System::Time(); // Mark the startTime of latest enter time
+      encoder_total = 0;
+
       roundaboutStatus = 0;// Avoid failure of detecting roundabout exit
       return CarManager::Feature::kCross;
     }
@@ -766,6 +776,10 @@ CarManager::Feature featureIdent_Corner() {
     }
   }
 
+//  /*Double check for crossing because only the cross if not accurate enough when straight road is too short*/
+//  if(has_inc_width_pt){
+//	  return CarManager::Feature::kCross;
+//  }
   //5. Nothing special: Return kNormal and wait for next testing
   return CarManager::Feature::kNormal;
   //TODO: Enter crossing with extreme angle - Two corners are on the same side
@@ -827,32 +841,40 @@ void GenPath(CarManager::Feature feature) {
     return;
   }
   /*Time delay for entering crossing*/
-  if (crossingStatus == 1 && abs(System::Time() - feature_start_time) > TuningVar.feature_inside_time) {//&& encoder pass crossing
+
+
+//  char temp[100];
+//  sprintf(temp, "Enc:%d", encoder_total);
+//  pLcd->SetRegion(Lcd::Rect(0, 32, 128, 15));
+//  pWriter->WriteString(temp);
+  if (crossingStatus == 1 && encoder_total >= TuningVar.cross_encoder_count/*abs(System::Time() - feature_start_time) > TuningVar.feature_inside_time*/) {//&& encoder pass crossing
 	  crossingStatus = 0;
   }
   if (crossingStatus == 1) { //Gen new path by searching midpoint
-//	uint16_t new_right_x;
-//	uint16_t new_left_x;
-//	// find new right edge
-//	for (uint16_t i = carMid.first; ; i++){
-//		if(getWorldBit(i, carMid.second+TuningVar.cross_cal_level) == 1){
-//			new_right_x = i;
-//			break;
-//		}
-//	}
-//	// find new left edge
-//	for (uint16_t i = carMid.first; ; i--){
-//		if(getWorldBit(i, carMid.second+TuningVar.cross_cal_level) == 1){
-//			new_left_x = i;
-//			break;
-//		}
-//	}
+	pEncoder0->Update();
+	encoder_total += pEncoder0->GetCount();
+	uint16_t new_right_x;
+	uint16_t new_left_x;
+	// find new right edge
+	for (uint16_t i = carMid.first; i < WorldSize::w ; i++){
+		if(getWorldBit(i, carMid.second+TuningVar.cross_cal_level) == 1){
+			new_right_x = i;
+			break;
+		}
+	}
+	// find new left edge
+	for (uint16_t i = carMid.first; i > 0 ; i--){
+		if(getWorldBit(i, carMid.second+TuningVar.cross_cal_level) == 1){
+			new_left_x = i;
+			break;
+		}
+	}
     /*FOR DEBUGGING*/
-//		pLcd->SetRegion(Lcd::Rect((new_left_x + new_right_x)/2,WorldSize.h - (carMid.second+TuningVar.cross_cal_level) - 1, 4, 4));
+//		pLcd->SetRegion(Lcd::Rect((new_left_x + new_right_x)/2,WorldSize::h - (carMid.second+TuningVar.cross_cal_level) - 1, 4, 4));
 //		pLcd->FillColor(Lcd::kRed);
     /*END OF DEBUGGING*/
-//    path.push((new_left_x + new_right_x)/2, carMid.second+TuningVar.cross_cal_level); //follow the new midpoint
-	  path.push(carMid.first,carMid.second);
+    path.push((new_left_x + new_right_x)/2, carMid.second+TuningVar.cross_cal_level); //follow the new midpoint
+//	  path.push(carMid.first,carMid.second);
     return;
   }
   /*End of time delay*/
@@ -1093,7 +1115,7 @@ int16_t CalcAngleDiff() {
 //	pLcd->SetRegion(Lcd::Rect(0, 0, 100, 15));
 //	pWriter->WriteBuffer(buff, 10);
 
-  return error;
+  return error / sum * 20;
 }
 
 }  // namespace
@@ -1106,11 +1128,21 @@ void main(CarManager::Car c) {
 //  servo_bounds = car == CarManager::Car::kCar1 ? CarManager::kBoundsCar1 : CarManager::kBoundsCar2;
 
   Led::Config ConfigLed;
+  ConfigLed.is_active_low = true;
   ConfigLed.id = 0;
   Led led0(ConfigLed);
+  ConfigLed.id = 1;
+  Led led1(ConfigLed);
+  ConfigLed.id = 2;
+  Led led2(ConfigLed);
   ConfigLed.id = 3;
   Led led3(ConfigLed);
   pLed3 = &led3;
+
+  led0.SetEnable(false);
+  led1.SetEnable(false);
+  led2.SetEnable(false);
+  led3.SetEnable(true);
 
   Ov7725::Config cameraConfig;
   cameraConfig.id = 0;
@@ -1133,16 +1165,27 @@ void main(CarManager::Car c) {
   DirEncoder::Config ConfigEncoder;
   ConfigEncoder.id = 0;
   DirEncoder encoder0(ConfigEncoder);
+  pEncoder0 = &encoder0;
+//  auto pEncoder0 = util::make_unique<DirEncoder>(ConfigEncoder);
   ConfigEncoder.id = 1;
   DirEncoder encoder1(ConfigEncoder);
+  pEncoder1 = &encoder1;
+//  auto pEncoder1 = util::make_unique<DirEncoder>(ConfigEncoder);
 
   AlternateMotor::Config ConfigMotor;
   ConfigMotor.id = 0;
   AlternateMotor motor0(ConfigMotor);
+//  auto pMotor0 = util::make_unique<AlternateMotor>(ConfigMotor);
   ConfigMotor.id = 1;
   AlternateMotor motor1(ConfigMotor);
+//  auto pMotor1 = util::make_unique<AlternateMotor>(ConfigMotor);
+  motor0.SetPower(200);
+  motor1.SetPower(200);
+  motor1.SetClockwise(false);
 
-  auto pMpc = util::make_unique<util::MpcDual>(&motor0, &motor1, &encoder0, &encoder1);
+
+
+//  auto pMpc = util::make_unique<util::MpcDual>(pMotor0.get(), pMotor1.get(), pEncoder0.get(), pEncoder1.get());
 //  util::MpcDual mpc(&motor0, &motor1, &encoder0, &encoder1);
 
   JyMcuBt106::Config ConfigBT;
@@ -1166,33 +1209,32 @@ void main(CarManager::Car c) {
   joystick_config.is_active_low = true;
   Joystick joystick(joystick_config);
 
-  DebugConsole console(&joystick, &lcd, &writer, 10);
+//  DebugConsole console(&joystick, &lcd, &writer, 10);
 
   /*CarManager::Config ConfigMgr;
   ConfigMgr.servo = std::move(pServo);
   ConfigMgr.epc = std::move(pMpc);
   CarManager::Init(std::move(ConfigMgr));*/
-  car_config.servo = std::move(pServo);
-  car_config.epc = std::move(pMpc);
-  CarManager::Init(std::move(car_config));
+//  car_config.servo = std::move(pServo);
+//  car_config.epc = std::move(pMpc);
+//  CarManager::Init(std::move(car_config));
 
   Timer::TimerInt time_img = 0;
 
   servo_bounds = CarManager::GetServoBounds();
 
   //Servo test
-//  pServo->SetDegree(servo_bounds.kLeftBound);
-  CarManager::SetTargetAngle(CarManager::GetServoAngles().kLeftAngle);
+  pServo->SetDegree(servo_bounds.kLeftBound);
+//  CarManager::SetTargetAngle(CarManager::GetServoAngles().kLeftAngle);
   System::DelayMs(1000);
-//  pServo->SetDegree(servo_bounds.kRightBound);
-  CarManager::SetTargetAngle(CarManager::GetServoAngles().kRightAngle);
+  pServo->SetDegree(servo_bounds.kRightBound);
+//  CarManager::SetTargetAngle(CarManager::GetServoAngles().kRightAngle);
   System::DelayMs(1000);
-//  pServo->SetDegree(servo_bounds.kCenter);
-  CarManager::SetTargetAngle(0);
+  pServo->SetDegree(servo_bounds.kCenter);
+//  CarManager::SetTargetAngle(0);
   System::DelayMs(1000);
 
-  motor0.SetPower(200);
-  motor1.SetPower(200);
+//  CarManager::SetTargetSpeed(8000);
   /*while(true){
 
 
@@ -1224,6 +1266,8 @@ void main(CarManager::Car c) {
   while (true) {
     while (time_img != System::Time()) {
       time_img = System::Time();
+      led0.SetEnable(time_img % 500 >= 250);
+
       if (time_img % 10 == 0) {
 //        Timer::TimerInt new_time = System::Time();
         //pMpc->UpdateEncoder();
@@ -1233,7 +1277,7 @@ void main(CarManager::Car c) {
         GenPath(a); //Generate path
         /*FOR DEBUGGING*/
 //				pLcd->SetRegion(Lcd::Rect(0, 16, 128, 15));
-				char timestr[100];
+//				char timestr[100];
 //				sprintf(timestr, "time: %dms", System::Time() - new_time);
 //				pLcd->SetRegion(Lcd::Rect(0, 32, 128, 15));
 //				sprintf(timestr, "feature: %dms", feature_start_time);
@@ -1244,7 +1288,7 @@ void main(CarManager::Car c) {
 //				PrintEdge(right_edge, Lcd::kBlue); //Print right_edge
 //				PrintCorner(left_corners, Lcd::kPurple); //Print left_corner
 //				PrintCorner(right_corners, Lcd::kPurple); //Print right_corner
-
+//
 //				switch (a) {
 //				case CarManager::Feature::kCross:
 //					pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
@@ -1274,12 +1318,20 @@ void main(CarManager::Car c) {
 //				PrintSuddenChangeTrackWidthLocation(Lcd::kYellow); //Print sudden change track width location
         /*END OF DEBUGGING*/
         // TODO: Modify CalcAngleDiff() to return angle difference, instead of servo value difference
-        pServo->SetDegree(util::clamp(static_cast<uint16_t>(servo_bounds.kCenter - CalcAngleDiff()),
+        pServo->SetDegree(libutil::ClampVal(static_cast<uint16_t>(servo_bounds.kCenter - CalcAngleDiff()),
                                       servo_bounds.kRightBound,
                                       servo_bounds.kLeftBound));
+        encoder0.Update();
+        encoder1.Update();
+       if(std::abs(encoder0.GetCount())<10||std::abs(encoder1.GetCount())<10){
+    	   motor0.SetPower(0);
+    	   motor1.SetPower(0);
+       }else{
+    	   motor0.SetPower(300);
+    	   motor1.SetPower(300);
+       }
 //				PrintEdge(path, Lcd::kGreen); //Print path
-        CarManager::UpdateParameters();
-        led0.Switch(); //heart beat
+//        CarManager::UpdateParameters();
       }
     }
 
