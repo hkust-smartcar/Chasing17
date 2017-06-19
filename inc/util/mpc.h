@@ -118,28 +118,28 @@ class Mpc {
   static constexpr float kI = 0.002;
   static constexpr float kD = 0.00035;
 
-  static constexpr struct {
+  struct MotorConstants {
     /**
      * Lower bound of motor power which should not be used for extended periods
      * of time. [0,1000]
      */
-    uint16_t kLowerBound;
+    static constexpr uint16_t kLowerBound = 75;
     /**
      * Upper bound of motor power which should not be used for extended periods
      * of time. [0,1000]
      */
-    uint16_t kUpperBound;
+    static constexpr uint16_t kUpperBound = 500;
     /**
      * Lower bound of motor power which should never be exceeded.
      * [0,kMotorLowerBound]
      */
-    uint16_t kLowerHardLimit;
+    static constexpr uint16_t kLowerHardLimit = 75;
     /**
      * Upper bound of motor power which should never be exceeded.
      * [kMotorUpperBound,1000]
      */
-    uint16_t kUpperHardLimit;
-  } MotorConstants = {75, 500, 75, 500};
+    static constexpr uint16_t kUpperHardLimit = 500;
+  };
 
   /**
    * Commits the target speed.
