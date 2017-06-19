@@ -92,7 +92,7 @@ int main() {
 	Flash::Config flash_config;
 	Flash flash(flash_config);
 
-    DebugConsole console(&joystick,&lcd,&writer,5);
+    DebugConsole console(&joystick,&lcd,&writer,10);
 
 	Item item("distract");
 //	console.PushItem(item);
