@@ -21,6 +21,7 @@
 #include "car_manager.h"
 #include "util/mpc_dual.h"
 #include "util/servo_controller.h"
+#include "util/unit_tests.h"
 #include "util/util.h"
 
 using libsc::AlternateMotor;
@@ -41,6 +42,8 @@ namespace algorithm {
 namespace david {
 
 void main() {
+//  util::MpcTest();
+
   Led::Config led_config;
   led_config.is_active_low = true;
   led_config.id = 0;
@@ -69,6 +72,7 @@ void main() {
   auto encoder2 = make_unique<DirEncoder>(encoder_config);
 
   auto mpc_dual = make_unique<MpcDual>(motor1.get(), motor2.get(), encoder1.get(), encoder2.get());
+  auto mpc_dual_debug = make_unique<MpcDualDebug>(mpc_dual.get());
 
   FutabaS3010::Config servo_config;
   servo_config.id = 0;
@@ -89,8 +93,11 @@ void main() {
   CarManager::Config car_config;
   car_config.servo_controller = std::move(servo_controller);
   car_config.epc = std::move(mpc_dual);
-  car_config.car = CarManager::Car::kCar1;
+  car_config.car = CarManager::Car::kCar2;
   CarManager::Init(std::move(car_config));
+
+  CarManager::SetTargetAngle(30);
+  CarManager::SetTargetSpeed(10000);
 
   auto time_img = System::Time();
 
@@ -101,16 +108,16 @@ void main() {
       time_img = System::Time();
       led1.SetEnable(time_img % 500 >= 250);
 
-      if (time_img % 300 == 0) {
-        CarManager::SetTargetAngle(15);
-      } else if (time_img % 300 == 100) {
-        CarManager::SetTargetAngle(0);
-      } else if (time_img % 300 == 200) {
-        CarManager::SetTargetAngle(-15);
-      }
-
       if (time_img % 10 == 0) {
+        CarManager::SetTargetAngle(0);
+        CarManager::SetTargetSpeed(10000);
+
         CarManager::UpdateParameters();
+
+        mpc_dual_debug->OutputEncoderMotorValues(console.get(), MpcDual::MotorSide::kBoth);
+        mpc_dual_debug->OutputLastEncoderValues(console.get(), MpcDual::MotorSide::kBoth);
+        util::ConsoleClearRow(console.get(), 6);
+        util::ConsoleWriteString(console.get(), util::to_string(CarManager::GetServoBounds().kCenter - CarManager::GetServoDeg()));
       }
     }
   }

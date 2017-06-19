@@ -177,11 +177,11 @@ class Mpc {
   /**
    * Vector of latest ten encoder values
    */
-  std::vector<int32_t> last_ten_encoder_val_ = std::vector<int32_t>(11);
+  std::vector<int32_t> last_ten_encoder_val_ = std::vector<int32_t>();
   /**
    * The average of newest ten values of the encoder in units per second
    */
-  int32_t average_encoder_val_ = 0;
+  float average_encoder_val_ = 0.0;
   /**
    * Cumalative error
    */
@@ -205,11 +205,19 @@ class Mpc {
    * Motor protection override count, in no. of cycles.
    */
   uint8_t force_start_count_ = 0;
+  /**
+   * Motor direction reversal count, in no. of cycles.
+   */
+  uint8_t force_reverse_count_ = 0;
 
   /**
    * Number of cycles to wait when overriding motor protection
    */
-  static constexpr uint8_t kOverrideWaitCycles = 50;
+  static constexpr uint8_t kOverrideWaitCycles = 10;
+  /**
+   * Number of cycles to wait when reversing motor direction
+   */
+  static constexpr uint8_t kReverseWaitCycles = 10;
   /**
    * The minimum encoder value before motor protection kicks in
    */

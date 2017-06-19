@@ -52,12 +52,12 @@ void ServoController::DoCorrection() {
 
   target_angle_change *= kP;
   last_servo_error_ = ((target_angle_change - average_servo_val_) / (last_servo_duration_ / 1000.0)) * kD;
-  target_angle_change += ((target_angle_change - average_servo_val_) / (last_servo_duration_ / 1000.0)) * kD;
+  target_angle_change += last_servo_error_;
 
   if (target_angle_change > 0) {
-    new_angle -= (s.kCenter - s.kRightBound) * (static_cast<float>(curr_servo_target_) / a.kRightAngle);
-  } else if (curr_servo_target_ < 0) {
-    new_angle -= (s.kLeftBound - s.kCenter) * (static_cast<float>(curr_servo_target_) / a.kLeftAngle);
+    new_angle -= (s.kCenter - s.kRightBound) * (static_cast<float>(target_angle_change) / a.kRightAngle);
+  } else if (target_angle_change < 0) {
+    new_angle -= (s.kLeftBound - s.kCenter) * (static_cast<float>(target_angle_change) / a.kLeftAngle);
   }
 
   if (new_angle > s.kLeftBound) {

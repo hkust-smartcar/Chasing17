@@ -36,7 +36,7 @@ void MpcDual::DoCorrection() {
   CarManager::ServoBounds s = CarManager::GetServoBounds();
   CarManager::SideRatio ratio = CarManager::GetSideRatio();
 
-  float servo_diff = s.kCenter - CarManager::GetServoDeg();
+  int servo_diff = s.kCenter - CarManager::GetServoDeg();
 
   // calculates the path deviation, then times a factor to account for speed
   // difference between left/right wheels
@@ -44,7 +44,7 @@ void MpcDual::DoCorrection() {
     mpc_left_->SetTargetSpeed(0, false);
     mpc_right_->SetTargetSpeed(0, false);
   } else if (servo_diff < 0) {  // turning left
-    float motor_speed_diff = servo_diff / (s.kCenter - s.kLeftBound);
+    float motor_speed_diff = static_cast<float>(servo_diff) / (s.kCenter - s.kLeftBound);
     motor_speed_diff_ = motor_speed_diff;
 
     float turning_radius = CarManager::kWheelbase / ratio.kLeft;
@@ -57,7 +57,7 @@ void MpcDual::DoCorrection() {
     mpc_right_->AddToTargetSpeed(mpc_right_->GetTargetSpeed() * motor_speed_diff_right, false);
     mpc_left_->AddToTargetSpeed(mpc_left_->GetTargetSpeed() * -motor_speed_diff_left, false);
   } else if (servo_diff > 0) {  // turning right
-    float motor_speed_diff = servo_diff / (s.kRightBound - s.kCenter);
+    float motor_speed_diff = static_cast<float>(servo_diff)  / (s.kCenter - s.kRightBound);
     motor_speed_diff_ = motor_speed_diff;
 
     float turning_radius = CarManager::kWheelbase / ratio.kRight;
@@ -69,6 +69,9 @@ void MpcDual::DoCorrection() {
 
     mpc_left_->AddToTargetSpeed(mpc_left_->GetTargetSpeed() * motor_speed_diff_left, false);
     mpc_right_->AddToTargetSpeed(mpc_right_->GetTargetSpeed() * -motor_speed_diff_right, false);
+  } else {
+    mpc_left_->SetTargetSpeed(mpc_left_->GetTargetSpeed(), false);
+    mpc_right_->SetTargetSpeed(mpc_right_->GetTargetSpeed(), false);
   }
 
   mpc_left_->SetCommitFlag(true);
@@ -79,7 +82,7 @@ void MpcDual::DoCorrection() {
 
 void MpcDual::SetTargetSpeed(const int16_t speed, bool commit_now) {
   mpc_left_->SetTargetSpeed(speed, false);
-  mpc_right_->SetTargetSpeed(speed, false);
+  mpc_right_->SetTargetSpeed(-speed, false);
   if (commit_now) {
     DoCorrection();
   }
@@ -87,7 +90,7 @@ void MpcDual::SetTargetSpeed(const int16_t speed, bool commit_now) {
 
 void MpcDual::AddToTargetSpeed(const int16_t speed, bool commit_now) {
   mpc_left_->AddToTargetSpeed(speed, false);
-  mpc_right_->AddToTargetSpeed(speed, false);
+  mpc_right_->AddToTargetSpeed(-speed, false);
   if (commit_now) {
     DoCorrection();
   }
