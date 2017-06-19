@@ -42,6 +42,11 @@ constexpr uint16_t Mpc::kProtectionMinCount;
 
 Mpc::Mpc(libsc::DirEncoder* e, libsc::AlternateMotor* m, bool isClockwise)
     : motor_(m), encoder_(e) {
+  static_assert(MotorConstants::kLowerHardLimit < MotorConstants::kUpperHardLimit,
+                "Hard Lower Bound should be smaller than Hard Upper Bound");
+  static_assert(MotorConstants::kLowerBound < MotorConstants::kUpperBound,
+                "Lower Bound should be smaller than Upper Bound");
+
   motor_->SetPower(0);
   motor_->SetClockwise(isClockwise);
   UpdateEncoder();
