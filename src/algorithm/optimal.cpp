@@ -338,13 +338,13 @@ bool FindOneLeftEdge() {
       if (worldview::car1::transformMatrix[min(
           left_edge.points.back().first + 1, WorldSize::w - 1)][WorldSize::h
           - left_edge.points.back().second][0] == -1) {
-        left_edge.points.pop_back();
+//        left_edge.points.pop_back();
         return false;
       }
       if (worldview::car1::transformMatrix[max(
           left_edge.points.back().first - 1, 1)][WorldSize::h
           - left_edge.points.back().second][0] == -1) {
-        left_edge.points.pop_back();
+//        left_edge.points.pop_back();
         return false;
       }
       break;
@@ -352,13 +352,13 @@ bool FindOneLeftEdge() {
       if (worldview::car2::transformMatrix[min(
           left_edge.points.back().first + 1, WorldSize::w - 1)][WorldSize::h
           - left_edge.points.back().second][0] == -1) {
-        left_edge.points.pop_back();
+//        left_edge.points.pop_back();
         return false;
       }
       if (worldview::car2::transformMatrix[max(
           left_edge.points.back().first - 1, 1)][WorldSize::h
           - left_edge.points.back().second][0] == -1) {
-        left_edge.points.pop_back();
+//        left_edge.points.pop_back();
         return false;
       }
       break;
@@ -461,13 +461,13 @@ bool FindOneRightEdge() {
         if (worldview::car1::transformMatrix[min(
             right_edge.points.back().first + 1, WorldSize::w - 1)][WorldSize::h
             - right_edge.points.back().second][0] == -1) {
-          right_edge.points.pop_back();
+//          right_edge.points.pop_back();
           return false;
         }
         if (worldview::car1::transformMatrix[max(
             right_edge.points.back().first - 1, 1)][WorldSize::h
             - right_edge.points.back().second][0] == -1) {
-          right_edge.points.pop_back();
+//          right_edge.points.pop_back();
           return false;
         }
         break;
@@ -475,13 +475,13 @@ bool FindOneRightEdge() {
         if (worldview::car2::transformMatrix[min(
             right_edge.points.back().first + 1, WorldSize::w - 1)][WorldSize::h
             - right_edge.points.back().second][0] == -1) {
-          right_edge.points.pop_back();
+//          right_edge.points.pop_back();
           return false;
         }
         if (worldview::car2::transformMatrix[max(
             right_edge.points.back().first - 1, 1)][WorldSize::h
             - right_edge.points.back().second][0] == -1) {
-          right_edge.points.pop_back();
+//          right_edge.points.pop_back();
           return false;
         }
         break;
@@ -757,6 +757,7 @@ CarManager::Feature featureIdent_Corner() {
       corner_temp_x = cornerMid_x; //store the entering corners
 	  corner_temp_y = cornerMid_y;
       feature_start_time = System::Time(); // Mark the startTime of latest enter time
+      pEncoder0->Update();
       encoder_total = 0;
       roundaboutStatus = 0;// Avoid failure of detecting roundabout exit
       return CarManager::Feature::kCross;
@@ -777,10 +778,50 @@ CarManager::Feature featureIdent_Corner() {
     }
   }
 
-//  /*Double check for crossing because only the cross if not accurate enough when straight road is too short*/
-//  if(has_inc_width_pt){
-//	  return CarManager::Feature::kCross;
-//  }
+  /*Double check for crossing to handle only one corner case*/
+  else if(roundaboutStatus == 0 && crossingStatus == 0){ // avoid double check for crossing when inside the crossing (encoder_total<2500)){ //Not inside roundabout, not Exit of Roundabout when encounter one corner case - CONDITION_1
+	  //Both sides are break due to -1 - CONDITION_2
+	  bool both_break = false;
+	  switch (car) { //reaches worldview boundaries
+	    case CarManager::Car::kCar1:
+	    	//right edge touch right boundary
+	      if ((worldview::car1::transformMatrix[min(right_edge.points.back().first + 1, WorldSize::w - 1)][WorldSize::h - right_edge.points.back().second][0] == -1)
+	    		  && (worldview::car1::transformMatrix[max(left_edge.points.back().first - 1, 1)][WorldSize::h - left_edge.points.back().second][0] == -1)//left edge touch left boundary
+				  ) {
+	    	  both_break = true;
+	      }
+	      break;
+	    case CarManager::Car::kCar2:
+	      if ((worldview::car2::transformMatrix[min(right_edge.points.back().first + 1, WorldSize::w - 1)][WorldSize::h - right_edge.points.back().second][0] == -1)
+	    		  && (worldview::car2::transformMatrix[max(left_edge.points.back().first - 1, 1)][WorldSize::h - left_edge.points.back().second][0] == -1)
+				  ) {
+	    	  both_break = true;
+	      }
+	      break;
+	  }
+	  /*FOR DEBUGGING*/
+//	  pLcd->SetRegion(Lcd::Rect(0,16,128,15));
+//	  (both_break)?(pWriter->WriteString("both break")):(pWriter->WriteString("Not both break"));
+	  if(!both_break){
+		  return CarManager::Feature::kNormal;
+	  }
+	  // Only one corner - CONDITION_3
+	  if(left_corners.points.size() > 0 || right_corners.points.size() > 0){
+		  pEncoder0->Update();
+	      crossingStatus = 1; //Detected
+	      encoder_total = 0;
+		  return CarManager::Feature::kCross;
+	  }
+//	  //Only left corner
+//	  if(left_corners.points.size() > 0){
+//		  //push the midpoint of right edge into corner
+//	  }
+//	  //Only right corner
+//	  if(right_corners.points.size() > 0){
+//
+//	  }
+  }
+
   //5. Nothing special: Return kNormal and wait for next testing
   return CarManager::Feature::kNormal;
   //TODO: Enter crossing with extreme angle - Two corners are on the same side
@@ -841,11 +882,11 @@ void GenPath(CarManager::Feature feature) {
   if (!left_size && !right_size) { //simple validity check
     return;
   }
-
-  char temp[100];
-  sprintf(temp, "Enc:%d", encoder_total);
-  pLcd->SetRegion(Lcd::Rect(0, 32, 128, 15));
-  pWriter->WriteString(temp);
+  /*FOR DEBUGGING*/
+//  char temp[100];
+//  sprintf(temp, "Enc:%d", encoder_total);
+//  pLcd->SetRegion(Lcd::Rect(0, 32, 128, 15));
+//  pWriter->WriteString(temp);
   if (crossingStatus == 1 && encoder_total >= TuningVar.cross_encoder_count/*abs(System::Time() - feature_start_time) > TuningVar.feature_inside_time*/) {//&& encoder pass crossing
 	  crossingStatus = 0;
   }
@@ -869,8 +910,8 @@ void GenPath(CarManager::Feature feature) {
 		}
 	}
     /*FOR DEBUGGING*/
-		pLcd->SetRegion(Lcd::Rect((new_left_x + new_right_x)/2,WorldSize::h - (carMid.second+ (TuningVar.cross_cal_start_num - encoder_total/TuningVar.cross_cal_ratio)) - 1, 4, 4));
-		pLcd->FillColor(Lcd::kRed);
+//		pLcd->SetRegion(Lcd::Rect((new_left_x + new_right_x)/2,WorldSize::h - (carMid.second+ (TuningVar.cross_cal_start_num - encoder_total/TuningVar.cross_cal_ratio)) - 1, 4, 4));
+//		pLcd->FillColor(Lcd::kRed);
     /*END OF DEBUGGING*/
     path.push((new_left_x + new_right_x)/2, carMid.second+ (TuningVar.cross_cal_start_num - encoder_total/TuningVar.cross_cal_ratio)); //follow the new midpoint
 //	  path.push(carMid.first,carMid.second);
@@ -1282,11 +1323,11 @@ void main(CarManager::Car c) {
 //				sprintf(timestr, "feature: %dms", feature_start_time);
 //				pLcd->SetRegion(Lcd::Rect(0, 64, 128, 15));
 //				(crossingStatus == 1)?pWriter->WriteString("Inside"):pWriter->WriteString("Before");
-				PrintWorldImage();
-				PrintEdge(left_edge, Lcd::kRed); //Print left_edge
-				PrintEdge(right_edge, Lcd::kBlue); //Print right_edge
-				PrintCorner(left_corners, Lcd::kPurple); //Print left_corner
-				PrintCorner(right_corners, Lcd::kPurple); //Print right_corner
+//				PrintWorldImage();
+//				PrintEdge(left_edge, Lcd::kRed); //Print left_edge
+//				PrintEdge(right_edge, Lcd::kBlue); //Print right_edge
+//				PrintCorner(left_corners, Lcd::kPurple); //Print left_corner
+//				PrintCorner(right_corners, Lcd::kPurple); //Print right_corner
 //
 //				switch (a) {
 //				case CarManager::Feature::kCross:
@@ -1317,12 +1358,12 @@ void main(CarManager::Car c) {
 //				PrintSuddenChangeTrackWidthLocation(Lcd::kYellow); //Print sudden change track width location
         /*END OF DEBUGGING*/
         // TODO: Modify CalcAngleDiff() to return angle difference, instead of servo value difference
-        pServo->SetDegree(libutil::ClampVal(static_cast<uint16_t>(servo_bounds.kCenter - CalcAngleDiff()),
-                                      servo_bounds.kRightBound,
+        pServo->SetDegree(libutil::ClampVal(servo_bounds.kRightBound,static_cast<uint16_t>(servo_bounds.kCenter - 1.3*CalcAngleDiff()),
+
                                       servo_bounds.kLeftBound));
        /*MOTOR PROTECTION*/
-        encoder0.Update();
-        encoder1.Update();
+//        encoder0.Update();
+//        encoder1.Update();
 //       if(std::abs(encoder0.GetCount())<10||std::abs(encoder1.GetCount())<10){
 //    	   motor0.SetPower(0);
 //    	   motor1.SetPower(0);
@@ -1330,7 +1371,7 @@ void main(CarManager::Car c) {
 //    	   motor0.SetPower(300);
 //    	   motor1.SetPower(300);
 //       }
-		PrintEdge(path, Lcd::kGreen); //Print path
+//		PrintEdge(path, Lcd::kGreen); //Print path
 //        CarManager::UpdateParameters();
       }
     }
