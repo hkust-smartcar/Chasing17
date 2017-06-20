@@ -741,7 +741,7 @@ CarManager::Feature featureIdent_Corner() {
 	  exit_round_ready = true;
   }
   /*FOR DEBUGGING*/
-  pLcd->SetRegion(Lcd::Rect(0,0,128,15));
+  pLcd->SetRegion(Lcd::Rect(0,16,128,15));
   exit_round_ready?pWriter->WriteString("ready"):pWriter->WriteString("Not ready");
     //4. Only one corner case: Only one corner, the moment when corner disappears + inside roundabout is Exit /*+ Front is black*/
     //Second time: Exit TODO: change to encoder reader
