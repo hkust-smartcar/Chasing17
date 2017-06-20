@@ -1321,6 +1321,7 @@ void main(CarManager::Car c) {
         pServo->SetDegree(libutil::ClampVal(static_cast<uint16_t>(servo_bounds.kCenter - CalcAngleDiff()),
                                       servo_bounds.kRightBound,
                                       servo_bounds.kLeftBound));
+       /*MOTOR PROTECTION*/
         encoder0.Update();
         encoder1.Update();
        if(std::abs(encoder0.GetCount())<10||std::abs(encoder1.GetCount())<10){
