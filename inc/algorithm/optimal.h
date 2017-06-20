@@ -105,9 +105,10 @@ struct {
   uint16_t stop_distance = 10; // The distance away from starting line - for stopping
   float black_div_length_ratio_threshold = 0.5; // ratio for black points/edge length. Used for detecting starting line
   libsc::Timer::TimerInt feature_inside_time = 450; // freezing time for feature extraction, the time for entering the entrance
-  uint16_t cross_cal_level = 65; //The num of path points considered for servo angle decision in crossing
+  uint16_t cross_cal_start_num = 60;
+  uint16_t cross_cal_ratio = 15; //Look forward @cross_cal_start_num - encoder_total/@cross_cal_ratio to determine path
   uint16_t general_cal_num = 20; //The num of path points considered for servo angle decision except crossing
-  uint16_t cross_encoder_count = 2600; // The hardcoded encoder count that car must reach in crossroad
+  uint16_t cross_encoder_count = 600; // The hardcoded encoder count that car must reach in crossroad
 
 } TuningVar;
 

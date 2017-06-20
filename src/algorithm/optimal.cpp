@@ -750,13 +750,14 @@ CarManager::Feature featureIdent_Corner() {
     } else if (!getWorldBit(test_x, test_y)
         && !getWorldBit(test_x + 1, test_y)
         && !getWorldBit(test_x, test_y + 1)
-        && !getWorldBit(test_x - 1, test_y)) {
+        && !getWorldBit(test_x - 1, test_y)
+		&& crossingStatus == 0) // avoid double check for crossing when inside the crossing (encoder_total<2500)
+    {
       crossingStatus = 1; //Detected
       corner_temp_x = cornerMid_x; //store the entering corners
 	  corner_temp_y = cornerMid_y;
       feature_start_time = System::Time(); // Mark the startTime of latest enter time
       encoder_total = 0;
-
       roundaboutStatus = 0;// Avoid failure of detecting roundabout exit
       return CarManager::Feature::kCross;
     }
@@ -840,13 +841,11 @@ void GenPath(CarManager::Feature feature) {
   if (!left_size && !right_size) { //simple validity check
     return;
   }
-  /*Time delay for entering crossing*/
 
-
-//  char temp[100];
-//  sprintf(temp, "Enc:%d", encoder_total);
-//  pLcd->SetRegion(Lcd::Rect(0, 32, 128, 15));
-//  pWriter->WriteString(temp);
+  char temp[100];
+  sprintf(temp, "Enc:%d", encoder_total);
+  pLcd->SetRegion(Lcd::Rect(0, 32, 128, 15));
+  pWriter->WriteString(temp);
   if (crossingStatus == 1 && encoder_total >= TuningVar.cross_encoder_count/*abs(System::Time() - feature_start_time) > TuningVar.feature_inside_time*/) {//&& encoder pass crossing
 	  crossingStatus = 0;
   }
@@ -857,28 +856,28 @@ void GenPath(CarManager::Feature feature) {
 	uint16_t new_left_x;
 	// find new right edge
 	for (uint16_t i = carMid.first; i < WorldSize::w ; i++){
-		if(getWorldBit(i, carMid.second+TuningVar.cross_cal_level) == 1){
+		if(getWorldBit(i, carMid.second+ (TuningVar.cross_cal_start_num - encoder_total/TuningVar.cross_cal_ratio)) == 1){
 			new_right_x = i;
 			break;
 		}
 	}
 	// find new left edge
 	for (uint16_t i = carMid.first; i > 0 ; i--){
-		if(getWorldBit(i, carMid.second+TuningVar.cross_cal_level) == 1){
+		if(getWorldBit(i, carMid.second+ (TuningVar.cross_cal_start_num - encoder_total/TuningVar.cross_cal_ratio)) == 1){
 			new_left_x = i;
 			break;
 		}
 	}
     /*FOR DEBUGGING*/
-//		pLcd->SetRegion(Lcd::Rect((new_left_x + new_right_x)/2,WorldSize::h - (carMid.second+TuningVar.cross_cal_level) - 1, 4, 4));
-//		pLcd->FillColor(Lcd::kRed);
+		pLcd->SetRegion(Lcd::Rect((new_left_x + new_right_x)/2,WorldSize::h - (carMid.second+ (TuningVar.cross_cal_start_num - encoder_total/TuningVar.cross_cal_ratio)) - 1, 4, 4));
+		pLcd->FillColor(Lcd::kRed);
     /*END OF DEBUGGING*/
-    path.push((new_left_x + new_right_x)/2, carMid.second+TuningVar.cross_cal_level); //follow the new midpoint
+    path.push((new_left_x + new_right_x)/2, carMid.second+ (TuningVar.cross_cal_start_num - encoder_total/TuningVar.cross_cal_ratio)); //follow the new midpoint
 //	  path.push(carMid.first,carMid.second);
     return;
   }
-  /*End of time delay*/
-  // When entering the roundabout, keep roundabout method untill completely enter
+
+  // When entering the roundabout, keep roundabout method until completely enter TODO: change to encoder value
   if (roundaboutStatus == 1 && abs(System::Time() - feature_start_time) < TuningVar.feature_inside_time) {
     feature = CarManager::Feature::kRoundabout;
   }
@@ -1283,11 +1282,11 @@ void main(CarManager::Car c) {
 //				sprintf(timestr, "feature: %dms", feature_start_time);
 //				pLcd->SetRegion(Lcd::Rect(0, 64, 128, 15));
 //				(crossingStatus == 1)?pWriter->WriteString("Inside"):pWriter->WriteString("Before");
-//				PrintWorldImage();
-//				PrintEdge(left_edge, Lcd::kRed); //Print left_edge
-//				PrintEdge(right_edge, Lcd::kBlue); //Print right_edge
-//				PrintCorner(left_corners, Lcd::kPurple); //Print left_corner
-//				PrintCorner(right_corners, Lcd::kPurple); //Print right_corner
+				PrintWorldImage();
+				PrintEdge(left_edge, Lcd::kRed); //Print left_edge
+				PrintEdge(right_edge, Lcd::kBlue); //Print right_edge
+				PrintCorner(left_corners, Lcd::kPurple); //Print left_corner
+				PrintCorner(right_corners, Lcd::kPurple); //Print right_corner
 //
 //				switch (a) {
 //				case CarManager::Feature::kCross:
@@ -1331,7 +1330,7 @@ void main(CarManager::Car c) {
 //    	   motor0.SetPower(300);
 //    	   motor1.SetPower(300);
 //       }
-//				PrintEdge(path, Lcd::kGreen); //Print path
+		PrintEdge(path, Lcd::kGreen); //Print path
 //        CarManager::UpdateParameters();
       }
     }
