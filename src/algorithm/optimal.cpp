@@ -1383,9 +1383,11 @@ void main(CarManager::Car c) {
 //				PrintSuddenChangeTrackWidthLocation(Lcd::kYellow); //Print sudden change track width location
         /*END OF DEBUGGING*/
         // TODO: Modify CalcAngleDiff() to return angle difference, instead of servo value difference
-        pServo->SetDegree(libutil::ClampVal(servo_bounds.kRightBound,static_cast<uint16_t>(servo_bounds.kCenter - 1.3*CalcAngleDiff()),
+        pServo->SetDegree(libutil::ClampVal(servo_bounds.kRightBound,
+        		static_cast<uint16_t>(servo_bounds.kCenter - 1.3*CalcAngleDiff()
+        			+ (car == CarManager::Car::kCar1 ? TuningVar.car1_servo_offset : TuningVar.car2_servo_offset)),
+                    servo_bounds.kLeftBound));
 
-                                      servo_bounds.kLeftBound));
        /*MOTOR PROTECTION*/
 //        encoder0.Update();
 //        encoder1.Update();

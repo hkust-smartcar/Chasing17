@@ -86,7 +86,7 @@ struct WorldSize {
 };
 
 struct {
-  bool roundabout_turn_left = true; //Used for GenPath()
+  bool roundabout_turn_left = false; //Used for GenPath()
   uint16_t starting_y = 17; //the starting y for edge detection
   uint16_t edge_length = 159; //max length for an edge
   uint16_t edge_hor_search_max = 4; //max for horizontal search of edge if next edge point cannot be found
@@ -109,6 +109,8 @@ struct {
   uint16_t cross_cal_ratio = 80; //Look forward @cross_cal_start_num - encoder_total/@cross_cal_ratio to determine path
   uint16_t general_cal_num = 20; //The num of path points considered for servo angle decision except crossing
   uint16_t cross_encoder_count = 4000; // The hardcoded encoder count that car must reach in crossroad
+  uint16_t car1_servo_offset = 26;
+  uint16_t car2_servo_offset = 120;
 
 } TuningVar;
 
