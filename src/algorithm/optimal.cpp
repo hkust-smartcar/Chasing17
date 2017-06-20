@@ -1417,7 +1417,7 @@ void main(CarManager::Car c) {
 //        Timer::TimerInt new_time = System::Time();
         //pMpc->UpdateEncoder();
         Capture(); //Capture until two base points are identified
-        if(FindStoppingLine()){
+        if(FindStoppingLine()&&time_img>10000){
         	motor0.SetPower(0);
         	motor1.SetPower(0);
         	pWriter->WriteString("Stopping Line Detected");
