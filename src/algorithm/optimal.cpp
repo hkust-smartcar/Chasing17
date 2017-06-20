@@ -95,6 +95,7 @@ int16_t CalcAngleDiff();
 void Capture();
 CarManager::Feature featureIdent_Corner();
 CarManager::Feature featureIdent_Width();
+bool FindStoppingLine();
 int FindDirection(int, int);
 bool FindEdges();
 bool FindOneLeftEdge();
@@ -1158,6 +1159,24 @@ int16_t CalcAngleDiff() {
   return error / sum * 20;
 }
 
+/*
+ * @brief Find if the stopping line exist
+ */
+bool FindStoppingLine(){
+	int refPoint=0;
+	int count=0;
+	for(int x=0;x<128;x++){
+		if(getFilteredBit(CameraBuf,x,400)!=refPoint){
+			count++;
+			refPoint=!refPoint;
+		}
+		if(count>10){
+			return true;
+		}
+	}
+	return false;
+}
+
 }  // namespace
 
 void main(CarManager::Car c) {
@@ -1312,6 +1331,12 @@ void main(CarManager::Car c) {
 //        Timer::TimerInt new_time = System::Time();
         //pMpc->UpdateEncoder();
         Capture(); //Capture until two base points are identified
+        if(FindStoppingLine()){
+        	motor0.SetPower(0);
+        	motor1.SetPower(0);
+        	pWriter->WriteString("Stopping Line Detected");
+        	while(1);
+        }
         FindEdges();
         CarManager::Feature a = featureIdent_Corner();
         GenPath(a); //Generate path
