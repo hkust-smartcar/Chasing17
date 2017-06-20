@@ -109,7 +109,8 @@ struct {
   uint16_t cross_cal_ratio = 80; //Look forward @cross_cal_start_num - encoder_total/@cross_cal_ratio to determine path
   uint16_t general_cal_num = 20; //The num of path points considered for servo angle decision except crossing
   uint16_t cross_encoder_count = 4000; // The hardcoded encoder count that car must reach in crossroad
-  uint16_t car1_servo_offset = 26;
+  uint16_t round_enter_offset = 10;
+  uint16_t car1_servo_offset = 49;
   uint16_t car2_servo_offset = 120;
 
 } TuningVar;
