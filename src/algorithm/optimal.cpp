@@ -333,36 +333,7 @@ bool FindOneLeftEdge() {
     return false; //reaches right
 
 //	if (left_edge.points.back().second > TuningVar.edge_min_worldview_bound_check){
-  switch (car) { //reaches worldview boundaries
-    case CarManager::Car::kCar1:
-      if (worldview::car1::transformMatrix[min(
-          left_edge.points.back().first + 1, WorldSize::w - 1)][WorldSize::h
-          - left_edge.points.back().second][0] == -1) {
-//        left_edge.points.pop_back();
-        return false;
-      }
-      if (worldview::car1::transformMatrix[max(
-          left_edge.points.back().first - 1, 1)][WorldSize::h
-          - left_edge.points.back().second][0] == -1) {
-//        left_edge.points.pop_back();
-        return false;
-      }
-      break;
-    case CarManager::Car::kCar2:
-      if (worldview::car2::transformMatrix[min(
-          left_edge.points.back().first + 1, WorldSize::w - 1)][WorldSize::h
-          - left_edge.points.back().second][0] == -1) {
-//        left_edge.points.pop_back();
-        return false;
-      }
-      if (worldview::car2::transformMatrix[max(
-          left_edge.points.back().first - 1, 1)][WorldSize::h
-          - left_edge.points.back().second][0] == -1) {
-//        left_edge.points.pop_back();
-        return false;
-      }
-      break;
-  }
+
 //	}
 
   //find corners
@@ -454,40 +425,6 @@ bool FindOneRightEdge() {
   if (right_edge.points.back().first == WorldSize::w - 1)
     return false; //reaches right
 
-  if (right_edge.points.back().second
-      > TuningVar.edge_min_worldview_bound_check) {
-    switch (car) { //reaches worldview boundaries
-      case CarManager::Car::kCar1:
-        if (worldview::car1::transformMatrix[min(
-            right_edge.points.back().first + 1, WorldSize::w - 1)][WorldSize::h
-            - right_edge.points.back().second][0] == -1) {
-//          right_edge.points.pop_back();
-          return false;
-        }
-        if (worldview::car1::transformMatrix[max(
-            right_edge.points.back().first - 1, 1)][WorldSize::h
-            - right_edge.points.back().second][0] == -1) {
-//          right_edge.points.pop_back();
-          return false;
-        }
-        break;
-      case CarManager::Car::kCar2:
-        if (worldview::car2::transformMatrix[min(
-            right_edge.points.back().first + 1, WorldSize::w - 1)][WorldSize::h
-            - right_edge.points.back().second][0] == -1) {
-//          right_edge.points.pop_back();
-          return false;
-        }
-        if (worldview::car2::transformMatrix[max(
-            right_edge.points.back().first - 1, 1)][WorldSize::h
-            - right_edge.points.back().second][0] == -1) {
-//          right_edge.points.pop_back();
-          return false;
-        }
-        break;
-    }
-  }
-
   //find corners
   if (right_edge.points.back().second
       <= WorldSize::h / TuningVar.corner_height_ratio) {
@@ -563,6 +500,60 @@ bool FindEdges() {
         left_edge.points.pop_back();
       }
       flag_break_left = flag_break_right = true;
+    }
+
+    switch (car) { // edges reaches worldview boundaries
+      case CarManager::Car::kCar1:
+        if (worldview::car1::transformMatrix[min(
+            left_edge.points.back().first + 1, WorldSize::w - 1)][WorldSize::h
+            - left_edge.points.back().second][0] == -1) {
+          flag_break_left = true;
+        }
+        if (worldview::car1::transformMatrix[max(
+            left_edge.points.back().first - 1, 1)][WorldSize::h
+            - left_edge.points.back().second][0] == -1) {
+        	flag_break_left = true;
+        }
+        if (right_edge.points.back().second
+                 > TuningVar.edge_min_worldview_bound_check) {
+            if (worldview::car1::transformMatrix[min(
+                right_edge.points.back().first + 1, WorldSize::w - 1)][WorldSize::h
+                - right_edge.points.back().second][0] == -1) {
+            	flag_break_right = true;
+            }
+            if (worldview::car1::transformMatrix[max(
+                right_edge.points.back().first - 1, 1)][WorldSize::h
+                - right_edge.points.back().second][0] == -1) {
+            	flag_break_right = true;
+            }
+        }
+        break;
+      case CarManager::Car::kCar2:
+        if (worldview::car2::transformMatrix[min(
+            left_edge.points.back().first + 1, WorldSize::w - 1)][WorldSize::h
+            - left_edge.points.back().second][0] == -1) {
+        	flag_break_left = true;
+        }
+        if (worldview::car2::transformMatrix[max(
+            left_edge.points.back().first - 1, 1)][WorldSize::h
+            - left_edge.points.back().second][0] == -1) {
+        	flag_break_left = true;
+        }
+        if (right_edge.points.back().second
+                  > TuningVar.edge_min_worldview_bound_check) {
+            if (worldview::car2::transformMatrix[min(
+                right_edge.points.back().first + 1, WorldSize::w - 1)][WorldSize::h
+                - right_edge.points.back().second][0] == -1) {
+              flag_break_right = true;
+            }
+            if (worldview::car2::transformMatrix[max(
+                right_edge.points.back().first - 1, 1)][WorldSize::h
+                - right_edge.points.back().second][0] == -1) {
+            flag_break_right = true;
+            }
+        }
+
+        break;
     }
 
     //check sudden change in track width
