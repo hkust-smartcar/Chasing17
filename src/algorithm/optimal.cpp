@@ -1324,13 +1324,13 @@ void main(CarManager::Car c) {
        /*MOTOR PROTECTION*/
         encoder0.Update();
         encoder1.Update();
-       if(std::abs(encoder0.GetCount())<10||std::abs(encoder1.GetCount())<10){
-    	   motor0.SetPower(0);
-    	   motor1.SetPower(0);
-       }else{
-    	   motor0.SetPower(300);
-    	   motor1.SetPower(300);
-       }
+//       if(std::abs(encoder0.GetCount())<10||std::abs(encoder1.GetCount())<10){
+//    	   motor0.SetPower(0);
+//    	   motor1.SetPower(0);
+//       }else{
+//    	   motor0.SetPower(300);
+//    	   motor1.SetPower(300);
+//       }
 //				PrintEdge(path, Lcd::kGreen); //Print path
 //        CarManager::UpdateParameters();
       }
