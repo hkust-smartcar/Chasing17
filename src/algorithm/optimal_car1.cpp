@@ -10,8 +10,7 @@
  *
  */
 
-#include "algorithm/optimal.h"
-
+#include "../../inc/algorithm/optimal_car1.h"
 #include "libsc/alternate_motor.h"
 #include "libsc/dir_encoder.h"
 #include "libsc/futaba_s3010.h"
@@ -48,6 +47,7 @@ using libsc::k60::Ov7725Configurator;
 
 namespace algorithm {
 namespace optimal {
+namespace car1 {
 
 namespace {
 Edges left_edge;
@@ -58,7 +58,7 @@ Corners right_corners;
 std::array<std::pair<uint16_t, uint16_t>, 2> inc_width_pts; //0:left, 1:right
 uint16_t start_y; //For crossing, store the last start point coordinate
 uint16_t start_x;
-bool debug = false;
+bool debug = true;
 bool has_inc_width_pt = false;
 bool is_straight_line = false;
 bool exit_round_ready = false; // A flag storing corner status inside roundabout
@@ -704,7 +704,7 @@ CarManager::Feature featureIdent_Corner() {
     	&& getWorldBit(test_x + 1, test_y)
         && getWorldBit(test_x, test_y + 1)
         && getWorldBit(test_x - 1, test_y)
-		&& roundaboutStatus == 0) {
+		/*&& roundaboutStatus == 0*//*Temporary close*/) {
       //All black
       pEncoder0->Update();
       pEncoder1->Update();
@@ -807,30 +807,58 @@ CarManager::Feature featureIdent_Corner() {
 		  }
 	  }
   }
-  /*Exit case handling: ready -> exit*/
-  if ((left_corners.points.size() > 0 || right_corners.points.size() > 0) && roundaboutStatus == 1 && abs(encoder_total_round) > TuningVar.round_encoder_count) {
-  	   exit_round_ready = true; // Detect one corner
-        }
-  /*FOR DEBUGGING*/
-  if(debug){
-	  pLcd->SetRegion(Lcd::Rect(0,30,128,15));
-	  exit_round_ready?pWriter->WriteString("ready"):pWriter->WriteString("Not ready");
-	  pLcd->SetRegion(Lcd::Rect(0,45,128,15));
-	  roundaboutStatus?pWriter->WriteString("RS = 1"):pWriter->WriteString("RS = 0");
-  }
-  /*END OF DEBUGGING*/
-    //the moment when corner disappears + inside roundabout is Exit /*+ Front is black*/
-    //Second time: Exit TODO: change to encoder reader
-  if (!(left_corners.points.size() > 0 || right_corners.points.size() > 0) && exit_round_ready
-		  && roundaboutStatus == 1 && abs(encoder_total_round) > TuningVar.round_encoder_count/*abs(System::Time() - feature_start_time) > TuningVar.feature_inside_time*/) {
-	  roundaboutStatus = 0;
-	  exit_round_ready = false;
-	  pEncoder0->Update();
-	  pEncoder1->Update();
-	  encoder_total_exit = 0;
-	  roundaboutExitStatus = 1;
-	  return CarManager::Feature::kRoundaboutExit;
-  }
+  /*Exit case handling: ready -> exit*//*Tempory close*/
+//  if ((left_corners.points.size() > 0 || right_corners.points.size() > 0) && roundaboutStatus == 1 && abs(encoder_total_round) > TuningVar.round_encoder_count) {
+//  	   exit_round_ready = true; // Detect one corner
+//        }
+//  /*FOR DEBUGGING*/
+//  if(debug){
+//	  pLcd->SetRegion(Lcd::Rect(0,30,128,15));
+//	  exit_round_ready?pWriter->WriteString("ready"):pWriter->WriteString("Not ready");
+//	  pLcd->SetRegion(Lcd::Rect(0,45,128,15));
+//	  roundaboutStatus?pWriter->WriteString("RS = 1"):pWriter->WriteString("RS = 0");
+//  }
+//  /*END OF DEBUGGING*/
+//  //the moment when corner disappears + inside roundabout is Exit /*+ Front is black*/
+//  //Second time: Exit TODO: change to encoder reader
+//  bool meet_exit = false;
+//  if(exit_round_ready && roundaboutStatus == 1 && abs(encoder_total_round) > TuningVar.round_encoder_count/*abs(System::Time() - feature_start_time) > TuningVar.feature_inside_time*/) {
+//	  /*CAR2
+//	   * meet_exit = !(left_corners.points.size() > 0 || right_corners.points.size() > 0)? true: false;
+//	   * */
+//	  /*CAR1*/
+//	  /*FOR DEBUGGING*/
+//	  if(debug){
+//		  pLcd->SetRegion(Lcd::Rect(carMid.first, WorldSize::h - (carMid.second + TuningVar.sightDist_exitRound) - 1, 4,4));
+//		  pLcd->FillColor(Lcd::kCyan);
+//	  }
+//	  if(getWorldBit(carMid.first, carMid.second + TuningVar.sightDist_exitRound) == 1){
+//		  //Double check: have road on the left
+//		  //		  if(TuningVar.roundabout_turn_left){
+//		  int i_cor_left;
+//		  int i_cor_right;
+//		  for(i_cor_right = carMid.first; (i_cor_right < carMid.first + TuningVar.roundroad_exit_radius) && getWorldBit(i_cor_right, carMid.second + TuningVar.sightDist_exitRound); i_cor_right++){}//search right
+//		  for(i_cor_left = carMid.first; (i_cor_left > carMid.first - TuningVar.roundroad_exit_radius) && getWorldBit(i_cor_left, carMid.second + TuningVar.sightDist_exitRound); i_cor_left--){}//search left
+//		  meet_exit = (i_cor_left>carMid.first - TuningVar.roundroad_exit_radius) && (i_cor_right < carMid.first + TuningVar.roundroad_exit_radius);
+//		  //		  }
+//		  //		  else{
+//		  //
+//		  //			  int i_cor;
+//		  //			  for(i_cor = carMid.first; i_cor < WorldSize::w && getWorldBit(i_cor, carMid.second + TuningVar.sightDist_exitRound); i_cor++ ){}//search right
+//		  //			  meet_exit = (i_cor < WorldSize::w);
+//		  //		  }
+//		  //	  }
+//		  if(meet_exit){
+//			  roundaboutStatus = 0;
+//			  exit_round_ready = false;
+//			  pEncoder0->Update();
+//			  pEncoder1->Update();
+//			  encoder_total_exit = 0;
+//			  roundaboutExitStatus = 1;
+//			  return CarManager::Feature::kRoundaboutExit;
+//		  }
+//	  }
+//  }
 
   //5. Nothing special: Return kNormal and wait for next testing
   return CarManager::Feature::kNormal;
@@ -938,7 +966,7 @@ void GenPath(CarManager::Feature feature) {
 	/*END OF CROSSING PASSING PART*/
 
 	/*FOR DEBUGGING*/
-//	if(debug){
+	if(debug){
 		char temp[100];
 		sprintf(temp, "ExitEnc:%d", abs(encoder_total_exit));
 		pLcd->SetRegion(Lcd::Rect(0, 54, 128, 15));
@@ -948,7 +976,7 @@ void GenPath(CarManager::Feature feature) {
 		pWriter->WriteString(temp);
 		pLcd->SetRegion(Lcd::Rect(0, 70, 128, 15));
 		roundaboutExitStatus?pWriter->WriteString("Inside Exit"):pWriter->WriteString("Outside Exit");
-//}
+}
 	/*END OF DEBUGGING*/
 
 	/*ROUNDABOUT ENTRANCE PASSING PART*/
@@ -1353,7 +1381,7 @@ void HardcodeOvertakeRight(){
 
 }  // namespace
 
-void main(CarManager::Car c) {
+void main_car1(CarManager::Car c) {
   CarManager::Config car_config;
   car_config.car = c;
 
@@ -1503,8 +1531,8 @@ void main(CarManager::Car c) {
 
   motor0.SetClockwise(true);
   motor1.SetClockwise(false);
-  motor0.SetPower(250);
-  motor1.SetPower(250);
+  motor0.SetPower(200);
+  motor1.SetPower(200);
 
   while (true) {
     while (time_img != System::Time()) {
@@ -1531,7 +1559,7 @@ void main(CarManager::Car c) {
 //				sprintf(timestr, "feature: %dms", feature_start_time);
 //				pLcd->SetRegion(Lcd::Rect(0, 64, 128, 15));
 //				(crossingStatus == 1)?pWriter->WriteString("Inside"):pWriter->WriteString("Before");
-        if(true){
+        if(debug){
 				PrintWorldImage();
 				PrintEdge(left_edge, Lcd::kRed); //Print left_edge
 				PrintEdge(right_edge, Lcd::kBlue); //Print right_edge
@@ -1572,7 +1600,7 @@ void main(CarManager::Car c) {
         }
         else{
         	pServo->SetDegree(libutil::ClampVal(servo_bounds.kRightBound,
-        			static_cast<uint16_t>(servo_bounds.kCenter - 1.7*CalcAngleDiff()
+        			static_cast<uint16_t>(servo_bounds.kCenter - 1.9*CalcAngleDiff()
         	+ (car == CarManager::Car::kCar1 ? TuningVar.car1_servo_offset : TuningVar.car2_servo_offset)),
 			servo_bounds.kLeftBound)); //Car1: kp = 1.5
         }
@@ -1596,3 +1624,4 @@ void main(CarManager::Car c) {
 
 }  // namespace optimal
 }  // namespace algorithm
+}

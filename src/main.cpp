@@ -8,13 +8,14 @@
  *
  */
 
+#include "../inc/algorithm/optimal_car1.h"
+#include "../inc/algorithm/optimal_car2.h"
 #include "libbase/k60/mcg.h"
 #include "libsc/battery_meter.h"
 #include "libsc/lcd_console.h"
 #include "libsc/st7735r.h"
 #include "libsc/system.h"
 
-#include "algorithm/optimal.h"
 #include "algorithm/distance.h"
 #include "util/testground.h"
 #include "util/util.h"
@@ -79,11 +80,18 @@ int main() {
   constexpr Algorithm a = Algorithm::kOptimal;
 
   // modify next line to change which car we're working with
-  CarManager::Car c = CarManager::Car::kCar1;
+  CarManager::Car c = CarManager::Car::kCar2;
 
   switch (a) {
     case Algorithm::kOptimal:
-      algorithm::optimal::main(c);
+    	switch (c){
+    	case CarManager::Car::kCar1:
+    		algorithm::optimal::car1::main_car1(c);
+    		break;
+    	case CarManager::Car::kCar2:
+    		algorithm::optimal::car2::main_car2(c);
+    	}
+
       break;
     case Algorithm::kTestGround:
       util::testground::main();
