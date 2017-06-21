@@ -5,7 +5,7 @@ include(CMakeForceCompiler)
 
 # specify what environment we're working with
 # valid options: david_desktop, david_laptop
-set(COMPILE_ENV david_desktop)
+set(COMPILE_ENV david_laptop)
 
 # specify the cross compiler
 set(TOOLCHAIN_PREFIX arm-none-eabi-)
@@ -35,7 +35,7 @@ if (${CMAKE_BUILD_TYPE} STREQUAL Release)
     set(MAKE_BUILD_TYPE RELEASE)
 elseif (${CMAKE_BUILD_TYPE} STREQUAL Debug)
     set(MAKE_BUILD_TYPE DEBUG)
-else (${CMAKE_BUILD_TYPE} STREQUAL Release)
+else ()
     message(WARNING "No build type configured. Defaulting to Debug")
     set(MAKE_BUILD_TYPE DEBUG)
 endif ()

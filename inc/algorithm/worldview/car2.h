@@ -1,10 +1,19 @@
-#ifndef CHASING17_ALGORITHM_OPTIMAL_IMG_CAR2_H_
-#define CHASING17_ALGORITHM_OPTIMAL_IMG_CAR2_H_
+/*
+ * car2.h
+ *
+ * Copyright (c) 2014-2017 HKUST SmartCar Team
+ * Refer to LICENSE for details
+ *
+ * Transformation matrix to world view for car 2.
+ *
+ */
+
+#ifndef CHASING17_ALGORITHM_WORLDVIEW_CAR2_H_
+#define CHASING17_ALGORITHM_WORLDVIEW_CAR2_H_
 
 #include <cstdint>
 
 namespace algorithm {
-namespace optimal {
 namespace worldview {
 namespace car2 {
 
@@ -2111,7 +2120,6 @@ constexpr int16_t transformMatrix[128][160][2] =
     };
 }  // namespace car2
 }  // namespace worldview
-}  // namespace optimal
 }  // namespace algorithm
 
-#endif  // CHASING17_ALGORITHM_OPTIMAL_IMG_CAR2_H_
+#endif  // CHASING17_ALGORITHM_WORLDVIEW_CAR2_H_
