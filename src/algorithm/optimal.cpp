@@ -1048,12 +1048,12 @@ void GenPath(CarManager::Feature feature) {
       break;
     }
     case CarManager::Feature::kCross: {
-      uint16_t cornerMid_x = (left_corners.points.front().first
-          + right_corners.points.front().first) / 2; //corner midpoint x-cor
-      uint16_t cornerMid_y = (left_corners.points.front().second
-          + right_corners.points.front().second) / 2; //corner midpoint y-cor
-      path.push(cornerMid_x, cornerMid_y);
-      path.push(carMid.first, carMid.second);
+//      uint16_t cornerMid_x = (left_corners.points.front().first
+//          + right_corners.points.front().first) / 2; //corner midpoint x-cor
+//      uint16_t cornerMid_y = (left_corners.points.front().second
+//          + right_corners.points.front().second) / 2; //corner midpoint y-cor
+//      path.push(cornerMid_x, cornerMid_y);
+//      path.push(carMid.first, carMid.second);
       break;
     }
     case CarManager::Feature::kRoundabout: {
@@ -1336,7 +1336,13 @@ void main(CarManager::Car c) {
   car_config.car = c;
 
   car = c;
-  servo_bounds = car == CarManager::Car::kCar1 ? CarManager::kBoundsCar1 : CarManager::kBoundsCar2;
+  	CarManager::ServoBounds s;
+  	if(c==CarManager::Car::kCar1){
+  	    s = CarManager::kBoundsCar1;
+  	}
+  	else{
+  	    s = CarManager::kBoundsCar2;
+  	}
 
   Led::Config ConfigLed;
   ConfigLed.is_active_low = true;
