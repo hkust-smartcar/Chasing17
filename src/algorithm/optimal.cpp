@@ -1321,8 +1321,8 @@ void main(CarManager::Car c) {
   AlternateMotor motor1(ConfigMotor);
   pMotor1 = &motor1;
 //  auto pMotor1 = util::make_unique<AlternateMotor>(ConfigMotor);
-  motor0.SetPower(200);
-  motor1.SetPower(200);
+//  motor0.SetPower(200);
+//  motor1.SetPower(200);
   motor1.SetClockwise(false);
 
 
@@ -1408,6 +1408,11 @@ void main(CarManager::Car c) {
 //  HardcodeOvertakeLeft();
   HardcodeOvertakeRight();
 
+  motor0.SetClockwise(true);
+  motor1.SetClockwise(false);
+  motor0.SetPower(200);
+  motor1.SetPower(200);
+
   while (true) {
     while (time_img != System::Time()) {
       time_img = System::Time();
@@ -1421,7 +1426,6 @@ void main(CarManager::Car c) {
         	motor0.SetPower(0);
         	motor1.SetPower(0);
         	pWriter->WriteString("Stopping Line Detected");
-        	while(1);
         }
         FindEdges();
         CarManager::Feature a = featureIdent_Corner();
@@ -1434,11 +1438,11 @@ void main(CarManager::Car c) {
 //				sprintf(timestr, "feature: %dms", feature_start_time);
 //				pLcd->SetRegion(Lcd::Rect(0, 64, 128, 15));
 //				(crossingStatus == 1)?pWriter->WriteString("Inside"):pWriter->WriteString("Before");
-				PrintWorldImage();
-				PrintEdge(left_edge, Lcd::kRed); //Print left_edge
-				PrintEdge(right_edge, Lcd::kBlue); //Print right_edge
-				PrintCorner(left_corners, Lcd::kPurple); //Print left_corner
-				PrintCorner(right_corners, Lcd::kPurple); //Print right_corner
+//				PrintWorldImage();
+//				PrintEdge(left_edge, Lcd::kRed); //Print left_edge
+//				PrintEdge(right_edge, Lcd::kBlue); //Print right_edge
+//				PrintCorner(left_corners, Lcd::kPurple); //Print left_corner
+//				PrintCorner(right_corners, Lcd::kPurple); //Print right_corner
 
 				//		PrintEdge(path, Lcd::kGreen); //Print path
 //
