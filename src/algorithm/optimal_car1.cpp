@@ -58,7 +58,7 @@ Corners right_corners;
 std::array<std::pair<uint16_t, uint16_t>, 2> inc_width_pts; //0:left, 1:right
 uint16_t start_y; //For crossing, store the last start point coordinate
 uint16_t start_x;
-bool debug = true;
+bool debug = false;
 bool has_inc_width_pt = false;
 bool is_straight_line = false;
 bool exit_round_ready = false; // A flag storing corner status inside roundabout
@@ -1329,25 +1329,34 @@ void HardcodeOvertakeRight(){
 	pMotor0->SetPower(200);
 	pMotor1->SetPower(200);
 	int overtake_cnt = 0;
+	int initial_cnt = 0;
 	while(overtake_cnt <= 2){
 		while (time_img != System::Time()){
 			time_img = System::Time();
 			if (time_img % 10 == 0){
-				if (cnt >= 2300){
+//				if (overtake_cnt == 3) return;
+				if ((cnt >= 1800 && overtake_cnt == 0) || (cnt >= 2500 && overtake_cnt == 1) || cnt >= 3100){
 					pMotor0->SetPower(0);
 					pMotor1->SetPower(0);
 					pMotor0->SetClockwise(false);
 					pMotor1->SetClockwise(true);
+					pMotor0->SetPower(1000);
+					pMotor1->SetPower(1000);
+					System::DelayMs(100);
+					pMotor0->SetPower(0);
+					pMotor1->SetPower(0);
 					stop_flag = true;
 					stop_time = System::Time();
+					if (overtake_cnt == 0) stop_time += 800;
 					cnt = 0;
 					overtake_cnt++;
 				}
-				if (System::Time() - stop_time > 2500 && stop_flag){
-					pMotor0->SetPower(200);
-					pMotor1->SetPower(200);
+				if (System::Time() - stop_time > 2600 && stop_flag){
 					pMotor0->SetClockwise(true);
 					pMotor1->SetClockwise(false);
+					pMotor0->SetPower(200);
+					pMotor1->SetPower(200);
+
 					stop_flag = false;
 				}
 				Capture();
@@ -1376,7 +1385,7 @@ void HardcodeOvertakeRight(){
 			}
 		}
 	}
-	System::DelayMs(2000);
+	System::DelayMs(5000);
 }
 
 }  // namespace
@@ -1527,7 +1536,7 @@ void main_car1(CarManager::Car c) {
   //pMpc->SetTargetSpeed(100);
 
 //  HardcodeOvertakeLeft();
-//  HardcodeOvertakeRight();
+  HardcodeOvertakeRight();
 
   motor0.SetClockwise(true);
   motor1.SetClockwise(false);
