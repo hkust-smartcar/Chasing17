@@ -58,7 +58,7 @@ Corners right_corners;
 std::array<std::pair<uint16_t, uint16_t>, 2> inc_width_pts; //0:left, 1:right
 uint16_t start_y; //For crossing, store the last start point coordinate
 uint16_t start_x;
-bool debug = false;
+bool debug = true;
 bool has_inc_width_pt = false;
 bool is_straight_line = false;
 bool exit_round_ready = false; // A flag storing corner status inside roundabout
@@ -1535,8 +1535,17 @@ void main_car1(CarManager::Car c) {
 
   //pMpc->SetTargetSpeed(100);
 
+  while(true){
+	  if(joystick.GetState()==Joystick::State::kUp){
+		  TuningVar.roundabout_turn_left=true;
+		  break;
+	  }else if(joystick.GetState()==Joystick::State::kDown){
+		  break;
+	  }
+  }
+
 //  HardcodeOvertakeLeft();
-  HardcodeOvertakeRight();
+//  HardcodeOvertakeRight();
 
   motor0.SetClockwise(true);
   motor1.SetClockwise(false);
