@@ -116,8 +116,7 @@ struct {
   uint16_t round_enter_offset = 10;
   uint16_t round_exit_offset = 15;
   uint16_t roundroad_exit_radius = 15;
-  uint16_t car1_servo_offset = 49;
-  uint16_t car2_servo_offset = 120;
+  uint16_t servo_offset = 120;
   uint16_t min_dist_meet_crossing = 35;
   uint16_t roundroad_min_size = 150; // When the edge is broken in roundabout, find until this threshold
   uint16_t exit_action_dist = 27; // double check to avoid corner's sudden disappear inside roundabout
