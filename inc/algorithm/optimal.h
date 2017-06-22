@@ -118,7 +118,6 @@ struct {
 
 } TuningVar;
 
-
 /**
  * TranslateType enum struct
  *

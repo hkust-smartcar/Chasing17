@@ -229,8 +229,8 @@ void MpcTest() {
   console_config.lcd = lcd.get();
   unique_ptr<LcdConsole> console = util::make_unique<LcdConsole>(console_config);
 
-  unique_ptr<Mpc> epc1 = util::make_unique<Mpc>(encoder1.get(), motor1.get(), false);
-  unique_ptr<Mpc> epc2 = util::make_unique<Mpc>(encoder2.get(), motor2.get(), false);
+  unique_ptr<Mpc> epc1 = util::make_unique<Mpc>(encoder1.get(), motor1.get(), Mpc::Side::kLeft, false);
+  unique_ptr<Mpc> epc2 = util::make_unique<Mpc>(encoder2.get(), motor2.get(), Mpc::Side::kRight, false);
   unique_ptr<MpcDebug> epc1_d = util::make_unique<MpcDebug>(epc1.get());
   unique_ptr<MpcDebug> epc2_d = util::make_unique<MpcDebug>(epc2.get());
 

@@ -22,8 +22,8 @@
 #define CHASING17_UTIL_MPC_H_
 
 #include <memory>
-#include <queue>
 #include <string>
+#include <vector>
 
 #include "libsc/alternate_motor.h"
 #include "libsc/dir_encoder.h"
@@ -35,6 +35,11 @@
 namespace util {
 class Mpc {
  public:
+  enum Side {
+    kLeft,
+    kRight
+  };
+
   /**
    * Default constructor
    *
@@ -42,7 +47,7 @@ class Mpc {
    * @param m Pointer to an AlternateMotor object
    * @param isClockwise Boolean stating whether the motor is rotating in clockwise direction
    */
-  explicit Mpc(libsc::DirEncoder* e, libsc::AlternateMotor* m, bool isClockwise);
+  Mpc(libsc::DirEncoder* e, libsc::AlternateMotor* m, Side side, bool isClockwise);
 
   ~Mpc();
 
@@ -93,7 +98,7 @@ class Mpc {
   /**
    * @return Current speed in encoder value per second
    */
-  inline int32_t GetCurrentSpeed() const { return average_encoder_val_; }
+  inline int32_t GetCurrentSpeed() const { return last_encoder_val_; }
 
   /**
    * Does motor power correction using encoder, and resets the encoder count.
@@ -110,25 +115,20 @@ class Mpc {
    */
   bool commit_target_flag_ = false;
 
- private:
-  /**
-   * Constants for encoder to motor value conversions
-   */
-  static constexpr float kP = 0.00198;
-  static constexpr float kI = 0.002;
-  static constexpr float kD = 0.00035;
+  bool is_clockwise_;
 
+ private:
   struct MotorConstants {
     /**
      * Lower bound of motor power which should not be used for extended periods
      * of time. [0,1000]
      */
-    static constexpr uint16_t kLowerBound = 75;
+    static constexpr uint16_t kLowerBound = 100;
     /**
      * Upper bound of motor power which should not be used for extended periods
      * of time. [0,1000]
      */
-    static constexpr uint16_t kUpperBound = 500;
+    static constexpr uint16_t kUpperBound = 400;
     /**
      * Lower bound of motor power which should never be exceeded.
      * [0,kMotorLowerBound]
@@ -150,17 +150,6 @@ class Mpc {
    */
   void UpdateEncoder();
 
-  /**
-   * Compares if two variables have the same sign.
-   *
-   * @tparam T Any numeric type
-   * @param val1 First value
-   * @param val2 Second value
-   * @return True if both variables have the same sign
-   */
-  template<typename T>
-  bool HasSameSign(T val1, T val2) const { return (val1 > 0 && val2 > 0) || (val1 < 0 && val2 < 0); }
-
   // Speed-related variables
   /**
    * Current reference target speed
@@ -177,15 +166,15 @@ class Mpc {
   /**
    * Vector of latest ten encoder values
    */
-  std::vector<int32_t> last_ten_encoder_val_ = std::vector<int32_t>();
+  std::vector<int32_t> last_encoder_vals_;
   /**
    * The average of newest ten values of the encoder in units per second
    */
-  float average_encoder_val_ = 0.0;
+  int32_t average_encoder_val_ = 0;
   /**
    * Cumalative error
    */
-  float cum_error_ = 0;
+  int32_t cum_error_ = 0;
   /**
    * Error of previous execution
    */
@@ -217,11 +206,13 @@ class Mpc {
   /**
    * Number of cycles to wait when reversing motor direction
    */
-  static constexpr uint8_t kReverseWaitCycles = 10;
+  static constexpr uint8_t kReverseWaitCycles = 2;
   /**
    * The minimum encoder value before motor protection kicks in
    */
-  static constexpr uint16_t kProtectionMinCount = 250;
+  static constexpr uint16_t kProtectionMinCount = 512;
+
+  Side side_;
 
   std::shared_ptr<libsc::AlternateMotor> motor_;
   std::shared_ptr<libsc::DirEncoder> encoder_;

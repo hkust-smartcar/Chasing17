@@ -30,6 +30,7 @@
 #include "libsc/lcd_console.h"
 #include "libsc/system.h"
 
+#include "car_manager.h"
 #include "util/mpc.h"
 #include "util/util.h"
 
@@ -135,8 +136,8 @@ class MpcDualDebug final : protected MpcDebug {
   explicit MpcDualDebug(MpcDual* mpc_dual);
 
   void OutputEncoderMotorValues(libsc::LcdConsole* console, MpcDual::MotorSide side) const;
-
   void OutputLastEncoderValues(libsc::LcdConsole* console, MpcDual::MotorSide side) const;
+  void OutputPidValues(libsc::LcdConsole* console, MpcDual::MotorSide side = MpcDual::MotorSide::kBoth) const;
 
   // Setters
   void SetMotorPower(uint16_t power, MpcDual::MotorSide side, bool is_clockwise);

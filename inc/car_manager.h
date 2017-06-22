@@ -46,8 +46,10 @@
 #include "util/mpc_dual.h"
 #include "util/servo_controller.h"
 
-// forward declaration for util::ServoController
+// forward declaration for util::Mpc, util::MpcDual, util::ServoController
 namespace util {
+class Mpc;
+class MpcDual;
 class ServoController;
 }
 

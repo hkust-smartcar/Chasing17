@@ -147,13 +147,13 @@ void CarManager::SetTargetSpeed(const int16_t speed, MotorSide src) {
   if (src == MotorSide::kLeft && epc_left_ != nullptr) {
     epc_left_->SetTargetSpeed(speed, false);
   } else if (src == MotorSide::kRight && epc_right_ != nullptr) {
-    epc_right_->SetTargetSpeed(-speed, false);
+    epc_right_->SetTargetSpeed(speed, false);
   } else if (src == MotorSide::kBoth) {
     if (epc_left_ != nullptr) {
       epc_left_->SetTargetSpeed(speed, false);
     }
     if (epc_right_ != nullptr) {
-      epc_right_->SetTargetSpeed(-speed, false);
+      epc_right_->SetTargetSpeed(speed, false);
     }
   }
 }
@@ -195,6 +195,10 @@ void CarManager::SetTargetAngle(const int16_t angle) {
 }
 
 void CarManager::UpdateDistance() {
+  if (usir_ == nullptr) {
+    return;
+  }
+
   if (identity_ == Identity::kFront) {
     us_distance_ = FcYyUsV4::kMinDistance;
   }

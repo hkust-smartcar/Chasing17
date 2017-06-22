@@ -23,8 +23,8 @@ MpcDual::MpcDual(AlternateMotor* motor_left,
                  AlternateMotor* motor_right,
                  DirEncoder* encoder_left,
                  DirEncoder* encoder_right) {
-  mpc_left_ = util::make_unique<Mpc>(encoder_left, motor_left, true);
-  mpc_right_ = util::make_unique<Mpc>(encoder_right, motor_right, false);
+  mpc_left_ = util::make_unique<Mpc>(encoder_left, motor_left, Side::kLeft, true);
+  mpc_right_ = util::make_unique<Mpc>(encoder_right, motor_right, Side::kRight, false);
 }
 
 MpcDual::~MpcDual() {
@@ -61,7 +61,7 @@ void MpcDual::DoCorrection() {
 
     // add to the current target speed
     mpc_right_->AddToTargetSpeed(mpc_right_->GetTargetSpeed() * motor_speed_diff_right, false);
-    mpc_left_->AddToTargetSpeed(mpc_left_->GetTargetSpeed() * -motor_speed_diff_left, false);
+    mpc_left_->AddToTargetSpeed(mpc_left_->GetTargetSpeed() * motor_speed_diff_left, false);
   } else if (servo_diff > 0) {  // turning right
     // calculate the ratio of current steering angle to max steering angle
     float motor_speed_diff = static_cast<float>(servo_diff)  / (s.kCenter - s.kRightBound);
@@ -78,7 +78,7 @@ void MpcDual::DoCorrection() {
 
     // add to the current target speed
     mpc_left_->AddToTargetSpeed(mpc_left_->GetTargetSpeed() * motor_speed_diff_left, false);
-    mpc_right_->AddToTargetSpeed(mpc_right_->GetTargetSpeed() * -motor_speed_diff_right, false);
+    mpc_right_->AddToTargetSpeed(mpc_right_->GetTargetSpeed() * motor_speed_diff_right, false);
   } else {  // straight
     // just set them as they are
     mpc_left_->SetTargetSpeed(mpc_left_->GetTargetSpeed(), false);
@@ -93,7 +93,7 @@ void MpcDual::DoCorrection() {
 
 void MpcDual::SetTargetSpeed(const int16_t speed, bool commit_now) {
   mpc_left_->SetTargetSpeed(speed, false);
-  mpc_right_->SetTargetSpeed(-speed, false);
+  mpc_right_->SetTargetSpeed(speed, false);
   if (commit_now) {
     DoCorrection();
   }
@@ -101,7 +101,7 @@ void MpcDual::SetTargetSpeed(const int16_t speed, bool commit_now) {
 
 void MpcDual::AddToTargetSpeed(const int16_t speed, bool commit_now) {
   mpc_left_->AddToTargetSpeed(speed, false);
-  mpc_right_->AddToTargetSpeed(-speed, false);
+  mpc_right_->AddToTargetSpeed(speed, false);
   if (commit_now) {
     DoCorrection();
   }
@@ -142,12 +142,12 @@ void MpcDualDebug::OutputEncoderMotorValues(libsc::LcdConsole* console, MpcDual:
   console->SetCursorRow(0);
   if (side == MpcDual::MotorSide::kLeft || side == MpcDual::MotorSide::kBoth) {
     s += "L: " + to_string(mpc_dual_->mpc_left_->last_encoder_val_) +
-        " " + to_string(mpc_dual_->mpc_left_->motor_->GetPower());
+        "\t\t" + to_string(mpc_dual_->mpc_left_->motor_->GetPower());
   }
   if (side == MpcDual::MotorSide::kRight || side == MpcDual::MotorSide::kBoth) {
     if (s != "") { s += "\n"; }
     s += "R: " + to_string(mpc_dual_->mpc_right_->last_encoder_val_) +
-        " " + to_string(mpc_dual_->mpc_right_->motor_->GetPower());
+        "\t\t" + to_string(mpc_dual_->mpc_right_->motor_->GetPower());
   }
   if (s != "") { s += "\n"; }
   util::ConsoleWriteString(console, s); 
@@ -165,18 +165,30 @@ void MpcDualDebug::OutputLastEncoderValues(libsc::LcdConsole* console, MpcDual::
   std::string s = "";
 
   // output encoder duration + encoder value
-  console->SetCursorRow(3);
+  console->SetCursorRow(4);
   if (side == MpcDual::MotorSide::kLeft || side == MpcDual::MotorSide::kBoth) {
     s += "L: " + to_string(mpc_dual_->mpc_left_->last_encoder_duration_) +
-        " " + to_string(mpc_dual_->mpc_left_->last_encoder_val_);
+        "\t\t" + to_string(mpc_dual_->mpc_left_->last_encoder_val_);
   }
   if (side == MpcDual::MotorSide::kRight || side == MpcDual::MotorSide::kBoth) {
     if (s != "") { s += "\n"; }
     s += "R: " + to_string(mpc_dual_->mpc_right_->last_encoder_duration_) +
-        " " + to_string(mpc_dual_->mpc_right_->last_encoder_val_);
+        "\t\t" + to_string(mpc_dual_->mpc_right_->last_encoder_val_);
   }
   if (s != "") { s += "\n"; }
 
+  ConsoleWriteString(console, s);
+}
+
+void MpcDualDebug::OutputPidValues(libsc::LcdConsole* console, MpcDual::MotorSide side) const {
+  std::string s = "";
+
+  console->SetCursorRow(0);
+  s += "LP: " + to_string(mpc_dual_->mpc_left_->prev_error_)
+      + "\nI: " + to_string(mpc_dual_->mpc_left_->cum_error_);
+  s += "\n";
+  s += "RP: " + to_string(mpc_dual_->mpc_right_->prev_error_)
+      + "\nI: " + to_string(mpc_dual_->mpc_right_->cum_error_);
   ConsoleWriteString(console, s);
 }
 

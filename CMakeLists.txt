@@ -191,3 +191,10 @@ add_custom_target(2017_CHASING_clean
 # configuration enabling all resolutions
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 add_executable(CurrentConfigSymbols ${SOURCES})
+
+message(STATUS "arm-none-eabi-g++ version info:")
+execute_process(COMMAND arm-none-eabi-g++ --version)
+
+message(STATUS "arm-none-eabi-gdb version info:")
+execute_process(COMMAND arm-none-eabi-gdb --version)
+message(STATUS "")

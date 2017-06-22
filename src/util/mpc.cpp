@@ -19,6 +19,8 @@
 #include "libsc/system.h"
 #include "libsc/timer.h"
 
+#include "car_manager.h"
+
 using libsc::AlternateMotor;
 using libsc::System;
 using libsc::Timer;
@@ -33,27 +35,45 @@ namespace util {
  * {0.002, 0.0001, 0.00032/0.0005} //kinda lags the change a bit
  * {0.00198, 0.002, 0.00035} //seems to be working quite well, only tiny fluctuations
  */
-constexpr float Mpc::kP;
-constexpr float Mpc::kI;
-constexpr float Mpc::kD;
+
+namespace {
+struct PidValues {
+  enum Side {
+    kLeft,
+    kRight
+  };
+
+  float kP[2];
+  float kI[2];
+  float kD[2];
+};
+
+static constexpr const PidValues kPidCar1 = {{0, 0}, {0, 0}, {0, 0}};
+static constexpr const PidValues kPidCar2 = {{0.005, 0.0}, {0.0025, 0.0}, {0, 0.0}};
+
+PidValues GetPidValues() {
+  switch (CarManager::GetCar()) {
+    default:
+    case CarManager::Car::kCar1:
+      return kPidCar1;
+    case CarManager::Car::kCar2:
+      return kPidCar2;
+  }
+}
+}  // namespace
 
 constexpr uint8_t Mpc::kOverrideWaitCycles;
 constexpr uint16_t Mpc::kProtectionMinCount;
 
-constexpr uint16_t Mpc::MotorConstants::kUpperBound;
-constexpr uint16_t Mpc::MotorConstants::kLowerBound;
-constexpr uint16_t Mpc::MotorConstants::kUpperHardLimit;
-constexpr uint16_t Mpc::MotorConstants::kLowerHardLimit;
-
-Mpc::Mpc(libsc::DirEncoder* e, libsc::AlternateMotor* m, bool isClockwise)
-    : motor_(m), encoder_(e) {
+Mpc::Mpc(libsc::DirEncoder* e, libsc::AlternateMotor* m, Mpc::Side side, bool isClockwise)
+    : is_clockwise_(isClockwise), side_(side), motor_(m), encoder_(e) {
   static_assert(MotorConstants::kLowerHardLimit < MotorConstants::kUpperHardLimit,
                 "Hard Lower Bound should be smaller than Hard Upper Bound");
   static_assert(MotorConstants::kLowerBound < MotorConstants::kUpperBound,
                 "Lower Bound should be smaller than Upper Bound");
 
   motor_->SetPower(0);
-  motor_->SetClockwise(isClockwise);
+  motor_->SetClockwise(is_clockwise_);
   UpdateEncoder();
 }
 
@@ -70,13 +90,18 @@ void Mpc::SetTargetSpeed(const int16_t speed, bool commit_now) {
 }
 
 void Mpc::AddToTargetSpeed(const int16_t d_speed, bool commit_now) {
-  target_speed_ += target_speed_ > 0 ? d_speed : -d_speed;
+  target_speed_ += d_speed;
   if (commit_now) {
     CommitTargetSpeed();
   }
 }
 
 void Mpc::DoCorrection() {
+  PidValues p = GetPidValues();
+  const float kP = p.kP[side_];
+  const float kI = p.kI[side_];
+  const float kD = p.kD[side_];
+
   // cleanup from previous cycle if it is out of range
   // [kMotorLowerBound,kMotorUpperBound]
   motor_->SetPower(util::clamp<uint16_t>(motor_->GetPower(), MotorConstants::kLowerBound, MotorConstants::kUpperBound));
@@ -95,7 +120,7 @@ void Mpc::DoCorrection() {
 
   // motor protection - turn off motor when encoder has null value
   // override this if force_start_count is bigger than 0
-  if (abs(last_encoder_val_) < kProtectionMinCount && force_start_count_ == 0) {
+  if (last_encoder_val_ < kProtectionMinCount && force_start_count_ == 0) {
     motor_->SetPower(0);
     return;
   } else if (last_encoder_val_ > 65530) {
@@ -104,23 +129,25 @@ void Mpc::DoCorrection() {
     return;
   }
 
+  float motor_power = motor_->GetPower();
+
   // get the speed difference and add power linearly.
   // bigger difference = higher power difference
-  int16_t speed_diff = static_cast<int16_t>(abs(curr_speed_) - std::fabs(average_encoder_val_));
-  motor_->AddPower(speed_diff * kP);
+  int16_t speed_diff = static_cast<int16_t>(curr_speed_ - average_encoder_val_);
+  motor_power += std::round(speed_diff * kP);
 
   // add the speed difference in consideration to the cumulative error
   // greater the cumulative error, higher the power
   cum_error_ += speed_diff * (last_encoder_duration_ / 1000.0);
-  motor_->AddPower(static_cast<int16_t>(cum_error_ * kI));
+  motor_power += static_cast<int16_t>(std::round(cum_error_ * kI));
 
   // add the speed difference in consideration to the rate of change of error
   // greater the change, higher the power
-  motor_->AddPower(static_cast<int16_t>((speed_diff - prev_error_) / (last_encoder_duration_ / 1000.0)) * kD);
+  motor_power += std::round(static_cast<int16_t>((speed_diff - prev_error_) / (last_encoder_duration_ / 1000.0)) * kD);
   prev_error_ = speed_diff;
 
   // hard limit bounds checking
-  motor_->SetPower(util::clamp<uint16_t>(motor_->GetPower(),
+  motor_->SetPower(util::clamp<uint16_t>(static_cast<uint16_t>(std::round(motor_power)),
                                          MotorConstants::kLowerHardLimit,
                                          MotorConstants::kUpperHardLimit));
 }
@@ -142,15 +169,15 @@ void Mpc::UpdateEncoder() {
   last_encoder_duration_ = GetTimeElapsed();
 
   encoder_->Update();
-  last_encoder_val_ = encoder_->GetCount() * 1000 / static_cast<int32_t>(last_encoder_duration_);
+  last_encoder_val_ = std::abs(encoder_->GetCount()) * 1000 / last_encoder_duration_;
 
-  last_ten_encoder_val_.push_back(last_encoder_val_);
-  while (last_ten_encoder_val_.size() > 10) last_ten_encoder_val_.erase(last_ten_encoder_val_.begin());
+  last_encoder_vals_.push_back(last_encoder_val_);
+  while (last_encoder_vals_.size() > 10) last_encoder_vals_.erase(last_encoder_vals_.begin());
   average_encoder_val_ = 0;
-  for (auto& m : last_ten_encoder_val_) {
+  for (auto& m : last_encoder_vals_) {
     average_encoder_val_ += m;
   }
-  average_encoder_val_ /= last_ten_encoder_val_.size();
+  average_encoder_val_ /= last_encoder_vals_.size();
 
   time_encoder_start_ = libsc::System::Time();
 }
