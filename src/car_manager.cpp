@@ -46,6 +46,9 @@ constexpr CarManager::ServoAngles CarManager::kAnglesCar2;
 constexpr CarManager::SideRatio CarManager::kRatioCar1;
 constexpr CarManager::SideRatio CarManager::kRatioCar2;
 
+constexpr CarManager::PidValues CarManager::kMotorPidCar1;
+constexpr CarManager::PidValues CarManager::kMotorPidCar2;
+
 unique_ptr<Mpc> CarManager::epc_left_ = nullptr;
 unique_ptr<Mpc> CarManager::epc_right_ = nullptr;
 unique_ptr<MpcDual> CarManager::epc_ = nullptr;
@@ -115,6 +118,16 @@ CarManager::SideRatio CarManager::GetSideRatio() {
       return kRatioCar1;
     case Car::kCar2:
       return kRatioCar2;
+  }
+}
+
+CarManager::PidValues CarManager::GetMotorPidValues() {
+  switch (CarManager::GetCar()) {
+    default:
+    case CarManager::Car::kCar1:
+      return kMotorPidCar1;
+    case CarManager::Car::kCar2:
+      return kMotorPidCar2;
   }
 }
 

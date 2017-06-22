@@ -155,10 +155,10 @@ void MpcDualDebug::OutputEncoderMotorValues(libsc::LcdConsole* console, MpcDual:
   // display target speed
   console->SetCursorRow(8);
   s = "L target: " + to_string(mpc_dual_->mpc_left_->GetTargetSpeed()) + "\n";
-  console->WriteString(s.c_str());
+  ConsoleWriteString(console, s);
   console->SetCursorRow(9);
   s = "R target: " + to_string(mpc_dual_->mpc_right_->GetTargetSpeed()) + "\n";
-  console->WriteString(s.c_str());
+  ConsoleWriteString(console, s);
 }
 
 void MpcDualDebug::OutputLastEncoderValues(libsc::LcdConsole* console, MpcDual::MotorSide side) const {
@@ -184,11 +184,17 @@ void MpcDualDebug::OutputPidValues(libsc::LcdConsole* console, MpcDual::MotorSid
   std::string s = "";
 
   console->SetCursorRow(0);
-  s += "LP: " + to_string(mpc_dual_->mpc_left_->prev_error_)
-      + "\nI: " + to_string(mpc_dual_->mpc_left_->cum_error_);
-  s += "\n";
-  s += "RP: " + to_string(mpc_dual_->mpc_right_->prev_error_)
-      + "\nI: " + to_string(mpc_dual_->mpc_right_->cum_error_);
+  if (side == MpcDual::MotorSide::kLeft || side == MpcDual::MotorSide::kBoth) {
+    s += "LP: " + to_string(mpc_dual_->mpc_left_->prev_error_)
+        + "\n I: " + to_string(mpc_dual_->mpc_left_->cum_error_);
+  }
+  if (side == MpcDual::MotorSide::kRight || side == MpcDual::MotorSide::kBoth) {
+    if (s != "") { s += "\n"; }
+    s += "RP: " + to_string(mpc_dual_->mpc_right_->prev_error_)
+        + "\n I: " + to_string(mpc_dual_->mpc_right_->cum_error_);
+  }
+  if (s != "") { s += "\n"; }
+
   ConsoleWriteString(console, s);
 }
 

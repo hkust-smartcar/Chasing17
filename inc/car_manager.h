@@ -155,6 +155,24 @@ class CarManager final {
   static constexpr SideRatio kRatioCar1 = {std::tan(kAnglesCar1.kLeftAngle), std::tan(kAnglesCar1.kRightAngle)};
   static constexpr SideRatio kRatioCar2 = {std::tan(kAnglesCar2.kLeftAngle), std::tan(kAnglesCar2.kRightAngle)};
 
+  struct PidValues {
+    enum Side {
+      kLeft = 0,
+      kRight
+    };
+
+    float kP[2];
+    float kI[2];
+    float kD[2];
+  };
+
+  static constexpr const PidValues kMotorPidCar1 = {{0, 0}, {0, 0}, {0, 0}};
+  static constexpr const PidValues kMotorPidCar2 = {{0.005, 0.0}, {0.0025, 0.0}, {0, 0.0}};
+  static constexpr const PidValues kServoPidCar1 = {{0, 0}, {0, 0}, {0, 0}};
+  static constexpr const PidValues kServoPidCar2 = {{0, 0}, {0, 0}, {0, 0}};
+
+  static PidValues GetMotorPidValues();
+
   /**
    * Update all parameters of the car (speed, slope, servo angle, distance)
    */

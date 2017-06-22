@@ -36,32 +36,6 @@ namespace util {
  * {0.00198, 0.002, 0.00035} //seems to be working quite well, only tiny fluctuations
  */
 
-namespace {
-struct PidValues {
-  enum Side {
-    kLeft,
-    kRight
-  };
-
-  float kP[2];
-  float kI[2];
-  float kD[2];
-};
-
-static constexpr const PidValues kPidCar1 = {{0, 0}, {0, 0}, {0, 0}};
-static constexpr const PidValues kPidCar2 = {{0.005, 0.0}, {0.0025, 0.0}, {0, 0.0}};
-
-PidValues GetPidValues() {
-  switch (CarManager::GetCar()) {
-    default:
-    case CarManager::Car::kCar1:
-      return kPidCar1;
-    case CarManager::Car::kCar2:
-      return kPidCar2;
-  }
-}
-}  // namespace
-
 constexpr uint8_t Mpc::kOverrideWaitCycles;
 constexpr uint16_t Mpc::kProtectionMinCount;
 
@@ -97,7 +71,7 @@ void Mpc::AddToTargetSpeed(const int16_t d_speed, bool commit_now) {
 }
 
 void Mpc::DoCorrection() {
-  PidValues p = GetPidValues();
+  CarManager::PidValues p = CarManager::GetMotorPidValues();
   const float kP = p.kP[side_];
   const float kI = p.kI[side_];
   const float kD = p.kD[side_];
