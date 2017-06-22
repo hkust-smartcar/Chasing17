@@ -26,7 +26,7 @@ namespace algorithm {
 namespace optimal {
 namespace car2 {
 
-void main_car2(CarManager::Car);
+void main_car2();
 
 /**
  * Edges struct

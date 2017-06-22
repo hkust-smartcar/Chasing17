@@ -86,10 +86,10 @@ int main() {
     case Algorithm::kOptimal:
     	switch (c){
     	case CarManager::Car::kCar1:
-    		algorithm::optimal::car1::main_car1(c);
+    		algorithm::optimal::car1::main_car1();
     		break;
     	case CarManager::Car::kCar2:
-    		algorithm::optimal::car2::main_car2(c);
+    		algorithm::optimal::car2::main_car2();
     	}
 
       break;

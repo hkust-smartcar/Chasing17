@@ -29,7 +29,6 @@
 
 #include "debug_console.h"
 #include "algorithm/worldview/car1.h"
-#include "algorithm/worldview/car2.h"
 
 using libsc::AlternateMotor;
 using libsc::DirEncoder;
@@ -72,12 +71,12 @@ int encoder_total_exit = 0;
 Timer::TimerInt feature_start_time;
 std::pair<int, int> carMid(WorldSize::w / 2, 0);
 const Byte* CameraBuf;
-//Byte WorldBuf[128*20];
+
+//pointers
 std::unique_ptr<Ov7725> pCamera = nullptr;
 St7735r* pLcd = nullptr;
 Led* pLed3 = nullptr;
 LcdTypewriter* pWriter = nullptr;
-CarManager::ServoBounds* pServoBounds = nullptr;
 FutabaS3010* pServo = nullptr;
 JyMcuBt106* pBT = nullptr;
 DirEncoder* pEncoder0 = nullptr;
@@ -86,7 +85,6 @@ AlternateMotor* pMotor0 = nullptr;
 AlternateMotor* pMotor1 = nullptr;
 
 CarManager::ServoBounds servo_bounds;
-CarManager::Car car;
 
 inline constexpr int max(int a, int b) { return (a > b) ? a : b; }
 inline constexpr int min(int a, int b) { return (a < b) ? a : b; }
@@ -101,7 +99,6 @@ void Capture();
 CarManager::Feature featureIdent_Corner();
 CarManager::Feature featureIdent_Width();
 bool FindStoppingLine();
-int FindDirection(int, int);
 bool FindEdges();
 bool FindOneLeftEdge();
 bool FindOneRightEdge();
@@ -140,26 +137,7 @@ int getFilteredBit(const Byte* buff, int x, int y) {
   return (count > total / 2) ? 1 : 0;
 }
 
-/**
- * @brief Consider the left/right of vector at current point pointing to next point
- * @param j direction
- * @param d original left/right-ness
- * @return new left/right-ness
- */
-int FindDirection(int j, int d) {
-  j %= 8;
-  if (j > 0 && j < 4)
-    return -1;
-  if (j > 4)
-    return 1;
-  if (j == 4)
-    return d;
-  return 4;
-}
 
-//test distortion world view
-//w_x,w_y world coordinate 128*160
-//i_x,i_y image coordinate 128*480
 
 //get bit value from camerabuf using camera coordinate system
 /**
@@ -178,24 +156,12 @@ bool getBit(int i_x, int i_y) {
  * @return world bit
  */
 bool getWorldBit(int w_x, int w_y) {
-  switch (car) {
-    case CarManager::Car::kCar1: {
+
       w_y = 160 - w_y;
       int i_x, i_y;
       i_x = worldview::car1::transformMatrix[w_x][w_y][0];
       i_y = worldview::car1::transformMatrix[w_x][w_y][1];
       return getFilteredBit(CameraBuf, i_x, i_y);
-    }
-      break;
-    case CarManager::Car::kCar2: {
-      w_y = 160 - w_y;
-      int i_x, i_y;
-      i_x = worldview::car2::transformMatrix[w_x][w_y][0];
-      i_y = worldview::car2::transformMatrix[w_x][w_y][1];
-      return getFilteredBit(CameraBuf, i_x, i_y);
-    }
-      break;
-  }
 
 }
 
@@ -218,7 +184,6 @@ void PrintWorldImage() {
   return;
 }
 
-//end test distortion
 
 /**
  * @brief Capture picture until two base points are identified.
@@ -235,7 +200,6 @@ void Capture() {
   bool found_left = false, found_right = false;
   int left_x = -1, left_y = -1;
   int right_x = -1, right_y = -1;
-//		while(!pCamera->IsAvailable());
   CameraBuf = pCamera->LockBuffer();
   pCamera->UnlockBuffer();
 
@@ -337,10 +301,6 @@ bool FindOneLeftEdge() {
     return false; //reaches left
   if (left_edge.points.back().first == WorldSize::w - 1)
     return false; //reaches right
-
-//	if (left_edge.points.back().second > TuningVar.edge_min_worldview_bound_check){
-
-//	}
 
   //find corners
   if (left_edge.points.back().second
@@ -508,8 +468,8 @@ bool FindEdges() {
       flag_break_left = flag_break_right = true;
     }
 
-    switch (car) { // edges reaches worldview boundaries
-      case CarManager::Car::kCar1:
+   // edges reach worldview boundaries
+
         if (worldview::car1::transformMatrix[min(
             left_edge.points.back().first + 1, WorldSize::w - 1)][WorldSize::h
             - left_edge.points.back().second][0] == -1) {
@@ -533,34 +493,7 @@ bool FindEdges() {
             	flag_break_right = true;
             }
         }
-        break;
-      case CarManager::Car::kCar2:
-        if (worldview::car2::transformMatrix[min(
-            left_edge.points.back().first + 1, WorldSize::w - 1)][WorldSize::h
-            - left_edge.points.back().second][0] == -1) {
-        	flag_break_left = true;
-        }
-        if (worldview::car2::transformMatrix[max(
-            left_edge.points.back().first - 1, 1)][WorldSize::h
-            - left_edge.points.back().second][0] == -1) {
-        	flag_break_left = true;
-        }
-        if (right_edge.points.back().second
-                  > TuningVar.edge_min_worldview_bound_check) {
-            if (worldview::car2::transformMatrix[min(
-                right_edge.points.back().first + 1, WorldSize::w - 1)][WorldSize::h
-                - right_edge.points.back().second][0] == -1) {
-              flag_break_right = true;
-            }
-            if (worldview::car2::transformMatrix[max(
-                right_edge.points.back().first - 1, 1)][WorldSize::h
-                - right_edge.points.back().second][0] == -1) {
-            flag_break_right = true;
-            }
-        }
 
-        break;
-    }
 
     //check sudden change in track width
     if (!has_inc_width_pt) {
@@ -743,8 +676,7 @@ CarManager::Feature featureIdent_Corner() {
 		  //	  bool both_break = false;
 		  // Only one corner - CONDITION_3
 		  bool crossing = false;
-		  switch (car) { //reaches worldview boundaries
-		  case CarManager::Car::kCar1:
+		  //reaches worldview boundaries
 			  //right edge touch right boundary + left corner
 			  if ((worldview::car1::transformMatrix[min(right_edge.points.back().first + 1, WorldSize::w - 1)][WorldSize::h - right_edge.points.back().second][0] == -1)
 					  && left_corners.points.size() > 0 ) {
@@ -770,34 +702,7 @@ CarManager::Feature featureIdent_Corner() {
 					  crossing = true;
 				  }
 			  }
-			  break;
-		  case CarManager::Car::kCar2:
-			  if ((worldview::car2::transformMatrix[min(right_edge.points.back().first + 1, WorldSize::w - 1)][WorldSize::h - right_edge.points.back().second][0] == -1)
-					  && left_corners.points.size() > 0) {
-				  //Only left corner
-				  if(abs(left_corners.points.front().second - carMid.second) <= TuningVar.min_dist_meet_crossing){
-					  //push the midpoint of right edge into corner
-					  right_corners.push((right_edge.points.front().first+right_edge.points.back().first)/2,(right_edge.points.front().second+right_edge.points.back().second)/2);
-					  pEncoder0->Update();
-					  crossingStatus = 1; //Detected
-					  encoder_total_cross = 0;
-					  crossing = true;
-				  }
-			  }
-			  if ((worldview::car2::transformMatrix[max(left_edge.points.back().first - 1, 1)][WorldSize::h - left_edge.points.back().second][0] == -1)
-					  && right_corners.points.size() > 0){
-				  //Only right corner
-				  if(abs(right_corners.points.front().second - carMid.second) <= TuningVar.min_dist_meet_crossing){
-					  left_corners.push((left_edge.points.front().first+left_edge.points.back().first)/2,(left_edge.points.front().second+left_edge.points.back().second)/2);
 
-					  pEncoder0->Update();
-					  crossingStatus = 1; //Detected
-					  encoder_total_cross = 0;
-					  crossing = true;
-				  }
-			  }
-			  break;
-		  }
 		  if(crossing){
 			  //Record the start midpoint for searching
 			  start_y = carMid.second+ (TuningVar.cross_cal_start_num - encoder_total_cross/TuningVar.cross_cal_ratio);
@@ -1231,11 +1136,6 @@ int16_t CalcAngleDiff() {
     sum++;
   }
 
-//	char buff[10];
-//	sprintf(buff, "Servo:%d", error);
-//	pLcd->SetRegion(Lcd::Rect(0, 0, 100, 15));
-//	pWriter->WriteBuffer(buff, 10);
-
   return error / sum * 20;
 }
 
@@ -1299,7 +1199,7 @@ void HardcodeOvertakeLeft(){
 //				PrintEdge(path, Lcd::kGreen);
 		        pServo->SetDegree(libutil::ClampVal(servo_bounds.kRightBound,
 		        		static_cast<uint16_t>(servo_bounds.kCenter - 1.3*CalcAngleDiff()
-		        			+ (car == CarManager::Car::kCar1 ? TuningVar.car1_servo_offset : TuningVar.car2_servo_offset)),
+		        			+ TuningVar.car1_servo_offset),
 		                    servo_bounds.kLeftBound));
 		        pEncoder0->Update();
 				if (!stop_flag){
@@ -1369,7 +1269,7 @@ void HardcodeOvertakeRight(){
 //				PrintEdge(path, Lcd::kGreen);
 		        pServo->SetDegree(libutil::ClampVal(servo_bounds.kRightBound,
 		        		static_cast<uint16_t>(servo_bounds.kCenter - 1.3*CalcAngleDiff()
-		        			+ (car == CarManager::Car::kCar1 ? TuningVar.car1_servo_offset : TuningVar.car2_servo_offset)),
+		        			+ TuningVar.car1_servo_offset),
 		                    servo_bounds.kLeftBound));
 		        pEncoder0->Update();
 				if (!stop_flag){
@@ -1390,12 +1290,10 @@ void HardcodeOvertakeRight(){
 
 }  // namespace
 
-void main_car1(CarManager::Car c) {
+void main_car1() {
   CarManager::Config car_config;
-  car_config.car = c;
 
-  car = c;
-  servo_bounds = c == CarManager::Car::kCar1 ? CarManager::kBoundsCar1 : CarManager::kBoundsCar2;
+  servo_bounds = CarManager::kBoundsCar1;
 
   Led::Config ConfigLed;
   ConfigLed.is_active_low = true;
@@ -1506,35 +1404,6 @@ void main_car1(CarManager::Car c) {
 //  CarManager::SetTargetAngle(0);
   System::DelayMs(1000);
 
-//  CarManager::SetTargetSpeed(8000);
-  /*while(true){
-
-
-   if(System::Time()%50==0&&pCamera->IsAvailable()){
-
-   Byte buffer[128*20];
-   CameraBuf = pCamera->LockBuffer();
-   PrintWorldImage();
-   //pLcd->SetRegion(Lcd::Rect(0,0,128,160));
-   //pLcd->FillBits(Lcd::kBlack,Lcd::kWhite,wholeImage(buffer),128*160);
-   pCamera->UnlockBuffer();
-   }
-   }*/
-
-  /*
-   DebugConsole::Item item("set servo");
-   item.setValuePtr(&servo_degree);
-   //item.setListener(SELECT,&updateServo);
-   item.setListener(DOWN_LEFT,&subServo);
-   item.setListener(LONG_LEFT,&subServo);
-   item.setListener(DOWN_RIGHT,&addServo);
-   item.setListener(LONG_RIGHT,&addServo);
-   console.pushItem(item);
-   console.enterDebug();
-   */
-
-  //pMpc->SetTargetSpeed(100);
-
   while(true){
 	  if(joystick.GetState()==Joystick::State::kUp){
 		  TuningVar.roundabout_turn_left=true;
@@ -1613,13 +1482,13 @@ void main_car1(CarManager::Car c) {
         if(crossingStatus == 1){
         	pServo->SetDegree(libutil::ClampVal(servo_bounds.kRightBound,
         			static_cast<uint16_t>(servo_bounds.kCenter - 1*CalcAngleDiff()
-        	+ (car == CarManager::Car::kCar1 ? TuningVar.car1_servo_offset : TuningVar.car2_servo_offset)),
+        	+ TuningVar.car1_servo_offset),
 			servo_bounds.kLeftBound)); //Car1: kp = 1.5
         }
         else{
         	pServo->SetDegree(libutil::ClampVal(servo_bounds.kRightBound,
         			static_cast<uint16_t>(servo_bounds.kCenter - 1.9*CalcAngleDiff()
-        	+ (car == CarManager::Car::kCar1 ? TuningVar.car1_servo_offset : TuningVar.car2_servo_offset)),
+        	+ TuningVar.car1_servo_offset),
 			servo_bounds.kLeftBound)); //Car1: kp = 1.5
         }
        /*MOTOR PROTECTION*/
