@@ -112,10 +112,11 @@ struct {
   float round_encoder_count = 200;
   float roundExit_encoder_count = 200;
   float round_enter_offset = 5;
+  float round_exit_offset = 10;
   float car1_servo_offset = 49;
   float car2_servo_offset = 120;
   float roundroad_min_size = 150; // When the edge is broken in roundabout, find until this threshold
-
+  float min_dist_meet_crossing = 35;
 } TuningVar;
 
 
