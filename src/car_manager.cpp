@@ -16,7 +16,6 @@
 
 #include "libsc/futaba_s3010.h"
 
-#include "mpu9250.h"
 #include "util/mpc.h"
 #include "util/mpc_dual.h"
 
@@ -55,7 +54,7 @@ unique_ptr<MpcDual> CarManager::epc_ = nullptr;
 unique_ptr<ServoController> CarManager::servo_controller_ = nullptr;
 unique_ptr<FutabaS3010> CarManager::servo_ = nullptr;
 unique_ptr<FcYyUsV4> CarManager::usir_ = nullptr;
-unique_ptr<Mpu9250> CarManager::mpu_ = nullptr;
+//unique_ptr<Mpu9250> CarManager::mpu_ = nullptr;
 
 void CarManager::Init(Config config) {
   static_assert(kBoundsCar1.kLeftBound > kBoundsCar1.kCenter && kBoundsCar1.kCenter > kBoundsCar1.kRightBound,
@@ -67,7 +66,7 @@ void CarManager::Init(Config config) {
   epc_right_ = move(config.epc_right);
   epc_ = move(config.epc);
   servo_controller_ = move(config.servo_controller);
-  mpu_ = move(config.mpu);
+//  mpu_ = move(config.mpu);
   servo_ = move(config.servo);
   identity_ = config.identity;
   car_ = config.car;
@@ -252,9 +251,11 @@ void CarManager::UpdateServoAngle() {
 }
 
 void CarManager::UpdateSlope() {
+  /*
   if (mpu_ == nullptr) {
     return;
   }
   // TODO(Derppening): Replace with call to MPU9250
   slope_deg_ = 0;
+   */
 }

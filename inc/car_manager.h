@@ -41,7 +41,6 @@
 #include "libsc/futaba_s3010.h"
 
 #include "fc_yy_us_v4.h"
-#include "mpu9250.h"
 #include "util/mpc.h"
 #include "util/mpc_dual.h"
 #include "util/servo_controller.h"
@@ -113,7 +112,7 @@ class CarManager final {
     std::unique_ptr<util::ServoController> servo_controller = nullptr;
     std::unique_ptr<libsc::FutabaS3010> servo = nullptr;
     std::unique_ptr<FcYyUsV4> usir = nullptr;
-    std::unique_ptr<Mpu9250> mpu = nullptr;
+//    std::unique_ptr<Mpu9250> mpu = nullptr;
     Identity identity;
     Car car;
   };
@@ -251,7 +250,7 @@ class CarManager final {
   static std::unique_ptr<util::MpcDual> epc_;
   static std::unique_ptr<util::ServoController> servo_controller_;
   static std::unique_ptr<libsc::FutabaS3010> servo_;
-  static std::unique_ptr<Mpu9250> mpu_;
+//  static std::unique_ptr<Mpu9250> mpu_;
   static std::unique_ptr<FcYyUsV4> usir_;
 };
 
