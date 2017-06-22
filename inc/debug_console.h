@@ -14,6 +14,7 @@
 #ifndef CHASING17_DEBUG_CONSOLE_H_
 #define CHASING17_DEBUG_CONSOLE_H_
 
+#include <string>
 #include <vector>
 
 #include "libsc/joystick.h"
@@ -25,11 +26,11 @@ typedef void(* Fptr)();
 
 class Item {
  public:
-  Item(char* text = nullptr, float* value = nullptr, bool flashable = false,bool readOnly = false)
-      : text(text), value(value), flash(flashable),readOnly(readOnly) {}
+  Item(std::string text = "", float* value = nullptr, bool flashable = false, bool readOnly = false)
+      : text(text), value(value), readOnly(readOnly), flash(flashable) {}
 
   //display text methods
-  char* GetText() { return text; }
+  std::string GetText() { return text; }
   Item* SetText(char* t);
 
   //listener methods
@@ -54,7 +55,7 @@ class Item {
   bool IsReadOnly() { return readOnly; }
 
  private:
-  char* text;
+  std::string text;
   float* value = nullptr;
   bool readOnly;
   bool flash = false;
@@ -150,7 +151,7 @@ class DebugConsole {
   int flash_sum=0;
   bool flag=false;
 
-  void Printxy(int x, int y, char* c, int inverted = false);
+  void Printxy(int x, int y, std::string c, int inverted = false);
 
   void Clear();
 

@@ -69,7 +69,7 @@ void DebugConsole::EnterDebug(char* leave_msg) {
   while (flag) {
     Listen();
 //    if(System::Time()%100==0)
-    	Save();
+    Save();
   }
   items.erase(items.begin());
   Clear();
@@ -113,38 +113,38 @@ void DebugConsole::PrintItemValue(int index, bool isInverted) {
   }
 }
 
-void DebugConsole::Load(){
+void DebugConsole::Load() {
 
-	if(flash == nullptr) return;
-	int start=0;
-	Byte* buff = new Byte[flash_sum*4];
-	flash->Read(buff,flash_sum*4);
-	for(int i=0;i<items.size();i++){
-		if(!items[i].IsFlashable()) continue;
-		float* v=items[i].GetValuePtr();
-		float temp=0;
-		if(v==nullptr)continue;
-		memcpy((unsigned char*) &temp, buff+start, 4);
-		start+=4;
-		if(temp==temp)*v=temp;
-	}
-	delete [] buff;
+  if (flash == nullptr) return;
+  int start = 0;
+  Byte* buff = new Byte[flash_sum * 4];
+  flash->Read(buff, flash_sum * 4);
+  for (int i = 0; i < items.size(); i++) {
+    if (!items[i].IsFlashable()) continue;
+    float* v = items[i].GetValuePtr();
+    float temp = 0;
+    if (v == nullptr)continue;
+    memcpy((unsigned char*) &temp, buff + start, 4);
+    start += 4;
+    if (temp == temp)*v = temp;
+  }
+  delete[] buff;
 }
 
-void DebugConsole::Save(){
-	if(flash == nullptr) return;
-	int start=0;
-	Byte* buff = new Byte[flash_sum*4];
-	for(int i=0; i<items.size();i++){
-		if(!items[i].IsFlashable()) continue;
-		float* v = items[i].GetValuePtr();
-		if(v==nullptr)continue;
-		memcpy(buff + start, (unsigned char*) v, 4);
-		start+=4;
-	}
-	flash->Write(buff, flash_sum*4);
-	System::DelayMs(100);
-	delete [] buff;
+void DebugConsole::Save() {
+  if (flash == nullptr) return;
+  int start = 0;
+  Byte* buff = new Byte[flash_sum * 4];
+  for (int i = 0; i < items.size(); i++) {
+    if (!items[i].IsFlashable()) continue;
+    float* v = items[i].GetValuePtr();
+    if (v == nullptr)continue;
+    memcpy(buff + start, (unsigned char*) v, 4);
+    start += 4;
+  }
+  flash->Write(buff, flash_sum * 4);
+  System::DelayMs(100);
+  delete[] buff;
 }
 
 DebugConsole* DebugConsole::SetDisplayLength(int length) {
@@ -172,13 +172,13 @@ DebugConsole* DebugConsole::SetAutoFlash(bool flag) {
   return this;
 }
 
-void DebugConsole::Printxy(int x, int y, char* c, int inverted) {
+void DebugConsole::Printxy(int x, int y, std::string c, int inverted) {
   if (inverted) {
     writer->SetTextColor(0x0000);
     writer->SetBgColor(0xFFFF);
   }
   lcd->SetRegion(Lcd::Rect(5 + x * 10, offset + y * 15, 128 - 5 - x * 10, 15));
-  writer->WriteString(c);
+  writer->WriteString(c.c_str());
   if (inverted) {
     writer->SetTextColor(0xFFFF);
     writer->SetBgColor(0x0000);
@@ -226,20 +226,20 @@ void DebugConsole::ListenerDo(Joystick::State key) {
     case Joystick::State::kSelect:
       if (item.GetListener() != nullptr) {
         item.GetListener()();
-      } else if (flag&&focus==0)//leave item click
-        flag=false;
+      } else if (flag && focus == 0)//leave item click
+        flag = false;
       break;
     case Joystick::State::kLeft:
-      if (flag&&focus==0)//leave item click
-        flag=false;
+      if (flag && focus == 0)//leave item click
+        flag = false;
       if (item.GetValuePtr() != nullptr && !item.IsReadOnly()) {
         item.SetValue(item.GetValue() - item.GetInterval());
         PrintItemValue(focus, true);
       }
       break;
     case Joystick::State::kRight:
-      if (flag&&focus==0)//leave item click
-        flag=false;
+      if (flag && focus == 0)//leave item click
+        flag = false;
       if (item.GetValuePtr() != nullptr && !item.IsReadOnly()) {
         item.SetValue(item.GetValue() + item.GetInterval());
         PrintItemValue(focus, true);
