@@ -20,6 +20,7 @@
 #include "libsc/timer.h"
 
 #include "car_manager.h"
+#include "util/util.h"
 
 using libsc::AlternateMotor;
 using libsc::System;
@@ -57,7 +58,7 @@ Mpc::~Mpc() {
 }
 
 void Mpc::SetTargetSpeed(const int16_t speed, bool commit_now) {
-  target_speed_ = speed;
+  target_ref_speed_ = speed;
   if (commit_now) {
     commit_target_flag_ = true;
     DoCorrection();
@@ -65,7 +66,7 @@ void Mpc::SetTargetSpeed(const int16_t speed, bool commit_now) {
 }
 
 void Mpc::AddToTargetSpeed(const int16_t d_speed, bool commit_now) {
-  target_speed_ += d_speed;
+  target_ref_speed_ += d_speed;
   if (commit_now) {
     commit_target_flag_ = true;
     DoCorrection();
@@ -85,7 +86,7 @@ void Mpc::DoCorrection() {
   // sets the correction target speed to the new speed, if
   // commit_target_flag_ is true.
   if (commit_target_flag_) {
-    curr_speed_ = target_speed_;
+    current_ref_speed_ = target_ref_speed_;
     commit_target_flag_ = false;
   }
 
@@ -109,7 +110,7 @@ void Mpc::DoCorrection() {
 
   // get the speed difference and add power linearly.
   // bigger difference = higher power difference
-  int16_t speed_diff = static_cast<int16_t>(curr_speed_ - average_encoder_val_);
+  int16_t speed_diff = static_cast<int16_t>(current_ref_speed_ - average_encoder_val_);
   motor_power += speed_diff * kP;
 
   // add the speed difference in consideration to the cumulative error
@@ -157,12 +158,12 @@ MpcDebug::MpcDebug(Mpc* mpc) : mpc_(mpc) {}
 
 void MpcDebug::OutputEncoderMotorValues(libsc::LcdConsole* console) const {
   std::string s = to_string(mpc_->last_encoder_val_) + " " + to_string(mpc_->motor_->GetPower()) + "\n";
-  console->WriteString(s.c_str());
+  ConsoleWriteString(console, s);
 }
 
 void MpcDebug::OutputLastEncoderValues(libsc::LcdConsole* console) const {
   std::string s = to_string(mpc_->last_encoder_duration_) + " " + to_string(mpc_->last_encoder_val_) + "\n";
-  console->WriteString(s.c_str());
+  ConsoleWriteString(console, s);
 }
 
 void MpcDebug::SetMotorPower(uint16_t power, bool is_clockwise) {

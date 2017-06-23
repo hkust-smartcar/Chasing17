@@ -94,11 +94,15 @@ class Mpc {
   /**
    * @return Current target speed.
    */
-  int16_t GetTargetSpeed() const { return target_speed_; }
+  int16_t GetTargetSpeed() const { return target_ref_speed_; }
   /**
    * @return Current speed in encoder value per second
    */
   int32_t GetCurrentSpeed() const { return last_encoder_val_; }
+  /**
+   * @return Average speed (over 10 readings) in encoder value per second
+   */
+  int32_t GetAvgSpeed() const { return average_encoder_val_; }
 
   /**
    * Does motor power correction using encoder, and resets the encoder count.
@@ -150,17 +154,17 @@ class Mpc {
   /**
    * Current reference target speed
    */
-  int16_t curr_speed_ = 0;
+  int16_t current_ref_speed_ = 0;
   /**
    * User-defined target speed
    */
-  int16_t target_speed_ = 0;
+  int16_t target_ref_speed_ = 0;
   /**
    * Last encoder value
    */
   int32_t last_encoder_val_ = 0;
   /**
-   * Vector of latest ten encoder values
+   * Vector of latest encoder values
    */
   std::vector<int32_t> last_encoder_vals_;
   /**
@@ -168,7 +172,7 @@ class Mpc {
    */
   int32_t average_encoder_val_ = 0;
   /**
-   * Cumalative error
+   * Cumulative error
    */
   int32_t cum_error_ = 0;
   /**
@@ -258,10 +262,6 @@ class MpcDebug {
    * @return The period of the last encoder execution.
    */
   libsc::Timer::TimerInt GetLastRunDuration() const { return mpc_->last_encoder_duration_; }
-  /**
-   * @return The encoder value in units per second
-   */
-  int32_t GetEncoderVal() const { return mpc_->average_encoder_val_; }
 
  protected:
   MpcDebug() {}
