@@ -90,15 +90,15 @@ class Mpc {
    * @return The time elapsed between now and last time the encoder values
    * were reset.
    */
-  inline libsc::Timer::TimerInt GetTimeElapsed() const { return libsc::System::Time() - time_encoder_start_; }
+  libsc::Timer::TimerInt GetTimeElapsed() const { return libsc::System::Time() - time_encoder_start_; }
   /**
    * @return Current target speed.
    */
-  inline int16_t GetTargetSpeed() const { return target_speed_; }
+  int16_t GetTargetSpeed() const { return target_speed_; }
   /**
    * @return Current speed in encoder value per second
    */
-  inline int32_t GetCurrentSpeed() const { return last_encoder_val_; }
+  int32_t GetCurrentSpeed() const { return last_encoder_val_; }
 
   /**
    * Does motor power correction using encoder, and resets the encoder count.
@@ -107,7 +107,7 @@ class Mpc {
   void DoCorrection();
 
  protected:
-  Mpc() {};
+  Mpc() {}
 
   /**
    * Whether to commit the user-defined target speed on next call to
@@ -141,10 +141,6 @@ class Mpc {
     static constexpr uint16_t kUpperHardLimit = 500;
   };
 
-  /**
-   * Commits the target speed.
-   */
-  void CommitTargetSpeed();
   /**
    * Updates the encoder value and resets the encoder
    */
@@ -190,6 +186,7 @@ class Mpc {
    */
   libsc::Timer::TimerInt last_encoder_duration_ = 0;
 
+  // counters
   /**
    * Motor protection override count, in no. of cycles.
    */
@@ -260,14 +257,14 @@ class MpcDebug {
   /**
    * @return The period of the last encoder execution.
    */
-  inline libsc::Timer::TimerInt GetLastRunDuration() const { return mpc_->last_encoder_duration_; }
+  libsc::Timer::TimerInt GetLastRunDuration() const { return mpc_->last_encoder_duration_; }
   /**
    * @return The encoder value in units per second
    */
-  inline int32_t GetEncoderVal() const { return mpc_->average_encoder_val_; }
+  int32_t GetEncoderVal() const { return mpc_->average_encoder_val_; }
 
  protected:
-  MpcDebug() {};
+  MpcDebug() {}
 
  private:
   std::unique_ptr<Mpc> mpc_;

@@ -24,7 +24,6 @@
 using libsc::AlternateMotor;
 using libsc::System;
 using libsc::Timer;
-using std::abs;
 using util::to_string;
 
 namespace util {
@@ -37,6 +36,7 @@ namespace util {
  */
 
 constexpr uint8_t Mpc::kOverrideWaitCycles;
+constexpr uint8_t Mpc::kReverseWaitCycles;
 constexpr uint16_t Mpc::kProtectionMinCount;
 
 Mpc::Mpc(libsc::DirEncoder* e, libsc::AlternateMotor* m, Mpc::Side side, bool isClockwise)
@@ -59,26 +59,28 @@ Mpc::~Mpc() {
 void Mpc::SetTargetSpeed(const int16_t speed, bool commit_now) {
   target_speed_ = speed;
   if (commit_now) {
-    CommitTargetSpeed();
+    commit_target_flag_ = true;
+    DoCorrection();
   }
 }
 
 void Mpc::AddToTargetSpeed(const int16_t d_speed, bool commit_now) {
   target_speed_ += d_speed;
   if (commit_now) {
-    CommitTargetSpeed();
+    commit_target_flag_ = true;
+    DoCorrection();
   }
 }
 
 void Mpc::DoCorrection() {
+  // cleanup from previous cycle if it is out of range
+  // [kMotorLowerBound,kMotorUpperBound]
+  motor_->SetPower(util::clamp<uint16_t>(motor_->GetPower(), MotorConstants::kLowerBound, MotorConstants::kUpperBound));
+
   CarManager::PidValues p = CarManager::GetMotorPidValues();
   const float kP = p.kP[side_];
   const float kI = p.kI[side_];
   const float kD = p.kD[side_];
-
-  // cleanup from previous cycle if it is out of range
-  // [kMotorLowerBound,kMotorUpperBound]
-  motor_->SetPower(util::clamp<uint16_t>(motor_->GetPower(), MotorConstants::kLowerBound, MotorConstants::kUpperBound));
 
   // sets the correction target speed to the new speed, if
   // commit_target_flag_ is true.
@@ -108,27 +110,22 @@ void Mpc::DoCorrection() {
   // get the speed difference and add power linearly.
   // bigger difference = higher power difference
   int16_t speed_diff = static_cast<int16_t>(curr_speed_ - average_encoder_val_);
-  motor_power += std::round(speed_diff * kP);
+  motor_power += speed_diff * kP;
 
   // add the speed difference in consideration to the cumulative error
   // greater the cumulative error, higher the power
   cum_error_ += speed_diff * (last_encoder_duration_ / 1000.0);
-  motor_power += static_cast<int16_t>(std::round(cum_error_ * kI));
+  motor_power += cum_error_ * kI;
 
   // add the speed difference in consideration to the rate of change of error
   // greater the change, higher the power
-  motor_power += std::round(static_cast<int16_t>((speed_diff - prev_error_) / (last_encoder_duration_ / 1000.0)) * kD);
+  motor_power += (speed_diff - prev_error_) / (last_encoder_duration_ / 1000.0) * kD;
   prev_error_ = speed_diff;
 
   // hard limit bounds checking
   motor_->SetPower(util::clamp<uint16_t>(static_cast<uint16_t>(std::round(motor_power)),
                                          MotorConstants::kLowerHardLimit,
                                          MotorConstants::kUpperHardLimit));
-}
-
-void Mpc::CommitTargetSpeed() {
-  commit_target_flag_ = true;
-  DoCorrection();
 }
 
 void Mpc::SetForceOverride(bool force_override) {
