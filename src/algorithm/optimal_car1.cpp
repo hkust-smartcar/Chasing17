@@ -1432,8 +1432,10 @@ void HardcodeOvertakeRight() {
 
 }  // namespace
 
-void main_car1() {
+void main_car1(bool debug_) {
 	CarManager::Config car_config;
+
+	debug = debug_;
 
 	servo_bounds = CarManager::kBoundsCar1;
 
