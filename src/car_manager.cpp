@@ -213,12 +213,14 @@ void CarManager::UpdateDistance() {
 
   if (identity_ == Identity::kFront) {
     us_distance_ = FcYyUsV4::kMinDistance;
+  } else {
+    us_distance_ = usir_->GetAvgDistance();
   }
-  us_distance_ = usir_->GetAvgDistance();
 }
 
 void CarManager::UpdateSpeed() {
   if (epc_ != nullptr) {
+    epc_->SetCommitFlag(true);
     epc_->DoCorrection();
     left_speed_ = epc_->GetCurrentSpeed(MpcDual::MotorSide::kLeft);
     right_speed_ = epc_->GetCurrentSpeed(MpcDual::MotorSide::kRight);
@@ -244,6 +246,7 @@ void CarManager::UpdateServoAngle() {
     servo_deg_ = servo_controller_->GetRawAngle();
     return;
   }
+
   if (servo_ != nullptr) {
     servo_deg_ = servo_->GetDegree();
     return;
@@ -251,11 +254,5 @@ void CarManager::UpdateServoAngle() {
 }
 
 void CarManager::UpdateSlope() {
-  /*
-  if (mpu_ == nullptr) {
-    return;
-  }
-  // TODO(Derppening): Replace with call to MPU9250
   slope_deg_ = 0;
-   */
 }

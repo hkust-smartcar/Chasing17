@@ -15,11 +15,8 @@
 
 #include <algorithm>
 #include <array>
-#include <bitset>
-#include <iterator>
 #include <memory>
 #include <string>
-#include <type_traits>
 #include <vector>
 
 #include "libbase/misc_types.h"
