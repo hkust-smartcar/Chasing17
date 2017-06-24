@@ -80,13 +80,13 @@ int main() {
   constexpr Algorithm a = Algorithm::kOptimal;
 
   // modify next line to change which car we're working with
-  constexpr CarManager::Car c = CarManager::Car::kCar2;
+  constexpr CarManager::Car c = CarManager::Car::kCar1;
 
   switch (a) {
     case Algorithm::kOptimal:
     	switch (c){
     	case CarManager::Car::kCar1:
-    		algorithm::optimal::car1::main_car1();
+    		algorithm::optimal::car1::main_car1(false);
     		break;
     	case CarManager::Car::kCar2:
     		algorithm::optimal::car2::main_car2(true);

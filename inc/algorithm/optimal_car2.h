@@ -106,7 +106,7 @@ struct {
   uint16_t action_distance = 27; // The condition in which the car start handling this feature when meeting it
   uint16_t stop_distance = 10; // The distance away from starting line - for stopping
   float black_div_length_ratio_threshold = 0.5; // ratio for black points/edge length. Used for detecting starting line
-  libsc::Timer::TimerInt feature_inside_time = 350*3; // freezing time for feature extraction, the time for entering the entrance
+  libsc::Timer::TimerInt feature_inside_time = 350; // freezing time for feature extraction, the time for entering the entrance
   uint16_t cross_cal_start_num = 80;
   uint16_t cross_cal_ratio = 80; //Look forward @cross_cal_start_num - encoder_total/@cross_cal_ratio to determine path
   uint16_t general_cal_num = 20; //The num of path points considered for servo angle decision except crossing

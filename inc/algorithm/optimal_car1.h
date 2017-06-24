@@ -90,18 +90,18 @@ struct WorldSize {
 /*CAR1*/
 struct {
   bool roundabout_turn_left = true; //Used for GenPath()
-  uint16_t starting_y = 18; //the starting y for edge detection
+  uint16_t starting_y = 10; //the starting y for edge detection
   uint16_t edge_length = 159; //max length for an edge
   uint16_t edge_hor_search_max = 4; //max for horizontal search of edge if next edge point cannot be found
   uint16_t edge_min_worldview_bound_check = 30; //min for worldview bound check in edge finding
   uint16_t corner_range = 7; //the square for detection would be in size corener_range*2+1
   float corner_height_ratio = 2.9; //the max height for detection would be WorldSize.h/corner_height_ratio
-  uint16_t corner_min = 15, corner_max = 30; //threshold (in %) for corner detection
+  uint16_t corner_min = 15, corner_max = 32; //threshold (in %) for corner detection
   uint16_t min_corners_dist = 7; // Manhattan dist threshold for consecutive corners
   uint16_t min_edges_dist = 7; // Manhattan dist threshold for edges
   uint16_t track_width_threshold = 900; //track width threshold for consideration of sudden change (square)
   uint16_t track_width_change_threshold = 350; //track width change threshold for consideration of sudden change
-  uint16_t sightDist = 50; // The distance from which the image pixel should be tested
+  uint16_t sightDist = 90; // The distance from which the image pixel should be tested
   uint16_t sightDist_exitRound = 60; //The distance from which the image pixel is used for exit testing
   uint16_t straight_line_threshold = 50; // The threshold num. of equal width for straight line detection
   uint16_t action_distance = 25; // The condition in which the car start handling this feature when meeting it
@@ -118,8 +118,9 @@ struct {
   uint16_t round_exit_offset = 10;
   uint16_t servo_offset = 49;
   uint16_t min_dist_meet_crossing = 35;
-  uint16_t roundroad_min_size = 150; // When the edge is broken in roundabout, find until this threshold
+  uint16_t roundroad_min_size = 30; // When the edge is broken in roundabout, find until this threshold
   uint16_t roundroad_exit_radius = 30; // search pixels around to double check exit of roundabout for CAR1
+  uint16_t exit_action_dist = 17; // double check to avoid corner's sudden disappear inside roundabout
 
 } TuningVar;
 
