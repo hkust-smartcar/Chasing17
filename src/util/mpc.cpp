@@ -106,11 +106,11 @@ void Mpc::DoCorrection() {
     return;
   }
 
-  float motor_power = motor_->GetPower();
+  float motor_power = 0;
 
   // get the speed difference and add power linearly.
   // bigger difference = higher power difference
-  int16_t speed_diff = static_cast<int16_t>(current_ref_speed_ - average_encoder_val_);
+  int16_t speed_diff = static_cast<int16_t>(current_ref_speed_ - last_encoder_val_);
   motor_power += speed_diff * kP;
 
   // add the speed difference in consideration to the cumulative error
