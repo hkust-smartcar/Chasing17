@@ -72,8 +72,8 @@ int encoder_total_round = 0; // for roundabout
 int encoder_total_exit = 0;
 Timer::TimerInt feature_start_time;
 std::pair<int, int> carMid(WorldSize::w / 2, 0);
-int roundabout_nearest_corner_cnt_left = 0; // for finding the nearest corner point for roundabout
-int roundabout_nearest_corner_cnt_right = 0;
+int roundabout_nearest_corner_cnt_left = pow(TuningVar.corner_range*2+1,2); // for finding the nearest corner point for roundabout
+int roundabout_nearest_corner_cnt_right = pow(TuningVar.corner_range*2+1,2);
 std::pair<int, int> roundabout_nearest_corner_left{0,0};
 std::pair<int, int> roundabout_nearest_corner_right{0,0};
 
@@ -310,25 +310,25 @@ bool FindOneLeftEdge() {
 	if (left_edge.points.back().first == WorldSize::w - 1)
 		return false; //reaches right
 
+	int CornerCheck = 0;
+	int total = 0;
+	auto last = left_edge.points.back();
+	if (last.first - TuningVar.corner_range <= 0
+			|| last.first + TuningVar.corner_range > WorldSize::w - 1
+			|| last.second - TuningVar.corner_range <= 0
+			|| last.second + TuningVar.corner_range > WorldSize::h - 1)
+		return true;
+	for (int i = (last.first - TuningVar.corner_range);
+			i <= (last.first + TuningVar.corner_range); i++) {
+		for (int j = (last.second - TuningVar.corner_range);
+				j <= (last.second + TuningVar.corner_range); j++) {
+			CornerCheck += getWorldBit(i, j);
+			total++;
+		}
+	}
 	//find corners
 	if (left_edge.points.back().second
 			<= WorldSize::h / TuningVar.corner_height_ratio) {
-		int CornerCheck = 0;
-		int total = 0;
-		auto last = left_edge.points.back();
-		if (last.first - TuningVar.corner_range <= 0
-				|| last.first + TuningVar.corner_range > WorldSize::w - 1
-				|| last.second - TuningVar.corner_range <= 0
-				|| last.second + TuningVar.corner_range > WorldSize::h - 1)
-			return true;
-		for (int i = (last.first - TuningVar.corner_range);
-				i <= (last.first + TuningVar.corner_range); i++) {
-			for (int j = (last.second - TuningVar.corner_range);
-					j <= (last.second + TuningVar.corner_range); j++) {
-				CornerCheck += getWorldBit(i, j);
-				total++;
-			}
-		}
 		//if in this threshold, consider as corner
 		if (CornerCheck > total * TuningVar.corner_min / 100
 				&& CornerCheck < total * TuningVar.corner_max / 100) {
@@ -338,14 +338,15 @@ bool FindOneLeftEdge() {
 				return true;
 			}
 			left_corners.push(last.first, last.second);
-
-			//check if the point is the point closest to corners
-			if (CornerCheck < roundabout_nearest_corner_cnt_left){
-				roundabout_nearest_corner_cnt_left = CornerCheck;
-				roundabout_nearest_corner_left = last;
-			}
 		}
+
 	}
+	//check if the point is the point closest to corners
+	if (CornerCheck < roundabout_nearest_corner_cnt_left){
+		roundabout_nearest_corner_cnt_left = CornerCheck;
+		roundabout_nearest_corner_left = last;
+	}
+
 
 	return true;
 }
@@ -407,25 +408,25 @@ bool FindOneRightEdge() {
 	if (right_edge.points.back().first == WorldSize::w - 1)
 		return false; //reaches right
 
+	int CornerCheck = 0;
+	int total = 0;
+	auto last = right_edge.points.back();
+	if (last.first - TuningVar.corner_range <= 0
+			|| last.first + TuningVar.corner_range > WorldSize::w - 1
+			|| last.second - TuningVar.corner_range <= 0
+			|| last.second + TuningVar.corner_range > WorldSize::h - 1)
+		return true;
+	for (int i = (last.first - TuningVar.corner_range);
+			i <= (last.first + TuningVar.corner_range); i++) {
+		for (int j = (last.second - TuningVar.corner_range);
+				j <= (last.second + TuningVar.corner_range); j++) {
+			CornerCheck += getWorldBit(i, j);
+			total++;
+		}
+	}
 	//find corners
 	if (right_edge.points.back().second
 			<= WorldSize::h / TuningVar.corner_height_ratio) {
-		int CornerCheck = 0;
-		int total = 0;
-		auto last = right_edge.points.back();
-		if (last.first - TuningVar.corner_range <= 0
-				|| last.first + TuningVar.corner_range > WorldSize::w - 1
-				|| last.second - TuningVar.corner_range <= 0
-				|| last.second + TuningVar.corner_range > WorldSize::h - 1)
-			return true;
-		for (int i = (last.first - TuningVar.corner_range);
-				i <= (last.first + TuningVar.corner_range); i++) {
-			for (int j = (last.second - TuningVar.corner_range);
-					j <= (last.second + TuningVar.corner_range); j++) {
-				CornerCheck += getWorldBit(i, j);
-				total++;
-			}
-		}
 		//if in this threshold, consider as corner
 		if (CornerCheck > total * TuningVar.corner_min / 100
 				&& CornerCheck < total * TuningVar.corner_max / 100) {
@@ -435,13 +436,12 @@ bool FindOneRightEdge() {
 				return true;
 			}
 			right_corners.push(last.first, last.second);
-
-			//check if the point is the point closest to corners
-			if (CornerCheck < roundabout_nearest_corner_cnt_right){
-				roundabout_nearest_corner_cnt_right = CornerCheck;
-				roundabout_nearest_corner_right = last;
-			}
 		}
+	}
+	//check if the point is the point closest to corners
+	if (CornerCheck < roundabout_nearest_corner_cnt_right){
+		roundabout_nearest_corner_cnt_right = CornerCheck;
+		roundabout_nearest_corner_right = last;
 	}
 
 	return true;
@@ -464,8 +464,8 @@ bool FindEdges() {
 	right_corners.points.clear();
 	bool flag_break_left = left_edge.points.size() == 0;
 	bool flag_break_right = right_edge.points.size() == 0;
-	roundabout_nearest_corner_cnt_left = TuningVar.corner_range*2+1;
-	roundabout_nearest_corner_cnt_right = TuningVar.corner_range*2+1;
+	roundabout_nearest_corner_cnt_left = pow(TuningVar.corner_range*2+1,2);
+	roundabout_nearest_corner_cnt_right = pow(TuningVar.corner_range*2+1,2);
 	uint16_t staright_line_edge_count = 0; // Track the num. of equal width
 	while (left_edge.points.size() <= 100 && right_edge.points.size() <= 100
 			&& (!flag_break_left || !flag_break_right)) {
@@ -1454,8 +1454,10 @@ void HardcodeOvertakeRight() {
 
 }  // namespace
 
-void main_car2() {
+void main_car2(bool debug_) {
 	CarManager::Config car_config;
+
+	debug = debug_;
 
 	servo_bounds = CarManager::kBoundsCar2;
 
@@ -1613,6 +1615,19 @@ void main_car2() {
 					PrintEdge(right_edge, Lcd::kBlue); //Print right_edge
 					PrintCorner(left_corners, Lcd::kPurple); //Print left_corner
 					PrintCorner(right_corners, Lcd::kPurple); //Print right_corner
+					pLcd->SetRegion(
+							Lcd::Rect(roundabout_nearest_corner_left.first,
+									WorldSize::h - roundabout_nearest_corner_left.second - 1, 4, 4));
+					pLcd->FillColor(Lcd::kYellow);
+					pLcd->SetRegion(
+							Lcd::Rect(roundabout_nearest_corner_right.first,
+									WorldSize::h - roundabout_nearest_corner_right.second - 1, 4, 4));
+					pLcd->FillColor(Lcd::kYellow);
+					char temp[100];
+					sprintf(temp, "min:%d", roundabout_nearest_corner_cnt_right);
+					pLcd->SetRegion(Lcd::Rect(0, 140, 128, 15));
+					pWriter->WriteString(temp);
+
 					PrintEdge(path, Lcd::kGreen); //Print path
 					switch (a) {
 					case CarManager::Feature::kCross:
