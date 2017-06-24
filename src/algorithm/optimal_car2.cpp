@@ -622,11 +622,6 @@ CarManager::Feature featureIdent_Width() {
  * @note: Execute this function after calling FindEdges()
  */
 CarManager::Feature featureIdent_Corner() {
-	/*FOR DEBUGGING*/
-//	pLcd->SetRegion(
-//	Lcd::Rect(carMid.first, WorldSize::h - carMid.second - 1, 2, 2));
-//	pLcd->FillColor(Lcd::kRed);
-	/*END OF DEBUGGING*/
 	//1. Straight line
 	if (is_straight_line) {
 //    roundaboutStatus = 0;// Avoid failure of detecting roundabout exit
@@ -805,41 +800,31 @@ CarManager::Feature featureIdent_Corner() {
 	//Second time: Exit TODO: change to encoder reader
 	bool meet_exit = false;
 	if (exit_round_ready && roundaboutStatus == 1
-			&& abs(encoder_total_round)
-					> TuningVar.round_encoder_count /*abs(System::Time() - feature_start_time) > TuningVar.feature_inside_time*/) {
-		/*CAR2 FOR DEMO ONLNY*/
+			&& abs(encoder_total_round) > TuningVar.round_encoder_count /*abs(System::Time() - feature_start_time) > TuningVar.feature_inside_time*/) {
 		/*FOR DEBUGGING*/
 		if (debug) {
-			pLcd->SetRegion(
-					Lcd::Rect(carMid.first,
-							WorldSize::h
-									- (carMid.second
-											+ TuningVar.sightDist_exitRound)
-									- 1, 4, 4));
+			pLcd->SetRegion(Lcd::Rect(carMid.first, WorldSize::h - (carMid.second + TuningVar.sightDist_exitRound)- 1, 4, 4));
 			pLcd->FillColor(Lcd::kYellow);
 		}
-		//	  	  if(getWorldBit(carMid.first, carMid.second + TuningVar.sightDist_exitRound) == 1){
-		//Double check: have road on the left
-		//		  if(TuningVar.roundabout_turn_left){
-		//	  		  int i_cor_left;
-		//	  		  int i_cor_right;
-		//	  		  for(i_cor_right = carMid.first; (i_cor_right < carMid.first + TuningVar.roundroad_exit_radius) && getWorldBit(i_cor_right, carMid.second + TuningVar.sightDist_exitRound); i_cor_right++){}//search right
-		//	  		  for(i_cor_left = carMid.first; (i_cor_left > carMid.first - TuningVar.roundroad_exit_radius) && getWorldBit(i_cor_left, carMid.second + TuningVar.sightDist_exitRound); i_cor_left--){}//search left
-		//	  		  meet_exit = (i_cor_left>carMid.first - TuningVar.roundroad_exit_radius) /*&& (i_cor_right < carMid.first + TuningVar.roundroad_exit_radius)*/;
-		//		  }
-		//		  else{
-		//
-		//			  int i_cor;
-		//			  for(i_cor = carMid.first; i_cor < WorldSize::w && getWorldBit(i_cor, carMid.second + TuningVar.sightDist_exitRound); i_cor++ ){}//search right
-		//			  meet_exit = (i_cor < WorldSize::w);
-		//		  }
-		//	  }
+		/*CAR2 FOR DEMO ONLNY*/
+//	  	  if(getWorldBit(carMid.first, carMid.second + TuningVar.sightDist_exitRound) == 1){
+//				//Double check: have road on the left
+//		  if(TuningVar.roundabout_turn_left){
+//	  		  int i_cor_left;
+//	  		  int i_cor_right;
+//	  		  for(i_cor_right = carMid.first; (i_cor_right < carMid.first + TuningVar.roundroad_exit_radius) && getWorldBit(i_cor_right, carMid.second + TuningVar.sightDist_exitRound); i_cor_right++){}//search right
+//	  		  for(i_cor_left = carMid.first; (i_cor_left > carMid.first - TuningVar.roundroad_exit_radius) && getWorldBit(i_cor_left, carMid.second + TuningVar.sightDist_exitRound); i_cor_left--){}//search left
+//	  		  meet_exit = (i_cor_left>carMid.first - TuningVar.roundroad_exit_radius) /*&& (i_cor_right < carMid.first + TuningVar.roundroad_exit_radius)*/;
+//		  }
+//		  else{
+//			  int i_cor;
+//			  for(i_cor = carMid.first; i_cor < WorldSize::w && getWorldBit(i_cor, carMid.second + TuningVar.sightDist_exitRound); i_cor++ ){}//search right
+//			  meet_exit = (i_cor < WorldSize::w);
+//		  }
+//	  }
 		/*CAR2*/
-		meet_exit =
-				(!(left_corners.points.size() > 0
-						|| right_corners.points.size() > 0))
-						&& (abs(prev_corner_y - carMid.second)
-								< TuningVar.exit_action_dist) ? true : false;
+		// corner disappears && close enough
+		meet_exit = (!(left_corners.points.size() > 0 || right_corners.points.size() > 0)) && (abs(prev_corner_y - carMid.second) < TuningVar.exit_action_dist) ? true : false;
 		if (meet_exit) {
 			roundaboutStatus = 0;
 			exit_round_ready = false;
@@ -955,9 +940,7 @@ void GenPath(CarManager::Feature feature) {
 		/*END OF DEBUGGING*/
 		path.push((new_left_x + new_right_x) / 2, start_y); //follow the new midpoint
 		//Update start_x and start_y
-		start_y = carMid.second
-				+ (TuningVar.cross_cal_start_num
-						- encoder_total_cross / TuningVar.cross_cal_ratio);
+		start_y = carMid.second + (TuningVar.cross_cal_start_num - encoder_total_cross / TuningVar.cross_cal_ratio);
 		start_x = (new_left_x + new_right_x) / 2;
 		//	path.push(carMid.first,carMid.second);
 		return;
@@ -1002,8 +985,7 @@ void GenPath(CarManager::Feature feature) {
 			&& abs(encoder_total_exit) < TuningVar.roundExit_encoder_count) {
 		pEncoder0->Update();
 		pEncoder1->Update();
-		encoder_total_exit += (pEncoder0->GetCount() + pEncoder1->GetCount())
-				/ 2;
+		encoder_total_exit += (pEncoder0->GetCount() + pEncoder1->GetCount()) / 2;
 		feature = CarManager::Feature::kRoundaboutExit;
 	}
 	/*END OF ROUNDABOUT EXIT PASSING PART*/
