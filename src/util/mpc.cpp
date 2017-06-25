@@ -99,6 +99,7 @@ void Mpc::DoCorrection() {
   // override this if force_start_count is bigger than 0
   if (last_encoder_val_ < kProtectionMinCount && force_start_count_ == 0) {
     motor_->SetPower(0);
+    cum_error_ = 0;
     return;
   } else if (last_encoder_val_ > 65530) {
     // workaround for bug in quad_encoder:

@@ -45,7 +45,7 @@ constexpr CarManager::ServoAngles CarManager::kAnglesCar2;
 constexpr CarManager::SideRatio CarManager::kRatioCar1;
 constexpr CarManager::SideRatio CarManager::kRatioCar2;
 
-constexpr CarManager::PidValues CarManager::kMotorPidCar1;
+CarManager::PidValues CarManager::kMotorPidCar1 = {{0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}};
 constexpr CarManager::PidValues CarManager::kMotorPidCar2;
 
 unique_ptr<Mpc> CarManager::epc_left_ = nullptr;

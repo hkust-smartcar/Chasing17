@@ -174,13 +174,13 @@ void DirEncoderTest() {
   LcdConsole console(console_config);
 
   while (true) {
-    motor_left.SetPower(100);
-    motor_right.SetPower(100);
+    motor_left.SetPower(200);
+    motor_right.SetPower(200);
 
     encoder_left.Update();
     encoder_right.Update();
 
-    std::string s = util::to_string(encoder_left.GetCount()) + " " + util::to_string(encoder_right.GetCount()) + "\n";
+    std::string s = util::to_string(std::abs(encoder_left.GetCount())) + " " + util::to_string(std::abs(encoder_right.GetCount())) + "\n";
     ConsoleWriteString(&console, s);
 
     System::DelayMs(100);

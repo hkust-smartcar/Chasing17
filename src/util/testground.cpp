@@ -10,6 +10,8 @@
 
 #include "util/testground.h"
 
+#include <sstream>
+
 #include "libsc/alternate_motor.h"
 #include "libsc/dir_encoder.h"
 #include "libsc/futaba_s3010.h"
@@ -31,6 +33,54 @@ using namespace libsc::k60;
 
 namespace util {
 namespace testground {
+
+struct {
+  std::string input = "";
+  bool tune = false;
+  std::vector<double> vars{};
+} tuning_vars;
+
+bool BluetoothListener(const Byte* data, const std::size_t size) {
+  if (data[0] == 't') {
+    tuning_vars.tune = true;
+    tuning_vars.input.clear();
+  }
+
+  if (tuning_vars.tune) {
+    unsigned int i = 0;
+    while (i < size) {
+      if (data[i] != 't' && data[i] != '\n') {
+        tuning_vars.input.push_back(data[i]);
+      } else if (data[i] == '\n') {
+        tuning_vars.tune = false;
+        break;
+      }
+      i++;
+    }
+
+    if (!tuning_vars.tune) {
+      tuning_vars.vars.clear();
+      char* pch = strtok(&tuning_vars.input[0], ",");
+      while (pch != nullptr) {
+        double constant;
+        std::stringstream(pch) >> constant;
+        tuning_vars.vars.push_back(constant);
+        pch = strtok(nullptr, ",");
+      }
+
+      // variable assignments here
+      CarManager::kMotorPidCar1.kP[0] = tuning_vars.vars.at(0);
+      CarManager::kMotorPidCar1.kI[0] = tuning_vars.vars.at(1);
+      CarManager::kMotorPidCar1.kD[0] = tuning_vars.vars.at(2);
+
+      CarManager::kMotorPidCar1.kP[1] = tuning_vars.vars.at(3);
+      CarManager::kMotorPidCar1.kI[1] = tuning_vars.vars.at(4);
+      CarManager::kMotorPidCar1.kD[1] = tuning_vars.vars.at(5);
+    }
+  }
+
+  return true;
+}
 
 void main() {
   Led::Config ConfigLed;
@@ -90,6 +140,7 @@ void main() {
   JyMcuBt106::Config bt_config;
   bt_config.id = 0;
   bt_config.baud_rate = libbase::k60::Uart::Config::BaudRate::k115200;
+  bt_config.rx_isr = &BluetoothListener;
   JyMcuBt106 bt(bt_config);
 
   led3.SetEnable(true);
@@ -142,13 +193,11 @@ void main() {
         mpc_dual->SetTargetSpeed(10000);
         CarManager::UpdateParameters();
 
-        mpc_dual_debug->OutputPidValues(&console);
+//        mpc_dual_debug->OutputPidValues(&console);
 //        mpc_dual_debug->OutputEncoderMotorValues(&console, MpcDual::MotorSide::kBoth);
-//        mpc_dual_debug->OutputLastEncoderValues(&console, MpcDual::MotorSide::kBoth);
+        mpc_dual_debug->OutputLastEncoderValues(&console, MpcDual::MotorSide::kBoth);
 
-//        int32_t speed = CarManager::GetLeftSpeed();
-
-        sprintf(speedStr, "%.1f,%ld,%.1f=%.1f\n", 1.0, mpc_dual->GetCurrentSpeed(MpcDual::MotorSide::kLeft), 10000.0, 1.0);
+        sprintf(speedStr, "%.1f,%ld,%.1f\n", 1.0, mpc_dual->GetCurrentSpeed(MpcDual::MotorSide::kLeft), 10000.0);
         std::string spdStr = std::string(speedStr);
         const Byte speedByte = 85;
         bt.SendBuffer(&speedByte, 1);

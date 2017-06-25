@@ -211,7 +211,7 @@ class Mpc {
   /**
    * The minimum encoder value before motor protection kicks in
    */
-  static constexpr uint16_t kProtectionMinCount = 512;
+  static constexpr uint16_t kProtectionMinCount = 1024;
 
   Side side_;
 
