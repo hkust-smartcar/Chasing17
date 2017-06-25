@@ -88,7 +88,7 @@ struct WorldSize {
 
 /*CAR2*/
 struct {
-  bool roundabout_turn_left = true; //Used for GenPath()
+  bool roundabout_turn_left = false; //Used for GenPath()
   uint16_t starting_y = 15; //the starting y for edge detection
   uint16_t edge_length = 159; //max length for an edge
   uint16_t edge_hor_search_max = 4; //max for horizontal search of edge if next edge point cannot be found

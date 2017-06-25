@@ -1557,8 +1557,8 @@ void main_car2(bool debug_) {
 
 	motor0.SetClockwise(true);
 	motor1.SetClockwise(false);
-	motor0.SetPower(260);
-	motor1.SetPower(260);
+	motor0.SetPower(230);
+	motor1.SetPower(230);
 
 	while (true) {
 		while (time_img != System::Time()) {
@@ -1566,6 +1566,10 @@ void main_car2(bool debug_) {
 			led0.SetEnable(time_img % 500 >= 250);
 
 			if (time_img % 10 == 0) {
+				char temp[100];
+				sprintf(temp, "servo:%d", pServo->GetDegree());
+				pLcd->SetRegion(Lcd::Rect(0, 0, 120, 15));
+				pWriter->WriteString(temp);
 //        Timer::TimerInt new_time = System::Time();
 				//pMpc->UpdateEncoder();
 				Capture(); //Capture until two base points are identified
@@ -1657,17 +1661,21 @@ void main_car2(bool debug_) {
 					pServo->SetDegree(
 							libutil::ClampVal(servo_bounds.kRightBound,
 									static_cast<uint16_t>(servo_bounds.kCenter
-											- 1 * CalcAngleDiff()
+											- 1.3 * CalcAngleDiff()
 											+ TuningVar.servo_offset),
 									servo_bounds.kLeftBound)); //Car1: kp = 1.5
 				} else {
 					pServo->SetDegree(
 							libutil::ClampVal(servo_bounds.kRightBound,
 									static_cast<uint16_t>(servo_bounds.kCenter
-											- 1.5 * CalcAngleDiff()
+											- 1.3 * CalcAngleDiff()
 											+ TuningVar.servo_offset),
 									servo_bounds.kLeftBound)); //Car1: kp = 1.5
 				}
+//				char speedstr[100];
+//				sprintf(speedstr, "err:%d", CalcAngleDiff());
+//				pLcd->SetRegion(Lcd::Rect(0,0,128,15));
+//				pWriter->WriteString(speedstr);
 				/*MOTOR PROTECTION*/
 //        encoder0.Update();
 //        encoder1.Update();

@@ -89,7 +89,7 @@ int main() {
     		algorithm::optimal::car1::main_car1(false);
     		break;
     	case CarManager::Car::kCar2:
-    		algorithm::optimal::car2::main_car2(true);
+    		algorithm::optimal::car2::main_car2(false);
     	}
 
       break;
