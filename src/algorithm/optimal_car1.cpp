@@ -85,7 +85,7 @@ St7735r* pLcd = nullptr;
 Led* pLed3 = nullptr;
 LcdTypewriter* pWriter = nullptr;
 FutabaS3010* pServo = nullptr;
-JyMcuBt106* pBT = nullptr;
+BTComm* pBT = nullptr;
 DirEncoder* pEncoder0 = nullptr;
 DirEncoder* pEncoder1 = nullptr;
 AlternateMotor* pMotor0 = nullptr;
@@ -669,9 +669,9 @@ CarManager::Feature featureIdent_Corner() {
 //		uint16_t test_y = TuningVar.sightDist
 //				* ((cornerMid_y - carMid.second) / edge3th) + cornerMid_y;
 		/*FOR DEBUGGING*/
-		if (debug) {
+		if (true) {
 			pLcd->SetRegion(Lcd::Rect(test_x, WorldSize::h - test_y - 1, 4, 4));
-			pLcd->FillColor(Lcd::kCyan);
+			pLcd->FillColor(Lcd::kYellow);
 		}
 		/*END OF DEBUGGING*/
 		if (getWorldBit(test_x, test_y) && getWorldBit(test_x + 1, test_y)
@@ -701,11 +701,8 @@ CarManager::Feature featureIdent_Corner() {
 			start_y = carMid.second
 					+ (TuningVar.cross_cal_start_num
 							- encoder_total_cross / TuningVar.cross_cal_ratio);
-			start_x = (start_y
-					- (left_corners.points.front().second
-							+ right_corners.points.front().second) / 2)
-					/ (left_corners.points.front().first
-							- right_corners.points.front().first)
+			start_x = (start_y - (left_corners.points.front().second + right_corners.points.front().second) / 2)
+					/ (left_corners.points.front().first - right_corners.points.front().first)
 					* (right_corners.points.front().second
 							- left_corners.points.front().second)
 					+ (left_corners.points.front().first
@@ -787,7 +784,7 @@ CarManager::Feature featureIdent_Corner() {
 	}
 	/*Exit case handling: ready -> exit*///To avoid entrance double check for corner
 	if ((left_corners.points.size() > 0 || right_corners.points.size() > 0)
-			&& roundaboutStatus == 1
+			&& roundaboutStatus == 1 && roundaboutExitStatus == 0
 			&& (abs(encoder_total_round) > TuningVar.round_encoder_count)) {
 //		//keep updating until corner disappear
 //		if (left_corners.points.size() > 0) {
@@ -801,11 +798,27 @@ CarManager::Feature featureIdent_Corner() {
 		exit_round_ready = true; // Detect one corner
 	}
 	/*FOR DEBUGGING*/
+//	if(true){
+//		char temp_1[100];
+//		sprintf(temp_1, "Ycor:%d", abs(roundabout_nearest_corner_left.second - carMid.second));
+//		pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
+//		pWriter->WriteString(temp_1);
+//		pLcd->SetRegion(Lcd::Rect(0,30,128,15));
+//		exit_round_ready?pWriter->WriteString("ready"):pWriter->WriteString("Not ready");
+//		pLcd->SetRegion(Lcd::Rect(0,45,128,15));
+//		roundaboutStatus?pWriter->WriteString("RS = 1"):pWriter->WriteString("RS = 0");
+//		pLcd->SetRegion(Lcd::Rect(0,56,128,15));
+//		roundaboutExitStatus?pWriter->WriteString("RSE = 1"):pWriter->WriteString("RSE = 0");
+//
+//	}
+
+	/*FOR DEBUGGING*/
 	if(debug){
 		pLcd->SetRegion(Lcd::Rect(0,30,128,15));
 		exit_round_ready?pWriter->WriteString("ready"):pWriter->WriteString("Not ready");
 		pLcd->SetRegion(Lcd::Rect(0,45,128,15));
 		roundaboutStatus?pWriter->WriteString("RS = 1"):pWriter->WriteString("RS = 0");
+
 	}
 	/*END OF DEBUGGING*/
 	//the moment when corner disappears + inside roundabout is Exit /*+ Front is black*/
@@ -970,7 +983,7 @@ void GenPath(CarManager::Feature feature) {
 			pLcd->FillColor(Lcd::kRed);
 		}
 		/*END OF DEBUGGING*/
-		path.push((new_left_x + new_right_x) / 2, start_y); //follow the new midpoint
+		path.push(((new_left_x + new_right_x) / 2 + carMid.first)/2, start_y); //follow the new midpoint
 		//Update start_x and start_y
 		start_y = carMid.second
 				+ (TuningVar.cross_cal_start_num
@@ -1004,7 +1017,7 @@ void GenPath(CarManager::Feature feature) {
 		pEncoder0->Update();
 		pEncoder1->Update();
 		encoder_total_round += (pEncoder0->GetCount() + pEncoder1->GetCount()) / 2;
-		feature = CarManager::Feature::kRoundabout;
+//		feature = CarManager::Feature::kRoundabout;
 	}
 
 	//When exiting the roundabout, keep exit method until completely exit
@@ -1093,7 +1106,7 @@ void GenPath(CarManager::Feature feature) {
 		else {
 			while ( (right_edge.points.size()<TuningVar.roundroad_min_size) && FindOneRightEdge()) {}
 			for(int i=0; i<right_edge.points.size(); i++){
-				path.push(right_edge.points[i].first - TuningVar.roundabout_offset, right_edge.points[i].second);
+				path.push(right_edge.points[i].first - TuningVar.roundabout_offset -5, right_edge.points[i].second);
 			}
 		}
 
@@ -1141,7 +1154,7 @@ void GenPath(CarManager::Feature feature) {
 		else {
 			while ((right_edge.points.size() < TuningVar.roundroad_min_size) && FindOneRightEdge()) {}
 			for(int i=0; i<right_edge.points.size(); i++){
-				path.push(right_edge.points[i].first - TuningVar.roundabout_offset, right_edge.points[i].second);
+				path.push(right_edge.points[i].first - TuningVar.roundabout_offset-5, right_edge.points[i].second);
 			}
 		}
 
@@ -1328,14 +1341,12 @@ int16_t CalcAngleDiff() {
 //			sum++;
 //		}
 //	}
-//	else{
-		for (auto&& point : path.points) {
-			if (sum > 20) //consider first 20 points
-				break;
-			error += (point.first - carMid.first);
-			sum++;
-		}
-//	}
+	for (auto&& point : path.points) {
+		if (sum > (roundaboutExitStatus == 1 ? 40 : 20)) //consider first 20 points
+			break;
+		error += (point.first - carMid.first);
+		sum++;
+	}
 
 	return error / sum * 20;
 }
@@ -1618,11 +1629,11 @@ void main_car1(bool debug_) {
 
 
 
-	while(joystick.GetState() != Joystick::State::kIdle){
-		if(bt.hasStartReq()){
-			break;
-		}
-	}
+//	while(joystick.GetState() != Joystick::State::kIdle){
+//		if(bt.hasStartReq()){
+//			break;
+//		}
+//	}
 
 //  HardcodeOvertakeLeft();
 //  HardcodeOvertakeRight();
@@ -1643,11 +1654,11 @@ void main_car1(bool debug_) {
 //        Timer::TimerInt new_time = System::Time();
 				//pMpc->UpdateEncoder();
 				Capture(); //Capture until two base points are identified
-				if (FindStoppingLine() && time_img > 10000) {
-					motor0.SetPower(0);
-					motor1.SetPower(0);
-					pWriter->WriteString("Stopping Line Detected");
-				}
+//				if (FindStoppingLine() && time_img > 10000) {
+//					motor0.SetPower(0);
+//					motor1.SetPower(0);
+//					pWriter->WriteString("Stopping Line Detected");
+//				}
 				FindEdges();
 				CarManager::Feature a = featureIdent_Corner();
 				GenPath(a); //Generate path
@@ -1655,6 +1666,7 @@ void main_car1(bool debug_) {
 //				pLcd->SetRegion(Lcd::Rect(0, 16, 128, 15));
 //				char timestr[100];
 //				sprintf(timestr, "time: %dms", System::Time() - new_time);
+//				pWriter->WriteString(timestr);
 //				pLcd->SetRegion(Lcd::Rect(0, 32, 128, 15));
 //				sprintf(timestr, "feature: %dms", feature_start_time);
 //				pLcd->SetRegion(Lcd::Rect(0, 64, 128, 15));
@@ -1671,7 +1683,31 @@ void main_car1(bool debug_) {
 //					sprintf(timestr, "AngleOS: %d", servoAngle);
 //					pServo->SetDegree(servo_bounds.kCenter + servoAngle);
 //					pWriter->WriteString(timestr);
-//					PrintWorldImage();
+					PrintWorldImage();
+					switch (a) {
+					case CarManager::Feature::kCross:
+						pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
+						pWriter->WriteString("Crossing");
+						break;
+					case CarManager::Feature::kRoundabout:
+						pLcd->SetRegion(Lcd::Rect(0, 60, 128, 15));
+						pWriter->WriteString("Roundabout");
+						break;
+					case CarManager::Feature::kNormal:
+						pLcd->SetRegion(Lcd::Rect(0, 30, 128, 15));
+						pWriter->WriteString("Normal");
+						break;
+					case CarManager::Feature::kRoundaboutExit:
+						pLcd->SetRegion(Lcd::Rect(0, 30, 128, 15));
+						pWriter->WriteString("Exit of Roundabout");
+						break;
+					case CarManager::Feature::kStraight:
+						pLcd->SetRegion(Lcd::Rect(0, 30, 128, 15));
+						pWriter->WriteString("Straight");
+						break;
+					}
+					PrintCorner(left_corners, Lcd::kPurple); //Print left_corner
+					PrintCorner(right_corners, Lcd::kPurple); //Print right_corner
 //					pLcd->SetRegion(Lcd::Rect(carMid.first, carMid.second, 5, 5));
 //					pLcd->FillColor(Lcd::kRed);
 
@@ -1688,19 +1724,19 @@ void main_car1(bool debug_) {
 						pWriter->WriteString("Crossing");
 						break;
 					case CarManager::Feature::kRoundabout:
-						pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
+						pLcd->SetRegion(Lcd::Rect(0, 60, 128, 15));
 						pWriter->WriteString("Roundabout");
 						break;
 					case CarManager::Feature::kNormal:
-						pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
+						pLcd->SetRegion(Lcd::Rect(0, 30, 128, 15));
 						pWriter->WriteString("Normal");
 						break;
 					case CarManager::Feature::kRoundaboutExit:
-						pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
+						pLcd->SetRegion(Lcd::Rect(0, 30, 128, 15));
 						pWriter->WriteString("Exit of Roundabout");
 						break;
 					case CarManager::Feature::kStraight:
-						pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
+						pLcd->SetRegion(Lcd::Rect(0, 30, 128, 15));
 						pWriter->WriteString("Straight");
 						break;
 					}
@@ -1708,7 +1744,16 @@ void main_car1(bool debug_) {
 //				PrintSuddenChangeTrackWidthLocation(Lcd::kYellow); //Print sudden change track width location
 				/*END OF DEBUGGING*/
 				// TODO: Modify CalcAngleDiff() to return angle difference, instead of servo value difference
-				if (crossingStatus == 1) {
+//				if(roundaboutStatus==1){
+//					motor0.SetPower(200);
+//					motor1.SetPower(200);
+//				}
+//				else{
+//					motor0.SetPower(260);
+//					motor1.SetPower(260);
+//				}
+
+				if (crossingStatus == 1 || roundaboutStatus == 1) {
 					pServo->SetDegree(
 							libutil::ClampVal(servo_bounds.kRightBound,
 									static_cast<uint16_t>(servo_bounds.kCenter

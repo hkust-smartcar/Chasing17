@@ -125,7 +125,7 @@ class CarManager final {
     uint16_t kRightBound;
   };
 
-  static constexpr ServoBounds kBoundsCar1 = {1040, 755, 470};
+  static constexpr ServoBounds kBoundsCar1 = {1040, 755, 470};//{1040, 755, 470};
   static constexpr ServoBounds kBoundsCar2 = {1145, 845, 545};
 
   /**

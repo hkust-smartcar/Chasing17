@@ -89,7 +89,7 @@ struct WorldSize {
 
 /*CAR1*/
 struct {
-  bool roundabout_turn_left = true; //Used for GenPath()
+  bool roundabout_turn_left = false; //Used for GenPath()
   uint16_t starting_y = 15; //the starting y for edge detection
   uint16_t edge_length = 159; //max length for an edge
   uint16_t edge_hor_search_max = 4; //max for horizontal search of edge if next edge point cannot be found
@@ -117,11 +117,11 @@ struct {
   uint16_t round_enter_offset = 15;
   uint16_t round_exit_offset = 10;
   uint16_t servo_offset = 0; //49
-  uint16_t min_dist_meet_crossing = 35;
+  uint16_t min_dist_meet_crossing = 30;
   uint16_t roundroad_min_size = 30; // When the edge is broken in roundabout, find until this threshold
-  uint16_t roundroad_exit_radius = 30; // search pixels around to double check exit of roundabout for CAR1
-  uint16_t exit_action_dist = 17; // double check to avoid corner's sudden disappear inside roundabout
-  uint16_t roundabout_offset = 15; // half of road width
+  uint16_t roundroad_exit_radius = 38; // search pixels around to double check exit of roundabout for CAR1
+  uint16_t exit_action_dist = 35; // double check to avoid corner's sudden disappear inside roundabout
+  uint16_t roundabout_offset = 10; // half of road width
 
 } TuningVar;
 
