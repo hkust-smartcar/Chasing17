@@ -1574,7 +1574,7 @@ void main_car1(bool debug_) {
 	JyMcuBt106::Config ConfigBT;
 	ConfigBT.id = 0;
 	ConfigBT.baud_rate = libbase::k60::Uart::Config::BaudRate::k115200;
-	JyMcuBt106 bt(ConfigBT);
+	BTComm bt(ConfigBT);
 	pBT = &bt;
 
 	St7735r::Config lcdConfig;
@@ -1617,6 +1617,12 @@ void main_car1(bool debug_) {
 	System::DelayMs(1000);
 
 
+
+	while(joystick.GetState() != Joystick::State::kIdle){
+		if(bt.hasStartReq()){
+			break;
+		}
+	}
 
 //  HardcodeOvertakeLeft();
 //  HardcodeOvertakeRight();
