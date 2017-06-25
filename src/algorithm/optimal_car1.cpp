@@ -1333,6 +1333,7 @@ void PrintSuddenChangeTrackWidthLocation(uint16_t color) {
 int16_t CalcAngleDiff() {
 	int16_t error = 0, sum = 0;
 	int16_t roundabout_offset = 0;
+	int avg = 0;
 //	if (roundaboutStatus == 1 && abs(encoder_total_round) > TuningVar.round_encoder_count) {
 //		for (auto&& point : path.points) {
 //			if (sum > 10) //consider first 10 points
@@ -1345,8 +1346,14 @@ int16_t CalcAngleDiff() {
 		if (sum > (roundaboutExitStatus == 1 ? 40 : 20)) //consider first 20 points
 			break;
 		error += (point.first - carMid.first);
+		avg += point.first;
 		sum++;
 	}
+
+	char temp[100];
+	sprintf(temp, "avg: %.2f", avg/(float)sum);
+	pLcd->SetRegion(Lcd::Rect(0, 16, 128, 15));
+	pWriter->WriteString(temp);
 
 	return error / sum * 20;
 }

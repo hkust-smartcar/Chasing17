@@ -71,7 +71,7 @@ int encoder_total_cross = 0; //for crossroad
 int encoder_total_round = 0; // for roundabout
 int encoder_total_exit = 0;
 Timer::TimerInt feature_start_time;
-std::pair<int, int> carMid(WorldSize::w / 2, 0);
+std::pair<int, int> carMid {69, 0};
 int roundabout_nearest_corner_cnt_left = pow(TuningVar.corner_range*2+1,2); // for finding the nearest corner point for roundabout
 int roundabout_nearest_corner_cnt_right = pow(TuningVar.corner_range*2+1,2);
 std::pair<int, int> roundabout_nearest_corner_left{0,0};
@@ -213,7 +213,7 @@ void Capture() {
 	pCamera->UnlockBuffer();
 
 	//Search horizontally
-	for (int i = WorldSize::w / 2; i > 0; i--) {
+	for (int i = carMid.first; i > 0; i--) {
 		if (getWorldBit(i, TuningVar.starting_y) == 1) {
 			left_x = i + 1;
 			left_y = TuningVar.starting_y;
@@ -227,7 +227,7 @@ void Capture() {
 	}
 
 	//Search horizontally
-	for (int i = WorldSize::w / 2; i < WorldSize::w; i++) {
+	for (int i = carMid.first; i < WorldSize::w; i++) {
 		if (getWorldBit(i, TuningVar.starting_y) == 1) {
 			right_x = i - 1;
 			right_y = TuningVar.starting_y;
@@ -1241,6 +1241,7 @@ void PrintSuddenChangeTrackWidthLocation(uint16_t color) {
 int16_t CalcAngleDiff() {
 	int16_t error = 0, sum = 0;
 	int16_t roundabout_offset = 0;
+	int avg = 0;
 //	if (roundaboutStatus == 1 && abs(encoder_total_round) > TuningVar.round_encoder_count) {
 //		for (auto&& point : path.points) {
 //			if (sum > 10) //consider first 10 points
@@ -1253,8 +1254,13 @@ int16_t CalcAngleDiff() {
 		if (sum > (roundaboutExitStatus == 1 ? 40 : 20)) //consider first 20 points
 			break;
 		error += (point.first - carMid.first);
+		avg += point.first;
 		sum++;
 	}
+	char temp[100];
+	sprintf(temp, "avg: %.2f", avg/(float)sum);
+	pLcd->SetRegion(Lcd::Rect(0, 16, 128, 15));
+	pWriter->WriteString(temp);
 
 	return error / sum * 20;
 }
@@ -1349,7 +1355,7 @@ void main_car2(bool debug_) {
 	cameraConfig.w = CameraSize::w;
 	cameraConfig.h = CameraSize::h;
 	cameraConfig.fps = Ov7725Configurator::Config::Fps::kHigh;
-	cameraConfig.contrast = 0x2C;
+	cameraConfig.contrast = 0x3D;
 	cameraConfig.brightness = 0x00;
 	std::unique_ptr<Ov7725> camera = util::make_unique<Ov7725>(cameraConfig);
 	pCamera = std::move(camera);
@@ -1452,7 +1458,7 @@ void main_car2(bool debug_) {
 //		}
 //	}
 
-	StartlineOvertake();
+//	StartlineOvertake();
 
 	motor0.SetClockwise(true);
 	motor1.SetClockwise(false);
@@ -1565,14 +1571,14 @@ void main_car2(bool debug_) {
 					pServo->SetDegree(
 							libutil::ClampVal(servo_bounds.kRightBound,
 									static_cast<uint16_t>(servo_bounds.kCenter
-											- 1.3 * CalcAngleDiff()
+											- 1.1 * CalcAngleDiff()
 											+ TuningVar.servo_offset),
 									servo_bounds.kLeftBound)); //Car1: kp = 1.5
 				} else {
 					pServo->SetDegree(
 							libutil::ClampVal(servo_bounds.kRightBound,
 									static_cast<uint16_t>(servo_bounds.kCenter
-											- 1.3 * CalcAngleDiff()
+											- 1.2 * CalcAngleDiff()
 											+ TuningVar.servo_offset),
 									servo_bounds.kLeftBound)); //Car1: kp = 1.5
 				}
