@@ -798,7 +798,7 @@ CarManager::Feature featureIdent_Corner() {
 		exit_round_ready = true; // Detect one corner
 	}
 	/*FOR DEBUGGING*/
-//	if(true){
+	if(true){
 //		char temp_1[100];
 //		sprintf(temp_1, "Ycor:%d", abs(roundabout_nearest_corner_left.second - carMid.second));
 //		pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
@@ -810,7 +810,7 @@ CarManager::Feature featureIdent_Corner() {
 //		pLcd->SetRegion(Lcd::Rect(0,56,128,15));
 //		roundaboutExitStatus?pWriter->WriteString("RSE = 1"):pWriter->WriteString("RSE = 0");
 //
-//	}
+	}
 
 	/*FOR DEBUGGING*/
 	if(debug){
@@ -1520,7 +1520,7 @@ void main_car1(bool debug_) {
 //		}
 //	}
 
-	StartlineOvertake();
+//	StartlineOvertake();
 
 	motor0.SetClockwise(true);
 	motor1.SetClockwise(false);
@@ -1594,6 +1594,14 @@ void main_car1(bool debug_) {
 //					PrintCorner(right_corners, Lcd::kPurple); //Print right_corner
 //					pLcd->SetRegion(Lcd::Rect(carMid.first, carMid.second, 5, 5));
 //					pLcd->FillColor(Lcd::kRed);
+
+
+//				PrintWorldImage();
+//				PrintEdge(left_edge, Lcd::kRed); //Print left_edge
+//				PrintEdge(right_edge, Lcd::kBlue); //Print right_edge
+//				PrintCorner(left_corners, Lcd::kPurple); //Print left_corner
+//				PrintCorner(right_corners, Lcd::kPurple); //Print right_corner
+//				PrintEdge(path, Lcd::kGreen); //Print path
 
 				if (debug) {
 					PrintWorldImage();
