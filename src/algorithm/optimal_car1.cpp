@@ -1358,7 +1358,7 @@ bool FindStoppingLine() {
 	int refPoint = 0;
 	int count = 0;
 	for (int x = 0; x < 128; x++) {
-		if (getFilteredBit(CameraBuf, x, 400) != refPoint) {
+		if (getFilteredBit(CameraBuf, x, 380) != refPoint) {
 			count++;
 			refPoint = !refPoint;
 		}
@@ -1370,147 +1370,68 @@ bool FindStoppingLine() {
 }
 
 /*
- * @brief Hardcode overtake for right car
+ * @brief Start line overtake
+ * Left Car 1; Right Car 2
+ * After overtake, Front Car 1; Back Car 2
  */
-void HardcodeOvertakeLeft() {
+void StartlineOvertake(){
+	/* For car 1; initial position: LEFT; after position: FRONT */
+
 	int cnt = 0;
-	Timer::TimerInt time_img = 0;
-	bool stop_flag = false;
-	Timer::TimerInt stop_time = 0;
-	pMotor0->SetPower(200);
-	pMotor1->SetPower(200);
-	int overtake_cnt = 0;
-	while (overtake_cnt <= 2) {
-		while (time_img != System::Time()) {
-			time_img = System::Time();
-			if (time_img % 10 == 0) {
-				if (cnt >= 2300) {
-					pMotor0->SetPower(0);
-					pMotor1->SetPower(0);
-					pMotor0->SetClockwise(false);
-					pMotor1->SetClockwise(true);
-					stop_flag = true;
-					stop_time = System::Time();
-					cnt = 0;
-					overtake_cnt++;
-				}
-				if (System::Time() - stop_time > 2500 && stop_flag) {
-					pMotor0->SetPower(200);
-					pMotor1->SetPower(200);
-					pMotor0->SetClockwise(true);
-					pMotor1->SetClockwise(false);
-					stop_flag = false;
-				}
-				Capture();
-				path.points.clear();
-				int error = 0;
-				for (int i = 0; i < 10; i++)
-					FindOneLeftEdge();
-				for (int i = 0; i < 10; i++)
-					path.push(left_edge.points[i].first + 6,
-							left_edge.points[i].second);
-//				PrintWorldImage();
-//				PrintEdge(right_edge, Lcd::kBlue);
-//				PrintEdge(path, Lcd::kGreen);
-				pServo->SetDegree(
-						libutil::ClampVal(servo_bounds.kRightBound,
-								static_cast<uint16_t>(servo_bounds.kCenter
-										- 1.3 * CalcAngleDiff()
-										+ TuningVar.servo_offset),
-								servo_bounds.kLeftBound));
-				pEncoder0->Update();
-				if (!stop_flag) {
-
-					cnt += pEncoder0->GetCount();
-				} else
-					cnt = 0;
-				char temp[100];
-				sprintf(temp, "enc:%d", cnt);
-				pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
-				pWriter->WriteString(temp);
-
-			}
-		}
+	while (1){
+		pMotor0->SetPower(500);
+		pMotor1->SetPower(500);
+		Capture();
+		path.points.clear();
+		for (int i = 0; i < 10; i++) FindOneLeftEdge();
+		for (int i = 0; i < 10; i++) path.push(left_edge.points[i].first + 5, left_edge.points[i].second);
+		pServo->SetDegree(
+				libutil::ClampVal(servo_bounds.kRightBound,
+						static_cast<uint16_t>(servo_bounds.kCenter
+								- 1.3 * CalcAngleDiff()
+								+ TuningVar.servo_offset),
+						servo_bounds.kLeftBound));
+		pEncoder0->Update();
+		cnt += pEncoder0->GetCount();
+		if (cnt > 2600) return;
 	}
-	System::DelayMs(2000);
 }
 
 /*
- * @brief Hardcode overtake for right car
+ * @brief Start line overtake
+ * Left Car 1; Right Car 2
+ * After overtake, Front Car 1; Back Car 2
  */
-void HardcodeOvertakeRight() {
+void StartlineOvertake2(){
+	/* For car 2; initial position: RIGHT; after position: BACK */
 	int cnt = 0;
-	Timer::TimerInt time_img = 0;
-	bool stop_flag = false;
-	Timer::TimerInt stop_time = 0;
-	pMotor0->SetPower(200);
-	pMotor1->SetPower(200);
-	int overtake_cnt = 0;
-	int initial_cnt = 0;
-	while (overtake_cnt <= 2) {
-		while (time_img != System::Time()) {
-			time_img = System::Time();
-			if (time_img % 10 == 0) {
-//				if (overtake_cnt == 3) return;
-				if ((cnt >= 1800 && overtake_cnt == 0)
-						|| (cnt >= 2500 && overtake_cnt == 1) || cnt >= 3100) {
-					pMotor0->SetPower(0);
-					pMotor1->SetPower(0);
-					pMotor0->SetClockwise(false);
-					pMotor1->SetClockwise(true);
-					pMotor0->SetPower(1000);
-					pMotor1->SetPower(1000);
-					System::DelayMs(100);
-					pMotor0->SetPower(0);
-					pMotor1->SetPower(0);
-					stop_flag = true;
-					stop_time = System::Time();
-					if (overtake_cnt == 0)
-						stop_time += 800;
-					cnt = 0;
-					overtake_cnt++;
-				}
-				if (System::Time() - stop_time > 2600 && stop_flag) {
-					pMotor0->SetClockwise(true);
-					pMotor1->SetClockwise(false);
-					pMotor0->SetPower(200);
-					pMotor1->SetPower(200);
-
-					stop_flag = false;
-				}
-				Capture();
-				path.points.clear();
-				int error = 0;
-				for (int i = 0; i < 10; i++)
-					FindOneRightEdge();
-				for (int i = 0; i < 10; i++)
-					path.push(right_edge.points[i].first - 6,
-							right_edge.points[i].second);
-//				PrintWorldImage();
-//				PrintEdge(right_edge, Lcd::kBlue);
-//				PrintEdge(path, Lcd::kGreen);
-				pServo->SetDegree(
-						libutil::ClampVal(servo_bounds.kRightBound,
-								static_cast<uint16_t>(servo_bounds.kCenter
-										- 1.3 * CalcAngleDiff()
-										+ TuningVar.servo_offset),
-								servo_bounds.kLeftBound));
-				pEncoder0->Update();
-				if (!stop_flag) {
-
-					cnt += pEncoder0->GetCount();
-				} else
-					cnt = 0;
-				char temp[100];
-				sprintf(temp, "enc:%d", cnt);
-				pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
-				pWriter->WriteString(temp);
-
-			}
+	while (1){
+		pMotor0->SetPower(400);
+		pMotor1->SetPower(400);
+		Capture();
+		path.points.clear();
+		for (int i = 0; i < 10; i++) FindOneRightEdge();
+		for (int i = 0; i < 10; i++) path.push(right_edge.points[i].first + 5, right_edge.points[i].second);
+		pServo->SetDegree(
+				libutil::ClampVal(servo_bounds.kRightBound,
+						static_cast<uint16_t>(servo_bounds.kCenter
+								- 1.3 * CalcAngleDiff()
+								+ TuningVar.servo_offset),
+						servo_bounds.kLeftBound));
+		pEncoder0->Update();
+		cnt += pEncoder0->GetCount();
+		if (cnt > 2300){
+			pMotor0->SetPower(1000);
+			pMotor1->SetPower(1000);
+			System::DelayMs(100);
+			pMotor0->SetPower(0);
+			pMotor1->SetPower(0);
+			System::DelayMs(1000);
+			return;
 		}
 	}
-	System::DelayMs(5000);
 }
+
 
 }  // namespace
 
@@ -1635,13 +1556,12 @@ void main_car1(bool debug_) {
 //		}
 //	}
 
-//  HardcodeOvertakeLeft();
-//  HardcodeOvertakeRight();
+	StartlineOvertake();
 
 	motor0.SetClockwise(true);
 	motor1.SetClockwise(false);
-	motor0.SetPower(260);
-	motor1.SetPower(260);
+	motor0.SetPower(230);
+	motor1.SetPower(230);
 
 
 //	int servoAngle = 0;
@@ -1654,11 +1574,11 @@ void main_car1(bool debug_) {
 //        Timer::TimerInt new_time = System::Time();
 				//pMpc->UpdateEncoder();
 				Capture(); //Capture until two base points are identified
-//				if (FindStoppingLine() && time_img > 10000) {
-//					motor0.SetPower(0);
-//					motor1.SetPower(0);
-//					pWriter->WriteString("Stopping Line Detected");
-//				}
+				if (FindStoppingLine() && time_img > 10000) {
+					motor0.SetPower(0);
+					motor1.SetPower(0);
+					pWriter->WriteString("Stopping Line");
+				}
 				FindEdges();
 				CarManager::Feature a = featureIdent_Corner();
 				GenPath(a); //Generate path
@@ -1764,10 +1684,11 @@ void main_car1(bool debug_) {
 					pServo->SetDegree(
 							libutil::ClampVal(servo_bounds.kRightBound,
 									static_cast<uint16_t>(servo_bounds.kCenter
-											- 1.6 * CalcAngleDiff()
+											- 1.3 * CalcAngleDiff()
 											+ TuningVar.servo_offset),
 									servo_bounds.kLeftBound)); //Car1: kp = 1.5
 				}
+
 				/*MOTOR PROTECTION*/
 //        encoder0.Update();
 //        encoder1.Update();
@@ -1779,6 +1700,7 @@ void main_car1(bool debug_) {
 //    	   motor1.SetPower(300);
 //       }
 //        CarManager::UpdateParameters();
+
 			}
 		}
 
