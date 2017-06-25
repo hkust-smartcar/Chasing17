@@ -1529,7 +1529,7 @@ void main_car2(bool debug_) {
 	JyMcuBt106::Config ConfigBT;
 	ConfigBT.id = 0;
 	ConfigBT.baud_rate = libbase::k60::Uart::Config::BaudRate::k115200;
-	JyMcuBt106 bt(ConfigBT);
+	BTComm bt(ConfigBT);
 	pBT = &bt;
 
 	St7735r::Config lcdConfig;
@@ -1579,6 +1579,16 @@ void main_car2(bool debug_) {
 //			break;
 //		}
 //	}
+
+	while(true){
+		if(joystick.GetState() != Joystick::State::kIdle){
+			Timer::TimerInt start=System::Time();
+			while(System::Time()-start<1500){ //1500 is time in ms that the back car need to wait after the joytick clicked
+				bt.sendStartReq();
+			}
+			break;
+		}
+	}
 
 //  HardcodeOvertakeLeft();
 //  HardcodeOvertakeRight();
