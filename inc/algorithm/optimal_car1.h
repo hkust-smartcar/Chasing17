@@ -101,7 +101,7 @@ struct {
   uint16_t min_edges_dist = 7; // Manhattan dist threshold for edges
   uint16_t track_width_threshold = 900; //track width threshold for consideration of sudden change (square)
   uint16_t track_width_change_threshold = 350; //track width change threshold for consideration of sudden change
-  uint16_t sightDist = 90; // The distance from which the image pixel should be tested
+  uint16_t sightDist = 60; // The distance from which the image pixel should be tested
   uint16_t sightDist_exitRound = 60; //The distance from which the image pixel is used for exit testing
   uint16_t straight_line_threshold = 50; // The threshold num. of equal width for straight line detection
   uint16_t action_distance = 25; // The condition in which the car start handling this feature when meeting it

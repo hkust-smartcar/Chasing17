@@ -669,10 +669,10 @@ CarManager::Feature featureIdent_Corner() {
 //		uint16_t test_y = TuningVar.sightDist
 //				* ((cornerMid_y - carMid.second) / edge3th) + cornerMid_y;
 		/*FOR DEBUGGING*/
-		if (true) {
-			pLcd->SetRegion(Lcd::Rect(test_x, WorldSize::h - test_y - 1, 4, 4));
-			pLcd->FillColor(Lcd::kYellow);
-		}
+//		if (true) {
+//			pLcd->SetRegion(Lcd::Rect(test_x, WorldSize::h - test_y - 1, 4, 4));
+//			pLcd->FillColor(Lcd::kYellow);
+//		}
 		/*END OF DEBUGGING*/
 		if (getWorldBit(test_x, test_y) && getWorldBit(test_x + 1, test_y)
 				&& getWorldBit(test_x, test_y + 1)
@@ -1543,7 +1543,7 @@ void main_car1(bool debug_) {
 	cameraConfig.w = CameraSize::w;
 	cameraConfig.h = CameraSize::h;
 	cameraConfig.fps = Ov7725Configurator::Config::Fps::kHigh;
-	cameraConfig.contrast = 0x2C;
+	cameraConfig.contrast = 0x3D;
 	cameraConfig.brightness = 0x00;
 	std::unique_ptr<Ov7725> camera = util::make_unique<Ov7725>(cameraConfig);
 	pCamera = std::move(camera);
@@ -1683,31 +1683,31 @@ void main_car1(bool debug_) {
 //					sprintf(timestr, "AngleOS: %d", servoAngle);
 //					pServo->SetDegree(servo_bounds.kCenter + servoAngle);
 //					pWriter->WriteString(timestr);
-					PrintWorldImage();
-					switch (a) {
-					case CarManager::Feature::kCross:
-						pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
-						pWriter->WriteString("Crossing");
-						break;
-					case CarManager::Feature::kRoundabout:
-						pLcd->SetRegion(Lcd::Rect(0, 60, 128, 15));
-						pWriter->WriteString("Roundabout");
-						break;
-					case CarManager::Feature::kNormal:
-						pLcd->SetRegion(Lcd::Rect(0, 30, 128, 15));
-						pWriter->WriteString("Normal");
-						break;
-					case CarManager::Feature::kRoundaboutExit:
-						pLcd->SetRegion(Lcd::Rect(0, 30, 128, 15));
-						pWriter->WriteString("Exit of Roundabout");
-						break;
-					case CarManager::Feature::kStraight:
-						pLcd->SetRegion(Lcd::Rect(0, 30, 128, 15));
-						pWriter->WriteString("Straight");
-						break;
-					}
-					PrintCorner(left_corners, Lcd::kPurple); //Print left_corner
-					PrintCorner(right_corners, Lcd::kPurple); //Print right_corner
+//					PrintWorldImage();
+//					switch (a) {
+//					case CarManager::Feature::kCross:
+//						pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
+//						pWriter->WriteString("Crossing");
+//						break;
+//					case CarManager::Feature::kRoundabout:
+//						pLcd->SetRegion(Lcd::Rect(0, 60, 128, 15));
+//						pWriter->WriteString("Roundabout");
+//						break;
+//					case CarManager::Feature::kNormal:
+//						pLcd->SetRegion(Lcd::Rect(0, 30, 128, 15));
+//						pWriter->WriteString("Normal");
+//						break;
+//					case CarManager::Feature::kRoundaboutExit:
+//						pLcd->SetRegion(Lcd::Rect(0, 30, 128, 15));
+//						pWriter->WriteString("Exit of Roundabout");
+//						break;
+//					case CarManager::Feature::kStraight:
+//						pLcd->SetRegion(Lcd::Rect(0, 30, 128, 15));
+//						pWriter->WriteString("Straight");
+//						break;
+//					}
+//					PrintCorner(left_corners, Lcd::kPurple); //Print left_corner
+//					PrintCorner(right_corners, Lcd::kPurple); //Print right_corner
 //					pLcd->SetRegion(Lcd::Rect(carMid.first, carMid.second, 5, 5));
 //					pLcd->FillColor(Lcd::kRed);
 
