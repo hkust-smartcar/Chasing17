@@ -1397,42 +1397,6 @@ void StartlineOvertake(){
 	}
 }
 
-/*
- * @brief Start line overtake
- * Left Car 1; Right Car 2
- * After overtake, Front Car 1; Back Car 2
- */
-void StartlineOvertake2(){
-	/* For car 2; initial position: RIGHT; after position: BACK */
-	int cnt = 0;
-	while (1){
-		pMotor0->SetPower(400);
-		pMotor1->SetPower(400);
-		Capture();
-		path.points.clear();
-		for (int i = 0; i < 10; i++) FindOneRightEdge();
-		for (int i = 0; i < 10; i++) path.push(right_edge.points[i].first + 5, right_edge.points[i].second);
-		pServo->SetDegree(
-				libutil::ClampVal(servo_bounds.kRightBound,
-						static_cast<uint16_t>(servo_bounds.kCenter
-								- 1.3 * CalcAngleDiff()
-								+ TuningVar.servo_offset),
-						servo_bounds.kLeftBound));
-		pEncoder0->Update();
-		cnt += pEncoder0->GetCount();
-		if (cnt > 2300){
-			pMotor0->SetPower(1000);
-			pMotor1->SetPower(1000);
-			System::DelayMs(100);
-			pMotor0->SetPower(0);
-			pMotor1->SetPower(0);
-			System::DelayMs(1000);
-			return;
-		}
-	}
-}
-
-
 }  // namespace
 
 void main_car1(bool debug_) {
