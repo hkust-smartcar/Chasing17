@@ -1064,7 +1064,7 @@ void GenPath(CarManager::Feature feature) {
 		else {
 			while ( (right_edge.points.size()<TuningVar.roundroad_min_size) && FindOneRightEdge()) {}
 			for(int i=0; i<right_edge.points.size(); i++){
-				path.push(right_edge.points[i].first - TuningVar.roundabout_offset -5, right_edge.points[i].second);
+				path.push(right_edge.points[i].first - TuningVar.roundabout_offset, right_edge.points[i].second);
 			}
 		}
 
@@ -1113,7 +1113,7 @@ void GenPath(CarManager::Feature feature) {
 		else {
 			while ((right_edge.points.size() < TuningVar.roundroad_min_size) && FindOneRightEdge()) {}
 			for(int i=0; i<right_edge.points.size(); i++){
-				path.push(right_edge.points[i].first - TuningVar.roundabout_offset-5, right_edge.points[i].second);
+				path.push(right_edge.points[i].first - TuningVar.roundabout_offset, right_edge.points[i].second);
 			}
 		}
 		break;
@@ -1257,10 +1257,10 @@ int16_t CalcAngleDiff() {
 		avg += point.first;
 		sum++;
 	}
-	char temp[100];
-	sprintf(temp, "avg: %.2f", avg/(float)sum);
-	pLcd->SetRegion(Lcd::Rect(0, 16, 128, 15));
-	pWriter->WriteString(temp);
+//	char temp[100];
+//	sprintf(temp, "avg: %.2f", avg/(float)sum);
+//	pLcd->SetRegion(Lcd::Rect(0, 16, 128, 15));
+//	pWriter->WriteString(temp);
 
 	return error / sum * 20;
 }
@@ -1439,14 +1439,14 @@ void main_car2(bool debug_) {
 //  CarManager::SetTargetAngle(0);
 	System::DelayMs(1000);
 
-//	while (true) {
-//		if (joystick.GetState() == Joystick::State::kUp) {
-//			TuningVar.roundabout_turn_left = true;
-//			break;
-//		} else if (joystick.GetState() == Joystick::State::kDown) {
-//			break;
-//		}
-//	}
+	while (true) {
+		if (joystick.GetState() == Joystick::State::kRight) {
+			TuningVar.roundabout_turn_left = false;
+			break;
+		} else if (joystick.GetState() == Joystick::State::kLeft) {
+			break;
+		}
+	}
 
 //	while(true){
 //		if(joystick.GetState() != Joystick::State::kIdle){
@@ -1462,8 +1462,12 @@ void main_car2(bool debug_) {
 
 	motor0.SetClockwise(true);
 	motor1.SetClockwise(false);
-	motor0.SetPower(230);
-	motor1.SetPower(230);
+	motor0.SetPower(260);
+	motor1.SetPower(260);
+
+	System::DelayMs(1000);
+
+	Timer::TimerInt startTime=System::Time();
 
 	while (true) {
 		while (time_img != System::Time()) {
@@ -1471,14 +1475,14 @@ void main_car2(bool debug_) {
 			led0.SetEnable(time_img % 500 >= 250);
 
 			if (time_img % 10 == 0) {
-				char temp[100];
-				sprintf(temp, "servo:%d", pServo->GetDegree());
-				pLcd->SetRegion(Lcd::Rect(0, 0, 120, 15));
-				pWriter->WriteString(temp);
+//				char temp[100];
+//				sprintf(temp, "servo:%d", pServo->GetDegree());
+//				pLcd->SetRegion(Lcd::Rect(0, 0, 120, 15));
+//				pWriter->WriteString(temp);
 //        Timer::TimerInt new_time = System::Time();
 				//pMpc->UpdateEncoder();
 				Capture(); //Capture until two base points are identified
-				if (FindStoppingLine() && time_img > 10000) {
+				if (FindStoppingLine() && time_img-startTime > 10000) {
 					motor0.SetClockwise(false);
 					motor1.SetClockwise(true);
 					motor0.SetPower(1000);
@@ -1487,6 +1491,12 @@ void main_car2(bool debug_) {
 					motor0.SetPower(0);
 					motor1.SetPower(0);
 					pWriter->WriteString("Stopping Line Detected");
+				}
+				if(roundaboutExitStatus == 1){
+					TuningVar.roundabout_offset = 20;
+				}
+				else{
+					TuningVar.roundabout_offset = 20;
 				}
 				FindEdges();
 				CarManager::Feature a = featureIdent_Corner();
@@ -1514,6 +1524,13 @@ void main_car2(bool debug_) {
 //					sprintf(timestr, "AngleOS: %d", servoAngle);
 //					pServo->SetDegree(servo_bounds.kCenter + servoAngle);
 //					pWriter->WriteString(timestr);
+
+//				PrintWorldImage();
+//				PrintEdge(left_edge, Lcd::kRed); //Print left_edge
+//				PrintEdge(right_edge, Lcd::kBlue); //Print right_edge
+//				PrintCorner(left_corners, Lcd::kPurple); //Print left_corner
+//				PrintCorner(right_corners, Lcd::kPurple); //Print right_corner
+//				PrintEdge(path, Lcd::kGreen); //Print path
 				if (debug) {
 					PrintWorldImage();
 					PrintEdge(left_edge, Lcd::kRed); //Print left_edge

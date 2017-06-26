@@ -1106,7 +1106,7 @@ void GenPath(CarManager::Feature feature) {
 		else {
 			while ( (right_edge.points.size()<TuningVar.roundroad_min_size) && FindOneRightEdge()) {}
 			for(int i=0; i<right_edge.points.size(); i++){
-				path.push(right_edge.points[i].first - TuningVar.roundabout_offset -5, right_edge.points[i].second);
+				path.push(right_edge.points[i].first - TuningVar.roundabout_offset, right_edge.points[i].second);
 			}
 		}
 
@@ -1154,7 +1154,7 @@ void GenPath(CarManager::Feature feature) {
 		else {
 			while ((right_edge.points.size() < TuningVar.roundroad_min_size) && FindOneRightEdge()) {}
 			for(int i=0; i<right_edge.points.size(); i++){
-				path.push(right_edge.points[i].first - TuningVar.roundabout_offset-5, right_edge.points[i].second);
+				path.push(right_edge.points[i].first - TuningVar.roundabout_offset, right_edge.points[i].second);
 			}
 		}
 
@@ -1350,10 +1350,10 @@ int16_t CalcAngleDiff() {
 		sum++;
 	}
 
-	char temp[100];
-	sprintf(temp, "avg: %.2f", avg/(float)sum);
-	pLcd->SetRegion(Lcd::Rect(0, 16, 128, 15));
-	pWriter->WriteString(temp);
+//	char temp[100];
+//	sprintf(temp, "avg: %.2f", avg/(float)sum);
+//	pLcd->SetRegion(Lcd::Rect(0, 16, 128, 15));
+//	pWriter->WriteString(temp);
 
 	return error / sum * 20;
 }
@@ -1519,7 +1519,14 @@ void main_car1(bool debug_) {
 //  CarManager::SetTargetAngle(0);
 	System::DelayMs(1000);
 
-
+	while (true) {
+		if (joystick.GetState() == Joystick::State::kRight) {
+			TuningVar.roundabout_turn_left = false;
+			break;
+		} else if (joystick.GetState() == Joystick::State::kLeft) {
+			break;
+		}
+	}
 
 //	while(joystick.GetState() != Joystick::State::kIdle){
 //		if(bt.hasStartReq()){
@@ -1534,6 +1541,7 @@ void main_car1(bool debug_) {
 	motor0.SetPower(230);
 	motor1.SetPower(230);
 
+	Timer::TimerInt startTime=System::Time();
 
 //	int servoAngle = 0;
 	while (true) {
@@ -1545,7 +1553,7 @@ void main_car1(bool debug_) {
 //        Timer::TimerInt new_time = System::Time();
 				//pMpc->UpdateEncoder();
 				Capture(); //Capture until two base points are identified
-				if (FindStoppingLine() && time_img > 10000) {
+				if (FindStoppingLine() && time_img-startTime > 10000) {
 					motor0.SetPower(0);
 					motor1.SetPower(0);
 					pWriter->WriteString("Stopping Line");
