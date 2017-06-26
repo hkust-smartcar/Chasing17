@@ -26,6 +26,8 @@ namespace algorithm {
 namespace optimal {
 namespace car1 {
 
+constexpr const bool kIsUseCarMgr = false;
+
 void main_car1(bool debug_ = false);
 
 /**
@@ -86,7 +88,6 @@ struct WorldSize {
   static constexpr uint16_t h = 160;
 };
 
-
 /*CAR1*/
 struct {
   bool roundabout_turn_left = true; //Used for GenPath()
@@ -107,7 +108,8 @@ struct {
   uint16_t action_distance = 27; // The condition in which the car start handling this feature when meeting it
   uint16_t stop_distance = 10; // The distance away from starting line - for stopping
   float black_div_length_ratio_threshold = 0.5; // ratio for black points/edge length. Used for detecting starting line
-  libsc::Timer::TimerInt feature_inside_time = 350; // freezing time for feature extraction, the time for entering the entrance
+  libsc::Timer::TimerInt
+      feature_inside_time = 350; // freezing time for feature extraction, the time for entering the entrance
   uint16_t cross_cal_start_num = 80;
   uint16_t cross_cal_ratio = 80; //Look forward @cross_cal_start_num - encoder_total/@cross_cal_ratio to determine path
   uint16_t general_cal_num = 20; //The num of path points considered for servo angle decision except crossing
@@ -124,7 +126,6 @@ struct {
   uint16_t roundabout_offset = 15; // half of road width
 
 } TuningVar;
-
 
 /**
  * TranslateType enum struct
