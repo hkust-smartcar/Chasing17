@@ -254,9 +254,5 @@ void CarManager::UpdateServoAngle() {
 }
 
 void CarManager::UpdateSlope() {
-  if (mpu_ == nullptr) {
-    return;
-  }
-  // TODO(Derppening): Replace with call to MPU9250
   slope_deg_ = 0;
 }
