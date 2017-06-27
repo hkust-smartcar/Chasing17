@@ -104,10 +104,9 @@ struct {
   uint16_t track_width_change_threshold = 350; //track width change threshold for consideration of sudden change
   uint16_t sightDist = 60; // The distance from which the image pixel should be tested
   uint16_t sightDist_exitRound = 60; //The distance from which the image pixel is used for exit testing
-  uint16_t straight_line_threshold = 50; // The threshold num. of equal width for straight line detection
+  uint16_t straight_line_threshold = 45; // The threshold num. of equal width for straight line detection
   uint16_t action_distance = 27; // The condition in which the car start handling this feature when meeting it
   uint16_t stop_distance = 10; // The distance away from starting line - for stopping
-  float black_div_length_ratio_threshold = 0.5; // ratio for black points/edge length. Used for detecting starting line
   libsc::Timer::TimerInt feature_inside_time = 350; // freezing time for feature extraction, the time for entering the entrance
   uint16_t cross_cal_start_num = 80;
   uint16_t cross_cal_ratio = 80; //Look forward @cross_cal_start_num - encoder_total/@cross_cal_ratio to determine path
