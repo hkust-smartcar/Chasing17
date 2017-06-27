@@ -70,10 +70,10 @@ uint16_t prev_track_width = 0;
 int encoder_total_cross = 0; //for crossroad
 int encoder_total_round = 0; // for roundabout
 int encoder_total_exit = 0;
+int roundabout_cnt = 0; // count the roundabout
 Timer::TimerInt feature_start_time;
 std::pair<int, int> carMid {61, 0};
-int roundabout_nearest_corner_cnt_left =
-    pow(TuningVar.corner_range * 2 + 1, 2); // for finding the nearest corner point for roundabout
+int roundabout_nearest_corner_cnt_left = pow(TuningVar.corner_range * 2 + 1, 2); // for finding the nearest corner point for roundabout
 int roundabout_nearest_corner_cnt_right = pow(TuningVar.corner_range * 2 + 1, 2);
 std::pair<int, int> roundabout_nearest_corner_left{0, 0};
 std::pair<int, int> roundabout_nearest_corner_right{0, 0};
@@ -121,6 +121,7 @@ void PrintEdge(Edges, uint16_t);
 void PrintImage();
 void PrintSuddenChangeTrackWidthLocation(uint16_t);
 void PrintWorldImage();
+int roundabout_shortest(uint8_t a, int pos);
 
 /**
  * @brief To fetch filtered bit, 1 = black; 0 = white
@@ -690,6 +691,7 @@ CarManager::Feature featureIdent_Corner() {
       encoder_total_round = 0;
       roundaboutStatus = 1; //Detected
 //			feature_start_time = System::Time(); // Mark the startTime of latest enter time
+      roundabout_cnt++;
       return CarManager::Feature::kRoundabout;
     } else if (!getWorldBit(test_x, test_y)
         && !getWorldBit(test_x + 1, test_y)
@@ -860,7 +862,7 @@ CarManager::Feature featureIdent_Corner() {
 
     /*CAR1*/
 
-    if (TuningVar.roundabout_turn_left) {
+    if (roundabout_shortest(TuningVar.roundabout_shortest_flag, roundabout_cnt - 1)) {
       /*FOR DEBUGGING*/
       if (debug) {
         pLcd->SetRegion(Lcd::Rect(roundabout_nearest_corner_left.first,
@@ -1083,7 +1085,7 @@ void GenPath(CarManager::Feature feature) {
   switch (feature) {
     case CarManager::Feature::kRoundabout: {
       // Turning left at the entrance
-      if (TuningVar.roundabout_turn_left) {
+      if (roundabout_shortest(TuningVar.roundabout_shortest_flag, roundabout_cnt - 1)) {
         //ensure the size of left is large enough for turning, size of left will never be 0
         while ((left_edge.points.size() < TuningVar.roundroad_min_size) && FindOneLeftEdge()) {}
         //translate right
@@ -1161,7 +1163,7 @@ void GenPath(CarManager::Feature feature) {
 	}
 	case CarManager::Feature::kRoundaboutExit: {
 		// Turning left at the entrance - Turning left at the exit
-		if (TuningVar.roundabout_turn_left) {
+		if (roundabout_shortest(TuningVar.roundabout_shortest_flag, roundabout_cnt - 1)) {
 			//ensure the size of left is large enough for turning, size of left will never be 0
 			while ((left_edge.points.size() < TuningVar.roundroad_min_size) && FindOneLeftEdge()) {}
 			//translate right
@@ -1344,6 +1346,15 @@ void PrintSuddenChangeTrackWidthLocation(uint16_t color) {
     pLcd->FillColor(color);
   }
 }
+
+/*
+ * @brief: return the shortest side of current roundabout
+ * @return: 1 means turning left, 0 means turning right
+ * */
+int roundabout_shortest(uint8_t a, int pos){
+	return (a >> (7-pos)) & 1;
+}
+
 
 /**
  * @brief Calculate the servo angle diff
@@ -1657,6 +1668,10 @@ void main_car1(bool debug_) {
 //				PrintCorner(left_corners, Lcd::kPurple); //Print left_corner
 //				PrintCorner(right_corners, Lcd::kPurple); //Print right_corner
 //				PrintEdge(path, Lcd::kGreen); //Print path
+//				pLcd->SetRegion(Lcd::Rect(0, 16, 128, 15));
+//				char timestr[100];
+//				sprintf(timestr, "Roun_cnt: %d", roundabout_cnt);
+//				pWriter->WriteString(timestr);
 
         if (debug) {
           PrintWorldImage();

@@ -123,6 +123,7 @@ struct {
   uint16_t round_exit_offset = 20;
   uint16_t round_encoder_count = 2600;
   uint16_t roundExit_encoder_count = 3000;
+  uint8_t roundabout_shortest_flag = 0b10000000; //1 means turn left, 0 means turn right. Reading from left to right
 
 } TuningVar;
 
