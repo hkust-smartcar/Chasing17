@@ -1455,8 +1455,6 @@ void StartlineOvertake() {
 }  // namespace
 
 void main_car1(bool debug_) {
-  CarManager::Config car_config;
-
   debug = debug_;
 
   Led::Config ConfigLed;
@@ -1747,7 +1745,7 @@ void main_car1(bool debug_) {
         }
 
         /*MOTOR PROTECTION*/
-        if (!kIsUseCarMgr) {
+//        if (!kIsUseCarMgr) {
 //        encoder0.Update();
 //        encoder1.Update();
 //       if(std::abs(encoder0.GetCount())<10||std::abs(encoder1.GetCount())<10){
@@ -1757,7 +1755,7 @@ void main_car1(bool debug_) {
 //    	   motor0.SetPower(300);
 //    	   motor1.SetPower(300);
 //       }
-        }
+//        }
 
         CarManager::UpdateParameters();
       }
