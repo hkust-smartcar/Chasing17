@@ -108,22 +108,21 @@ struct {
   uint16_t action_distance = 27; // The condition in which the car start handling this feature when meeting it
   uint16_t stop_distance = 10; // The distance away from starting line - for stopping
   float black_div_length_ratio_threshold = 0.5; // ratio for black points/edge length. Used for detecting starting line
-  libsc::Timer::TimerInt
-      feature_inside_time = 350; // freezing time for feature extraction, the time for entering the entrance
+  libsc::Timer::TimerInt feature_inside_time = 350; // freezing time for feature extraction, the time for entering the entrance
   uint16_t cross_cal_start_num = 80;
   uint16_t cross_cal_ratio = 80; //Look forward @cross_cal_start_num - encoder_total/@cross_cal_ratio to determine path
   uint16_t general_cal_num = 20; //The num of path points considered for servo angle decision except crossing
   uint16_t cross_encoder_count = 4000; // The hardcoded encoder count that car must reach in crossroad
-  uint16_t round_encoder_count = 200;
-  uint16_t roundExit_encoder_count = 300;
   uint16_t round_enter_offset = 15;
-  uint16_t round_exit_offset = 10;
-  uint16_t servo_offset = 21; //49
+  uint16_t servo_offset = 0; //49
   uint16_t min_dist_meet_crossing = 30;
   uint16_t roundroad_min_size = 30; // When the edge is broken in roundabout, find until this threshold
   uint16_t roundroad_exit_radius = 38; // search pixels around to double check exit of roundabout for CAR1
   uint16_t exit_action_dist = 35; // double check to avoid corner's sudden disappear inside roundabout
   uint16_t roundabout_offset = 15; // half of road width
+  uint16_t round_exit_offset = 20;
+  uint16_t round_encoder_count = 2600;
+  uint16_t roundExit_encoder_count = 3000;
 
 } TuningVar;
 

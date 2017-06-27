@@ -71,7 +71,7 @@ int encoder_total_cross = 0; //for crossroad
 int encoder_total_round = 0; // for roundabout
 int encoder_total_exit = 0;
 Timer::TimerInt feature_start_time;
-std::pair<int, int> carMid(WorldSize::w / 2 - 3, 0);
+std::pair<int, int> carMid {61, 0};
 int roundabout_nearest_corner_cnt_left =
     pow(TuningVar.corner_range * 2 + 1, 2); // for finding the nearest corner point for roundabout
 int roundabout_nearest_corner_cnt_right = pow(TuningVar.corner_range * 2 + 1, 2);
@@ -1014,15 +1014,15 @@ void GenPath(CarManager::Feature feature) {
   if (debug) {
     char temp[100];
     sprintf(temp, "ExitEnc:%d", abs(encoder_total_exit));
-    pLcd->SetRegion(Lcd::Rect(0, 54, 128, 15));
+    pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
     pWriter->WriteString(temp);
     sprintf(temp, "EntEnc:%d", abs(encoder_total_round));
     pLcd->SetRegion(Lcd::Rect(0, 85, 128, 15));
     pWriter->WriteString(temp);
-    pLcd->SetRegion(Lcd::Rect(0, 70, 128, 15));
-    roundaboutExitStatus ?
-    pWriter->WriteString("Inside Exit") :
-    pWriter->WriteString("Outside Exit");
+//    pLcd->SetRegion(Lcd::Rect(0, 70, 128, 15));
+//    roundaboutExitStatus ?
+//    pWriter->WriteString("Inside Exit") :
+//    pWriter->WriteString("Outside Exit");
   }
   /*END OF DEBUGGING*/
 
@@ -1034,7 +1034,7 @@ void GenPath(CarManager::Feature feature) {
     // TODO(Derppening): Figure out the use of the lines below
     pEncoder0->Update();
     pEncoder1->Update();
-    encoder_total_round += (pEncoder0->GetCount() + pEncoder1->GetCount()) / 2;
+    encoder_total_round += pEncoder0->GetCount()/*(pEncoder0->GetCount() + pEncoder1->GetCount()) / 2*/;//Because for exit/enter, the car will first left then right which destroy the encoder
 //		feature = CarManager::Feature::kRoundabout;
   }
 
@@ -1049,8 +1049,7 @@ void GenPath(CarManager::Feature feature) {
     // TODO(Derppening): Figure out the use of the lines below
     pEncoder0->Update();
     pEncoder1->Update();
-    encoder_total_exit += (pEncoder0->GetCount() + pEncoder1->GetCount())
-        / 2;
+    encoder_total_exit += pEncoder0->GetCount()/*(pEncoder0->GetCount() + pEncoder1->GetCount()) / 2*/;
     feature = CarManager::Feature::kRoundaboutExit;
   }
 
@@ -1167,13 +1166,13 @@ void GenPath(CarManager::Feature feature) {
 			while ((left_edge.points.size() < TuningVar.roundroad_min_size) && FindOneLeftEdge()) {}
 			//translate right
 			for(int i=0; i<left_edge.points.size(); i++){
-				path.push(left_edge.points[i].first + TuningVar.roundabout_offset, left_edge.points[i].second);
+				path.push(left_edge.points[i].first + TuningVar.round_exit_offset, left_edge.points[i].second);
 			}
 		}
 		else {
 			while ((right_edge.points.size() < TuningVar.roundroad_min_size) && FindOneRightEdge()) {}
 			for(int i=0; i<right_edge.points.size(); i++){
-				path.push(right_edge.points[i].first - TuningVar.roundabout_offset, right_edge.points[i].second);
+				path.push(right_edge.points[i].first -TuningVar.round_exit_offset, right_edge.points[i].second);
 			}
 		}
 
@@ -1368,11 +1367,11 @@ int16_t CalcAngleDiff() {
     avg += point.first;
     sum++;
   }
-
-	//char temp[100];
-	//sprintf(temp, "avg: %.2f", avg/(float)sum);
-	//pLcd->SetRegion(Lcd::Rect(0, 16, 128, 15));
-	//pWriter->WriteString(temp);
+//
+//	char temp[100];
+//	sprintf(temp, "avg: %.2f", avg/(float)sum);
+//	pLcd->SetRegion(Lcd::Rect(0, 16, 128, 15));
+//	pWriter->WriteString(temp);
 
   return error / sum * 20;
 }
@@ -1551,14 +1550,14 @@ void main_car1(bool debug_) {
     System::DelayMs(1000);
   }
 
-  while (true) {
-    if (joystick.GetState() == Joystick::State::kRight) {
-      TuningVar.roundabout_turn_left = false;
-      break;
-    } else if (joystick.GetState() == Joystick::State::kLeft) {
-      break;
-    }
-  }
+//  while (true) {
+//    if (joystick.GetState() == Joystick::State::kRight) {
+//      TuningVar.roundabout_turn_left = false;
+//      break;
+//    } else if (joystick.GetState() == Joystick::State::kLeft) {
+//      break;
+//    }
+//  }
 
 //	while(joystick.GetState() != Joystick::State::kIdle){
 //		if(bt.hasStartReq()){
@@ -1575,8 +1574,8 @@ void main_car1(bool debug_) {
   } else {
     pMotor0->SetClockwise(true);
     pMotor1->SetClockwise(false);
-    pMotor0->SetPower(200);
-    pMotor1->SetPower(200);
+    pMotor0->SetPower(210);
+    pMotor1->SetPower(210);
   }
 
 	Timer::TimerInt startTime=System::Time();
@@ -1590,15 +1589,15 @@ void main_car1(bool debug_) {
       if (time_img % 10 == 0) {
 //        Timer::TimerInt new_time = System::Time();
         Capture(); //Capture until two base points are identified
-        if (FindStoppingLine() && time_img-startTime > 10000) {
-          if (kIsUseCarMgr) {
-            CarManager::SetTargetSpeed(0);
-          } else {
-            pMotor0->SetPower(0);
-            pMotor1->SetPower(0);
-          }
-          pWriter->WriteString("Stopping Line Detected");
-        }
+//        if (FindStoppingLine() && time_img-startTime > 10000) {
+//          if (kIsUseCarMgr) {
+//            CarManager::SetTargetSpeed(0);
+//          } else {
+//            pMotor0->SetPower(0);
+//            pMotor1->SetPower(0);
+//          }
+//          pWriter->WriteString("Stopping Line Detected");
+//        }
         FindEdges();
         CarManager::Feature a = featureIdent_Corner();
         GenPath(a); //Generate path

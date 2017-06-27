@@ -1462,12 +1462,23 @@ void main_car2(bool debug_) {
 
 	motor0.SetClockwise(true);
 	motor1.SetClockwise(false);
-	motor0.SetPower(260);
-	motor1.SetPower(260);
+	motor0.SetPower(300);
+	motor1.SetPower(300);
 
 	System::DelayMs(1000);
 
 	Timer::TimerInt startTime=System::Time();
+
+//	while (true){
+//	    char temp[100];
+//	    sprintf(temp, "Enc:%d", abs(encoder_total_exit));
+//	    pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
+//	    pWriter->WriteString(temp);
+//	    pEncoder0->Update();
+//	    encoder_total_exit += pEncoder0->GetCount();
+//	    System::DelayMs(100);
+//	}
+
 
 	while (true) {
 		while (time_img != System::Time()) {
