@@ -41,13 +41,14 @@
 #include "libsc/futaba_s3010.h"
 
 #include "fc_yy_us_v4.h"
-#include "mpu9250.h"
 #include "util/mpc.h"
 #include "util/mpc_dual.h"
 #include "util/servo_controller.h"
 
-// forward declaration for util::ServoController
+// forward declaration for util::Mpc, util::MpcDual, util::ServoController
 namespace util {
+class Mpc;
+class MpcDual;
 class ServoController;
 }
 
@@ -111,7 +112,7 @@ class CarManager final {
     std::unique_ptr<util::ServoController> servo_controller = nullptr;
     std::unique_ptr<libsc::FutabaS3010> servo = nullptr;
     std::unique_ptr<FcYyUsV4> usir = nullptr;
-    std::unique_ptr<Mpu9250> mpu = nullptr;
+//    std::unique_ptr<Mpu9250> mpu = nullptr;
     Identity identity;
     Car car;
   };
@@ -125,7 +126,7 @@ class CarManager final {
     uint16_t kRightBound;
   };
 
-  static constexpr ServoBounds kBoundsCar1 = {1040, 755, 470};//{1040, 755, 470};
+  static constexpr ServoBounds kBoundsCar1 = {1040, 755, 470};
   static constexpr ServoBounds kBoundsCar2 = {1145, 845, 545};
 
   /**
@@ -152,6 +153,24 @@ class CarManager final {
 
   static constexpr SideRatio kRatioCar1 = {std::tan(kAnglesCar1.kLeftAngle), std::tan(kAnglesCar1.kRightAngle)};
   static constexpr SideRatio kRatioCar2 = {std::tan(kAnglesCar2.kLeftAngle), std::tan(kAnglesCar2.kRightAngle)};
+
+  struct PidValues {
+    enum Side {
+      kLeft = 0,
+      kRight
+    };
+
+    float kP[2];
+    float kI[2];
+    float kD[2];
+  };
+
+  static constexpr const PidValues kMotorPidCar1 = {{1.0, 1.0}, {0, 0}, {0, 0}};
+  static constexpr const PidValues kMotorPidCar2 = {{0.5, 0.0}, {0.0, 0.0}, {0, 0.0}};
+  static constexpr const PidValues kServoPidCar1 = {{1.0, 0}, {0, 0}, {0, 0}};
+  static constexpr const PidValues kServoPidCar2 = {{1.0, 0}, {0, 0}, {0, 0}};
+
+  static PidValues GetMotorPidValues();
 
   /**
    * Update all parameters of the car (speed, slope, servo angle, distance)
@@ -231,7 +250,7 @@ class CarManager final {
   static std::unique_ptr<util::MpcDual> epc_;
   static std::unique_ptr<util::ServoController> servo_controller_;
   static std::unique_ptr<libsc::FutabaS3010> servo_;
-  static std::unique_ptr<Mpu9250> mpu_;
+//  static std::unique_ptr<Mpu9250> mpu_;
   static std::unique_ptr<FcYyUsV4> usir_;
 };
 
