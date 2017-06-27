@@ -1642,18 +1642,18 @@ void main_car1(bool debug_) {
 					}
 				}
 
-				/*MOTOR PROTECTION*/
-				if (!kIsUseCarMgr) {
-					//        encoder0.Update();
-					//        encoder1.Update();
-					//       if(std::abs(encoder0.GetCount())<10||std::abs(encoder1.GetCount())<10){
-					//    	   motor0.SetPower(0);
-					//    	   motor1.SetPower(0);
-					//       }else{
-					//    	   motor0.SetPower(300);
-					//    	   motor1.SetPower(300);
-					//       }
-				}
+        /*MOTOR PROTECTION*/
+//        if (!kIsUseCarMgr) {
+//        encoder0.Update();
+//        encoder1.Update();
+//       if(std::abs(encoder0.GetCount())<10||std::abs(encoder1.GetCount())<10){
+//    	   motor0.SetPower(0);
+//    	   motor1.SetPower(0);
+//       }else{
+//    	   motor0.SetPower(300);
+//    	   motor1.SetPower(300);
+//       }
+//        }
 
 				CarManager::UpdateParameters();
 			}

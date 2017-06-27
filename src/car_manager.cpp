@@ -16,7 +16,6 @@
 
 #include "libsc/futaba_s3010.h"
 
-#include "mpu9250.h"
 #include "util/mpc.h"
 #include "util/mpc_dual.h"
 
@@ -46,13 +45,16 @@ constexpr CarManager::ServoAngles CarManager::kAnglesCar2;
 constexpr CarManager::SideRatio CarManager::kRatioCar1;
 constexpr CarManager::SideRatio CarManager::kRatioCar2;
 
+CarManager::PidValues CarManager::kMotorPidCar1 = {{0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}};
+constexpr CarManager::PidValues CarManager::kMotorPidCar2;
+
 unique_ptr<Mpc> CarManager::epc_left_ = nullptr;
 unique_ptr<Mpc> CarManager::epc_right_ = nullptr;
 unique_ptr<MpcDual> CarManager::epc_ = nullptr;
 unique_ptr<ServoController> CarManager::servo_controller_ = nullptr;
 unique_ptr<FutabaS3010> CarManager::servo_ = nullptr;
 unique_ptr<FcYyUsV4> CarManager::usir_ = nullptr;
-unique_ptr<Mpu9250> CarManager::mpu_ = nullptr;
+//unique_ptr<Mpu9250> CarManager::mpu_ = nullptr;
 
 void CarManager::Init(Config config) {
   static_assert(kBoundsCar1.kLeftBound > kBoundsCar1.kCenter && kBoundsCar1.kCenter > kBoundsCar1.kRightBound,
@@ -64,7 +66,7 @@ void CarManager::Init(Config config) {
   epc_right_ = move(config.epc_right);
   epc_ = move(config.epc);
   servo_controller_ = move(config.servo_controller);
-  mpu_ = move(config.mpu);
+//  mpu_ = move(config.mpu);
   servo_ = move(config.servo);
   identity_ = config.identity;
   car_ = config.car;
@@ -118,6 +120,16 @@ CarManager::SideRatio CarManager::GetSideRatio() {
   }
 }
 
+CarManager::PidValues CarManager::GetMotorPidValues() {
+  switch (CarManager::GetCar()) {
+    default:
+    case CarManager::Car::kCar1:
+      return kMotorPidCar1;
+    case CarManager::Car::kCar2:
+      return kMotorPidCar2;
+  }
+}
+
 void CarManager::SetOverrideProtection(const bool override_protection, const MotorSide side) {
   if (side == MotorSide::kBoth) {
     if (epc_ != nullptr) {
@@ -147,13 +159,13 @@ void CarManager::SetTargetSpeed(const int16_t speed, MotorSide src) {
   if (src == MotorSide::kLeft && epc_left_ != nullptr) {
     epc_left_->SetTargetSpeed(speed, false);
   } else if (src == MotorSide::kRight && epc_right_ != nullptr) {
-    epc_right_->SetTargetSpeed(-speed, false);
+    epc_right_->SetTargetSpeed(speed, false);
   } else if (src == MotorSide::kBoth) {
     if (epc_left_ != nullptr) {
       epc_left_->SetTargetSpeed(speed, false);
     }
     if (epc_right_ != nullptr) {
-      epc_right_->SetTargetSpeed(-speed, false);
+      epc_right_->SetTargetSpeed(speed, false);
     }
   }
 }
@@ -195,14 +207,20 @@ void CarManager::SetTargetAngle(const int16_t angle) {
 }
 
 void CarManager::UpdateDistance() {
+  if (usir_ == nullptr) {
+    return;
+  }
+
   if (identity_ == Identity::kFront) {
     us_distance_ = FcYyUsV4::kMinDistance;
+  } else {
+    us_distance_ = usir_->GetAvgDistance();
   }
-  us_distance_ = usir_->GetAvgDistance();
 }
 
 void CarManager::UpdateSpeed() {
   if (epc_ != nullptr) {
+    epc_->SetCommitFlag(true);
     epc_->DoCorrection();
     left_speed_ = epc_->GetCurrentSpeed(MpcDual::MotorSide::kLeft);
     right_speed_ = epc_->GetCurrentSpeed(MpcDual::MotorSide::kRight);
@@ -228,6 +246,7 @@ void CarManager::UpdateServoAngle() {
     servo_deg_ = servo_controller_->GetRawAngle();
     return;
   }
+
   if (servo_ != nullptr) {
     servo_deg_ = servo_->GetDegree();
     return;
@@ -235,9 +254,5 @@ void CarManager::UpdateServoAngle() {
 }
 
 void CarManager::UpdateSlope() {
-  if (mpu_ == nullptr) {
-    return;
-  }
-  // TODO(Derppening): Replace with call to MPU9250
   slope_deg_ = 0;
 }
