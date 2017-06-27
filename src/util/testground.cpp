@@ -65,6 +65,7 @@ void main() {
   auto motor0 = make_unique<AlternateMotor>(ConfigMotor);
   ConfigMotor.id = 1;
   auto motor1 = make_unique<AlternateMotor>(ConfigMotor);
+  motor1->SetClockwise(false);
 
   auto mpc_dual = make_unique<MpcDual>(motor0.get(), motor1.get(), encoder0.get(), encoder1.get());
 
@@ -86,29 +87,59 @@ void main() {
   joystick_config.is_active_low = true;
   Joystick joystick(joystick_config);
 
-  CarManager::Config car_config;
-  car_config.servo = std::move(servo);
-  car_config.epc = std::move(mpc_dual);
-  car_config.car = CarManager::Car::kCar1;
-  CarManager::Init(std::move(car_config));
-
-  CarManager::SetOverrideProtection(true);
-  CarManager::SetTargetSpeed(6000);
-  CarManager::SetTargetAngle(CarManager::kBoundsCar1.kCenter);
+//  CarManager::Config car_config;
+//  car_config.servo = std::move(servo);
+//  car_config.epc = std::move(mpc_dual);
+//  car_config.car = CarManager::Car::kCar1;
+//  CarManager::Init(std::move(car_config));
+//
+//  CarManager::SetOverrideProtection(true);
+//  CarManager::SetTargetSpeed(6000);
+//  CarManager::SetTargetAngle(CarManager::kBoundsCar1.kCenter);
 
   FcYyUsV4 usir(libbase::k60::Pin::Name::kPtb0);
 
   Timer::TimerInt time_img = 0;
 
-  CarManager::SetTargetSpeed(8250);
-  while (true) {
-    if (time_img != System::Time()) {
-      time_img = System::Time();
-      if (time_img % 100 == 0) led0.Switch();
-		if (time_img % 15 == 0){
-			CarManager::UpdateParameters();
-		}
-    }
+//  CarManager::SetTargetSpeed(8250);
+//  while (true) {
+//    if (time_img != System::Time()) {
+//      time_img = System::Time();
+//      if (time_img % 100 == 0) led0.Switch();
+//		if (time_img % 15 == 0){
+//			CarManager::UpdateParameters();
+//		}
+//    }
+//  }
+
+  char sp[100];
+
+  Timer::TimerInt start_time = System::Time();
+  servo->SetDegree(755);
+
+  while (true){
+	  if (time_img != System::Time()){
+		  time_img = System::Time();
+		  if (time_img % 10 == 0){
+			  if (System::Time() - start_time > 6000){
+				  motor0->SetPower(0);
+				  motor1->SetPower(0);
+			  } else if (System::Time() - start_time > 4000){
+				  motor0->SetPower(500);				  motor1->SetPower(500);
+			  } else if (System::Time() - start_time > 2000){
+				  motor0->SetPower(200);
+				  motor1->SetPower(200);
+			  } else {
+				  motor0->SetPower(0);
+				  motor1->SetPower(0);
+			  }
+			  encoder0->Update();
+			  encoder1->Update();
+			  sprintf(sp, "%d\t%d\t%d\t%d\n", time_img, motor0->GetPower(), encoder0->GetCount(), encoder1->GetCount());
+			  bt.SendStr(sp);
+		  }
+
+	  }
   }
 }
 
