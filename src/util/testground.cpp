@@ -69,13 +69,13 @@ bool BluetoothListener(const Byte* data, const std::size_t size) {
       }
 
       // variable assignments here
-      CarManager::kMotorPidCar1.kP[0] = tuning_vars.vars.at(0);
-      CarManager::kMotorPidCar1.kI[0] = tuning_vars.vars.at(1);
-      CarManager::kMotorPidCar1.kD[0] = tuning_vars.vars.at(2);
-
-      CarManager::kMotorPidCar1.kP[1] = tuning_vars.vars.at(3);
-      CarManager::kMotorPidCar1.kI[1] = tuning_vars.vars.at(4);
-      CarManager::kMotorPidCar1.kD[1] = tuning_vars.vars.at(5);
+//      CarManager::kMotorPidCar1.kP[0] = tuning_vars.vars.at(0);
+//      CarManager::kMotorPidCar1.kI[0] = tuning_vars.vars.at(1);
+//      CarManager::kMotorPidCar1.kD[0] = tuning_vars.vars.at(2);
+//
+//      CarManager::kMotorPidCar1.kP[1] = tuning_vars.vars.at(3);
+//      CarManager::kMotorPidCar1.kI[1] = tuning_vars.vars.at(4);
+//      CarManager::kMotorPidCar1.kD[1] = tuning_vars.vars.at(5);
     }
   }
 

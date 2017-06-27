@@ -12,7 +12,9 @@
 
 #include "algorithm/optimal_car1.h"
 #include <vector>
-#include <string>
+#include <cstring>
+#include <sstream>
+#include <stdio.h>
 
 #include "libsc/alternate_motor.h"
 #include "libsc/dir_encoder.h"
@@ -55,7 +57,7 @@ namespace {
 std::string inputStr;
 bool tune = false;
 std::vector<double> constVector;
-
+uint8_t now_angle = 0;
 
 Edges left_edge;
 Edges right_edge;
@@ -85,6 +87,7 @@ int roundabout_nearest_corner_cnt_left = pow(TuningVar.corner_range * 2 + 1, 2);
 int roundabout_nearest_corner_cnt_right = pow(TuningVar.corner_range * 2 + 1, 2);
 std::pair<int, int> roundabout_nearest_corner_left{0, 0};
 std::pair<int, int> roundabout_nearest_corner_right{0, 0};
+int prev_servo_error = 0;
 
 const Byte* CameraBuf;
 
@@ -129,6 +132,57 @@ void PrintImage();
 void PrintSuddenChangeTrackWidthLocation(uint16_t);
 void PrintWorldImage();
 int roundabout_shortest(uint8_t a, int pos);
+
+/*
+ * @brief: bluetooth listener for processing tuning
+ * */
+bool bluetoothListener(const Byte *data, const size_t size) {
+	if (data[0] == 'P') {
+			//space
+	}
+
+	if (data[0] == 't') {
+		tune = 1;
+		inputStr = "";
+	}
+	if (tune) {
+
+		unsigned int i = 0;
+		while (i<size) {
+			if (data[i] != 't' && data[i] != '\n') {
+				inputStr += (char)data[i];
+			} else if (data[i] == '\n') {
+				tune = 0;
+				break;
+			}
+			i++;
+		}
+		if (!tune) {
+			constVector.clear();
+			char * pch;
+			pch = strtok(&inputStr[0], ",");
+			while (pch != NULL){
+				double constant;
+				std::stringstream(pch) >> constant;
+				constVector.push_back(constant);
+				pch = strtok (NULL, ",");
+			}
+
+
+//			KP   = constVector[0];
+			TuningVar.angle_div_error = constVector[0];
+			now_angle = constVector[1];
+		}
+	}
+	//	else if (data[0] == 'a') {
+	//		servoPtr->SetDegree(900);
+	//	} else if (data[0] == 'd') {
+	//		servoPtr->SetDegree(430);
+	//	} else if (data[0] == 'A' || data[0] == 'D') {
+	//		servoPtr->SetDegree(700);
+	//	}
+	return 1;
+}
 
 /**
  * @brief To fetch filtered bit, 1 = black; 0 = white
@@ -1333,7 +1387,7 @@ void StartlineOvertake() {
 	while (1) {
 		if (kIsUseCarMgr) {
 			// TODO(Derppening): Remove line below when new target speeds are set
-			static_assert(!kIsUseCarMgr, "Implement new target speed for StartlineOvertake()");
+//			static_assert(!kIsUseCarMgr, "Implement new target speed for StartlineOvertake()");
 			CarManager::SetTargetSpeed(15000);
 		} else {
 			pMotor0->SetPower(500);
@@ -1347,7 +1401,7 @@ void StartlineOvertake() {
 
 		if (kIsUseCarMgr) {
 			// TODO(Derppening): Remove line below when new servo angles are set
-			static_assert(!kIsUseCarMgr, "Implement new servo angles for StartlineOvertake()");
+//			static_assert(!kIsUseCarMgr, "Implement new servo angles for StartlineOvertake()");
 			//      CarManager::SetTargetAngle(/* angle */);
 		} else {
 			pServo->SetDegree(util::clamp<uint16_t>(servo_bounds.kCenter - 1.3 * CalcAngleDiff() + TuningVar.servo_offset,
@@ -1358,7 +1412,7 @@ void StartlineOvertake() {
 		if (kIsUseCarMgr) {
 			cnt += (CarManager::GetLeftSpeed() + CarManager::GetRightSpeed()) / 2;
 			// TODO(Derppening): Remove line below when new count value is set
-			static_assert(!kIsUseCarMgr, "Implement new count value for StartlineOvertake()");
+//			static_assert(!kIsUseCarMgr, "Implement new count value for StartlineOvertake()");
 			// if (cnt > val) return;
 		} else {
 			pEncoder0->Update();
@@ -1429,7 +1483,7 @@ void main_car1(bool debug_) {
 	JyMcuBt106::Config ConfigBT;
 	ConfigBT.id = 0;
 	ConfigBT.baud_rate = libbase::k60::Uart::Config::BaudRate::k115200;
-//	ConfigBT.rx_isr = &bluetoothListener;
+	ConfigBT.rx_isr = &bluetoothListener;
 	JyMcuBt106 bt(ConfigBT);
 //	pBT = &bt;
 
@@ -1462,21 +1516,22 @@ void main_car1(bool debug_) {
 	Timer::TimerInt time_img = 0;
 
 	//Servo test
-	if (kIsUseCarMgr) {
-		CarManager::SetTargetAngle(CarManager::GetServoAngles().kLeftAngle);
-		System::DelayMs(1000);
-		CarManager::SetTargetAngle(CarManager::GetServoAngles().kRightAngle);
-		System::DelayMs(1000);
-		CarManager::SetTargetAngle(0);
-		System::DelayMs(1000);
-	} else {
-		pServo->SetDegree(servo_bounds.kLeftBound);
-		System::DelayMs(1000);
-		pServo->SetDegree(servo_bounds.kRightBound);
-		System::DelayMs(1000);
-		pServo->SetDegree(servo_bounds.kCenter);
-		System::DelayMs(1000);
-	}
+//	if (kIsUseCarMgr) {
+//		CarManager::SetTargetAngle(-CarManager::GetServoAngles().kLeftAngle);
+//		System::DelayMs(1000);
+//		CarManager::SetTargetAngle(CarManager::GetServoAngles().kRightAngle);
+//		System::DelayMs(1000);
+//		CarManager::SetTargetAngle(0);
+//		System::DelayMs(1000);
+//	} else {
+//		pServo->SetDegree(servo_bounds.kLeftBound);
+//		System::DelayMs(1000);
+//		pServo->SetDegree(servo_bounds.kRightBound);
+//		System::DelayMs(1000);
+//		pServo->SetDegree(servo_bounds.kCenter);
+//		System::DelayMs(1000);
+//	}
+
 
 	//  while (true) {
 	//    if (joystick.GetState() == Joystick::State::kRight) {
@@ -1497,7 +1552,7 @@ void main_car1(bool debug_) {
 
 	if (kIsUseCarMgr) {
 		// TODO(Derppening): Remove line below when new target speeds are set
-		static_assert(!kIsUseCarMgr, "Implement new target speed for main_car1()");
+//		static_assert(!kIsUseCarMgr, "Implement new target speed for main_car1()");
 		CarManager::SetTargetSpeed(8000);
 	} else {
 		pMotor0->SetClockwise(true);
@@ -1611,36 +1666,20 @@ void main_car1(bool debug_) {
 				//		 			motor1.SetPower(260);
 				//                }
 				//				}
-				char timestr[100];
-				pLcd->SetRegion(Lcd::Rect(0, 16, 128, 15));
-				sprintf(timestr, "Angle_error: %d", CalcAngleDiff());
-				pWriter->WriteString(timestr);
-				if (crossingStatus == 1 || roundaboutStatus == 1) {
-					if (kIsUseCarMgr) {
-						// TODO(Derppening): Remove line below when new servo angles are set
-						static_assert(!kIsUseCarMgr, "Implement new servo angles for main_car1()");
-						CarManager::SetTargetAngle(util::clamp<uint16_t>( - 1.3 * CalcAngleDiff(),
-							CarManager::GetServoAngles().kRightAngle,
-							CarManager::GetServoAngles().kLeftAngle));
-					} else {
-						pServo->SetDegree(util::clamp<uint16_t>(servo_bounds.kCenter - 1 * CalcAngleDiff() + TuningVar.servo_offset,
-								servo_bounds.kRightBound,
-								servo_bounds.kLeftBound));  //Car1: kp = 1.5
-					}
-				} else {
-					if (kIsUseCarMgr) {
-						// TODO(Derppening): Remove line below when new servo angles are set
-						static_assert(!kIsUseCarMgr, "Implement new servo angles for main_car1()");
-						CarManager::SetTargetAngle(util::clamp<uint16_t>( - 1.3 * CalcAngleDiff(),
-							CarManager::GetServoAngles().kRightAngle,
-							CarManager::GetServoAngles().kLeftAngle));
-					} else {
-						pServo->SetDegree(util::clamp<uint16_t>(
-								servo_bounds.kCenter - 1.3 * CalcAngleDiff() + TuningVar.servo_offset,
-								servo_bounds.kRightBound,
-								servo_bounds.kLeftBound));  //Car1: kp = 1.5
-					}
-				}
+
+				int curr_servo_error = CalcAngleDiff();
+				CarManager::SetTargetAngle(1.3 * curr_servo_error + 0 * (curr_servo_error - prev_servo_error));
+				prev_servo_error = curr_servo_error;
+//				if (kIsUseCarMgr) {
+//					// TODO(Derppening): Remove line below when new servo angles are set
+//					CarManager::SetTargetAngle(util::clamp<uint16_t>( TuningVar.angle_div_error * CalcAngleDiff(),
+//							-CarManager::GetServoAngles().kLeftAngle,
+//							CarManager::GetServoAngles().kRightAngle));
+//				} else {
+//					pServo->SetDegree(util::clamp<uint16_t>(servo_bounds.kCenter - 1.3 * CalcAngleDiff() + TuningVar.servo_offset,
+//							servo_bounds.kRightBound,
+//							servo_bounds.kLeftBound));  //Car1: kp = 1.5
+//				}
 
         /*MOTOR PROTECTION*/
 //        if (!kIsUseCarMgr) {

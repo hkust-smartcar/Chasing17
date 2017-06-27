@@ -18,6 +18,7 @@
 
 #include "util/mpc.h"
 #include "util/mpc_dual.h"
+#include "util/util.h"
 
 using libsc::FutabaS3010;
 using std::move;
@@ -45,7 +46,7 @@ constexpr CarManager::ServoAngles CarManager::kAnglesCar2;
 constexpr CarManager::SideRatio CarManager::kRatioCar1;
 constexpr CarManager::SideRatio CarManager::kRatioCar2;
 
-CarManager::PidValues CarManager::kMotorPidCar1 = {{0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}};
+constexpr CarManager::PidValues CarManager::kMotorPidCar1;
 constexpr CarManager::PidValues CarManager::kMotorPidCar2;
 
 unique_ptr<Mpc> CarManager::epc_left_ = nullptr;
@@ -189,17 +190,8 @@ void CarManager::SetTargetAngle(const int16_t angle) {
 
   if (servo_ != nullptr) {
     uint16_t new_angle = s.kCenter;
-    if (angle > 0) {
-      new_angle -= (s.kCenter - s.kRightBound) * (static_cast<float>(angle) / a.kRightAngle);
-    } else if (angle < 0) {
-      new_angle -= (s.kLeftBound - s.kCenter) * (static_cast<float>(angle) / a.kLeftAngle);
-    }
 
-    if (new_angle > s.kLeftBound) {
-      new_angle = s.kLeftBound;
-    } else if (new_angle < s.kRightBound) {
-      new_angle = s.kRightBound;
-    }
+    new_angle = util::clamp<uint16_t>(s.kCenter - angle, s.kRightBound, s.kLeftBound);
 
     servo_->SetDegree(new_angle);
     return;

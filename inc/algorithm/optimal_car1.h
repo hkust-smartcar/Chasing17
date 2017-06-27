@@ -26,7 +26,7 @@ namespace algorithm {
 namespace optimal {
 namespace car1 {
 
-constexpr const bool kIsUseCarMgr = false;
+constexpr const bool kIsUseCarMgr = true;
 
 void main_car1(bool debug_ = false);
 
@@ -123,6 +123,7 @@ struct {
   uint16_t round_encoder_count = 2600;
   uint16_t roundExit_encoder_count = 3000;
   uint8_t roundabout_shortest_flag = 0b10000000; //1 means turn left, 0 means turn right. Reading from left to right
+  uint16_t angle_div_error = 1; // translate error into angle
 
 } TuningVar;
 
