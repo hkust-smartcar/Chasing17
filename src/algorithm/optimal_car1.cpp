@@ -69,7 +69,12 @@ uint16_t start_y; //For crossing, store the last start point coordinate
 uint16_t start_x;
 uint16_t prev_corner_x; //store the latest corner coordinate appears last time during roundabout
 uint16_t prev_corner_y;
+
+/*FOR OVERTAKING*/
 bool is_front_car = true;
+bool other_has_exited = false;
+bool stop_before_roundexit = true;
+
 bool debug = true;
 bool has_inc_width_pt = false;
 bool is_straight_line = false;
@@ -98,6 +103,7 @@ St7735r* pLcd = nullptr;
 Led* pLed3 = nullptr;
 LcdTypewriter* pWriter = nullptr;
 FutabaS3010* pServo = nullptr;
+//JyMcuBt106* pBTovertake = nullptr;
 BTComm* pBT = nullptr;
 DirEncoder* pEncoder0 = nullptr;
 DirEncoder* pEncoder1 = nullptr;
@@ -835,7 +841,7 @@ CarManager::Feature featureIdent_Corner() {
 	if (exit_round_ready && roundaboutStatus == 1
 			&& abs(encoder_total_round) > TuningVar.round_encoder_count/*abs(System::Time() - feature_start_time) > TuningVar.feature_inside_time*/) {
 
-		if (roundabout_shortest(TuningVar.roundabout_shortest_flag, roundabout_cnt - 1)) {
+		if (is_front_car?!roundabout_shortest(TuningVar.roundabout_shortest_flag, roundabout_cnt - 1):roundabout_shortest(TuningVar.roundabout_shortest_flag, roundabout_cnt - 1)) {
 			/*FOR DEBUGGING*/
 			if (debug) {
 				pLcd->SetRegion(Lcd::Rect(roundabout_nearest_corner_left.first, WorldSize::h - roundabout_nearest_corner_left.second - 1, 4, 4));
@@ -854,15 +860,41 @@ CarManager::Feature featureIdent_Corner() {
 			// corner disappears && close enough
 			meet_exit = abs(roundabout_nearest_corner_right.second - carMid.second) < TuningVar.exit_action_dist;
 		}
-		if (meet_exit) {
-			//    	roundaboutStatus = 0;
-			exit_round_ready = false;
-			// TODO(Derppening): Figure out the use of the following two lines
-			pEncoder0->Update();
-			pEncoder1->Update();
-			encoder_total_exit = 0;
-			roundaboutExitStatus = 1;
-			return CarManager::Feature::kRoundaboutExit;
+		//TODO: receive buffer message: only keep moving when receiving exit message
+		if(!is_front_car){//back car
+			stop_before_roundexit = false;
+			if (meet_exit) {
+				//roundaboutStatus = 0;
+				exit_round_ready = false;
+				// TODO(Derppening): Figure out the use of the following two lines
+				pEncoder0->Update();
+				pEncoder1->Update();
+				encoder_total_exit = 0;
+				roundaboutExitStatus = 1;
+				return CarManager::Feature::kRoundaboutExit;
+			}
+		}
+		else{
+			if (meet_exit) {
+				//GO
+				if(pBT->hasFinishedOvertake()){
+					stop_before_roundexit = false;
+					//switch ID
+					is_front_car = false;
+					// roundaboutStatus = 0;
+					exit_round_ready = false;
+					// TODO(Derppening): Figure out the use of the following two lines
+					pEncoder0->Update();
+					pEncoder1->Update();
+					encoder_total_exit = 0;
+					roundaboutExitStatus = 1;
+					pBT->resetFinishOvertake();
+					return CarManager::Feature::kRoundaboutExit;
+				}
+				else{
+					stop_before_roundexit = true;
+				}
+			}
 		}
 		//	  }
 	}
@@ -1009,9 +1041,15 @@ void GenPath(CarManager::Feature feature) {
 			&& abs(encoder_total_exit) >= TuningVar.roundExit_encoder_count) {
 		roundaboutExitStatus = 0;
 		roundaboutStatus = 0;
+		/*TODO: switch carID, sendBT to another car and set has_exited on the other side to true*/
+		if(!is_front_car){//Back car
+			//switch ID
+			is_front_car = true;
+			pBT->sendFinishOvertake();
+		}
 	}
 	if (roundaboutExitStatus == 1
-			&& abs(encoder_total_exit) < TuningVar.roundExit_encoder_count) {
+			&& abs(encoder_total_exit) < TuningVar.roundExit_encoder_count) {//TODO: Be care of back turning of motor when stop will affect encoder value
 		// TODO(Derppening): Figure out the use of the lines below
 		pEncoder0->Update();
 		pEncoder1->Update();
@@ -1049,7 +1087,7 @@ void GenPath(CarManager::Feature feature) {
 	switch (feature) {
 	case CarManager::Feature::kRoundabout: {
 		// Turning left at the entrance
-		if (roundabout_shortest(TuningVar.roundabout_shortest_flag, roundabout_cnt - 1)) {
+		if (is_front_car?!roundabout_shortest(TuningVar.roundabout_shortest_flag, roundabout_cnt - 1):roundabout_shortest(TuningVar.roundabout_shortest_flag, roundabout_cnt - 1)) {
 			//ensure the size of left is large enough for turning, size of left will never be 0
 			while ((left_edge.points.size() < TuningVar.roundroad_min_size) && FindOneLeftEdge()) {}
 			//translate right
@@ -1093,41 +1131,11 @@ void GenPath(CarManager::Feature feature) {
 				path.push(right_edge.points[i].first - TuningVar.roundabout_offset , right_edge.points[i].second);
 			}
 		}
-
-		/*OLD METHOD*/
-		//			int j = 1;
-		//			while ((j <= TuningVar.roundroad_min_size - right_edge.points.size()) && FindOneRightEdge()) {
-		//				j++;
-		//			}
-		//			int i = 0;
-		//			for (; i < right_edge.points.size(); i++) {
-		//				// set left edge as carMid before meeting black
-		//				if (getWorldBit(carMid.first, right_edge.points.front().second + i) == 0) {
-		//					path.push((carMid.first - TuningVar.round_enter_offset + right_edge.points[i].first) / 2,
-		//							right_edge.points[i].second); //left_edge.points[i].second == left_edge.points[i])??
-		//				} else
-		//					break;
-		//			}
-		//			/*change to find edge part*/
-		//			// Push the base point first
-		//			left_edge.points.clear();
-		//			left_edge.push(carMid.first,
-		//					right_edge.points.front().second + i - 1);
-		//			path.push(
-		//					(left_edge.points.back().first
-		//							- TuningVar.round_enter_offset
-		//							+ right_edge.points[i].first) / 2,
-		//					right_edge.points[i].second);
-		//			i++;
-		//			for (;i < right_edge.points.size() && FindOneLeftEdge(); i++) {
-		//				path.push((left_edge.points.back().first + right_edge.points[i].first) / 2, right_edge.points[i].second);
-		//			}
-		//		}
 		break;
 	}
 	case CarManager::Feature::kRoundaboutExit: {
 		// Turning left at the entrance - Turning left at the exit
-		if (roundabout_shortest(TuningVar.roundabout_shortest_flag, roundabout_cnt - 1)) {
+		if (is_front_car?!roundabout_shortest(TuningVar.roundabout_shortest_flag, roundabout_cnt - 1):roundabout_shortest(TuningVar.roundabout_shortest_flag, roundabout_cnt - 1)) {
 			//ensure the size of left is large enough for turning, size of left will never be 0
 			while ((left_edge.points.size() < TuningVar.roundroad_min_size) && FindOneLeftEdge()) {}
 			//translate right
@@ -1457,7 +1465,8 @@ void main_car1(bool debug_) {
 	ConfigBT.baud_rate = libbase::k60::Uart::Config::BaudRate::k115200;
 	ConfigBT.rx_isr = &bluetoothListener;
 	JyMcuBt106 bt(ConfigBT);
-//	pBT = &bt;
+//	pBTovertake = &bt;
+	pBT = &bt;
 
 	St7735r::Config lcdConfig;
 	lcdConfig.is_revert = true;
@@ -1519,6 +1528,17 @@ void main_car1(bool debug_) {
 			led0.SetEnable(time_img % 500 >= 250);
 
 			if (time_img % 10 == 0) {
+				//Overtake motor control
+				if (roundaboutExitStatus == 1 && stop_before_roundexit) {
+					/*Consider braking*/
+					pMotor0->SetPower(0);
+					pMotor1->SetPower(0);
+				}
+				else
+					pMotor0->SetPower(220);
+					pMotor1->SetPower(220);
+
+
 				//        Timer::TimerInt new_time = System::Time();
 				Capture(); //Capture until two base points are identified
 				//        if (FindStoppingLine() && time_img-startTime > 10000) {
