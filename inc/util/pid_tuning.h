@@ -18,7 +18,7 @@ namespace pid_tuning {
 
 void main();
 
-}  // namespace testground
+}  // namespace pid_tuning
 }  // namespace util
 
 #endif  // CHASING17_UTIL_PID_TUNING_MAIN_H_

@@ -14,20 +14,21 @@
 
 #include <sstream>
 
-#include "libsc/alternate_motor.h"
+#include "libsc/dir_motor.h"
 #include "libsc/dir_encoder.h"
 #include "libsc/futaba_s3010.h"
 #include "libsc/k60/jy_mcu_bt_106.h"
 #include "libsc/lcd_console.h"
 #include "libsc/led.h"
 #include "libsc/system.h"
-#include "libsc/k60/ov7725.h"
+#include "libutil/incremental_pid_controller.h"
 
 #include "bluetooth.h"
 #include "util/util.h"
 
 using namespace libsc;
 using namespace libsc::k60;
+using namespace libutil;
 
 namespace util {
 namespace pid_tuning {
@@ -36,6 +37,9 @@ std::string inputStr;
 bool tune = false;
 std::vector<double> constVector;
 uint8_t now_angle = 0;
+
+float Kp = 0, Ki = 0, Kd = 0;
+float left_motor_target = 0, right_motor_target = 0;
 
 /*
  * @brief: bluetooth listener for processing tuning
@@ -72,11 +76,12 @@ bool bluetoothListener(const Byte *data, const size_t size) {
 				pch = strtok (NULL, ",");
 			}
 
-//			Kp = constVector[0];
-//			Ki = constVector[1];
-//			Kd = constVector[2];
-//			target_enc_val_left = constVector[3];
-//			target_enc_val_right = constVector[4];
+			Kp = constVector[0];
+			Ki = constVector[1];
+			Kd = constVector[2];
+			left_motor_target = constVector[3];
+			right_motor_target = constVector[4];
+
 		}
 	}
 	return 1;
@@ -100,18 +105,57 @@ void main() {
   ConfigEncoder.id = 1;
   DirEncoder encoder1(ConfigEncoder);
 
-  AlternateMotor::Config ConfigMotor;
+  DirMotor::Config ConfigMotor;
   ConfigMotor.id = 0;
-  AlternateMotor motor0(ConfigMotor);
+  DirMotor motor0(ConfigMotor);
   ConfigMotor.id = 1;
-  AlternateMotor motor1(ConfigMotor);
+  DirMotor motor1(ConfigMotor);
+  motor1.SetClockwise(false);
 
   JyMcuBt106::Config bt_config;
   bt_config.id = 0;
   bt_config.baud_rate = libbase::k60::Uart::Config::BaudRate::k115200;
   bt_config.rx_isr = &bluetoothListener;
   JyMcuBt106 bt(bt_config);
+  Timer::TimerInt time_img = 0;
+
+  IncrementalPidController<float, float> pid_left(0,0,0,0);
+  pid_left.SetOutputBound(-500, 500);
+  IncrementalPidController<float, float> pid_right(0,0,0,0);
+  pid_right.SetOutputBound(-500, 500);
+
+  while (true){
+	  while (System::Time() != time_img){
+		  time_img = System::Time();
+		  if (time_img % 10 == 0){
+			  pid_left.SetKp(Kp);
+			  pid_right.SetKp(Kp);
+			  pid_left.SetKi(Ki);
+			  pid_right.SetKi(Ki);
+			  pid_left.SetKd(Kd);
+			  pid_right.SetKd(Kd);
+			  pid_left.SetSetpoint(left_motor_target);
+			  pid_right.SetSetpoint(right_motor_target);
+
+			  encoder0.Update();
+			  encoder1.Update();
+
+			  int curr_left = -encoder0.GetCount();
+			  int curr_right = encoder1.GetCount();
+
+			  char speedChar[100]{};
+			  sprintf(speedChar, "%.1f,%d,%.2f,%d,%.2f\n", 1.0, curr_left, left_motor_target, curr_right, right_motor_target);
+			  const Byte speedByte = 85;
+			  bt.SendBuffer(&speedByte, 1);
+			  bt.SendStr(speedChar);
+
+			  motor0.AddPower(pid_left.Calc(curr_left));
+			  motor1.AddPower(pid_right.Calc(curr_right));
+		  }
+		  if (time_img % 500 == 0) led0.Switch();
+	  }
+  }
 }
 
-} //namesapce testground
+} //namesapce pid_tuning
 } //namespace util
