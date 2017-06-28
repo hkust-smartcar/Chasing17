@@ -95,9 +95,7 @@ std::pair<int, int> roundabout_nearest_corner_right{0, 0};
 int prev_servo_error = 0;
 int curr_enc_val_left = 0;
 int curr_enc_val_right = 0;
-int target_enc_val = 0;
-int cum_enc_error_left = 0;
-int cum_enc_error_right = 0;
+
 
 const Byte* CameraBuf;
 
@@ -1620,28 +1618,6 @@ void main_car1(bool debug_) {
 				pEncoder1->Update();
 				curr_enc_val_left = std::abs(pEncoder0->GetCount());
 				curr_enc_val_right = std::abs(pEncoder1->GetCount());
-				/* Motor Protection */
-				if ((curr_enc_val_left < 10 || curr_enc_val_right < 10) && time_img - startTime > 10000){
-					pMotor0->SetPower(0);
-					pMotor1->SetPower(0);
-					target_enc_val = cum_enc_error_left = cum_enc_error_right = 0;
-				} else {
-					int delta_degree = (std::abs(pServo->GetDegree() - servo_bounds.kCenter))/10;
-					int target_enc_val_left = 0, target_enc_val_right = 0;
-
-					if (pServo->GetDegree() <= servo_bounds.kCenter){ //turning right
-						//left motor speeds up, right motor slows down
-						target_enc_val_left = target_enc_val * (1 + differential(delta_degree));
-						target_enc_val_right = target_enc_val * (1 - differential(delta_degree));
-					} else { //turning left
-						//left motor slows down, right motor speeds up
-						target_enc_val_left = target_enc_val * (1 - differential(delta_degree));
-						target_enc_val_right = target_enc_val * (1 + differential(delta_degree));
-					}
-
-					pMotor0->SetPower(10 * (target_enc_val_left - curr_enc_val_left) + 0 * cum_enc_error_left);
-					pMotor1->SetPower(10 * (target_enc_val_right - curr_enc_val_right) + 0 * cum_enc_error_right);
-				}
 
 			}
 		}
