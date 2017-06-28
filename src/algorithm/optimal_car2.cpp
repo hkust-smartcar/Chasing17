@@ -59,6 +59,7 @@ uint16_t start_y; //For crossing, store the last start point coordinate
 uint16_t start_x;
 uint16_t prev_corner_x; //store the latest corner coordinate appears last time during roundabout
 uint16_t prev_corner_y;
+bool is_front_car = true;
 bool debug = true;
 bool has_inc_width_pt = false;
 bool is_straight_line = false;
@@ -70,6 +71,7 @@ uint16_t prev_track_width = 0;
 int encoder_total_cross = 0; //for crossroad
 int encoder_total_round = 0; // for roundabout
 int encoder_total_exit = 0;
+int roundabout_cnt = 0; // count the roundabout
 Timer::TimerInt feature_start_time;
 std::pair<int, int> carMid{69, 0};
 int roundabout_nearest_corner_cnt_left =
@@ -123,7 +125,7 @@ void PrintEdge(Edges, uint16_t);
 void PrintImage();
 void PrintSuddenChangeTrackWidthLocation(uint16_t);
 void PrintWorldImage();
-
+int roundabout_shortest(uint8_t a, int pos);
 /**
  * @brief To fetch filtered bit, 1 = black; 0 = white
  * @param buff Camera buffer
@@ -568,56 +570,6 @@ bool FindEdges() {
 }
 
 /**
- * @brief Feature Identification by edges width
- *
- * Algorithm:
- * 1. Width increases suddenly (inc_width_pts serves as "corners")
- * 2. Perpendicular direction, search points @sightDistance away.
- * 3. Black (1) is roundabout, White (0) is crossing
- *
- * @return: Feature: kCrossing, kRound...
- * @note: Execute this function after calling FindEdges() only when width sudden increase is detected
- */
-CarManager::Feature featureIdent_Width() {
-  std::pair<int, int> carMid{WorldSize::w / 2, 0};
-  std::pair<int, int> cornerMid;
-  //Width increase case
-  if (has_inc_width_pt) {
-    //TODO: The conditions ensuring the width increase is reasonable case
-    if (true) {
-      int cornerMid_x = (inc_width_pts.at(0).first
-          + inc_width_pts.at(1).first) / 2; //corner midpoint x-cor
-      int cornerMid_y = (inc_width_pts.at(0).second
-          + inc_width_pts.at(1).second) / 2; //corner midpoint y-cor
-      int edge3th = sqrt(
-          pow(cornerMid_x - carMid.first, 2)
-              + pow(cornerMid_y - carMid.second, 2)); //Third edge of right triangle
-      int test_x = TuningVar.sightDist
-          * ((cornerMid_x - carMid.first) / edge3th) + cornerMid_x;
-      int test_y = TuningVar.sightDist
-          * ((cornerMid_y - carMid.second) / edge3th) + cornerMid_y;
-      if (getWorldBit(test_x, test_y) && getWorldBit(test_x + 1, test_y)
-          && getWorldBit(test_x, test_y + 1)
-          && getWorldBit(test_x - 1, test_y)) {
-        //All black
-        return CarManager::Feature::kRoundabout;
-      } else if (!getWorldBit(test_x, test_y)
-          && !getWorldBit(test_x + 1, test_y)
-          && !getWorldBit(test_x, test_y + 1)
-          && !getWorldBit(test_x - 1, test_y)) {
-        return CarManager::Feature::kCross;
-      }
-    }
-      //Special case: Enter crossing with extreme angle - Two corners are on the same side / Only one corner
-    else
-      return CarManager::Feature::kRoundaboutExit;
-  }
-
-  //Return kNormal and wait for next testing
-  return CarManager::Feature::kNormal;
-}
-
-/**
  * @brief Feature Identification by corners
  *
  * Algorithm:
@@ -656,13 +608,6 @@ CarManager::Feature featureIdent_Corner() {
             - left_corners.points.front().second)
         / (left_corners.points.front().first
             - right_corners.points.front().first) + cornerMid_x;
-//    uint16_t edge3th = sqrt(
-//        pow(abs(cornerMid_x - carMid.first), 2)
-//            + pow(abs(cornerMid_y - carMid.second), 2)); //Third edge of right triangle
-//    uint16_t test_x = TuningVar.sightDist
-//        * ((cornerMid_x - carMid.first) / edge3th) + cornerMid_x; //'-': The image is in opposite direction
-//    uint16_t test_y = TuningVar.sightDist
-//        * ((cornerMid_y - carMid.second) / edge3th) + cornerMid_y;
     /*FOR DEBUGGING*/
     if (debug) {
       pLcd->SetRegion(Lcd::Rect(test_x, WorldSize::h - test_y - 1, 4, 4));
@@ -814,33 +759,12 @@ CarManager::Feature featureIdent_Corner() {
   if (exit_round_ready && roundaboutStatus == 1
       && abs(encoder_total_round)
           > TuningVar.round_encoder_count /*abs(System::Time() - feature_start_time) > TuningVar.feature_inside_time*/) {
-    /*CAR2 FOR DEMO ONLNY : DISTANCE METHOD BY LESLIE*/
-    /*FOR DEBUGGING*/
-    //		if (debug) {
-    //			pLcd->SetRegion(Lcd::Rect(carMid.first, WorldSize::h - (carMid.second + TuningVar.sightDist_exitRound)- 1, 4, 4));
-    //			pLcd->FillColor(Lcd::kYellow);
-    //		}
-    //	  	  if(getWorldBit(carMid.first, carMid.second + TuningVar.sightDist_exitRound) == 1){
-    //				//Double check: have road on the left
-    //		  if(TuningVar.roundabout_turn_left){
-    //	  		  int i_cor_left;
-    //	  		  int i_cor_right;
-    //	  		  for(i_cor_right = carMid.first; (i_cor_right < carMid.first + TuningVar.roundroad_exit_radius) && getWorldBit(i_cor_right, carMid.second + TuningVar.sightDist_exitRound); i_cor_right++){}//search right
-    //	  		  for(i_cor_left = carMid.first; (i_cor_left > carMid.first - TuningVar.roundroad_exit_radius) && getWorldBit(i_cor_left, carMid.second + TuningVar.sightDist_exitRound); i_cor_left--){}//search left
-    //	  		  meet_exit = (i_cor_left>carMid.first - TuningVar.roundroad_exit_radius) /*&& (i_cor_right < carMid.first + TuningVar.roundroad_exit_radius)*/;
-    //		  }
-    //		  else{
-    //			  int i_cor;
-    //			  for(i_cor = carMid.first; i_cor < WorldSize::w && getWorldBit(i_cor, carMid.second + TuningVar.sightDist_exitRound); i_cor++ ){}//search right
-    //			  meet_exit = (i_cor < WorldSize::w);
-    //		  }
-    //	  }
 
     // corner disappears && close enough
 //		meet_exit = (!(left_corners.points.size() > 0 || right_corners.points.size() > 0)) && (abs(prev_corner_y - carMid.second) < TuningVar.exit_action_dist) ? true : false;
     /*CAR2*/
 
-    if (TuningVar.roundabout_turn_left) {
+    if (roundabout_shortest(TuningVar.roundabout_shortest_flag, roundabout_cnt - 1)) {
       /*FOR DEBUGGING*/
       if (debug) {
         pLcd->SetRegion(Lcd::Rect(roundabout_nearest_corner_left.first,
@@ -1033,8 +957,7 @@ void GenPath(CarManager::Feature feature) {
     // TODO(Derppening): Figure out the use of the lines below
     pEncoder0->Update();
     pEncoder1->Update();
-    encoder_total_exit += (pEncoder0->GetCount() + pEncoder1->GetCount())
-        / 2;
+    encoder_total_exit += pEncoder0->GetCount();
     feature = CarManager::Feature::kRoundaboutExit;
   }
   /*END OF ROUNDABOUT EXIT PASSING PART*/
@@ -1042,7 +965,7 @@ void GenPath(CarManager::Feature feature) {
   switch (feature) {
     case CarManager::Feature::kRoundabout: {
       // Turning left at the entrance
-      if (TuningVar.roundabout_turn_left) {
+      if (roundabout_shortest(TuningVar.roundabout_shortest_flag, roundabout_cnt - 1)) {
         //ensure the size of left is large enough for turning, size of left will never be 0
         while ((left_edge.points.size() < TuningVar.roundroad_min_size) && FindOneLeftEdge()) {}
         //translate right
@@ -1121,7 +1044,7 @@ void GenPath(CarManager::Feature feature) {
     case CarManager::Feature::kRoundaboutExit: {
       // Turning left at the entrance - Turning left at the exit
       // Turning left at the entrance - Turning left at the exit
-      if (TuningVar.roundabout_turn_left) {
+      if (roundabout_shortest(TuningVar.roundabout_shortest_flag, roundabout_cnt - 1)) {
         //ensure the size of left is large enough for turning, size of left will never be 0
         while ((left_edge.points.size() < TuningVar.roundroad_min_size) && FindOneLeftEdge()) {}
         //translate right
@@ -1252,6 +1175,16 @@ void PrintSuddenChangeTrackWidthLocation(uint16_t color) {
     pLcd->FillColor(color);
   }
 }
+
+/*
+ * @brief: return the shortest side of current roundabout
+ * @return: 1 means turning left, 0 means turning right
+ * */
+int roundabout_shortest(uint8_t a, int pos){
+	return (a >> (7-pos)) & 1;
+}
+
+
 
 /**
  * @brief Calculate the servo angle diff
@@ -1429,14 +1362,14 @@ void main_car2(bool debug_) {
   pServo->SetDegree(servo_bounds.kCenter);
   System::DelayMs(1000);
 
-  while (true) {
-    if (joystick.GetState() == Joystick::State::kRight) {
-      TuningVar.roundabout_turn_left = false;
-      break;
-    } else if (joystick.GetState() == Joystick::State::kLeft) {
-      break;
-    }
-  }
+//  while (true) {
+//    if (joystick.GetState() == Joystick::State::kRight) {
+//      TuningVar.roundabout_turn_left = false;
+//      break;
+//    } else if (joystick.GetState() == Joystick::State::kLeft) {
+//      break;
+//    }
+//  }
 
 //	while(true){
 //		if(joystick.GetState() != Joystick::State::kIdle){

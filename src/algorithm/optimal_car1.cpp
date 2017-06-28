@@ -69,8 +69,7 @@ uint16_t start_y; //For crossing, store the last start point coordinate
 uint16_t start_x;
 uint16_t prev_corner_x; //store the latest corner coordinate appears last time during roundabout
 uint16_t prev_corner_y;
-bool is_back_car = true;
-bool is_front_car = false;
+bool is_front_car = true;
 bool debug = true;
 bool has_inc_width_pt = false;
 bool is_straight_line = false;
@@ -674,13 +673,6 @@ CarManager::Feature featureIdent_Corner() {
 				(test_y - cornerMid_y) * (right_corners.points.front().second - left_corners.points.front().second)
 				/ (left_corners.points.front().first
 						- right_corners.points.front().first) + cornerMid_x;
-		//		uint16_t edge3th = sqrt(
-		//				pow(abs(cornerMid_x - carMid.first), 2)
-		//						+ pow(abs(cornerMid_y - carMid.second), 2)); //Third edge of right triangle
-		//		uint16_t test_x = TuningVar.sightDist
-		//				* ((cornerMid_x - carMid.first) / edge3th) + cornerMid_x; //'-': The image is in opposite direction
-		//		uint16_t test_y = TuningVar.sightDist
-		//				* ((cornerMid_y - carMid.second) / edge3th) + cornerMid_y;
 		/*FOR DEBUGGING*/
 		//		if (true) {
 		//			pLcd->SetRegion(Lcd::Rect(test_x, WorldSize::h - test_y - 1, 4, 4));

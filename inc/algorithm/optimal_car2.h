@@ -95,32 +95,33 @@ struct {
   uint16_t edge_min_worldview_bound_check = 30; //min for worldview bound check in edge finding
   uint16_t corner_range = 7; //the square for detection would be in size corener_range*2+1
   float corner_height_ratio = 2.9; //the max height for detection would be WorldSize.h/corner_height_ratio
-  uint16_t corner_min = 15, corner_max = 32; //threshold (in %) for corner detection
+  uint16_t corner_min = 16, corner_max = 31; //threshold (in %) for corner detection
   uint16_t min_corners_dist = 7; // Manhattan dist threshold for consecutive corners
   uint16_t min_edges_dist = 7; // Manhattan dist threshold for edges
   uint16_t track_width_threshold = 900; //track width threshold for consideration of sudden change (square)
   uint16_t track_width_change_threshold = 350; //track width change threshold for consideration of sudden change
-  uint16_t sightDist = 80; // The distance from which the image pixel should be tested
+  uint16_t sightDist = 60; // The distance from which the image pixel should be tested
   uint16_t sightDist_exitRound = 60; //The distance from which the image pixel is used for exit testing
-  uint16_t straight_line_threshold = 50; // The threshold num. of equal width for straight line detection
+  uint16_t straight_line_threshold = 45; // The threshold num. of equal width for straight line detection
   uint16_t action_distance = 27; // The condition in which the car start handling this feature when meeting it
   uint16_t stop_distance = 10; // The distance away from starting line - for stopping
-  float black_div_length_ratio_threshold = 0.5; // ratio for black points/edge length. Used for detecting starting line
   libsc::Timer::TimerInt feature_inside_time = 350; // freezing time for feature extraction, the time for entering the entrance
   uint16_t cross_cal_start_num = 80;
   uint16_t cross_cal_ratio = 80; //Look forward @cross_cal_start_num - encoder_total/@cross_cal_ratio to determine path
   uint16_t general_cal_num = 20; //The num of path points considered for servo angle decision except crossing
   uint16_t cross_encoder_count = 4000; // The hardcoded encoder count that car must reach in crossroad
-  uint16_t round_encoder_count = 200;
-  uint16_t roundExit_encoder_count = 200;
   uint16_t round_enter_offset = 15;
-  uint16_t round_exit_offset = 10;
+  uint16_t round_exit_offset = 20;
+  uint16_t round_encoder_count = 2600;
+  uint16_t roundExit_encoder_count = 3000;
   uint16_t roundroad_exit_radius = 15;
   uint16_t servo_offset = 0;//149
   uint16_t min_dist_meet_crossing = 30;
   uint16_t roundroad_min_size = 30; // When the edge is broken in roundabout, find until this threshold
   uint16_t exit_action_dist = 35; // double check to avoid corner's sudden disappear inside roundabout
   uint16_t roundabout_offset = 15; // half of road width
+  uint8_t roundabout_shortest_flag = 0b10000000; //1 means turn left, 0 means turn right. Reading from left to right
+  uint16_t angle_div_error = 1; // translate error into angle
 
 } TuningVar;
 
