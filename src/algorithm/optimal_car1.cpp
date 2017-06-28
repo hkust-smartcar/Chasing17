@@ -657,11 +657,6 @@ bool FindEdges() {
  * @note: Execute this function after calling FindEdges()
  */
 Feature featureIdent_Corner() {
-	/*FOR DEBUGGING*/
-	//	pLcd->SetRegion(
-	//	Lcd::Rect(carMid.first, WorldSize::h - carMid.second - 1, 2, 2));
-	//	pLcd->FillColor(Lcd::kRed);
-	/*END OF DEBUGGING*/
 	//1. Straight line
 	if (is_straight_line) {
 		//    roundaboutStatus = 0;// Avoid failure of detecting roundabout exit
@@ -879,8 +874,6 @@ Feature featureIdent_Corner() {
 				//GO
 				if(pBT->hasFinishedOvertake()){
 					stop_before_roundexit = false;
-					//switch ID
-					is_front_car = false;
 					// roundaboutStatus = 0;
 					exit_round_ready = false;
 //					pEncoder0->Update();
@@ -1044,6 +1037,10 @@ void GenPath(Feature feature) {
 			//switch ID
 			is_front_car = true;
 			pBT->sendFinishOvertake();
+		}
+		//switch ID after using offset to exit for original front car
+		else if(is_front_car){
+			is_front_car = false;
 		}
 	}
 	if (roundaboutExitStatus == 1
@@ -1531,9 +1528,10 @@ void main_car1(bool debug_) {
 					pMotor0->SetPower(0);
 					pMotor1->SetPower(0);
 				}
-				else
+				else{
 					pMotor0->SetPower(210);
 					pMotor1->SetPower(210);
+				}
 
 
 				//        Timer::TimerInt new_time = System::Time();
@@ -1563,9 +1561,6 @@ void main_car1(bool debug_) {
 				//		PrintCorner(right_corners, Lcd::kPurple); //Print right_corner
 				//		pLcd->SetRegion(Lcd::Rect(carMid.first, carMid.second, 5, 5));
 				//		pLcd->FillColor(Lcd::kRed);
-
-
-
 				if (debug) {
 					PrintWorldImage();
 					PrintEdge(left_edge, Lcd::kRed); //Print left_edge

@@ -67,6 +67,11 @@ uint16_t start_y; //For crossing, store the last start point coordinate
 uint16_t start_x;
 uint16_t prev_corner_x; //store the latest corner coordinate appears last time during roundabout
 uint16_t prev_corner_y;
+
+/*FOR OVERTAKING*/
+bool is_front_car = true;
+bool stop_before_roundexit = true;
+
 bool debug = true;
 bool has_inc_width_pt = false;
 bool is_straight_line = false;
@@ -78,10 +83,10 @@ uint16_t prev_track_width = 0;
 int encoder_total_cross = 0; //for crossroad
 int encoder_total_round = 0; // for roundabout
 int encoder_total_exit = 0;
+int roundabout_cnt = 0; // count the roundabout
 Timer::TimerInt feature_start_time;
 std::pair<int, int> carMid{69, 0};
-int roundabout_nearest_corner_cnt_left =
-    pow(TuningVar.corner_range * 2 + 1, 2); // for finding the nearest corner point for roundabout
+int roundabout_nearest_corner_cnt_left = pow(TuningVar.corner_range * 2 + 1, 2); // for finding the nearest corner point for roundabout
 int roundabout_nearest_corner_cnt_right = pow(TuningVar.corner_range * 2 + 1, 2);
 std::pair<int, int> roundabout_nearest_corner_left{0, 0};
 std::pair<int, int> roundabout_nearest_corner_right{0, 0};
@@ -107,8 +112,8 @@ St7735r* pLcd = nullptr;
 Led* pLed3 = nullptr;
 LcdTypewriter* pWriter = nullptr;
 FutabaS3010* pServo = nullptr;
-JyMcuBt106* pBTovertake = nullptr;
-//BTComm* pBT = nullptr;
+//JyMcuBt106* pBTovertake = nullptr;
+BTComm* pBT = nullptr;
 DirEncoder* pEncoder0 = nullptr;
 DirEncoder* pEncoder1 = nullptr;
 AlternateMotor* pMotor0 = nullptr;
@@ -131,7 +136,6 @@ const int8_t dy[9] = {1, 1, 0, -1, -1, -1, 0, 1, 1};
 int16_t CalcAngleDiff();
 void Capture();
 Feature featureIdent_Corner();
-Feature featureIdent_Width();
 bool FindStoppingLine();
 bool FindEdges();
 bool FindOneLeftEdge();
@@ -143,6 +147,7 @@ void PrintEdge(Edges, uint16_t);
 void PrintImage();
 void PrintSuddenChangeTrackWidthLocation(uint16_t);
 void PrintWorldImage();
+int roundabout_shortest(uint8_t a, int pos);
 
 
 
@@ -686,13 +691,6 @@ Feature featureIdent_Corner() {
             - left_corners.points.front().second)
         / (left_corners.points.front().first
             - right_corners.points.front().first) + cornerMid_x;
-//    uint16_t edge3th = sqrt(
-//        pow(abs(cornerMid_x - carMid.first), 2)
-//            + pow(abs(cornerMid_y - carMid.second), 2)); //Third edge of right triangle
-//    uint16_t test_x = TuningVar.sightDist
-//        * ((cornerMid_x - carMid.first) / edge3th) + cornerMid_x; //'-': The image is in opposite direction
-//    uint16_t test_y = TuningVar.sightDist
-//        * ((cornerMid_y - carMid.second) / edge3th) + cornerMid_y;
     /*FOR DEBUGGING*/
     if (debug) {
       pLcd->SetRegion(Lcd::Rect(test_x, WorldSize::h - test_y - 1, 4, 4));
@@ -711,6 +709,7 @@ Feature featureIdent_Corner() {
       encoder_total_round = 0;
       roundaboutStatus = 1; //Detected
 //			feature_start_time = System::Time(); // Mark the startTime of latest enter time
+	  roundabout_cnt++;
       return Feature::kRoundabout;
     } else if (!getWorldBit(test_x, test_y)
         && !getWorldBit(test_x + 1, test_y)
@@ -844,33 +843,12 @@ Feature featureIdent_Corner() {
   if (exit_round_ready && roundaboutStatus == 1
       && abs(encoder_total_round)
           > TuningVar.round_encoder_count /*abs(System::Time() - feature_start_time) > TuningVar.feature_inside_time*/) {
-    /*CAR2 FOR DEMO ONLNY : DISTANCE METHOD BY LESLIE*/
-    /*FOR DEBUGGING*/
-    //		if (debug) {
-    //			pLcd->SetRegion(Lcd::Rect(carMid.first, WorldSize::h - (carMid.second + TuningVar.sightDist_exitRound)- 1, 4, 4));
-    //			pLcd->FillColor(Lcd::kYellow);
-    //		}
-    //	  	  if(getWorldBit(carMid.first, carMid.second + TuningVar.sightDist_exitRound) == 1){
-    //				//Double check: have road on the left
-    //		  if(TuningVar.roundabout_turn_left){
-    //	  		  int i_cor_left;
-    //	  		  int i_cor_right;
-    //	  		  for(i_cor_right = carMid.first; (i_cor_right < carMid.first + TuningVar.roundroad_exit_radius) && getWorldBit(i_cor_right, carMid.second + TuningVar.sightDist_exitRound); i_cor_right++){}//search right
-    //	  		  for(i_cor_left = carMid.first; (i_cor_left > carMid.first - TuningVar.roundroad_exit_radius) && getWorldBit(i_cor_left, carMid.second + TuningVar.sightDist_exitRound); i_cor_left--){}//search left
-    //	  		  meet_exit = (i_cor_left>carMid.first - TuningVar.roundroad_exit_radius) /*&& (i_cor_right < carMid.first + TuningVar.roundroad_exit_radius)*/;
-    //		  }
-    //		  else{
-    //			  int i_cor;
-    //			  for(i_cor = carMid.first; i_cor < WorldSize::w && getWorldBit(i_cor, carMid.second + TuningVar.sightDist_exitRound); i_cor++ ){}//search right
-    //			  meet_exit = (i_cor < WorldSize::w);
-    //		  }
-    //	  }
 
     // corner disappears && close enough
 //		meet_exit = (!(left_corners.points.size() > 0 || right_corners.points.size() > 0)) && (abs(prev_corner_y - carMid.second) < TuningVar.exit_action_dist) ? true : false;
     /*CAR2*/
 
-    if (TuningVar.roundabout_turn_left) {
+    if (is_front_car?!roundabout_shortest(TuningVar.roundabout_shortest_flag, roundabout_cnt - 1):roundabout_shortest(TuningVar.roundabout_shortest_flag, roundabout_cnt - 1)) {
       /*FOR DEBUGGING*/
       if (debug) {
         pLcd->SetRegion(Lcd::Rect(roundabout_nearest_corner_left.first,
@@ -895,20 +873,39 @@ Feature featureIdent_Corner() {
       // corner disappears && close enough
       meet_exit = abs(roundabout_nearest_corner_right.second - carMid.second) < TuningVar.exit_action_dist;
     }
-
-    if (meet_exit) {
-//			roundaboutStatus = 0;
-      exit_round_ready = false;
-      // TODO(Derppening): Figure out the use of the following two lines
-//      pEncoder0->Update();
-//      pEncoder1->Update();
-      encoder_total_exit = 0;
-      roundaboutExitStatus = 1;
-      return Feature::kRoundaboutExit;
-    }
-    //	}
+	//TODO: receive buffer message: only keep moving when receiving exit message
+	if(!is_front_car){//back car
+		stop_before_roundexit = false;
+		if (meet_exit) {
+			//roundaboutStatus = 0;
+			exit_round_ready = false;
+//				pEncoder0->Update();
+//				pEncoder1->Update();
+			encoder_total_exit = 0;
+			roundaboutExitStatus = 1;
+			return Feature::kRoundaboutExit;
+		}
+	}
+	else{
+		if (meet_exit) {
+			//GO
+			if(pBT->hasFinishedOvertake()){
+				stop_before_roundexit = false;
+				// roundaboutStatus = 0;
+				exit_round_ready = false;
+//					pEncoder0->Update();
+//					pEncoder1->Update();
+				encoder_total_exit = 0;
+				pBT->resetFinishOvertake();
+			}
+			else{
+				stop_before_roundexit = true;
+			}
+			roundaboutExitStatus = 1;
+			return Feature::kRoundaboutExit;
+		}
+	}
   }
-
   //5. Nothing special: Return kNormal and wait for next testing
   return Feature::kNormal;
 }
@@ -1056,6 +1053,16 @@ void GenPath(Feature feature) {
       && abs(encoder_total_exit) >= TuningVar.roundExit_encoder_count) {
     roundaboutExitStatus = 0;
     roundaboutStatus = 0;
+	/*TODO: switch carID, sendBT to another car and set has_exited on the other side to true*/
+	if(!is_front_car){//Back car
+		//switch ID
+		is_front_car = true;
+		pBT->sendFinishOvertake();
+	}
+	//switch ID after using offset to exit for original front car
+	else if(is_front_car){
+		is_front_car = false;
+	}
   }
   if (roundaboutExitStatus == 1
       && abs(encoder_total_exit) < TuningVar.roundExit_encoder_count) {
@@ -1070,7 +1077,7 @@ void GenPath(Feature feature) {
   switch (feature) {
     case Feature::kRoundabout: {
       // Turning left at the entrance
-      if (TuningVar.roundabout_turn_left) {
+      if (is_front_car?!roundabout_shortest(TuningVar.roundabout_shortest_flag, roundabout_cnt - 1):roundabout_shortest(TuningVar.roundabout_shortest_flag, roundabout_cnt - 1)) {
         //ensure the size of left is large enough for turning, size of left will never be 0
         while ((left_edge.points.size() < TuningVar.roundroad_min_size) && FindOneLeftEdge()) {}
         //translate right
@@ -1149,7 +1156,7 @@ void GenPath(Feature feature) {
     case Feature::kRoundaboutExit: {
       // Turning left at the entrance - Turning left at the exit
       // Turning left at the entrance - Turning left at the exit
-      if (TuningVar.roundabout_turn_left) {
+      if (is_front_car?!roundabout_shortest(TuningVar.roundabout_shortest_flag, roundabout_cnt - 1):roundabout_shortest(TuningVar.roundabout_shortest_flag, roundabout_cnt - 1)) {
         //ensure the size of left is large enough for turning, size of left will never be 0
         while ((left_edge.points.size() < TuningVar.roundroad_min_size) && FindOneLeftEdge()) {}
         //translate right
@@ -1280,6 +1287,15 @@ void PrintSuddenChangeTrackWidthLocation(uint16_t color) {
     pLcd->FillColor(color);
   }
 }
+
+/*
+ * @brief: return the shortest side of current roundabout
+ * @return: 1 means turning left, 0 means turning right
+ * */
+int roundabout_shortest(uint8_t a, int pos){
+	return (a >> (7-pos)) & 1;
+}
+
 
 /**
  * @brief Calculate the servo angle diff
@@ -1430,9 +1446,9 @@ void main_car2(bool debug_) {
   ConfigBT.id = 0;
   ConfigBT.baud_rate = libbase::k60::Uart::Config::BaudRate::k115200;
   ConfigBT.rx_isr = &bluetoothListener;
-  JyMcuBt106 bt(ConfigBT);
-//  BTComm bt(ConfigBT);
-//  pBT = &bt;
+//  JyMcuBt106 bt(ConfigBT);
+  BTComm bt(ConfigBT);
+  pBT = &bt;
 
   St7735r::Config lcdConfig;
   lcdConfig.is_revert = true;
@@ -1481,6 +1497,10 @@ void main_car2(bool debug_) {
 //	}
 
 //	StartlineOvertake();
+	pMotor0->SetClockwise(true);
+	pMotor1->SetClockwise(false);
+	pMotor0->SetPower(210);
+	pMotor1->SetPower(210);
 
   Timer::TimerInt startTime = System::Time();
 
@@ -1491,24 +1511,34 @@ void main_car2(bool debug_) {
 
       if (time_img % 10 == 0) {
     	  /*Send Data*/
-    	  			  char speedChar[15] = {};
-    	  			  //				sprintf(speedChar, "%.1f,%.3f,%.4f,%.4f,%.3f,%.4f,%.4f\n", 1.0, leftPowSpeedP, leftPowSpeedI, leftPowSpeedD, rightPowSpeedP, rightPowSpeedI, rightPowSpeedD);
-    	  			  //				sprintf(speedChar, "%.1f,%.2f,%.2f\n", 1.0, targetAng, tempTargetAng);
-    	  			  //				sprintf(speedChar, "%.1f,%.2f,%.2f\n", 1.0, leftSpeed, leftTempTargetSpeed);
-    	  			  //				sprintf(speedChar, "%.1f,%.2f,%.2f\n", 1.0, rightSpeed, rightTempTargetSpeed);
-    	  			  //				sprintf(speedChar, "%.1f,%.2f,%.2f,%.2f,%.2f\n", 1.0, targetAng, tempTargetAng, curSpeed, targetSpeed);
-    	  			  //			  	sprintf(speedChar, "%.1f,%.3f\n", 1.0, dt);
-    	  		  sprintf(speedChar, "%.1f, %d,%d,%d,%d\n",1.0,0-curr_enc_val_right,target_enc_val_right,curr_enc_val_left,target_enc_val_left);
+//		  char speedChar[15] = {};
+//		  //				sprintf(speedChar, "%.1f,%.3f,%.4f,%.4f,%.3f,%.4f,%.4f\n", 1.0, leftPowSpeedP, leftPowSpeedI, leftPowSpeedD, rightPowSpeedP, rightPowSpeedI, rightPowSpeedD);
+//		  //				sprintf(speedChar, "%.1f,%.2f,%.2f\n", 1.0, targetAng, tempTargetAng);
+//		  //				sprintf(speedChar, "%.1f,%.2f,%.2f\n", 1.0, leftSpeed, leftTempTargetSpeed);
+//		  //				sprintf(speedChar, "%.1f,%.2f,%.2f\n", 1.0, rightSpeed, rightTempTargetSpeed);
+//		  //				sprintf(speedChar, "%.1f,%.2f,%.2f,%.2f,%.2f\n", 1.0, targetAng, tempTargetAng, curSpeed, targetSpeed);
+//		  //			  	sprintf(speedChar, "%.1f,%.3f\n", 1.0, dt);
+    	  //	  sprintf(speedChar, "%.1f, %d,%d,%d,%d\n",1.0,0-curr_enc_val_right,target_enc_val_right,curr_enc_val_left,target_enc_val_left);
+    	  //
+    	  ////    	  			  std::string speedStr = speedChar;
+    	  //		  const Byte speedByte = 85;
+    	  //		  bt.SendBuffer(&speedByte, 1);
+    	  //		  bt.SendStr(speedChar);
+    	  //Overtake motor control
+    	  if (roundaboutExitStatus == 1 && stop_before_roundexit) {
+    		  /*Consider braking*/
+    		  pMotor0->SetPower(0);
+    		  pMotor1->SetPower(0);
+    	  }
+    	  else{
+    		  pMotor0->SetPower(210);
+    		  pMotor1->SetPower(210);
+    	  }
 
-//    	  			  std::string speedStr = speedChar;
-    	  			  const Byte speedByte = 85;
-    	  			  bt.SendBuffer(&speedByte, 1);
-    	  			  bt.SendStr(speedChar);
 
 
-
-    	Timer::TimerInt algo_start_time = System::Time();
-        Capture(); //Capture until two base points are identified
+//    	  Timer::TimerInt algo_start_time = System::Time();
+    	  Capture(); //Capture until two base points are identified
 //        if (FindStoppingLine() && time_img - startTime > 10000) {
 //            pMotor0->SetClockwise(false);
 //            pMotor1->SetClockwise(true);
@@ -1519,18 +1549,13 @@ void main_car2(bool debug_) {
 //            pMotor1->SetPower(0);
 //          pWriter->WriteString("Stopping Line Detected");
 //        }
-        if (roundaboutExitStatus == 1) {
-          TuningVar.roundabout_offset = 20;
-        } else {
-          TuningVar.roundabout_offset = 20;
-        }
         FindEdges();
         Feature feature = featureIdent_Corner();
         GenPath(feature); //Generate path
         /*FOR DEBUGGING*/
         if (debug) {
           char time_str[100];
-          sprintf(time_str, "Time:%dms", System::Time()-algo_start_time);
+//          sprintf(time_str, "Time:%dms", System::Time()-algo_start_time);
           pLcd->SetRegion(Lcd::Rect(0,0,128,15));
           pWriter->WriteString(time_str);
           PrintWorldImage();
@@ -1593,7 +1618,7 @@ void main_car2(bool debug_) {
 		curr_enc_val_left = (pEncoder0->GetCount());
 		curr_enc_val_right = (pEncoder1->GetCount());
 
-		int delta_degree = (std::abs(pServo->GetDegree() - servo_bounds.kCenter))/10;
+//		int delta_degree = (std::abs(pServo->GetDegree() - servo_bounds.kCenter))/10;
 //		target_enc_val_left = 0, target_enc_val_right = 0;
 //			target_enc_val_left = target_enc_val_right = 200; //actual speed = 5800 * cycle * speed
 
@@ -1612,13 +1637,13 @@ void main_car2(bool debug_) {
 //				curr_enc_val_left,curr_enc_val_right);
 //		pLcd->SetRegion(Lcd::Rect(0,0,128,15));
 //		pWriter->WriteString(temp);
-		int left_power = util::clamp(Kp * (target_enc_val_left - curr_enc_val_left) + Ki * cum_enc_error_left + Kd * (target_enc_val_left - curr_enc_val_left - prev_enc_error), 0.0f, 400.0f);
-		int right_power = util::clamp(Kp * (target_enc_val_right + curr_enc_val_right) + Ki * cum_enc_error_right + Kd * (target_enc_val_right + curr_enc_val_right - prev_enc_error), 0.0f, 400.0f);
-		pMotor0->SetPower(left_power);
-		pMotor1->SetPower(right_power);
-		cum_enc_error_left += target_enc_val_left - curr_enc_val_left;
-		cum_enc_error_right += target_enc_val_right + curr_enc_val_right;
-		prev_enc_error = target_enc_val_right - curr_enc_val_right;
+//		int left_power = util::clamp(Kp * (target_enc_val_left - curr_enc_val_left) + Ki * cum_enc_error_left + Kd * (target_enc_val_left - curr_enc_val_left - prev_enc_error), 0.0f, 400.0f);
+//		int right_power = util::clamp(Kp * (target_enc_val_right + curr_enc_val_right) + Ki * cum_enc_error_right + Kd * (target_enc_val_right + curr_enc_val_right - prev_enc_error), 0.0f, 400.0f);
+//		pMotor0->SetPower(left_power);
+//		pMotor1->SetPower(right_power);
+//		cum_enc_error_left += target_enc_val_left - curr_enc_val_left;
+//		cum_enc_error_right += target_enc_val_right + curr_enc_val_right;
+//		prev_enc_error = target_enc_val_right - curr_enc_val_right;
 		/* Motor Protection */
 //		if ((curr_enc_val_left < 10 || curr_enc_val_right < 10) && time_img - startTime > 1000){
 //			pMotor0->SetPower(0);
