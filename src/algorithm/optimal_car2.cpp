@@ -575,56 +575,6 @@ bool FindEdges() {
 }
 
 /**
- * @brief Feature Identification by edges width
- *
- * Algorithm:
- * 1. Width increases suddenly (inc_width_pts serves as "corners")
- * 2. Perpendicular direction, search points @sightDistance away.
- * 3. Black (1) is roundabout, White (0) is crossing
- *
- * @return: Feature: kCrossing, kRound...
- * @note: Execute this function after calling FindEdges() only when width sudden increase is detected
- */
-Feature featureIdent_Width() {
-  std::pair<int, int> carMid{WorldSize::w / 2, 0};
-  std::pair<int, int> cornerMid;
-  //Width increase case
-  if (has_inc_width_pt) {
-    //TODO: The conditions ensuring the width increase is reasonable case
-    if (true) {
-      int cornerMid_x = (inc_width_pts.at(0).first
-          + inc_width_pts.at(1).first) / 2; //corner midpoint x-cor
-      int cornerMid_y = (inc_width_pts.at(0).second
-          + inc_width_pts.at(1).second) / 2; //corner midpoint y-cor
-      int edge3th = sqrt(
-          pow(cornerMid_x - carMid.first, 2)
-              + pow(cornerMid_y - carMid.second, 2)); //Third edge of right triangle
-      int test_x = TuningVar.sightDist
-          * ((cornerMid_x - carMid.first) / edge3th) + cornerMid_x;
-      int test_y = TuningVar.sightDist
-          * ((cornerMid_y - carMid.second) / edge3th) + cornerMid_y;
-      if (getWorldBit(test_x, test_y) && getWorldBit(test_x + 1, test_y)
-          && getWorldBit(test_x, test_y + 1)
-          && getWorldBit(test_x - 1, test_y)) {
-        //All black
-        return Feature::kRoundabout;
-      } else if (!getWorldBit(test_x, test_y)
-          && !getWorldBit(test_x + 1, test_y)
-          && !getWorldBit(test_x, test_y + 1)
-          && !getWorldBit(test_x - 1, test_y)) {
-        return Feature::kCross;
-      }
-    }
-      //Special case: Enter crossing with extreme angle - Two corners are on the same side / Only one corner
-    else
-      return Feature::kRoundaboutExit;
-  }
-
-  //Return kNormal and wait for next testing
-  return Feature::kNormal;
-}
-
-/**
  * @brief Feature Identification by corners
  *
  * Algorithm:
