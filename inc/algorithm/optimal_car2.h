@@ -26,8 +26,6 @@ namespace algorithm {
 namespace optimal {
 namespace car2 {
 
-constexpr const bool kIsUseCarMgr = false;
-
 void main_car2(bool debug_ = false);
 
 /**

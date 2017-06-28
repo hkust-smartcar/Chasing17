@@ -78,6 +78,8 @@ int roundabout_nearest_corner_cnt_right = pow(TuningVar.corner_range * 2 + 1, 2)
 std::pair<int, int> roundabout_nearest_corner_left{0, 0};
 std::pair<int, int> roundabout_nearest_corner_right{0, 0};
 
+int prev_servo_error = 0;
+
 const Byte* CameraBuf;
 
 //pointers
@@ -577,7 +579,7 @@ bool FindEdges() {
  * @note: Execute this function after calling FindEdges() only when width sudden increase is detected
  */
 CarManager::Feature featureIdent_Width() {
-  std::pair<int, int> carMid(WorldSize::w / 2, 0);
+  std::pair<int, int> carMid{WorldSize::w / 2, 0};
   std::pair<int, int> cornerMid;
   //Width increase case
   if (has_inc_width_pt) {
@@ -1308,58 +1310,32 @@ void StartlineOvertake() {
   /* For car 2; initial position: RIGHT; after position: BACK */
   int cnt = 0;
   while (1) {
-    if (kIsUseCarMgr) {
-      // TODO(Derppening): Remove line below when new target speeds are set
-      static_assert(!kIsUseCarMgr, "Implement new target speed for StartlineOvertake()");
-      CarManager::SetTargetSpeed(13000);
-    } else {
       pMotor0->SetPower(400);
       pMotor1->SetPower(400);
-    }
 
     Capture();
     path.points.clear();
     for (int i = 0; i < 10; i++) FindOneRightEdge();
     for (int i = 0; i < 10; i++) path.push(right_edge.points[i].first - 6, right_edge.points[i].second);
 
-    if (kIsUseCarMgr) {
-      // TODO(Derppening): Remove line below when new servo angles are set
-      static_assert(!kIsUseCarMgr, "Implement new servo angles for StartlineOvertake()");
-//      CarManager::SetTargetAngle(/* angle */);
-    } else {
-      pServo->SetDegree(util::clamp<uint16_t>(servo_bounds.kCenter - 1.3 * CalcAngleDiff() + TuningVar.servo_offset,
-                                              servo_bounds.kRightBound,
-                                              servo_bounds.kLeftBound));
-    }
+    pServo->SetDegree(util::clamp<uint16_t>(servo_bounds.kCenter - 1.3 * CalcAngleDiff() + TuningVar.servo_offset,
+                                                  servo_bounds.kRightBound,
+                                                  servo_bounds.kLeftBound));
 
-    if (kIsUseCarMgr) {
-      cnt += (CarManager::GetLeftSpeed() + CarManager::GetRightSpeed()) / 2;
-      // TODO(Derppening): Remove line below when new count and speed values are set
-      static_assert(!kIsUseCarMgr, "Implement new count and speed values for StartlineOvertake()");
-//       if (cnt > /* val */) {
-//         CarManager::SetTargetSpeed(-20000);
-//         System::DelayMs(100);
-//         CarManager::SetTargetSpeed(-1);
-//         CarManager::SetTargetSpeed(0);
-//         System::DelayMs(1000);
-//         return;
-//       }
-    } else {
-      pEncoder0->Update();
-      cnt += pEncoder0->GetCount();
-      if (cnt > 1300) {
-        pMotor0->SetClockwise(false);
-        pMotor1->SetClockwise(true);
-        pMotor0->SetPower(1000);
-        pMotor1->SetPower(1000);
-        System::DelayMs(100);
-        pMotor0->SetClockwise(true);
-        pMotor1->SetClockwise(false);
-        pMotor0->SetPower(0);
-        pMotor1->SetPower(0);
-        System::DelayMs(1000);
-        return;
-      }
+    pEncoder0->Update();
+    cnt += pEncoder0->GetCount();
+    if (cnt > 1300) {
+      pMotor0->SetClockwise(false);
+      pMotor1->SetClockwise(true);
+      pMotor0->SetPower(1000);
+      pMotor1->SetPower(1000);
+      System::DelayMs(100);
+      pMotor0->SetClockwise(true);
+      pMotor1->SetClockwise(false);
+      pMotor0->SetPower(0);
+      pMotor1->SetPower(0);
+      System::DelayMs(1000);
+      return;
     }
   }
 }
@@ -1443,33 +1419,15 @@ void main_car2(bool debug_) {
 
 //  DebugConsole console(&joystick, &lcd, &writer, 10);
 
-  CarManager::Config ConfigMgr;
-  ConfigMgr.car = CarManager::Car::kCar2;
-  if (kIsUseCarMgr) {
-    ConfigMgr.servo = std::move(spServo);
-    ConfigMgr.epc = std::move(spMpc);
-  }
-  CarManager::Init(std::move(ConfigMgr));
-  servo_bounds = CarManager::GetServoBounds();
-
   Timer::TimerInt time_img = 0;
 
   //Servo test
-  if (kIsUseCarMgr) {
-    CarManager::SetTargetAngle(CarManager::GetServoAngles().kLeftAngle);
-    System::DelayMs(1000);
-    CarManager::SetTargetAngle(CarManager::GetServoAngles().kRightAngle);
-    System::DelayMs(1000);
-    CarManager::SetTargetAngle(0);
-    System::DelayMs(1000);
-  } else {
-    pServo->SetDegree(servo_bounds.kLeftBound);
-    System::DelayMs(1000);
-    pServo->SetDegree(servo_bounds.kRightBound);
-    System::DelayMs(1000);
-    pServo->SetDegree(servo_bounds.kCenter);
-    System::DelayMs(1000);
-  }
+  pServo->SetDegree(servo_bounds.kLeftBound);
+  System::DelayMs(1000);
+  pServo->SetDegree(servo_bounds.kRightBound);
+  System::DelayMs(1000);
+  pServo->SetDegree(servo_bounds.kCenter);
+  System::DelayMs(1000);
 
   while (true) {
     if (joystick.GetState() == Joystick::State::kRight) {
@@ -1492,18 +1450,10 @@ void main_car2(bool debug_) {
 
 //	StartlineOvertake();
 
-  if (kIsUseCarMgr) {
-    // TODO(Derppening): Remove line below when new target speeds are set
-    static_assert(!kIsUseCarMgr, "Implement new target speed for main_car1()");
-    CarManager::SetTargetSpeed(10500);
-  } else {
-    pMotor0->SetClockwise(true);
-    pMotor1->SetClockwise(false);
-    pMotor0->SetPower(300);
-    pMotor1->SetPower(300);
-  }
-
-  System::DelayMs(1000);
+  pMotor0->SetClockwise(true);
+  pMotor1->SetClockwise(false);
+  pMotor0->SetPower(300);
+  pMotor1->SetPower(300);
 
   Timer::TimerInt startTime = System::Time();
 
@@ -1523,35 +1473,15 @@ void main_car2(bool debug_) {
       led0.SetEnable(time_img % 500 >= 250);
 
       if (time_img % 10 == 0) {
-//				char temp[100];
-//              if (kIsUseCarMgr) {
-//                sprintf(temp, "servo:%d", CarManager::GetServoDeg());
-//              } else {
-//                sprintf(temp, "servo:%d", pServo->GetDegree());
-//              }
-//				pLcd->SetRegion(Lcd::Rect(0, 0, 120, 15));
-//				pWriter->WriteString(temp);
-//        Timer::TimerInt new_time = System::Time();
         Capture(); //Capture until two base points are identified
         if (FindStoppingLine() && time_img - startTime > 10000) {
-          if (kIsUseCarMgr) {
-            static_assert(!kIsUseCarMgr, "Implement new target speed for main_car1()");
-            CarManager::SetTargetSpeed(20000);
-          } else {
-            if (kIsUseCarMgr) {
-              CarManager::SetTargetSpeed(-20000);
-              System::DelayMs(18);
-              CarManager::SetTargetSpeed(0);
-            } else {
-              pMotor0->SetClockwise(false);
-              pMotor1->SetClockwise(true);
-              pMotor0->SetPower(1000);
-              pMotor1->SetPower(1000);
-              System::DelayMs(18);
-              pMotor0->SetPower(0);
-              pMotor1->SetPower(0);
-            }
-          }
+            pMotor0->SetClockwise(false);
+            pMotor1->SetClockwise(true);
+            pMotor0->SetPower(1000);
+            pMotor1->SetPower(1000);
+            System::DelayMs(18);
+            pMotor0->SetPower(0);
+            pMotor1->SetPower(0);
           pWriter->WriteString("Stopping Line Detected");
         }
         if (roundaboutExitStatus == 1) {
@@ -1578,31 +1508,13 @@ void main_car2(bool debug_) {
 //              }
 //				sprintf(timestr, "ServoAngle: %d", pServo->GetDegree());
 //				pWriter->WriteString(timestr);
-
-        /*Tuning offset*/
-//					if (joystick.GetState() == Joystick::State::kUp) {
-//						servoAngle+=10;
-//					} else if (joystick.GetState() == Joystick::State::kDown) {
-//						servoAngle-=10;
-//					}
-//					pLcd->SetRegion(Lcd::Rect(0, 16, 128, 15));
-//					char timestr[100];
-//					sprintf(timestr, "AngleOS: %d", servoAngle);
-//					pServo->SetDegree(servo_bounds.kCenter + servoAngle);
-//					pWriter->WriteString(timestr);
-
-//				PrintWorldImage();
-//				PrintEdge(left_edge, Lcd::kRed); //Print left_edge
-//				PrintEdge(right_edge, Lcd::kBlue); //Print right_edge
-//				PrintCorner(left_corners, Lcd::kPurple); //Print left_corner
-//				PrintCorner(right_corners, Lcd::kPurple); //Print right_corner
-//				PrintEdge(path, Lcd::kGreen); //Print path
         if (debug) {
           PrintWorldImage();
           PrintEdge(left_edge, Lcd::kRed); //Print left_edge
           PrintEdge(right_edge, Lcd::kBlue); //Print right_edge
           PrintCorner(left_corners, Lcd::kPurple); //Print left_corner
           PrintCorner(right_corners, Lcd::kPurple); //Print right_corner
+          PrintSuddenChangeTrackWidthLocation(Lcd::kYellow); //Print sudden change track width location
           pLcd->SetRegion(
               Lcd::Rect(roundabout_nearest_corner_left.first,
                         WorldSize::h - roundabout_nearest_corner_left.second - 1, 4, 4));
@@ -1640,45 +1552,16 @@ void main_car2(bool debug_) {
               break;
           }
         }
-//				PrintSuddenChangeTrackWidthLocation(Lcd::kYellow); //Print sudden change track width location
         /*END OF DEBUGGING*/
-        // TODO: Modify CalcAngleDiff() to return angle difference, instead of servo value difference
-//				if (roundaboutStatus == 1
-//						&& encoder_total_round
-//								> TuningVar.round_encoder_count) {
-//					TuningVar.corner_max = 40;
-//				} else {
-//					TuningVar.corner_max = 32;
-//				}
 
-        if (crossingStatus == 1 || roundaboutStatus == 1) {
-          if (kIsUseCarMgr) {
-            // TODO(Derppening): Remove line below when new servo angles are set
-            static_assert(!kIsUseCarMgr, "Implement new servo angles for main_car1()");
-//            CarManager::SetTargetAngle(/* angle */);
-          } else {
-            pServo->SetDegree(util::clamp<uint16_t>(
-                servo_bounds.kCenter - 1.1 * CalcAngleDiff() + TuningVar.servo_offset,
-                servo_bounds.kRightBound,
-                servo_bounds.kLeftBound));  //Car1: kp = 1.5
-          }
-        } else {
-          if (kIsUseCarMgr) {
-            // TODO(Derppening): Remove line below when new servo angles are set
-            static_assert(!kIsUseCarMgr, "Implement new servo angles for main_car1()");
-//            CarManager::SetTargetAngle(/* angle */);
-          } else {
-            pServo->SetDegree(util::clamp<uint16_t>(
-                servo_bounds.kCenter - 1.2 * CalcAngleDiff() + TuningVar.servo_offset,
-                servo_bounds.kRightBound,
-                servo_bounds.kLeftBound));  //Car1: kp = 1.5
-          }
-        }
+		int curr_servo_error = CalcAngleDiff();
 
-//				char speedstr[100];
-//				sprintf(speedstr, "err:%d", CalcAngleDiff());
-//				pLcd->SetRegion(Lcd::Rect(0,0,128,15));
-//				pWriter->WriteString(speedstr);
+		pServo->SetDegree(util::clamp<uint16_t>(
+                servo_bounds.kCenter - (1.3 * curr_servo_error + 0 * (curr_servo_error - prev_servo_error)),
+                servo_bounds.kRightBound,
+                servo_bounds.kLeftBound));
+		prev_servo_error = curr_servo_error;
+
         /*MOTOR PROTECTION*/
 //        if (!kIsUseCarMgr) {
 //        encoder0.Update();
@@ -1692,7 +1575,6 @@ void main_car2(bool debug_) {
 //       }
 //        }
 
-        CarManager::UpdateParameters();
       }
     }
 
