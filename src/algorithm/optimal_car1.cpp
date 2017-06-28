@@ -71,7 +71,6 @@ uint16_t prev_corner_y;
 
 /*FOR OVERTAKING*/
 bool is_front_car = true;
-bool other_has_exited = false;
 bool stop_before_roundexit = true;
 
 bool debug = true;
@@ -696,9 +695,8 @@ Feature featureIdent_Corner() {
 				&& roundaboutStatus == 0
 				&& crossingStatus == 0/*Temporary close*/) {
 			//All black
-			// TODO(Derppening): Figure out the use of the following two lines
-			pEncoder0->Update();
-			pEncoder1->Update();
+//			pEncoder0->Update();
+//			pEncoder1->Update();
 			encoder_total_round = 0;
 			roundaboutStatus = 1; //Detected
 			//			feature_start_time = System::Time(); // Mark the startTime of latest enter time
@@ -711,8 +709,7 @@ Feature featureIdent_Corner() {
 				&& crossingStatus == 0
 				&& roundaboutStatus == 0) // avoid double check for crossing when inside the crossing (encoder_total_cross<2500)
 		{
-			// TODO(Derppening): Figure out the use of the following line
-			pEncoder0->Update();
+//			pEncoder0->Update();
 			encoder_total_cross = 0;
 			crossingStatus = 1; //Detected
 			//			feature_start_time = System::Time(); // Mark the startTime of latest enter time
@@ -794,8 +791,7 @@ Feature featureIdent_Corner() {
 													- left_corners.points.front().second)
 													+ (left_corners.points.front().first
 															+ right_corners.points.front().first) / 2;
-				// TODO(Derppening): Figure out the use of the following line
-				pEncoder0->Update();
+//				pEncoder0->Update();
 				crossingStatus = 1; //Detected
 				encoder_total_cross = 0;
 				return Feature::kCross;
@@ -871,9 +867,8 @@ Feature featureIdent_Corner() {
 			if (meet_exit) {
 				//roundaboutStatus = 0;
 				exit_round_ready = false;
-				// TODO(Derppening): Figure out the use of the following two lines
-				pEncoder0->Update();
-				pEncoder1->Update();
+//				pEncoder0->Update();
+//				pEncoder1->Update();
 				encoder_total_exit = 0;
 				roundaboutExitStatus = 1;
 				return Feature::kRoundaboutExit;
@@ -888,17 +883,16 @@ Feature featureIdent_Corner() {
 					is_front_car = false;
 					// roundaboutStatus = 0;
 					exit_round_ready = false;
-					// TODO(Derppening): Figure out the use of the following two lines
-					pEncoder0->Update();
-					pEncoder1->Update();
+//					pEncoder0->Update();
+//					pEncoder1->Update();
 					encoder_total_exit = 0;
-					roundaboutExitStatus = 1;
 					pBT->resetFinishOvertake();
-					return Feature::kRoundaboutExit;
 				}
 				else{
 					stop_before_roundexit = true;
 				}
+				roundaboutExitStatus = 1;
+				return Feature::kRoundaboutExit;
 			}
 		}
 		//	  }
@@ -978,8 +972,8 @@ void GenPath(Feature feature) {
 	}
 	if (crossingStatus == 1
 			&& encoder_total_cross < TuningVar.cross_encoder_count) { //Gen new path by searching midpoint
-		pEncoder0->Update();
-		encoder_total_cross += pEncoder0->GetCount();
+//		pEncoder0->Update÷();
+		encoder_total_cross += curr_enc_val_left;
 		uint16_t new_right_x;
 		uint16_t new_left_x;
 		// find new right edge
@@ -1034,9 +1028,9 @@ void GenPath(Feature feature) {
 			&& abs(encoder_total_round)
 	< TuningVar.round_encoder_count/*abs(System::Time() - feature_start_time) < TuningVar.feature_inside_time*/) {
 		// TODO(Derppening): Figure out the use of the lines below
-		pEncoder0->Update();
-		pEncoder1->Update();
-		encoder_total_round += pEncoder0->GetCount()/*(pEncoder0->GetCount() + pEncoder1->GetCount()) / 2*/;//Because for exit/enter, the car will first left then right which destroy the encoder
+//		pEncoder0->Update();
+//		pEncoder1->Update();
+		encoder_total_round += curr_enc_val_left/*(pEncoder0->GetCount() + pEncoder1->GetCount()) / 2*/;//Because for exit/enter, the car will first left then right which destroy the encoder
 		//		feature = Feature::kRoundabout;
 	}
 
@@ -1055,9 +1049,9 @@ void GenPath(Feature feature) {
 	if (roundaboutExitStatus == 1
 			&& abs(encoder_total_exit) < TuningVar.roundExit_encoder_count) {//TODO: Be care of back turning of motor when stop will affect encoder value
 		// TODO(Derppening): Figure out the use of the lines below
-		pEncoder0->Update();
-		pEncoder1->Update();
-		encoder_total_exit += pEncoder0->GetCount()/*(pEncoder0->GetCount() + pEncoder1->GetCount()) / 2*/;
+//		pEncoder0->Update();
+//		pEncoder1->Update();
+		encoder_total_exit += curr_enc_val_left/*(pEncoder0->GetCount() + pEncoder1->GetCount()) / 2*/;
 		feature = Feature::kRoundaboutExit;
 	}
 
@@ -1403,8 +1397,8 @@ void StartlineOvertake() {
 				servo_bounds.kRightBound,
 				servo_bounds.kLeftBound));
 
-		pEncoder0->Update();
-		cnt += pEncoder0->GetCount();
+//		pEncoder0->Update();
+		cnt += curr_enc_val_left;
 		if (cnt > 2600) return;
 	}
 }
@@ -1538,8 +1532,8 @@ void main_car1(bool debug_) {
 					pMotor1->SetPower(0);
 				}
 				else
-					pMotor0->SetPower(220);
-					pMotor1->SetPower(220);
+					pMotor0->SetPower(210);
+					pMotor1->SetPower(210);
 
 
 				//        Timer::TimerInt new_time = System::Time();
@@ -1650,8 +1644,8 @@ void main_car1(bool debug_) {
 						target_enc_val_right = target_enc_val * (1 + differential(delta_degree));
 					}
 
-					pMotor0->SetPower(0 * (target_enc_val_left - curr_enc_val_left) + 0 * cum_enc_error_left);
-					pMotor1->SetPower(0 * (target_enc_val_right - curr_enc_val_right) + 0 * cum_enc_error_right);
+					pMotor0->SetPower(10 * (target_enc_val_left - curr_enc_val_left) + 0 * cum_enc_error_left);
+					pMotor1->SetPower(10 * (target_enc_val_right - curr_enc_val_right) + 0 * cum_enc_error_right);
 				}
 
 			}
