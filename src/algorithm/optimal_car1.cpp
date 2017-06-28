@@ -70,7 +70,7 @@ uint16_t prev_corner_x; //store the latest corner coordinate appears last time d
 uint16_t prev_corner_y;
 
 /*FOR OVERTAKING*/
-bool is_front_car = true;
+bool is_front_car = false;
 bool stop_before_roundexit = true;
 
 bool debug = true;
@@ -420,7 +420,7 @@ bool FindOneLeftEdge() {
 	}
 
 	//check if the point is the point closest to corners
-	if (CornerCheck < roundabout_nearest_corner_cnt_left) {
+	if (CornerCheck < roundabout_nearest_corner_cnt_left && last.second <= TuningVar.nearest_corner_threshold) {
 		roundabout_nearest_corner_cnt_left = CornerCheck;
 		roundabout_nearest_corner_left = last;
 	}
@@ -522,7 +522,7 @@ bool FindOneRightEdge() {
 	}
 
 	//check if the point is the point closest to corners
-	if (CornerCheck < roundabout_nearest_corner_cnt_right) {
+	if (CornerCheck < roundabout_nearest_corner_cnt_right && last.second <= TuningVar.nearest_corner_threshold) {
 		roundabout_nearest_corner_cnt_right = CornerCheck;
 		roundabout_nearest_corner_right = last;
 	}
@@ -807,17 +807,17 @@ Feature featureIdent_Corner() {
 		exit_round_ready = true; // Detect one corner
 	}
 	/*FOR DEBUGGING*/
-	if (debug) {
-		//		char temp_1[100];
-		//		sprintf(temp_1, "Ycor:%d", abs(roundabout_nearest_corner_left.second - carMid.second));
-		//		pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
-		//		pWriter->WriteString(temp_1);
-		//		pLcd->SetRegion(Lcd::Rect(0,30,128,15));
-		//		exit_round_ready?pWriter->WriteString("ready"):pWriter->WriteString("Not ready");
-		//		pLcd->SetRegion(Lcd::Rect(0,45,128,15));
-		//		roundaboutStatus?pWriter->WriteString("RS = 1"):pWriter->WriteString("RS = 0");
-		//		pLcd->SetRegion(Lcd::Rect(0,56,128,15));
-		//		roundaboutExitStatus?pWriter->WriteString("RSE = 1"):pWriter->WriteString("RSE = 0");
+	if (true) {
+				char temp_1[100];
+//				sprintf(temp_1, "Ycor:%d", abs(roundabout_nearest_corner_right.second - carMid.second));
+//				pLcd->SetRegion(Lcd::Rect(0, 75, 128, 15));
+//				pWriter->WriteString(temp_1);
+				pLcd->SetRegion(Lcd::Rect(0,30,128,15));
+				exit_round_ready?pWriter->WriteString("ready"):pWriter->WriteString("Not ready");
+				pLcd->SetRegion(Lcd::Rect(0,45,128,15));
+				roundaboutStatus?pWriter->WriteString("RS = 1"):pWriter->WriteString("RS = 0");
+				pLcd->SetRegion(Lcd::Rect(0,56,128,15));
+				roundaboutExitStatus?pWriter->WriteString("RSE = 1"):pWriter->WriteString("RSE = 0");
 	}
 
 	/*FOR DEBUGGING*/
@@ -855,6 +855,12 @@ Feature featureIdent_Corner() {
 			meet_exit = abs(roundabout_nearest_corner_right.second - carMid.second) < TuningVar.exit_action_dist;
 		}
 		//TODO: receive buffer message: only keep moving when receiving exit message
+		/*FOR DEBUGGING*/
+		if(debug){
+			pLcd->SetRegion(Lcd::Rect(0,100,128,15));
+			meet_exit?pWriter->WriteString("Meet"):pWriter->WriteString("Not meet exit");
+		}
+
 		if(!is_front_car){//back car
 			stop_before_roundexit = false;
 			if (meet_exit) {
@@ -870,7 +876,7 @@ Feature featureIdent_Corner() {
 		else{
 			if (meet_exit) {
 				//GO
-				if(pBT->hasFinishedOvertake()){
+				if(/*pBT->hasFinishedOvertake()*/false){
 					stop_before_roundexit = false;
 					// roundaboutStatus = 0;
 					exit_round_ready = false;
@@ -880,6 +886,7 @@ Feature featureIdent_Corner() {
 					pBT->resetFinishOvertake();
 				}
 				else{
+					encoder_total_exit = 0;//clear history data to avoid immediately judged as "finish exit"
 					stop_before_roundexit = true;
 				}
 				roundaboutExitStatus = 1;
@@ -1008,7 +1015,7 @@ void GenPath(Feature feature) {
 		pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
 		pWriter->WriteString(temp);
 		sprintf(temp, "EntEnc:%d", abs(encoder_total_round));
-		pLcd->SetRegion(Lcd::Rect(0, 85, 128, 15));
+		pLcd->SetRegion(Lcd::Rect(0, 15, 128, 15));
 		pWriter->WriteString(temp);
 	}
 	/*END OF DEBUGGING*/
@@ -1521,6 +1528,15 @@ void main_car1(bool debug_) {
 
 			if (time_img % 10 == 0) {
 				//Overtake motor control
+				/*FOR DEBUGGING*/
+				if(debug){
+					pLcd->SetRegion(Lcd::Rect(0,85,128,15));
+					stop_before_roundexit?pWriter->WriteString("StopB"):pWriter->WriteString("No StopB");
+				}
+				pLcd->SetRegion(Lcd::Rect(0,0,128,15));
+				is_front_car?pWriter->WriteString("Front"):pWriter->WriteString("Back");
+
+
 				if (roundaboutExitStatus == 1 && stop_before_roundexit) {
 					/*Consider braking*/
 					pMotor0->SetPower(0);
@@ -1554,9 +1570,9 @@ void main_car1(bool debug_) {
 				//		sprintf(timestr, "AngleOS: %d", servoAngle);
 				//		pServo->SetDegree(servo_bounds.kCenter + servoAngle);
 				//		pWriter->WriteString(timestr);
-				//		PrintWorldImage();
-				//		PrintCorner(left_corners, Lcd::kPurple); //Print left_corner
-				//		PrintCorner(right_corners, Lcd::kPurple); //Print right_corner
+//						PrintWorldImage();
+//						PrintCorner(left_corners, Lcd::kPurple); //Print left_corner
+//						PrintCorner(right_corners, Lcd::kPurple); //Print right_corner
 				//		pLcd->SetRegion(Lcd::Rect(carMid.first, carMid.second, 5, 5));
 				//		pLcd->FillColor(Lcd::kRed);
 				if (debug) {
@@ -1608,7 +1624,7 @@ void main_car1(bool debug_) {
 				int curr_servo_error = CalcAngleDiff();
 
 				pServo->SetDegree(util::clamp<uint16_t>(
-		                servo_bounds.kCenter - (1.3 * curr_servo_error + 0 * (curr_servo_error - prev_servo_error)),
+		                servo_bounds.kCenter - (0.6 * curr_servo_error + 0 * (curr_servo_error - prev_servo_error)),
 		                servo_bounds.kRightBound,
 		                servo_bounds.kLeftBound));
 				prev_servo_error = curr_servo_error;
