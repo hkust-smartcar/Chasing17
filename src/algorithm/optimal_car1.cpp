@@ -1644,8 +1644,13 @@ void main_car1(bool debug_) {
 						target_enc_val_right = target_enc_val * (1 + differential(delta_degree));
 					}
 
+<<<<<<< HEAD
 					pMotor0->SetPower(10 * (target_enc_val_left - curr_enc_val_left) + 0 * cum_enc_error_left);
 					pMotor1->SetPower(10 * (target_enc_val_right - curr_enc_val_right) + 0 * cum_enc_error_right);
+=======
+					pMotor0->SetPower(max(pMotor0->GetPower() + 1 * (target_enc_val_left - curr_enc_val_left) + 0 * cum_enc_error_left, 400));
+					pMotor1->SetPower(max(pMotor1->GetPower() + 1 * (target_enc_val_right - curr_enc_val_right) + 0 * cum_enc_error_right, 400));
+>>>>>>> e1483b5ac7fda91968939fb5bf9a14c508cde830
 				}
 
 			}

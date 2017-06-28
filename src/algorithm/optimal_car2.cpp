@@ -30,6 +30,7 @@
 #include "algorithm/worldview/car2.h"
 
 #include <cmath>
+#include <sstream>
 
 using libsc::AlternateMotor;
 using libsc::DirEncoder;
@@ -50,6 +51,12 @@ namespace optimal {
 namespace car2 {
 
 namespace {
+//BT listener
+std::string inputStr;
+bool tune = false;
+std::vector<double> constVector;
+
+
 Edges left_edge;
 Edges right_edge;
 Edges path;
@@ -82,9 +89,14 @@ std::pair<int, int> roundabout_nearest_corner_right{0, 0};
 int prev_servo_error = 0;
 int curr_enc_val_left = 0;
 int curr_enc_val_right = 0;
-int target_enc_val = 0;
+int target_enc_val = 8000;
+int target_enc_val_left = 0;
+int target_enc_val_right = 0;
 int cum_enc_error_left = 0;
 int cum_enc_error_right = 0;
+int prev_enc_error = 0;
+
+float Kp = 0, Ki = 0, Kd = 0;
 
 
 const Byte* CameraBuf;
@@ -95,7 +107,8 @@ St7735r* pLcd = nullptr;
 Led* pLed3 = nullptr;
 LcdTypewriter* pWriter = nullptr;
 FutabaS3010* pServo = nullptr;
-BTComm* pBT = nullptr;
+JyMcuBt106* pBTovertake = nullptr;
+//BTComm* pBT = nullptr;
 DirEncoder* pEncoder0 = nullptr;
 DirEncoder* pEncoder1 = nullptr;
 AlternateMotor* pMotor0 = nullptr;
@@ -130,6 +143,66 @@ void PrintEdge(Edges, uint16_t);
 void PrintImage();
 void PrintSuddenChangeTrackWidthLocation(uint16_t);
 void PrintWorldImage();
+
+
+
+/*
+ * @brief: bluetooth listener for processing tuning
+ * */
+bool bluetoothListener(const Byte *data, const size_t size) {
+	if (data[0] == 'P') {
+			//space
+	}
+
+	if (data[0] == 't') {
+		tune = 1;
+		inputStr = "";
+	}
+	if (tune) {
+
+		unsigned int i = 0;
+		while (i<size) {
+			if (data[i] != 't' && data[i] != '\n') {
+				inputStr += (char)data[i];
+			} else if (data[i] == '\n') {
+				tune = 0;
+				break;
+			}
+			i++;
+		}
+		if (!tune) {
+			constVector.clear();
+			char * pch;
+			pch = strtok(&inputStr[0], ",");
+			while (pch != NULL){
+				double constant;
+				std::stringstream(pch) >> constant;
+				constVector.push_back(constant);
+				pch = strtok (NULL, ",");
+			}
+
+
+//			KP   = constVector[0];
+			Kp = constVector[0];
+			Ki = constVector[1];
+			Kd = constVector[2];
+			target_enc_val_left = constVector[3];
+			target_enc_val_right = constVector[4];
+
+
+//			now_angle = constVector[1];
+		}
+	}
+	//	else if (data[0] == 'a') {
+	//		servoPtr->SetDegree(900);
+	//	} else if (data[0] == 'd') {
+	//		servoPtr->SetDegree(430);
+	//	} else if (data[0] == 'A' || data[0] == 'D') {
+	//		servoPtr->SetDegree(700);
+	//	}
+	return 1;
+}
+
 
 /**
  * @brief To fetch filtered bit, 1 = black; 0 = white
@@ -1356,8 +1429,10 @@ void main_car2(bool debug_) {
   JyMcuBt106::Config ConfigBT;
   ConfigBT.id = 0;
   ConfigBT.baud_rate = libbase::k60::Uart::Config::BaudRate::k115200;
-  BTComm bt(ConfigBT);
-  pBT = &bt;
+  ConfigBT.rx_isr = &bluetoothListener;
+  JyMcuBt106 bt(ConfigBT);
+//  BTComm bt(ConfigBT);
+//  pBT = &bt;
 
   St7735r::Config lcdConfig;
   lcdConfig.is_revert = true;
@@ -1386,14 +1461,14 @@ void main_car2(bool debug_) {
   pServo->SetDegree(servo_bounds.kCenter);
   System::DelayMs(1000);
 
-  while (true) {
-    if (joystick.GetState() == Joystick::State::kRight) {
-      TuningVar.roundabout_turn_left = false;
-      break;
-    } else if (joystick.GetState() == Joystick::State::kLeft) {
-      break;
-    }
-  }
+//  while (true) {
+//    if (joystick.GetState() == Joystick::State::kRight) {
+//      TuningVar.roundabout_turn_left = false;
+//      break;
+//    } else if (joystick.GetState() == Joystick::State::kLeft) {
+//      break;
+//    }
+//  }
 
 //	while(true){
 //		if(joystick.GetState() != Joystick::State::kIdle){
@@ -1415,18 +1490,35 @@ void main_car2(bool debug_) {
       led0.SetEnable(time_img % 500 >= 250);
 
       if (time_img % 10 == 0) {
+    	  /*Send Data*/
+    	  			  char speedChar[15] = {};
+    	  			  //				sprintf(speedChar, "%.1f,%.3f,%.4f,%.4f,%.3f,%.4f,%.4f\n", 1.0, leftPowSpeedP, leftPowSpeedI, leftPowSpeedD, rightPowSpeedP, rightPowSpeedI, rightPowSpeedD);
+    	  			  //				sprintf(speedChar, "%.1f,%.2f,%.2f\n", 1.0, targetAng, tempTargetAng);
+    	  			  //				sprintf(speedChar, "%.1f,%.2f,%.2f\n", 1.0, leftSpeed, leftTempTargetSpeed);
+    	  			  //				sprintf(speedChar, "%.1f,%.2f,%.2f\n", 1.0, rightSpeed, rightTempTargetSpeed);
+    	  			  //				sprintf(speedChar, "%.1f,%.2f,%.2f,%.2f,%.2f\n", 1.0, targetAng, tempTargetAng, curSpeed, targetSpeed);
+    	  			  //			  	sprintf(speedChar, "%.1f,%.3f\n", 1.0, dt);
+    	  		  sprintf(speedChar, "%.1f, %d,%d,%d,%d\n",1.0,0-curr_enc_val_right,target_enc_val_right,curr_enc_val_left,target_enc_val_left);
+
+//    	  			  std::string speedStr = speedChar;
+    	  			  const Byte speedByte = 85;
+    	  			  bt.SendBuffer(&speedByte, 1);
+    	  			  bt.SendStr(speedChar);
+
+
+
     	Timer::TimerInt algo_start_time = System::Time();
         Capture(); //Capture until two base points are identified
-        if (FindStoppingLine() && time_img - startTime > 10000) {
-            pMotor0->SetClockwise(false);
-            pMotor1->SetClockwise(true);
-            pMotor0->SetPower(1000);
-            pMotor1->SetPower(1000);
-            System::DelayMs(18);
-            pMotor0->SetPower(0);
-            pMotor1->SetPower(0);
-          pWriter->WriteString("Stopping Line Detected");
-        }
+//        if (FindStoppingLine() && time_img - startTime > 10000) {
+//            pMotor0->SetClockwise(false);
+//            pMotor1->SetClockwise(true);
+//            pMotor0->SetPower(1000);
+//            pMotor1->SetPower(1000);
+//            System::DelayMs(18);
+//            pMotor0->SetPower(0);
+//            pMotor1->SetPower(0);
+//          pWriter->WriteString("Stopping Line Detected");
+//        }
         if (roundaboutExitStatus == 1) {
           TuningVar.roundabout_offset = 20;
         } else {
@@ -1498,30 +1590,64 @@ void main_car2(bool debug_) {
 		/* Motor PID */
 		pEncoder0->Update();
 		pEncoder1->Update();
-		curr_enc_val_left = std::abs(pEncoder0->GetCount());
-		curr_enc_val_right = std::abs(pEncoder1->GetCount());
+		curr_enc_val_left = (pEncoder0->GetCount());
+		curr_enc_val_right = (pEncoder1->GetCount());
+
+		int delta_degree = (std::abs(pServo->GetDegree() - servo_bounds.kCenter))/10;
+//		target_enc_val_left = 0, target_enc_val_right = 0;
+//			target_enc_val_left = target_enc_val_right = 200; //actual speed = 5800 * cycle * speed
+
+//			if (pServo->GetDegree() <= servo_bounds.kCenter){ //turning right
+//				//left motor speeds up, right motor slows down
+//				target_enc_val_left = target_enc_val * (1 + differential(delta_degree));
+//				target_enc_val_right = target_enc_val * (1 - differential(delta_degree));
+//			} else { //turning left
+//				//left motor slows down, right motor speeds up
+//				target_enc_val_left = target_enc_val * (1 - differential(delta_degree));
+//				target_enc_val_right = target_enc_val * (1 + differential(delta_degree));
+//			}
+
+//		char temp[100];
+//		sprintf(temp, "target=%d,\n%d,\n%d,\n%d,\n%d", target_enc_val,target_enc_val_left,target_enc_val_right,
+//				curr_enc_val_left,curr_enc_val_right);
+//		pLcd->SetRegion(Lcd::Rect(0,0,128,15));
+//		pWriter->WriteString(temp);
+		int left_power = util::clamp(Kp * (target_enc_val_left - curr_enc_val_left) + Ki * cum_enc_error_left + Kd * (target_enc_val_left - curr_enc_val_left - prev_enc_error), 0.0f, 400.0f);
+		int right_power = util::clamp(Kp * (target_enc_val_right + curr_enc_val_right) + Ki * cum_enc_error_right + Kd * (target_enc_val_right + curr_enc_val_right - prev_enc_error), 0.0f, 400.0f);
+		pMotor0->SetPower(left_power);
+		pMotor1->SetPower(right_power);
+		cum_enc_error_left += target_enc_val_left - curr_enc_val_left;
+		cum_enc_error_right += target_enc_val_right + curr_enc_val_right;
+		prev_enc_error = target_enc_val_right - curr_enc_val_right;
 		/* Motor Protection */
-		if ((curr_enc_val_left < 10 || curr_enc_val_right < 10) && time_img - startTime > 10000){
-			pMotor0->SetPower(0);
-			pMotor1->SetPower(0);
-			target_enc_val = cum_enc_error_left = cum_enc_error_right = 0;
-		} else {
-			int delta_degree = (std::abs(pServo->GetDegree() - servo_bounds.kCenter))/10;
-			int target_enc_val_left = 0, target_enc_val_right = 0;
+//		if ((curr_enc_val_left < 10 || curr_enc_val_right < 10) && time_img - startTime > 1000){
+//			pMotor0->SetPower(0);
+//			pMotor1->SetPower(0);
+//			target_enc_val = cum_enc_error_left = cum_enc_error_right = 0;
+//		} else {
+//			int delta_degree = (std::abs(pServo->GetDegree() - servo_bounds.kCenter))/10;
+//			target_enc_val_left = 0, target_enc_val_right = 0;
+////			target_enc_val_left = target_enc_val_right = 200; //actual speed = 5800 * cycle * speed
+//
+////			if (pServo->GetDegree() <= servo_bounds.kCenter){ //turning right
+////				//left motor speeds up, right motor slows down
+////				target_enc_val_left = target_enc_val * (1 + differential(delta_degree));
+////				target_enc_val_right = target_enc_val * (1 - differential(delta_degree));
+////			} else { //turning left
+////				//left motor slows down, right motor speeds up
+////				target_enc_val_left = target_enc_val * (1 - differential(delta_degree));
+////				target_enc_val_right = target_enc_val * (1 + differential(delta_degree));
+////			}
+//
+//			char temp[100];
+//			sprintf(temp, "target=%d,\n%d,\n%d,\n%d,\n%d", target_enc_val,target_enc_val_left,target_enc_val_right,
+//					curr_enc_val_left,curr_enc_val_right);
+//			pLcd->SetRegion(Lcd::Rect(0,0,128,15));
+//			pWriter->WriteString(temp);
+//			pMotor0->SetPower(min(Kp * (target_enc_val_left - curr_enc_val_left) + 0 * cum_enc_error_left, 400));
+//			pMotor1->SetPower(min(Kp * (target_enc_val_right - curr_enc_val_right) + 0 * cum_enc_error_right, 400));
+//		}
 
-			if (pServo->GetDegree() <= servo_bounds.kCenter){ //turning right
-				//left motor speeds up, right motor slows down
-				target_enc_val_left = target_enc_val * (1 + differential(delta_degree));
-				target_enc_val_right = target_enc_val * (1 - differential(delta_degree));
-			} else { //turning left
-				//left motor slows down, right motor speeds up
-				target_enc_val_left = target_enc_val * (1 - differential(delta_degree));
-				target_enc_val_right = target_enc_val * (1 + differential(delta_degree));
-			}
-
-			pMotor0->SetPower(0 * (target_enc_val_left - curr_enc_val_left) + 0 * cum_enc_error_left);
-			pMotor1->SetPower(0 * (target_enc_val_right - curr_enc_val_right) + 0 * cum_enc_error_right);
-		}
 
       }
     }
