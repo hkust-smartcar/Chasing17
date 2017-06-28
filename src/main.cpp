@@ -15,6 +15,10 @@
 #include "libsc/lcd_console.h"
 #include "libsc/st7735r.h"
 #include "libsc/system.h"
+#include "libsc/lcd_typewriter.h"
+#include "libsc/joystick.h"
+#include "libbase/k60/flash.h"
+#include "debug_console.h"
 
 #include "algorithm/distance.h"
 #include "util/testground.h"
@@ -36,6 +40,9 @@ using libsc::Lcd;
 using libsc::LcdConsole;
 using libsc::St7735r;
 using libsc::System;
+using libsc::LcdTypewriter;
+using libsc::Joystick;
+using libbase::k60::Flash;
 
 enum struct Algorithm {
   kOptimal,
@@ -50,8 +57,8 @@ int main() {
   ConfigBM.voltage_ratio = 0.4;
   BatteryMeter bm(ConfigBM);
 
-  // Battery Check
   {
+	// Battery Check
     St7735r::Config lcd_config;
     lcd_config.is_revert = true;
     St7735r lcd(lcd_config);
@@ -59,21 +66,54 @@ int main() {
 
     LcdConsole::Config console_config;
     console_config.lcd = &lcd;
-    LcdConsole console(console_config);
+    LcdConsole lcdconsole(console_config);
 
     float voltage;
     do {
       voltage = bm.GetVoltage();
 
-      console.SetTextColor(voltage <= 7.4 ? Lcd::kRed : Lcd::kGreen);
+      lcdconsole.SetTextColor(voltage <= 7.4 ? Lcd::kRed : Lcd::kGreen);
 
       char temp[32];
       sprintf(temp, " Voltage: %.2fV", voltage);
-      util::ConsoleClearRow(&console, 0);
-      console.WriteString(temp);
+      util::ConsoleClearRow(&lcdconsole, 0);
+      lcdconsole.WriteString(temp);
+
+      lcdconsole.WriteString("\nlong press hard reset");
 
       System::DelayMs(1000);
     } while (voltage <= 7.4);
+
+    LcdTypewriter::Config writerconfig;
+	writerconfig.lcd = &lcd;
+	LcdTypewriter writer(writerconfig);
+
+	Joystick::Config joystick_config;
+	joystick_config.id = 0;
+	joystick_config.is_active_low = true;
+	Joystick joystick(joystick_config);
+
+	Flash::Config flash_config;
+	Flash flash(flash_config);
+
+	DebugConsole console(&joystick,&lcd,&writer);
+	bool isCar1=true,car_img;
+	if(joystick.GetState()==Joystick::State::kIdle)
+		console.SetFlash(&flash);
+	console.PushItem("car",&isCar1,"1","2");
+	console.Load();
+	car_img = isCar1;
+
+	typedef algorithm::optimal::car1::TuningVar V;
+	V* v = &algorithm::optimal::car2::TuningVar;
+
+
+
+
+
+
+	console.EnterDebug(">> start <<");
+
   }
 
   // modify next line to switch between algorithms
