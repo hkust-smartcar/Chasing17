@@ -20,51 +20,27 @@
 using libsc::System;
 
 uint32_t FcYyUsV4::impulse_start_time_ = 0;
-uint16_t FcYyUsV4::distance_ = 0;
-uint16_t FcYyUsV4::average_distance_ = 0;
-std::vector<uint16_t> FcYyUsV4::last_ten_distance_{};
-uint16_t FcYyUsV4::std_deviation_ = 0;
+float FcYyUsV4::distance_ = 0;
+bool FcYyUsV4::reset_flag = false;
+uint16_t FcYyUsV4::rep_cnt = 0;
 
 void FcYyUsV4::listener(Gpi* gpi) {
   if (gpi->Get()) {
-    // TODO(Derppening): Determine why we switched to System::Time() again
-    impulse_start_time_ = System::Time();  // Time10Us();
-    average_distance_ = 0;
-    std_deviation_ = 0;
-
+    impulse_start_time_ = System::TimeIn125us();
   } else {
-    uint16_t dist = (System::Time() - impulse_start_time_) * 6.8;
-    if (dist > 2000) { //max: 5500, filter > 2000mm
-      distance_ = kMaxDistance; average_distance_ = 0; return;
-    } else if (dist < 20) {
-      distance_ = kMinDistance; average_distance_ = 0; return;
-    } else {
-      distance_ = dist;
+    float dist = (System::TimeIn125us() - impulse_start_time_) * 42.5; //unit: mm
+    if (reset_flag) {
+    	distance_ = dist;
+    	reset_flag = false;
+    	rep_cnt = 0;
+    	return;
     }
 
-    uint16_t old_average_distance_ = average_distance_;
-    uint16_t old_std_deviation_ = std_deviation_;
+	if (dist < 1000 && std::abs(dist - distance_) < 100) {
+		distance_ = dist;
+		rep_cnt = 0;
+	} else if (++rep_cnt == 500) reset_flag = true;
 
-    //average the distance
-    last_ten_distance_.push_back(distance_);
-    while (last_ten_distance_.size() > 10) last_ten_distance_.erase(last_ten_distance_.begin());
-    average_distance_ = 0;
-    for (auto&& m : last_ten_distance_){
-      average_distance_ += m;
-    }
-    average_distance_ /= static_cast<int32_t>(last_ten_distance_.size());
-
-    //find S.D.
-    std_deviation_ = 0;
-    for (auto&& m : last_ten_distance_){
-      std_deviation_ += (m-average_distance_) * (m-average_distance_);
-    }
-    std_deviation_ = std::sqrt(std_deviation_ / last_ten_distance_.size());
-
-    if (std_deviation_ > 150){  // filter outliers
-      average_distance_ = old_average_distance_;
-      std_deviation_ = old_std_deviation_;
-    }
   }
 }
 
@@ -72,6 +48,10 @@ FcYyUsV4::FcYyUsV4(libbase::k60::Pin::Name pin) {
   gpi_config_.pin = pin;
   gpi_config_.interrupt = Pin::Config::Interrupt::kBoth;
   gpi_config_.isr = listener;
-  gpi_config_.config.set(Pin::Config::kPassiveFilter);
+//  gpi_config_.config.set(Pin::Config::kPassiveFilter);
   m_pin_ = Gpi(gpi_config_);
+}
+
+void FcYyUsV4::resetFilter(){
+	reset_flag = true;
 }

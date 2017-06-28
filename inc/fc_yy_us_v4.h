@@ -40,8 +40,12 @@ class FcYyUsV4 {
    * @return The distance measured by the sensor (mm)
    */
   uint16_t GetDistance() const { return distance_; }
-  uint16_t GetAvgDistance() const { return average_distance_; }
-  uint16_t GetSD() const { return std_deviation_; }
+  uint16_t GetAvgDistance() const { return distance_; }
+
+  /**
+   * @brief Reset the filter
+   */
+  void resetFilter();
 
  private:
   static void listener(Gpi* gpi);
@@ -50,11 +54,9 @@ class FcYyUsV4 {
   Gpi::Config gpi_config_;
 
   static uint32_t impulse_start_time_;
-  static uint16_t distance_;
-
-  static std::vector<uint16_t> last_ten_distance_;
-  static uint16_t average_distance_;
-  static uint16_t std_deviation_;
+  static float distance_;
+  static bool reset_flag;
+  static uint16_t rep_cnt;
 };
 
 #endif  // CHASING17_FCYYUSV4_H_
