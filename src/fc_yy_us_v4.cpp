@@ -29,7 +29,7 @@ void FcYyUsV4::listener(Gpi* gpi) {
     impulse_start_time_ = System::TimeIn125us();
   } else {
     float dist = (System::TimeIn125us() - impulse_start_time_) * 42.5; //unit: mm
-    if (reset_flag) {
+    if (reset_flag && dist < 1000) {
     	distance_ = dist;
     	reset_flag = false;
     	rep_cnt = 0;
@@ -39,7 +39,7 @@ void FcYyUsV4::listener(Gpi* gpi) {
 	if (dist < 1000 && std::abs(dist - distance_) < 100) {
 		distance_ = dist;
 		rep_cnt = 0;
-	} else if (++rep_cnt == 500) reset_flag = true;
+	} else if (++rep_cnt == 10) reset_flag = true;
 
   }
 }

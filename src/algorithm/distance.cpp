@@ -8,6 +8,7 @@
 #include "libsc/lcd_console.h"
 #include "libsc/system.h"
 #include "libsc/k60/jy_mcu_bt_106.h"
+#include "libsc/joystick.h"
 
 #include "fc_yy_us_v4.h"
 #include "util/util.h"
@@ -25,6 +26,10 @@ void USIRDemo() {
   Led led4(config_led);
 
   FcYyUsV4 US(Pin::Name::kPtb0);
+
+  Joystick::Config config_joystick;
+  config_joystick.id = 0;
+  config_joystick.dispatcher = [&US](const uint8_t id, const Joystick::State which){US.resetFilter();};
 
   St7735r::Config lcd_config;
   lcd_config.is_revert = true;
@@ -52,8 +57,10 @@ void USIRDemo() {
       if (time % 100 == 0) {
         unsigned int dist = US.GetDistance();
         char temp[100];
-        sprintf(temp, "%d\n", dist);
-        bt.SendStr(temp);
+        sprintf(temp, "\tdist = %d\n", dist);
+//        bt.SendStr(temp);
+        pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
+        pWriter->WriteString(temp);
         led4.SetEnable(dist != FcYyUsV4::kMaxDistance && dist != FcYyUsV4::kMinDistance);
         led1.Switch();
       }

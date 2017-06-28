@@ -111,12 +111,12 @@ void Mpc::DoCorrection() {
 
   // add the speed difference in consideration to the cumulative error
   // greater the cumulative error, higher the power
-  cum_error_ += speed_diff * (last_encoder_duration_ / 1000.0);
+  cum_error_ += speed_diff * (last_encoder_duration_);
   motor_->AddPower(static_cast<int16_t>(cum_error_ * kI));
 
   // add the speed difference in consideration to the rate of change of error
   // greater the change, higher the power
-  motor_->AddPower(static_cast<int16_t>((speed_diff - prev_error_) / (last_encoder_duration_ / 1000.0)) * kD);
+  motor_->AddPower(static_cast<int16_t>((speed_diff - prev_error_) / (last_encoder_duration_)) * kD);
   prev_error_ = speed_diff;
 
   // hard limit bounds checking
