@@ -165,7 +165,7 @@ class CarManager final {
     float kD[2];
   };
 
-  static constexpr const PidValues kMotorPidCar1 = {{1.0, 1.0}, {0, 0}, {0, 0}};
+  static constexpr const PidValues kMotorPidCar1 = {{7, 7}, {0.07323, 0.03221}, {0, 0}};
   static constexpr const PidValues kMotorPidCar2 = {{0.5, 0.0}, {0.0, 0.0}, {0, 0.0}};
   static constexpr const PidValues kServoPidCar1 = {{1.0, 0}, {0, 0}, {0, 0}};
   static constexpr const PidValues kServoPidCar2 = {{1.0, 0}, {0, 0}, {0, 0}};

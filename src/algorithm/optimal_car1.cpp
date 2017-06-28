@@ -69,6 +69,8 @@ uint16_t start_y; //For crossing, store the last start point coordinate
 uint16_t start_x;
 uint16_t prev_corner_x; //store the latest corner coordinate appears last time during roundabout
 uint16_t prev_corner_y;
+bool is_back_car = true;
+bool is_front_car = false;
 bool debug = true;
 bool has_inc_width_pt = false;
 bool is_straight_line = false;
