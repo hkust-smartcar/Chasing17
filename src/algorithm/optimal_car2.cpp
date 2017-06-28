@@ -1433,8 +1433,8 @@ void main_car2(bool debug_) {
           TuningVar.roundabout_offset = 20;
         }
         FindEdges();
-        Feature a = featureIdent_Corner();
-        GenPath(a); //Generate path
+        Feature feature = featureIdent_Corner();
+        GenPath(feature); //Generate path
         /*FOR DEBUGGING*/
         if (debug) {
           char time_str[100];
@@ -1461,7 +1461,7 @@ void main_car2(bool debug_) {
           pWriter->WriteString(temp);
 
           PrintEdge(path, Lcd::kGreen); //Print path
-          switch (a) {
+          switch (feature) {
             case Feature::kCross:
               pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
               pWriter->WriteString("Crossing");

@@ -19,6 +19,7 @@
 #include "algorithm/distance.h"
 #include "util/testground.h"
 #include "util/util.h"
+#include "car_manager.h"
 
 namespace libbase {
 namespace k60 {
