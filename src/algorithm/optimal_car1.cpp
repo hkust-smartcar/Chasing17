@@ -14,9 +14,9 @@
 #include <vector>
 #include <cstring>
 #include <sstream>
-#include <stdio.h>
+#include <cstdio>
 
-#include "libsc/alternate_motor.h"
+#include "libsc/dir_motor.h"
 #include "libsc/dir_encoder.h"
 #include "libsc/futaba_s3010.h"
 #include "libsc/joystick.h"
@@ -33,7 +33,7 @@
 #include "util/util.h"
 #include "algorithm/worldview/car1.h"
 
-using libsc::AlternateMotor;
+using libsc::DirMotor;
 using libsc::DirEncoder;
 using libsc::FutabaS3010;
 using libsc::Joystick;
@@ -71,7 +71,7 @@ uint16_t prev_corner_y;
 
 /*FOR OVERTAKING*/
 bool is_front_car = false;
-bool stop_before_roundexit = true;
+bool stop_before_roundexit = false;
 
 bool debug = true;
 bool has_inc_width_pt = false;
@@ -109,8 +109,8 @@ FutabaS3010* pServo = nullptr;
 BTComm* pBT = nullptr;
 DirEncoder* pEncoder0 = nullptr;
 DirEncoder* pEncoder1 = nullptr;
-AlternateMotor* pMotor0 = nullptr;
-AlternateMotor* pMotor1 = nullptr;
+DirMotor* pMotor0 = nullptr;
+DirMotor* pMotor1 = nullptr;
 
 ServoBounds servo_bounds = {1040, 755, 470};
 
@@ -807,7 +807,7 @@ Feature featureIdent_Corner() {
 		exit_round_ready = true; // Detect one corner
 	}
 	/*FOR DEBUGGING*/
-	if (true) {
+	if (debug) {
 				char temp_1[100];
 //				sprintf(temp_1, "Ycor:%d", abs(roundabout_nearest_corner_right.second - carMid.second));
 //				pLcd->SetRegion(Lcd::Rect(0, 75, 128, 15));
@@ -876,7 +876,7 @@ Feature featureIdent_Corner() {
 		else{
 			if (meet_exit) {
 				//GO
-				if(/*pBT->hasFinishedOvertake()*/false){
+				if(pBT->hasFinishedOvertake()){
 					stop_before_roundexit = false;
 					// roundaboutStatus = 0;
 					exit_round_ready = false;
@@ -1452,12 +1452,12 @@ void main_car1(bool debug_) {
 	auto spEncoder1 = util::make_unique<DirEncoder>(ConfigEncoder);
 	pEncoder1 = spEncoder1.get();
 
-	AlternateMotor::Config ConfigMotor;
+	DirMotor::Config ConfigMotor;
 	ConfigMotor.id = 0;
-	auto spMotor0 = util::make_unique<AlternateMotor>(ConfigMotor);
+	auto spMotor0 = util::make_unique<DirMotor>(ConfigMotor);
 	pMotor0 = spMotor0.get();
 	ConfigMotor.id = 1;
-	auto spMotor1 = util::make_unique<AlternateMotor>(ConfigMotor);
+	auto spMotor1 = util::make_unique<DirMotor>(ConfigMotor);
 	pMotor1 = spMotor1.get();
 
 	JyMcuBt106::Config ConfigBT;

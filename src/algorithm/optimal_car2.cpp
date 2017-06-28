@@ -11,7 +11,7 @@
  */
 
 #include "../../inc/algorithm/optimal_car2.h"
-#include "libsc/alternate_motor.h"
+#include "libsc/dir_motor.h"
 #include "libsc/dir_encoder.h"
 #include "libsc/futaba_s3010.h"
 #include "libsc/k60/jy_mcu_bt_106.h"
@@ -32,7 +32,7 @@
 #include <cmath>
 #include <sstream>
 
-using libsc::AlternateMotor;
+using libsc::DirMotor;
 using libsc::DirEncoder;
 using libsc::FutabaS3010;
 using libsc::Joystick;
@@ -107,8 +107,8 @@ FutabaS3010* pServo = nullptr;
 BTComm* pBT = nullptr;
 DirEncoder* pEncoder0 = nullptr;
 DirEncoder* pEncoder1 = nullptr;
-AlternateMotor* pMotor0 = nullptr;
-AlternateMotor* pMotor1 = nullptr;
+DirMotor* pMotor0 = nullptr;
+DirMotor* pMotor1 = nullptr;
 
 ServoBounds servo_bounds = {1145, 845, 545};
 
@@ -890,6 +890,7 @@ Feature featureIdent_Corner() {
 				pBT->resetFinishOvertake();
 			}
 			else{
+				encoder_total_exit = 0;//clear history data to avoid immediately judged as "finish exit"
 				stop_before_roundexit = true;
 			}
 			roundaboutExitStatus = 1;
@@ -1147,20 +1148,20 @@ void GenPath(Feature feature) {
     case Feature::kRoundaboutExit: {
       // Turning left at the entrance - Turning left at the exit
       // Turning left at the entrance - Turning left at the exit
-      if (is_front_car?!roundabout_shortest(TuningVar.roundabout_shortest_flag, roundabout_cnt - 1):roundabout_shortest(TuningVar.roundabout_shortest_flag, roundabout_cnt - 1)) {
-        //ensure the size of left is large enough for turning, size of left will never be 0
-        while ((left_edge.points.size() < TuningVar.roundroad_min_size) && FindOneLeftEdge()) {}
-        //translate right
-        for (int i = 0; i < left_edge.points.size(); i++) {
-          path.push(left_edge.points[i].first + TuningVar.roundabout_offset, left_edge.points[i].second);
-        }
-      } else {
-        while ((right_edge.points.size() < TuningVar.roundroad_min_size) && FindOneRightEdge()) {}
-        for (int i = 0; i < right_edge.points.size(); i++) {
-          path.push(right_edge.points[i].first - TuningVar.roundabout_offset, right_edge.points[i].second);
-        }
-      }
-      break;
+    	if (is_front_car?!roundabout_shortest(TuningVar.roundabout_shortest_flag, roundabout_cnt - 1):roundabout_shortest(TuningVar.roundabout_shortest_flag, roundabout_cnt - 1)) {
+    		//ensure the size of left is large enough for turning, size of left will never be 0
+    		while ((left_edge.points.size() < TuningVar.roundroad_min_size) && FindOneLeftEdge()) {}
+    		//translate right
+    		for (int i = 0; i < left_edge.points.size(); i++) {
+    			path.push(left_edge.points[i].first + TuningVar.roundabout_offset, left_edge.points[i].second);
+    		}
+    	} else {
+    		while ((right_edge.points.size() < TuningVar.roundroad_min_size) && FindOneRightEdge()) {}
+    		for (int i = 0; i < right_edge.points.size(); i++) {
+    			path.push(right_edge.points[i].first - TuningVar.roundabout_offset, right_edge.points[i].second);
+    		}
+    	}
+    	break;
 
 //		/*FOR DEMO ONLY*/
 //		int i_cor_right; //new right edge
@@ -1421,17 +1422,16 @@ void main_car2(bool debug_) {
   auto spEncoder1 = util::make_unique<DirEncoder>(ConfigEncoder);
   pEncoder1 = spEncoder1.get();
 
-  AlternateMotor::Config ConfigMotor;
+  DirMotor::Config ConfigMotor;
   ConfigMotor.id = 0;
-  auto spMotor0 = util::make_unique<AlternateMotor>(ConfigMotor);
+  auto spMotor0 = util::make_unique<DirMotor>(ConfigMotor);
   pMotor0 = spMotor0.get();
   ConfigMotor.id = 1;
-  auto spMotor1 = util::make_unique<AlternateMotor>(ConfigMotor);
+  auto spMotor1 = util::make_unique<DirMotor>(ConfigMotor);
   pMotor1 = spMotor1.get();
   pMotor0->SetClockwise(true);
   pMotor1->SetClockwise(false);
 
-  auto spMpc = util::make_unique<util::MpcDual>(spMotor0.get(), spMotor1.get(), spEncoder0.get(), spEncoder1.get());
 
   JyMcuBt106::Config ConfigBT;
   ConfigBT.id = 0;
