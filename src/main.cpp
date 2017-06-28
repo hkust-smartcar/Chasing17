@@ -20,6 +20,7 @@
 #include "util/testground.h"
 #include "util/util.h"
 #include "car_manager.h"
+#include "util/pid_tuning.h"
 
 namespace libbase {
 namespace k60 {
@@ -41,7 +42,8 @@ using libsc::System;
 enum struct Algorithm {
   kOptimal,
   kTestGround,
-  kDistance
+  kDistance,
+  kPID
 };
 
 int main() {
@@ -78,7 +80,7 @@ int main() {
   }
 
   // modify next line to switch between algorithms
-  constexpr Algorithm a = Algorithm::kOptimal;
+  constexpr Algorithm a = Algorithm::kPID;
 
   // modify next line to change which car we're working with
   constexpr CarManager::Car c = CarManager::Car::kCar1;
@@ -99,6 +101,9 @@ int main() {
       break;
     case Algorithm::kDistance:
       algorithm::USIRDemo();
+      break;
+    case Algorithm::kPID:
+      util::pid_tuning::main();
       break;
     default:
       // all cases covered
