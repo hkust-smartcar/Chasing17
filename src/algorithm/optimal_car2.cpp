@@ -94,15 +94,6 @@ std::pair<int, int> roundabout_nearest_corner_right{0, 0};
 int prev_servo_error = 0;
 int curr_enc_val_left = 0;
 int curr_enc_val_right = 0;
-int target_enc_val = 8000;
-int target_enc_val_left = 0;
-int target_enc_val_right = 0;
-int cum_enc_error_left = 0;
-int cum_enc_error_right = 0;
-int prev_enc_error = 0;
-
-float Kp = 0, Ki = 0, Kd = 0;
-
 
 const Byte* CameraBuf;
 
@@ -188,11 +179,11 @@ bool bluetoothListener(const Byte *data, const size_t size) {
 
 
 //			KP   = constVector[0];
-			Kp = constVector[0];
-			Ki = constVector[1];
-			Kd = constVector[2];
-			target_enc_val_left = constVector[3];
-			target_enc_val_right = constVector[4];
+//			Kp = constVector[0];
+//			Ki = constVector[1];
+//			Kd = constVector[2];
+//			target_enc_val_left = constVector[3];
+//			target_enc_val_right = constVector[4];
 
 
 //			now_angle = constVector[1];
@@ -1617,62 +1608,6 @@ void main_car2(bool debug_) {
 		pEncoder1->Update();
 		curr_enc_val_left = (pEncoder0->GetCount());
 		curr_enc_val_right = (pEncoder1->GetCount());
-
-//		int delta_degree = (std::abs(pServo->GetDegree() - servo_bounds.kCenter))/10;
-//		target_enc_val_left = 0, target_enc_val_right = 0;
-//			target_enc_val_left = target_enc_val_right = 200; //actual speed = 5800 * cycle * speed
-
-//			if (pServo->GetDegree() <= servo_bounds.kCenter){ //turning right
-//				//left motor speeds up, right motor slows down
-//				target_enc_val_left = target_enc_val * (1 + differential(delta_degree));
-//				target_enc_val_right = target_enc_val * (1 - differential(delta_degree));
-//			} else { //turning left
-//				//left motor slows down, right motor speeds up
-//				target_enc_val_left = target_enc_val * (1 - differential(delta_degree));
-//				target_enc_val_right = target_enc_val * (1 + differential(delta_degree));
-//			}
-
-//		char temp[100];
-//		sprintf(temp, "target=%d,\n%d,\n%d,\n%d,\n%d", target_enc_val,target_enc_val_left,target_enc_val_right,
-//				curr_enc_val_left,curr_enc_val_right);
-//		pLcd->SetRegion(Lcd::Rect(0,0,128,15));
-//		pWriter->WriteString(temp);
-//		int left_power = util::clamp(Kp * (target_enc_val_left - curr_enc_val_left) + Ki * cum_enc_error_left + Kd * (target_enc_val_left - curr_enc_val_left - prev_enc_error), 0.0f, 400.0f);
-//		int right_power = util::clamp(Kp * (target_enc_val_right + curr_enc_val_right) + Ki * cum_enc_error_right + Kd * (target_enc_val_right + curr_enc_val_right - prev_enc_error), 0.0f, 400.0f);
-//		pMotor0->SetPower(left_power);
-//		pMotor1->SetPower(right_power);
-//		cum_enc_error_left += target_enc_val_left - curr_enc_val_left;
-//		cum_enc_error_right += target_enc_val_right + curr_enc_val_right;
-//		prev_enc_error = target_enc_val_right - curr_enc_val_right;
-		/* Motor Protection */
-//		if ((curr_enc_val_left < 10 || curr_enc_val_right < 10) && time_img - startTime > 1000){
-//			pMotor0->SetPower(0);
-//			pMotor1->SetPower(0);
-//			target_enc_val = cum_enc_error_left = cum_enc_error_right = 0;
-//		} else {
-//			int delta_degree = (std::abs(pServo->GetDegree() - servo_bounds.kCenter))/10;
-//			target_enc_val_left = 0, target_enc_val_right = 0;
-////			target_enc_val_left = target_enc_val_right = 200; //actual speed = 5800 * cycle * speed
-//
-////			if (pServo->GetDegree() <= servo_bounds.kCenter){ //turning right
-////				//left motor speeds up, right motor slows down
-////				target_enc_val_left = target_enc_val * (1 + differential(delta_degree));
-////				target_enc_val_right = target_enc_val * (1 - differential(delta_degree));
-////			} else { //turning left
-////				//left motor slows down, right motor speeds up
-////				target_enc_val_left = target_enc_val * (1 - differential(delta_degree));
-////				target_enc_val_right = target_enc_val * (1 + differential(delta_degree));
-////			}
-//
-//			char temp[100];
-//			sprintf(temp, "target=%d,\n%d,\n%d,\n%d,\n%d", target_enc_val,target_enc_val_left,target_enc_val_right,
-//					curr_enc_val_left,curr_enc_val_right);
-//			pLcd->SetRegion(Lcd::Rect(0,0,128,15));
-//			pWriter->WriteString(temp);
-//			pMotor0->SetPower(min(Kp * (target_enc_val_left - curr_enc_val_left) + 0 * cum_enc_error_left, 400));
-//			pMotor1->SetPower(min(Kp * (target_enc_val_right - curr_enc_val_right) + 0 * cum_enc_error_right, 400));
-//		}
-
 
       }
     }
