@@ -20,8 +20,6 @@
 
 #include "libsc/system.h"
 
-#include "car_manager.h"
-
 namespace algorithm {
 namespace optimal {
 namespace car2 {
@@ -86,6 +84,22 @@ struct WorldSize {
   static constexpr uint16_t h = 160;
 };
 
+struct ServoBounds {
+  uint16_t kLeftBound;
+  uint16_t kCenter;
+  uint16_t kRightBound;
+};
+
+enum struct Feature : uint8_t {
+  kStraight = 0,
+  kRoundabout,
+  kCross,
+  kNormal,
+  kRoundaboutExit
+};
+
+inline int differential(int x) { return 0.295367f*x + 0.0872415f*x*x; }
+
 /*CAR2*/
 struct {
   bool roundabout_turn_left = true; //Used for GenPath()
@@ -133,6 +147,8 @@ struct {
 enum struct TranslateType {
   kNone = 0, kLeftNull, kRightNull
 };
+
+
 
 }
 }
