@@ -70,7 +70,7 @@ uint16_t prev_corner_y;
 
 /*FOR OVERTAKING*/
 bool is_front_car = true;
-bool stop_before_roundexit = true;
+bool stop_before_roundexit = false;
 
 bool debug = true;
 bool has_inc_width_pt = false;

@@ -1513,6 +1513,8 @@ void main_car1(bool debug_) {
 	pMotor0->SetPower(210);
 	pMotor1->SetPower(210);
 
+	while(1);
+
 	Timer::TimerInt startTime=System::Time();
 
 	//	int servoAngle = 0;

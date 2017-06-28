@@ -81,7 +81,7 @@ int main() {
   constexpr Algorithm a = Algorithm::kOptimal;
 
   // modify next line to change which car we're working with
-  constexpr CarManager::Car c = CarManager::Car::kCar2;
+  constexpr CarManager::Car c = CarManager::Car::kCar1;
 
   switch (a) {
     case Algorithm::kOptimal:
