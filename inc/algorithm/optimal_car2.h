@@ -124,8 +124,8 @@ struct {
   uint16_t cross_cal_ratio = 80; //Look forward @cross_cal_start_num - encoder_total/@cross_cal_ratio to determine path
   uint16_t general_cal_num = 20; //The num of path points considered for servo angle decision except crossing
   uint16_t cross_encoder_count = 4000; // The hardcoded encoder count that car must reach in crossroad
-  uint16_t round_enter_offset = 15;
-  uint16_t round_exit_offset = 20;
+  uint16_t round_enter_offset = 13;
+  uint16_t round_exit_offset = 25;
   uint16_t round_encoder_count = 2600;
   uint16_t roundExit_encoder_count = 3000;
   uint16_t roundroad_exit_radius = 15;
@@ -134,7 +134,7 @@ struct {
   uint16_t roundroad_min_size = 30; // When the edge is broken in roundabout, find until this threshold
   uint16_t exit_action_dist = 35; // double check to avoid corner's sudden disappear inside roundabout
   uint16_t roundabout_offset = 15; // half of road width
-  uint8_t roundabout_shortest_flag = 0b10000000; //1 means turn left, 0 means turn right. Reading from left to right
+  uint8_t roundabout_shortest_flag = 0b11000000; //1 means turn left, 0 means turn right. Reading from left to right
   uint16_t angle_div_error = 1; // translate error into angle
 
 } TuningVar;

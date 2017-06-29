@@ -70,7 +70,7 @@ uint16_t prev_corner_x; //store the latest corner coordinate appears last time d
 uint16_t prev_corner_y;
 
 /*FOR OVERTAKING*/
-bool is_front_car = false;
+bool is_front_car = true;//false
 bool stop_before_roundexit = false;
 
 bool debug = true;
@@ -792,23 +792,30 @@ Feature featureIdent_Corner() {
 		}
 	}
 	/*Exit case handling: ready -> exit*///To avoid entrance double check for corner
-	if ((left_corners.points.size() > 0 || right_corners.points.size() > 0)
-			&& roundaboutStatus == 1 && roundaboutExitStatus == 0
-			&& (abs(encoder_total_round) > TuningVar.round_encoder_count)) {
-		//		//keep updating until corner disappear
-		//		if (left_corners.points.size() > 0) {
-		//			prev_corner_x = left_corners.points.front().first;
-		//			prev_corner_y = left_corners.points.front().second;
-		//		}
-		//		if (right_corners.points.size() > 0) {
-		//			prev_corner_x = right_corners.points.front().first;
-		//			prev_corner_y = right_corners.points.front().second;
-		//		}
-		exit_round_ready = true; // Detect one corner
+	if(is_front_car?!roundabout_shortest(TuningVar.roundabout_shortest_flag, roundabout_cnt - 1):roundabout_shortest(TuningVar.roundabout_shortest_flag, roundabout_cnt - 1)){
+		if (left_corners.points.size() > 0 && roundaboutStatus == 1 && roundaboutExitStatus == 0
+				&& abs(encoder_total_round) > TuningVar.round_encoder_count) {
+			//		//keep updating until corner disappear
+			//		if (left_corners.points.size() > 0) {
+			//			prev_corner_x = left_corners.points.front().first;
+			//			prev_corner_y = left_corners.points.front().second;
+			//		}
+			//		if (right_corners.points.size() > 0) {
+			//			prev_corner_x = right_corners.points.front().first;
+			//			prev_corner_y = right_corners.points.front().second;
+			//		}
+			exit_round_ready = true; // Detect one corner
+		}
+	}
+	else{
+		if (right_corners.points.size() > 0 && roundaboutStatus == 1 && roundaboutExitStatus == 0
+				&& abs(encoder_total_round) > TuningVar.round_encoder_count) {
+			exit_round_ready = true; // Detect one corner
+		}
 	}
 	/*FOR DEBUGGING*/
 	if (debug) {
-				char temp_1[100];
+		char temp_1[100];
 //				sprintf(temp_1, "Ycor:%d", abs(roundabout_nearest_corner_right.second - carMid.second));
 //				pLcd->SetRegion(Lcd::Rect(0, 75, 128, 15));
 //				pWriter->WriteString(temp_1);
@@ -876,7 +883,9 @@ Feature featureIdent_Corner() {
 		else{
 			if (meet_exit) {
 				//GO
-				if(pBT->hasFinishedOvertake()){
+				if(pBT->hasFinishedOvertake()){//Maybe never inside this loop?
+					pLed3->Switch();
+					System::DelayMs(2000);
 					stop_before_roundexit = false;
 					// roundaboutStatus = 0;
 					exit_round_ready = false;
@@ -1495,30 +1504,31 @@ void main_car1(bool debug_) {
 	System::DelayMs(1000);
 
 
+//	  while (true) {
+//	    if (joystick.GetState() == Joystick::State::kRight) {
+//	      TuningVar.roundabout_turn_left = false;
+//	      break;
+//	    } else if (joystick.GetState() == Joystick::State::kLeft) {
+//	      break;
+//	    }
+//	  }
 
-	//  while (true) {
-	//    if (joystick.GetState() == Joystick::State::kRight) {
-	//      TuningVar.roundabout_turn_left = false;
-	//      break;
-	//    } else if (joystick.GetState() == Joystick::State::kLeft) {
-	//      break;
-	//    }
-	//  }
-
-	//	while(joystick.GetState() != Joystick::State::kIdle){
-	//		if(bt.hasStartReq()){
-	//			break;
-	//		}
-	//	}
+//
+		while(joystick.GetState() == Joystick::State::kIdle){
+			if(bt.hasStartReq()){
+				break;
+			}
+		}
 
 	//	StartlineOvertake();
 
 	pMotor0->SetClockwise(true);
 	pMotor1->SetClockwise(false);
-	pMotor0->SetPower(210);
-	pMotor1->SetPower(210);
+	pMotor0->SetPower(190);
+	pMotor1->SetPower(190);
 
 	Timer::TimerInt startTime=System::Time();
+	bool brake_flag = true;
 
 	//	int servoAngle = 0;
 	while (true) {
@@ -1527,6 +1537,7 @@ void main_car1(bool debug_) {
 			led0.SetEnable(time_img % 500 >= 250);
 
 			if (time_img % 10 == 0) {
+		    	bt.resendNAKData();
 				//Overtake motor control
 				/*FOR DEBUGGING*/
 				if(debug){
@@ -1539,14 +1550,39 @@ void main_car1(bool debug_) {
 
 				if (roundaboutExitStatus == 1 && stop_before_roundexit) {
 					/*Consider braking*/
-					pMotor0->SetPower(0);
-					pMotor1->SetPower(0);
+					if(brake_flag){
+						brake_flag = false;
+						pMotor0->SetClockwise(false);
+						pMotor1->SetClockwise(true);
+						pMotor0->SetPower(1000);
+						pMotor1->SetPower(1000);
+						System::DelayMs(250);
+					}
+					else{
+						pMotor0->SetPower(0);
+						pMotor1->SetPower(0);
+					}
 				}
 				else{
-					pMotor0->SetPower(210);
-					pMotor1->SetPower(210);
+					pMotor0->SetClockwise(true);
+					pMotor1->SetClockwise(false);
+					pMotor0->SetPower(190);
+					pMotor1->SetPower(190);
 				}
-
+				if(roundaboutExitStatus ==0){
+					brake_flag = true;
+				}
+				//Double check
+				if(pMotor0->GetPower() == 0 && pMotor1->GetPower() == 0){
+					if(pBT->hasFinishedOvertake()){
+						System::DelayMs(2000);
+						stop_before_roundexit = false;
+						// roundaboutStatus = 0;
+						exit_round_ready = false;
+						encoder_total_exit = 0;
+						pBT->resetFinishOvertake();
+					}
+				}
 
 				//        Timer::TimerInt new_time = System::Time();
 				Capture(); //Capture until two base points are identified
@@ -1624,7 +1660,7 @@ void main_car1(bool debug_) {
 				int curr_servo_error = CalcAngleDiff();
 
 				pServo->SetDegree(util::clamp<uint16_t>(
-		                servo_bounds.kCenter - (0.6 * curr_servo_error + 0 * (curr_servo_error - prev_servo_error)),
+		                servo_bounds.kCenter - (1.3 * curr_servo_error + 0 * (curr_servo_error - prev_servo_error)),
 		                servo_bounds.kRightBound,
 		                servo_bounds.kLeftBound));
 				prev_servo_error = curr_servo_error;
