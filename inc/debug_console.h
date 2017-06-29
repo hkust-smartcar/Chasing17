@@ -23,24 +23,24 @@
 
 typedef void(* Fptr)();
 
-typedef enum{
-	  kNan,
-	  kUint16,
-	  kInt32,
-	  kFloat,
-	  kBool,
-	  kBS //bit string using int
+typedef enum {
+  kNan,
+  kUint16,
+  kInt32,
+  kFloat,
+  kBool,
+  kBS //bit string using int
 } VarType;
 
-typedef struct Item{
-	  char* text=nullptr;
-	  VarType type=VarType::kNan;
-	  uint8_t vIndex=0;
-	  float interval=1;
-	  Fptr listener=nullptr;
-	  uint8_t bsIndex=0; //for bitstring
-	  char* true_text = nullptr;
-	  char* false_text = nullptr;
+typedef struct Item {
+  char* text = nullptr;
+  VarType type = VarType::kNan;
+  uint8_t vIndex = 0;
+  float interval = 1;
+  Fptr listener = nullptr;
+  uint8_t bsIndex = 0; //for bitstring
+  char* true_text = nullptr;
+  char* false_text = nullptr;
 } Item;
 
 class DebugConsole {
@@ -67,8 +67,8 @@ class DebugConsole {
   void PushItem(char* text, uint16_t* valuePtr, float interval);//uint16
   void PushItem(char* text, int32_t* valuePtr, float interval);//uint16
   void PushItem(char* text, float* valuePtr, float interval);//float
-  void PushItem(char* text, bool* valuePtr, char* true_text="true", char* false_text="false");//bool
-  void PushItem(char* text, int32_t* valuePtr, char* true_text="true", char* false_text="false");//bitstring
+  void PushItem(char* text, bool* valuePtr, char* true_text = "true", char* false_text = "false");//bool
+  void PushItem(char* text, int32_t* valuePtr, char* true_text = "true", char* false_text = "false");//bitstring
 
   /*
    * Set item
@@ -117,7 +117,7 @@ class DebugConsole {
   DebugConsole* SetLongClickCd(int cd);
   DebugConsole* SetOffset(int offset);
   DebugConsole* SetAutoFlash(bool flag);
-  void SetFlash(libbase::k60::Flash* flash){this->flash=flash;}
+  void SetFlash(libbase::k60::Flash* flash) { this->flash = flash; }
 
   //parameters getters
   int GetDisplayLength() { return displayLength; }
@@ -126,7 +126,6 @@ class DebugConsole {
   int GetOffset() { return offset; }
 
  private:
-
 
   int focus = 0;
   int topIndex = 0;
@@ -146,8 +145,8 @@ class DebugConsole {
   int cd = 0;    //time needed to trigger next long click listener
   int offset = 0; //distance away from top of lcd
   bool auto_flash = true; //flash
-  int flash_sum=0;
-  bool flag=false;
+  int flash_sum = 0;
+  bool flag = false;
 
   void Printxy(int x, int y, char* c, int inverted = false);
 
@@ -155,6 +154,5 @@ class DebugConsole {
 
   void ListenerDo(libsc::Joystick::State key);
 };
-
 
 #endif // CHASING17_DEBUG_CONSOLE_H_

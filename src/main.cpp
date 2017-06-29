@@ -90,36 +90,36 @@ int main() {
   // modify next line to change which car we're working with
   CarManager::Car c = CarManager::Car::kCar1;
 
-  bool reset=false,skip_debug=false;
+  bool reset = false, skip_debug = false;
   {
-	Joystick::Config joystick_config;
-	joystick_config.id = 0;
-	joystick_config.is_active_low = true;
-	Joystick joystick(joystick_config);
+    Joystick::Config joystick_config;
+    joystick_config.id = 0;
+    joystick_config.is_active_low = true;
+    Joystick joystick(joystick_config);
 
-	reset=(joystick.GetState()==Joystick::State::kSelect?true:false);
-	skip_debug=(joystick.GetState()==Joystick::State::kIdle?true:false);
+    reset = (joystick.GetState() == Joystick::State::kSelect ? true : false);
+    skip_debug = (joystick.GetState() == Joystick::State::kIdle ? true : false);
   }
 
-  if(!skip_debug)
-  switch(debug(reset)){
-  case 1:
-	  c = CarManager::Car::kCar1;
-	  break;
-  case 2:
-	  c = CarManager::Car::kCar2;
-	  break;
-  }
+  if (!skip_debug)
+    switch (debug(reset)) {
+      case 1:
+        c = CarManager::Car::kCar1;
+        break;
+      case 2:
+        c = CarManager::Car::kCar2;
+        break;
+    }
 
   switch (a) {
     case Algorithm::kOptimal:
-    	switch (c){
-    	case CarManager::Car::kCar1:
-    		algorithm::optimal::car1::main_car1(false);
-    		break;
-    	case CarManager::Car::kCar2:
-    		algorithm::optimal::car2::main_car2(false);
-    	}
+      switch (c) {
+        case CarManager::Car::kCar1:
+          algorithm::optimal::car1::main_car1(false);
+          break;
+        case CarManager::Car::kCar2:
+          algorithm::optimal::car2::main_car2(false);
+      }
 
       break;
     case Algorithm::kTestGround:

@@ -32,8 +32,8 @@ DebugConsole::DebugConsole(Joystick* joystick, St7735r* lcd, LcdTypewriter* writ
 void DebugConsole::EnterDebug(char* leave_msg) {
   flag = true;
   Item item;
-  item.text=leave_msg;
-  items.insert(items.begin()+0, item);
+  item.text = leave_msg;
+  items.insert(items.begin() + 0, item);
 
   int index = items.size();
   Load();
@@ -41,7 +41,7 @@ void DebugConsole::EnterDebug(char* leave_msg) {
   while (flag) {
     Listen();
 //    if(System::Time()%100==0)
-	Save();
+    Save();
   }
   items.erase(items.begin());
   Clear();
@@ -58,72 +58,72 @@ void DebugConsole::Listen() {
   }
 }
 
-void DebugConsole::PushItem(char* text, uint16_t* valuePtr, float interval){
-	Item item;
-	item.text = text;
-	item.type = VarType::kUint16;
-	item.vIndex = uint16t_values.size();
-	item.interval=interval;
-	uint16t_values.push_back(valuePtr);
-	items.push_back(item);
-	flash_sum+=sizeof(*valuePtr);
+void DebugConsole::PushItem(char* text, uint16_t* valuePtr, float interval) {
+  Item item;
+  item.text = text;
+  item.type = VarType::kUint16;
+  item.vIndex = uint16t_values.size();
+  item.interval = interval;
+  uint16t_values.push_back(valuePtr);
+  items.push_back(item);
+  flash_sum += sizeof(*valuePtr);
 }
-void DebugConsole::PushItem(char* text, int32_t* valuePtr, float interval){
-	Item item;
-	item.text = text;
-	item.type = VarType::kInt32;
-	item.vIndex = int32t_values.size();
-	item.interval=interval;
-	int32t_values.push_back(valuePtr);
-	items.push_back(item);
-	flash_sum+=sizeof(*valuePtr);
+void DebugConsole::PushItem(char* text, int32_t* valuePtr, float interval) {
+  Item item;
+  item.text = text;
+  item.type = VarType::kInt32;
+  item.vIndex = int32t_values.size();
+  item.interval = interval;
+  int32t_values.push_back(valuePtr);
+  items.push_back(item);
+  flash_sum += sizeof(*valuePtr);
 }
-void DebugConsole::PushItem(char* text, float* valuePtr, float interval){
-	Item item;
-	item.text = text;
-	item.type = VarType::kFloat;
-	item.vIndex = float_values.size();
-	item.interval=interval;
-	float_values.push_back(valuePtr);
-	items.push_back(item);
-	flash_sum+=sizeof(*valuePtr);
+void DebugConsole::PushItem(char* text, float* valuePtr, float interval) {
+  Item item;
+  item.text = text;
+  item.type = VarType::kFloat;
+  item.vIndex = float_values.size();
+  item.interval = interval;
+  float_values.push_back(valuePtr);
+  items.push_back(item);
+  flash_sum += sizeof(*valuePtr);
 }
-void DebugConsole::PushItem(char* text, bool* valuePtr, char* true_text, char* false_text){
-	Item item;
-	item.text = text;
-	item.type = VarType::kBool;
-	item.vIndex = bool_values.size();
-	item.true_text = true_text;
-	item.false_text = false_text;
-	bool_values.push_back(valuePtr);
-	items.push_back(item);
-	flash_sum+=sizeof(*valuePtr);
+void DebugConsole::PushItem(char* text, bool* valuePtr, char* true_text, char* false_text) {
+  Item item;
+  item.text = text;
+  item.type = VarType::kBool;
+  item.vIndex = bool_values.size();
+  item.true_text = true_text;
+  item.false_text = false_text;
+  bool_values.push_back(valuePtr);
+  items.push_back(item);
+  flash_sum += sizeof(*valuePtr);
 }
-void DebugConsole::PushItem(char* text, int32_t* valuePtr, char* true_text, char* false_text){
-	Item item;
-	item.text = text;
-	item.type = VarType::kBS;
-	item.vIndex = int32t_values.size();
-	item.bsIndex = 0;
-	item.true_text = true_text;
-	item.false_text = false_text;
-	int32t_values.push_back(valuePtr);
-	items.push_back(item);
-	flash_sum+=sizeof(*valuePtr);
+void DebugConsole::PushItem(char* text, int32_t* valuePtr, char* true_text, char* false_text) {
+  Item item;
+  item.text = text;
+  item.type = VarType::kBS;
+  item.vIndex = int32t_values.size();
+  item.bsIndex = 0;
+  item.true_text = true_text;
+  item.false_text = false_text;
+  int32t_values.push_back(valuePtr);
+  items.push_back(item);
+  flash_sum += sizeof(*valuePtr);
 }
 
-void DebugConsole::SetItem(int index, Item item){
-	items[index].text=item.text;
-	items[index].type=item.type;
-	items[index].vIndex=item.vIndex;
-	items[index].interval=item.interval;
-	items[index].listener=item.listener;
-	items[index].bsIndex=item.bsIndex; //for bitstring
-	items[index].true_text=item.true_text;
-	items[index].false_text=item.false_text;
+void DebugConsole::SetItem(int index, Item item) {
+  items[index].text = item.text;
+  items[index].type = item.type;
+  items[index].vIndex = item.vIndex;
+  items[index].interval = item.interval;
+  items[index].listener = item.listener;
+  items[index].bsIndex = item.bsIndex; //for bitstring
+  items[index].true_text = item.true_text;
+  items[index].false_text = item.false_text;
 }
-Item DebugConsole::GetItem(int index){
-	return items[index];
+Item DebugConsole::GetItem(int index) {
+  return items[index];
 }
 
 void DebugConsole::ListItems() {
@@ -140,27 +140,29 @@ void DebugConsole::ListItemValues() {
   }
 }
 
-void DebugConsole::ChangeItemValue(int index, bool IsIncrement){
-	Item item = items[index];
-	float c = IsIncrement?1.0:-1.0;
-	switch(item.type){
-	    case VarType::kNan:
-	    	return;break;
-	    case VarType::kUint16:
-	    	*uint16t_values[item.vIndex]+= int(c*item.interval);
-	    	break;
-		case VarType::kInt32:
-			*int32t_values[item.vIndex]+= int(c*item.interval);
-			break;
-	    case VarType::kFloat:
-	    	*float_values[item.vIndex]+=float(c*item.interval);
-	    	break;
-	    case VarType::kBool:
-	    	*bool_values[item.vIndex]=!*bool_values[item.vIndex];
-	    	break;
-	    default:
-	    	return;break;
-	    }
+void DebugConsole::ChangeItemValue(int index, bool IsIncrement) {
+  Item item = items[index];
+  float c = IsIncrement ? 1.0 : -1.0;
+  switch (item.type) {
+    case VarType::kNan:
+      return;
+      break;
+    case VarType::kUint16:
+      *uint16t_values[item.vIndex] += int(c * item.interval);
+      break;
+    case VarType::kInt32:
+      *int32t_values[item.vIndex] += int(c * item.interval);
+      break;
+    case VarType::kFloat:
+      *float_values[item.vIndex] += float(c * item.interval);
+      break;
+    case VarType::kBool:
+      *bool_values[item.vIndex] = !*bool_values[item.vIndex];
+      break;
+    default:
+      return;
+      break;
+  }
 }
 
 void DebugConsole::PrintItem(int index, bool isInverted) {
@@ -170,99 +172,104 @@ void DebugConsole::PrintItem(int index, bool isInverted) {
 
 void DebugConsole::PrintItemValue(int index, bool isInverted) {
 
-    char buff[20];
-    Item item = items[index];
-    switch(item.type){
+  char buff[20];
+  Item item = items[index];
+  switch (item.type) {
     case VarType::kNan:
-    	return;break;
+      return;
+      break;
     case VarType::kUint16:
-    	sprintf(buff, "%d", *uint16t_values[item.vIndex]);
-    	break;
+      sprintf(buff, "%d", *uint16t_values[item.vIndex]);
+      break;
     case VarType::kInt32:
-    	sprintf(buff, "%d", *int32t_values[item.vIndex]);
-    	break;
+      sprintf(buff, "%d", *int32t_values[item.vIndex]);
+      break;
     case VarType::kFloat:
-    	sprintf(buff, "%.3lf", *float_values[item.vIndex]);
-    	break;
+      sprintf(buff, "%.3lf", *float_values[item.vIndex]);
+      break;
     case VarType::kBool:
-    	sprintf(buff, "%s", *bool_values[item.vIndex] ? item.true_text : item.false_text);
-    	break;
+      sprintf(buff, "%s", *bool_values[item.vIndex] ? item.true_text : item.false_text);
+      break;
     case VarType::kBS:
-    	sprintf(buff, "%d:%s", item.bsIndex,(*int32t_values[item.vIndex]>>item.bsIndex)&1 ? item.true_text : item.false_text);
-    	Printxy(7, index - topIndex, buff, isInverted);
-    	return;
-    	break;
+      sprintf(buff,
+              "%d:%s",
+              item.bsIndex,
+              (*int32t_values[item.vIndex] >> item.bsIndex) & 1 ? item.true_text : item.false_text);
+      Printxy(7, index - topIndex, buff, isInverted);
+      return;
+      break;
     default:
-    	return;break;
-    }
-    Printxy(9, index - topIndex, buff, isInverted);
-    return;
+      return;
+      break;
+  }
+  Printxy(9, index - topIndex, buff, isInverted);
+  return;
 }
 
-void DebugConsole::Load(){
+void DebugConsole::Load() {
 
-	if(flash == nullptr) return;
-	int start=0;
-	Byte* buff = new Byte[flash_sum];
-	flash->Read(buff,flash_sum);
-	for(int i=0;i<uint16t_values.size();i++){
-		uint16_t* v=uint16t_values[i];
-		uint16_t temp=0;
-		memcpy((unsigned char*) &temp, buff+start, sizeof(*v));
-		start+=sizeof(*v);
-		if(temp==temp)*v=temp;
-	}
-	for(int i=0;i<int32t_values.size();i++){
-		int32_t* v=int32t_values[i];
-		int32_t temp=0;
-		memcpy((unsigned char*) &temp, buff+start, sizeof(*v));
-		start+=sizeof(*v);
-		if(temp==temp)*v=temp;
-	}
-	for(int i=0;i<float_values.size();i++){
-		float* v=float_values[i];
-		float temp=0;
-		memcpy((unsigned char*) &temp, buff+start, sizeof(*v));
-		start+=sizeof(*v);
-		if(temp==temp)*v=temp;
-	}
-	for(int i=0;i<bool_values.size();i++){
-		bool* v=bool_values[i];
-		bool temp=0;
-		memcpy((unsigned char*) &temp, buff+start, sizeof(*v));
-		start+=sizeof(*v);
-		if(temp==temp)*v=temp;
-	}
-	delete [] buff;
+  if (flash == nullptr) return;
+  int start = 0;
+  Byte* buff = new Byte[flash_sum];
+  flash->Read(buff, flash_sum);
+  for (int i = 0; i < uint16t_values.size(); i++) {
+    uint16_t* v = uint16t_values[i];
+    uint16_t temp = 0;
+    memcpy((unsigned char*) &temp, buff + start, sizeof(*v));
+    start += sizeof(*v);
+    if (temp == temp)*v = temp;
+  }
+  for (int i = 0; i < int32t_values.size(); i++) {
+    int32_t* v = int32t_values[i];
+    int32_t temp = 0;
+    memcpy((unsigned char*) &temp, buff + start, sizeof(*v));
+    start += sizeof(*v);
+    if (temp == temp)*v = temp;
+  }
+  for (int i = 0; i < float_values.size(); i++) {
+    float* v = float_values[i];
+    float temp = 0;
+    memcpy((unsigned char*) &temp, buff + start, sizeof(*v));
+    start += sizeof(*v);
+    if (temp == temp)*v = temp;
+  }
+  for (int i = 0; i < bool_values.size(); i++) {
+    bool* v = bool_values[i];
+    bool temp = 0;
+    memcpy((unsigned char*) &temp, buff + start, sizeof(*v));
+    start += sizeof(*v);
+    if (temp == temp)*v = temp;
+  }
+  delete[] buff;
 }
 
-void DebugConsole::Save(){
-	if(flash == nullptr) return;
-	int start=0;
-	Byte* buff = new Byte[flash_sum];
-	for(int i=0;i<uint16t_values.size();i++){
-		uint16_t* v=uint16t_values[i];
-		memcpy(buff+start, (unsigned char*) v, sizeof(*v));
-		start+=sizeof(*v);
-	}
-	for(int i=0;i<int32t_values.size();i++){
-		int32_t* v=int32t_values[i];
-		memcpy(buff+start, (unsigned char*) v, sizeof(*v));
-		start+=sizeof(*v);
-	}
-	for(int i=0;i<float_values.size();i++){
-		float* v=float_values[i];
-		memcpy(buff+start, (unsigned char*) v, sizeof(*v));
-		start+=sizeof(*v);
-	}
-	for(int i=0;i<bool_values.size();i++){
-		bool* v=bool_values[i];
-		memcpy(buff+start, (unsigned char*) v, sizeof(*v));
-		start+=sizeof(*v);
-	}
-	flash->Write(buff, flash_sum);
-	System::DelayMs(100);
-	delete [] buff;
+void DebugConsole::Save() {
+  if (flash == nullptr) return;
+  int start = 0;
+  Byte* buff = new Byte[flash_sum];
+  for (int i = 0; i < uint16t_values.size(); i++) {
+    uint16_t* v = uint16t_values[i];
+    memcpy(buff + start, (unsigned char*) v, sizeof(*v));
+    start += sizeof(*v);
+  }
+  for (int i = 0; i < int32t_values.size(); i++) {
+    int32_t* v = int32t_values[i];
+    memcpy(buff + start, (unsigned char*) v, sizeof(*v));
+    start += sizeof(*v);
+  }
+  for (int i = 0; i < float_values.size(); i++) {
+    float* v = float_values[i];
+    memcpy(buff + start, (unsigned char*) v, sizeof(*v));
+    start += sizeof(*v);
+  }
+  for (int i = 0; i < bool_values.size(); i++) {
+    bool* v = bool_values[i];
+    memcpy(buff + start, (unsigned char*) v, sizeof(*v));
+    start += sizeof(*v);
+  }
+  flash->Write(buff, flash_sum);
+  System::DelayMs(100);
+  delete[] buff;
 }
 
 DebugConsole* DebugConsole::SetDisplayLength(int length) {
@@ -342,36 +349,33 @@ void DebugConsole::ListenerDo(Joystick::State key) {
       }
       break;
     case Joystick::State::kSelect:
-    	if(item.type==VarType::kBS){
-    		*int32t_values[item.vIndex]=*int32t_values[item.vIndex]^(1<<item.bsIndex);
-			PrintItemValue(focus, true);
-    	}
-    	else if (item.listener != nullptr) {
+      if (item.type == VarType::kBS) {
+        *int32t_values[item.vIndex] = *int32t_values[item.vIndex] ^ (1 << item.bsIndex);
+        PrintItemValue(focus, true);
+      } else if (item.listener != nullptr) {
         item.listener();
-      } else if (flag&&focus==0)//leave item click
-        flag=false;
+      } else if (flag && focus == 0)//leave item click
+        flag = false;
       break;
     case Joystick::State::kLeft:
-      if (flag&&focus==0)//leave item click
-        flag=false;
-      else if(item.type==VarType::kBS){
-    	  items[focus].bsIndex=(items[focus].bsIndex-1)%32;
-    	  PrintItem(focus, true);
-      }
-      else if (item.type!=VarType::kNan) {
-    	ChangeItemValue(focus,0);
+      if (flag && focus == 0)//leave item click
+        flag = false;
+      else if (item.type == VarType::kBS) {
+        items[focus].bsIndex = (items[focus].bsIndex - 1) % 32;
+        PrintItem(focus, true);
+      } else if (item.type != VarType::kNan) {
+        ChangeItemValue(focus, 0);
         PrintItemValue(focus, true);
       }
       break;
     case Joystick::State::kRight:
-      if (flag&&focus==0)//leave item click
-        flag=false;
-      else if(item.type==VarType::kBS){
-		  items[focus].bsIndex=(items[focus].bsIndex+1)%32;
-		  PrintItem(focus, true);
-		}
-		else if (item.type!=VarType::kNan) {
-    	ChangeItemValue(focus,1);
+      if (flag && focus == 0)//leave item click
+        flag = false;
+      else if (item.type == VarType::kBS) {
+        items[focus].bsIndex = (items[focus].bsIndex + 1) % 32;
+        PrintItem(focus, true);
+      } else if (item.type != VarType::kNan) {
+        ChangeItemValue(focus, 1);
         PrintItemValue(focus, true);
       }
       break;
