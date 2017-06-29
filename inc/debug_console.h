@@ -68,9 +68,13 @@ class DebugConsole {
   void PushItem(char* text, int32_t* valuePtr, float interval);//uint16
   void PushItem(char* text, float* valuePtr, float interval);//float
   void PushItem(char* text, bool* valuePtr, char* true_text="true", char* false_text="false");//bool
-//  void PushItem(char* text, bool* valuePtr);//bool
   void PushItem(char* text, int32_t* valuePtr, char* true_text="true", char* false_text="false");//bitstring
-//  void PushItem(char* text, int32_t* valuePtr);//bitstring
+
+  /*
+   * Set item
+   */
+  void SetItem(int index, Item item);
+  Item GetItem(int index);
 
   /**
    * print item start from topIndex, total amount displayLength

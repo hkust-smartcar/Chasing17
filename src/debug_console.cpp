@@ -112,6 +112,20 @@ void DebugConsole::PushItem(char* text, int32_t* valuePtr, char* true_text, char
 	flash_sum+=sizeof(*valuePtr);
 }
 
+void DebugConsole::SetItem(int index, Item item){
+	items[index].text=item.text;
+	items[index].type=item.type;
+	items[index].vIndex=item.vIndex;
+	items[index].interval=item.interval;
+	items[index].listener=item.listener;
+	items[index].bsIndex=item.bsIndex; //for bitstring
+	items[index].true_text=item.true_text;
+	items[index].false_text=item.false_text;
+}
+Item DebugConsole::GetItem(int index){
+	return items[index];
+}
+
 void DebugConsole::ListItems() {
   Clear();
   for (int i = topIndex; i < (items.size() < topIndex + displayLength ? items.size() : topIndex + displayLength); i++) {
