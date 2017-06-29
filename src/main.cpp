@@ -94,7 +94,7 @@ int main() {
 	joystick_config.is_active_low = true;
 	Joystick joystick(joystick_config);
 
-	reset=(joystick.GetState()==Joystick::State::kDown?true:false);
+	reset=(joystick.GetState()==Joystick::State::kSelect?true:false);
 	skip_debug=(joystick.GetState()==Joystick::State::kIdle?true:false);
   }
 
