@@ -124,8 +124,8 @@ struct {
   uint16_t cross_cal_ratio = 80; //Look forward @cross_cal_start_num - encoder_total/@cross_cal_ratio to determine path
   uint16_t general_cal_num = 20; //The num of path points considered for servo angle decision except crossing
   uint16_t cross_encoder_count = 4000; // The hardcoded encoder count that car must reach in crossroad
-  uint16_t round_enter_offset = 13;
-  uint16_t round_exit_offset = 25;
+  uint16_t round_enter_offset = 20;
+  uint16_t round_exit_offset = 22;
   uint16_t round_encoder_count = 2600;
   uint16_t roundExit_encoder_count = 3000;
   uint16_t roundroad_exit_radius = 15;

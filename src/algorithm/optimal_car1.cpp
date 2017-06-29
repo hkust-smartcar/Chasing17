@@ -883,8 +883,8 @@ Feature featureIdent_Corner() {
 		else{
 			if (meet_exit) {
 				//GO
+				pLed3->SetEnable(true);
 				if(pBT->hasFinishedOvertake()){//Maybe never inside this loop?
-					pLed3->Switch();
 					System::DelayMs(2000);
 					stop_before_roundexit = false;
 					// roundaboutStatus = 0;
@@ -1379,7 +1379,7 @@ bool FindStoppingLine() {
 			count++;
 			refPoint = !refPoint;
 		}
-		if (count > 10) {
+		if (count > 20) {
 			return true;
 		}
 	}
@@ -1442,7 +1442,7 @@ void main_car1(bool debug_) {
 	cameraConfig.w = CameraSize::w;
 	cameraConfig.h = CameraSize::h;
 	cameraConfig.fps = Ov7725Configurator::Config::Fps::kHigh;
-	cameraConfig.contrast = 0x3D;
+//	cameraConfig.contrast = 0x3D;
 	cameraConfig.brightness = 0x00;
 	std::unique_ptr<Ov7725> camera = util::make_unique<Ov7725>(cameraConfig);
 	spCamera = std::move(camera);
@@ -1544,53 +1544,91 @@ void main_car1(bool debug_) {
 					pLcd->SetRegion(Lcd::Rect(0,85,128,15));
 					stop_before_roundexit?pWriter->WriteString("StopB"):pWriter->WriteString("No StopB");
 				}
-				pLcd->SetRegion(Lcd::Rect(0,0,128,15));
-				is_front_car?pWriter->WriteString("Front"):pWriter->WriteString("Back");
-
+//				pLcd->SetRegion(Lcd::Rect(0,0,128,15));
+//				is_front_car?pWriter->WriteString("Front"):pWriter->WriteString("Back");
 
 				if (roundaboutExitStatus == 1 && stop_before_roundexit) {
 					/*Consider braking*/
-					if(brake_flag){
-						brake_flag = false;
-						pMotor0->SetClockwise(false);
-						pMotor1->SetClockwise(true);
-						pMotor0->SetPower(1000);
-						pMotor1->SetPower(1000);
-						System::DelayMs(250);
-					}
-					else{
+					pMotor0->SetClockwise(false);
+					pMotor1->SetClockwise(true);
+					pMotor0->SetPower(1000);
+					pMotor1->SetPower(1000);
+					System::DelayMs(200);
+					while(true){
 						pMotor0->SetPower(0);
 						pMotor1->SetPower(0);
+						if(pBT->hasFinishedOvertake()){
+							break;
+						}
 					}
-				}
-				else{
+					System::DelayMs(1500);
+					stop_before_roundexit = false;
+					// roundaboutStatus = 0;
+					exit_round_ready = false;
+//					pEncoder0->Update();
+//					pEncoder1->Update();
+					encoder_total_exit = 0;
+					pBT->resetFinishOvertake();
 					pMotor0->SetClockwise(true);
 					pMotor1->SetClockwise(false);
 					pMotor0->SetPower(190);
 					pMotor1->SetPower(190);
 				}
-				if(roundaboutExitStatus ==0){
-					brake_flag = true;
-				}
+//				if (roundaboutExitStatus == 1 && stop_before_roundexit) {
+//					/*Consider braking*/
+//					if(brake_flag){
+//						brake_flag = false;
+//						pMotor0->SetClockwise(false);
+//						pMotor1->SetClockwise(true);
+//						pMotor0->SetPower(1000);
+//						pMotor1->SetPower(1000);
+//						System::DelayMs(250);
+//					}
+//					else{
+//						pMotor0->SetPower(0);
+//						pMotor1->SetPower(0);
+//					}
+//				}
+//				else{
+//					pMotor0->SetClockwise(true);
+//					pMotor1->SetClockwise(false);
+//					pMotor0->SetPower(190);
+//					pMotor1->SetPower(190);
+//				}
+//				if(roundaboutExitStatus ==0){
+//					brake_flag = true;
+//				}
 				//Double check
-				if(pMotor0->GetPower() == 0 && pMotor1->GetPower() == 0){
-					if(pBT->hasFinishedOvertake()){
-						System::DelayMs(2000);
-						stop_before_roundexit = false;
-						// roundaboutStatus = 0;
-						exit_round_ready = false;
-						encoder_total_exit = 0;
-						pBT->resetFinishOvertake();
-					}
-				}
+//				if(pMotor0->GetPower() == 0 && pMotor1->GetPower() == 0){
+//					if(pBT->hasFinishedOvertake()){
+//						System::DelayMs(2000);
+//						stop_before_roundexit = false;
+//						// roundaboutStatus = 0;
+//						exit_round_ready = false;
+//						encoder_total_exit = 0;
+//						pBT->resetFinishOvertake();
+//					}
+//				}
 
 				//        Timer::TimerInt new_time = System::Time();
 				Capture(); //Capture until two base points are identified
-				//        if (FindStoppingLine() && time_img-startTime > 10000) {
-				//          pMotor0->SetPower(0);
-				//          pMotor1->SetPower(0);
-				//          pWriter->WriteString("Stopping Line Detected");
-				//        }
+		        if (FindStoppingLine() && time_img - startTime > 10000) {
+					if (FindStoppingLine() && time_img-startTime > 10000) {
+			        	if(is_front_car){
+							  pMotor0->SetPower(0);
+							  pMotor1->SetPower(0);
+			        	}else{
+			                pMotor0->SetClockwise(false);
+			                pMotor1->SetClockwise(true);
+			                pMotor0->SetPower(1000);
+			                pMotor1->SetPower(1000);
+			                System::DelayMs(18);
+			                pMotor0->SetPower(0);
+			                pMotor1->SetPower(0);
+			        	}
+					}
+		          pWriter->WriteString("Stopping Line Detected");
+		        }
 				FindEdges();
 				Feature feature = featureIdent_Corner();
 				GenPath(feature); //Generate path
@@ -1606,9 +1644,12 @@ void main_car1(bool debug_) {
 				//		sprintf(timestr, "AngleOS: %d", servoAngle);
 				//		pServo->SetDegree(servo_bounds.kCenter + servoAngle);
 				//		pWriter->WriteString(timestr);
-//						PrintWorldImage();
-//						PrintCorner(left_corners, Lcd::kPurple); //Print left_corner
-//						PrintCorner(right_corners, Lcd::kPurple); //Print right_corner
+//				PrintWorldImage();
+//				PrintEdge(left_edge, Lcd::kRed); //Print left_edge
+//				PrintEdge(right_edge, Lcd::kBlue); //Print right_edge
+//				PrintCorner(left_corners, Lcd::kPurple); //Print left_corner
+//				PrintCorner(right_corners, Lcd::kPurple); //Print right_corner
+//				PrintEdge(path, Lcd::kGreen); //Print path
 				//		pLcd->SetRegion(Lcd::Rect(carMid.first, carMid.second, 5, 5));
 				//		pLcd->FillColor(Lcd::kRed);
 				if (debug) {
