@@ -85,9 +85,9 @@ int main() {
   constexpr Algorithm a = Algorithm::kTestGround;
 
   // modify next line to change which car we're working with
-  constexpr CarManager::Car c = CarManager::Car::kCar1;
+  CarManager::Car c = CarManager::Car::kCar1;
 
-  bool reset=false;
+  bool reset=false,skip_debug=false;
   {
 	Joystick::Config joystick_config;
 	joystick_config.id = 0;
@@ -95,9 +95,18 @@ int main() {
 	Joystick joystick(joystick_config);
 
 	reset=(joystick.GetState()==Joystick::State::kDown?true:false);
+	skip_debug=(joystick.GetState()==Joystick::State::kIdle?true:false);
   }
 
-  debug(reset);
+  if(!skip_debug)
+  switch(debug(reset)){
+  case 1:
+	  c = CarManager::Car::kCar1;
+	  break;
+  case 2:
+	  c = CarManager::Car::kCar2;
+	  break;
+  }
 
   switch (a) {
     case Algorithm::kOptimal:
