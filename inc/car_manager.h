@@ -43,13 +43,11 @@
 #include "fc_yy_us_v4.h"
 #include "util/mpc.h"
 #include "util/mpc_dual.h"
-#include "util/servo_controller.h"
 
 // forward declaration for util::Mpc, util::MpcDual, util::ServoController
 namespace util {
 class Mpc;
 class MpcDual;
-class ServoController;
 }
 
 class CarManager final {
@@ -109,7 +107,6 @@ class CarManager final {
     std::unique_ptr<util::Mpc> epc_left = nullptr;
     std::unique_ptr<util::Mpc> epc_right = nullptr;
     std::unique_ptr<util::MpcDual> epc = nullptr;
-    std::unique_ptr<util::ServoController> servo_controller = nullptr;
     std::unique_ptr<libsc::FutabaS3010> servo = nullptr;
     std::unique_ptr<FcYyUsV4> usir = nullptr;
 //    std::unique_ptr<Mpu9250> mpu = nullptr;
@@ -248,7 +245,6 @@ class CarManager final {
   static std::unique_ptr<util::Mpc> epc_left_;
   static std::unique_ptr<util::Mpc> epc_right_;
   static std::unique_ptr<util::MpcDual> epc_;
-  static std::unique_ptr<util::ServoController> servo_controller_;
   static std::unique_ptr<libsc::FutabaS3010> servo_;
 //  static std::unique_ptr<Mpu9250> mpu_;
   static std::unique_ptr<FcYyUsV4> usir_;

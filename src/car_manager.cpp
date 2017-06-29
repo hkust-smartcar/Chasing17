@@ -25,7 +25,6 @@ using std::move;
 using std::unique_ptr;
 using util::Mpc;
 using util::MpcDual;
-using util::ServoController;
 
 uint16_t CarManager::us_distance_ = 0;
 int32_t CarManager::left_speed_ = 0;
@@ -52,7 +51,6 @@ constexpr CarManager::PidValues CarManager::kMotorPidCar2;
 unique_ptr<Mpc> CarManager::epc_left_ = nullptr;
 unique_ptr<Mpc> CarManager::epc_right_ = nullptr;
 unique_ptr<MpcDual> CarManager::epc_ = nullptr;
-unique_ptr<ServoController> CarManager::servo_controller_ = nullptr;
 unique_ptr<FutabaS3010> CarManager::servo_ = nullptr;
 unique_ptr<FcYyUsV4> CarManager::usir_ = nullptr;
 //unique_ptr<Mpu9250> CarManager::mpu_ = nullptr;
@@ -66,7 +64,6 @@ void CarManager::Init(Config config) {
   epc_left_ = move(config.epc_left);
   epc_right_ = move(config.epc_right);
   epc_ = move(config.epc);
-  servo_controller_ = move(config.servo_controller);
 //  mpu_ = move(config.mpu);
   servo_ = move(config.servo);
   identity_ = config.identity;
@@ -172,27 +169,9 @@ void CarManager::SetTargetSpeed(const int16_t speed, MotorSide src) {
 }
 
 void CarManager::SetTargetAngle(const int16_t angle) {
-  ServoBounds s = GetServoBounds();
-  ServoAngles a = GetServoAngles();
-
-  if (servo_controller_ != nullptr) {
-    int16_t new_angle = angle;
-
-    if (new_angle > a.kRightAngle) {
-      new_angle = a.kRightAngle;
-    } else if (new_angle < -a.kLeftAngle) {
-      new_angle = -a.kLeftAngle;
-    }
-
-    servo_controller_->SetTargetAngle(new_angle, false);
-    return;
-  }
-
   if (servo_ != nullptr) {
-    uint16_t new_angle = s.kCenter;
-
-    new_angle = util::clamp<uint16_t>(s.kCenter - angle, s.kRightBound, s.kLeftBound);
-
+    ServoBounds s = GetServoBounds();
+    uint16_t new_angle = util::clamp<uint16_t>(s.kCenter - angle, s.kRightBound, s.kLeftBound);
     servo_->SetDegree(new_angle);
     return;
   }
@@ -232,13 +211,6 @@ void CarManager::UpdateSpeed() {
 }
 
 void CarManager::UpdateServoAngle() {
-  if (servo_controller_ != nullptr) {
-    servo_controller_->SetCommitFlag(true);
-    servo_controller_->DoCorrection();
-    servo_deg_ = servo_controller_->GetRawAngle();
-    return;
-  }
-
   if (servo_ != nullptr) {
     servo_deg_ = servo_->GetDegree();
     return;
