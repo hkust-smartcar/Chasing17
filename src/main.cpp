@@ -15,6 +15,9 @@
 #include "libsc/lcd_console.h"
 #include "libsc/st7735r.h"
 #include "libsc/system.h"
+#include "libsc/joystick.h"
+
+#include "debug.h"
 
 #include "algorithm/distance.h"
 #include "util/testground.h"
@@ -38,6 +41,7 @@ using libsc::Lcd;
 using libsc::LcdConsole;
 using libsc::St7735r;
 using libsc::System;
+using libsc::Joystick;
 
 enum struct Algorithm {
   kOptimal,
@@ -77,13 +81,35 @@ int main() {
 
       System::DelayMs(1000);
     } while (voltage <= 7.4);
+
   }
 
   // modify next line to switch between algorithms
   constexpr Algorithm a = Algorithm::kOptimal;
 
   // modify next line to change which car we're working with
-  constexpr CarManager::Car c = CarManager::Car::kCar1;
+  CarManager::Car c = CarManager::Car::kCar1;
+
+  bool reset=false,skip_debug=false;
+  {
+	Joystick::Config joystick_config;
+	joystick_config.id = 0;
+	joystick_config.is_active_low = true;
+	Joystick joystick(joystick_config);
+
+	reset=(joystick.GetState()==Joystick::State::kSelect?true:false);
+	skip_debug=(joystick.GetState()==Joystick::State::kIdle?true:false);
+  }
+
+  if(!skip_debug)
+  switch(debug(reset)){
+  case 1:
+	  c = CarManager::Car::kCar1;
+	  break;
+  case 2:
+	  c = CarManager::Car::kCar2;
+	  break;
+  }
 
   switch (a) {
     case Algorithm::kOptimal:
