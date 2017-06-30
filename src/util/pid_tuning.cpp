@@ -23,7 +23,7 @@
 #include "libsc/lcd_typewriter.h"
 #include "libsc/led.h"
 #include "libsc/system.h"
-#include "libutil/incremental_pid_controller.h"
+#include "libutil/positional_pid_controller.h"
 #include "libsc/joystick.h"
 
 #include "bluetooth.h"
@@ -43,7 +43,7 @@ uint8_t now_angle = 0;
 DirMotor* pMotor0 = nullptr;
 DirMotor* pMotor1 = nullptr;
 
-float Kp = 1.5, Ki = 0.001, Kd = 0;
+float Kp = 0, Ki = 0, Kd = 0;
 float left_motor_target = 0, right_motor_target = 0;
 
 /*
@@ -168,9 +168,9 @@ void main() {
   JyMcuBt106 bt(bt_config);
   Timer::TimerInt time_img = 0;
 
-  IncrementalPidController<float, float> pid_left(0,0,0,0);
+  PositionalPidController<float, float> pid_left(0,0,0,0);
   pid_left.SetOutputBound(-500, 500);
-  IncrementalPidController<float, float> pid_right(0,0,0,0);
+  PositionalPidController<float, float> pid_right(0,0,0,0);
   pid_right.SetOutputBound(-500, 500);
 
   St7735r::Config lcd_config;
@@ -201,11 +201,18 @@ void main() {
 			  pid_left.SetSetpoint(left_motor_target);
 			  pid_right.SetSetpoint(right_motor_target);
 
-			  encoder0.Update();
-			  encoder1.Update();
+			  /* PID I Limit */
+//			  pid_left.SetILimit(?);
+//			  pid_right,SetILimit(?);
 
-			  curr_left = encoder0.GetCount();
-			  curr_right = -encoder1.GetCount();
+			  /* Encoder bug workaround */
+//			 do {
+				  encoder0.Update();
+				  encoder1.Update();
+
+				  curr_left = encoder0.GetCount();
+				  curr_right = -encoder1.GetCount();
+//			 } while (curr_left > ? && curr_right > ?);
 
 			  char speedChar[100]{};
 			  sprintf(speedChar, "%.1f,%d,%.2f,%d,%.2f\n", 1.0, curr_left, left_motor_target, curr_right, right_motor_target);
@@ -213,11 +220,8 @@ void main() {
 			  bt.SendBuffer(&speedByte, 1);
 			  bt.SendStr(speedChar);
 
-//			  motor0.AddPower(pid_left.Calc(curr_left));
-//			  motor1.AddPower(pid_right.Calc(curr_right));
-
-			  SetMotorPower(GetMotorPower(0)+pid_left.Calc(curr_left),0);
-			  SetMotorPower(GetMotorPower(1)+pid_right.Calc(curr_right),1);
+			  SetMotorPower(pid_left.Calc(curr_left),0);
+			  SetMotorPower(pid_right.Calc(curr_right),1);
 
 			  led1.SetEnable(time_img/250);
 		  }
