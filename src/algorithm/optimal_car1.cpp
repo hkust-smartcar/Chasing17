@@ -1577,8 +1577,8 @@ void main_car1(bool debug_) {
 	pid_left.SetOutputBound(-500, 500);
 	IncrementalPidController<float, float> pid_right(0,0,0,0);
 	pid_right.SetOutputBound(-500, 500);
-	pid_left.SetKp(0);
-	pid_right.SetKp(0);
+	pid_left.SetKp(1.5);
+	pid_right.SetKp(1.5);
 	pid_left.SetKi(0.001);
 	pid_right.SetKi(0.001);
 	pid_left.SetKd(0);
@@ -1640,12 +1640,12 @@ void main_car1(bool debug_) {
 					/*Consider braking*/
 					pMotor0->SetClockwise(false);
 					pMotor1->SetClockwise(true);
-//					pMotor0->SetPower(1000);
-//					pMotor1->SetPower(1000);
+					pMotor0->SetPower(1000);
+					pMotor1->SetPower(1000);
 					System::DelayMs(200);
 					while(true){
-//						pMotor0->SetPower(0);
-//						pMotor1->SetPower(0);
+						pMotor0->SetPower(0);
+						pMotor1->SetPower(0);
 						if(pBT->hasFinishedOvertake()){
 							break;
 						}
@@ -1660,8 +1660,8 @@ void main_car1(bool debug_) {
 					pBT->resetFinishOvertake();
 					pMotor0->SetClockwise(true);
 					pMotor1->SetClockwise(false);
-//					pMotor0->SetPower(TuningVar::targetSpeed);
-//					pMotor1->SetPower(TuningVar::targetSpeed);
+					pMotor0->SetPower(TuningVar::targetSpeed);
+					pMotor1->SetPower(TuningVar::targetSpeed);
 				}
 //				if (roundaboutExitStatus == 1 && stop_before_roundexit) {
 //					/*Consider braking*/
@@ -1704,16 +1704,16 @@ void main_car1(bool debug_) {
 		        if (FindStoppingLine() && time_img - startTime > 10000) {
 					if (FindStoppingLine() && time_img-startTime > 10000) {
 			        	if(is_front_car){
-//							  pMotor0->SetPower(0);
-//							  pMotor1->SetPower(0);
+							  pMotor0->SetPower(0);
+							  pMotor1->SetPower(0);
 			        	}else{
-//			                pMotor0->SetClockwise(false);
-//			                pMotor1->SetClockwise(true);
-//			                pMotor0->SetPower(1000);
-//			                pMotor1->SetPower(1000);
-//			                System::DelayMs(18);
-//			                pMotor0->SetPower(0);
-//			                pMotor1->SetPower(0);
+			                pMotor0->SetClockwise(false);
+			                pMotor1->SetClockwise(true);
+			                pMotor0->SetPower(1000);
+			                pMotor1->SetPower(1000);
+			                System::DelayMs(18);
+			                pMotor0->SetPower(0);
+			                pMotor1->SetPower(0);
 			        	}
 					}
 		          pWriter->WriteString("Stopping Line Detected");
@@ -1804,6 +1804,10 @@ void main_car1(bool debug_) {
 				curr_enc_val_right = -pEncoder1->GetCount();
 				SetMotorPower(GetMotorPower(0)+pid_left.Calc(curr_enc_val_left),0);
 				SetMotorPower(GetMotorPower(1)+pid_right.Calc(curr_enc_val_right),1);
+				if(curr_enc_val_left<100||curr_enc_val_right<100){
+					pMotor0->SetPower(0);
+					pMotor1->SetPower(0);
+				}
 			}
 		}
 
