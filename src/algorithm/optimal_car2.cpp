@@ -1486,16 +1486,10 @@ void main_car2(bool debug_) {
 //    }
 //  }
 
-	while(true&&!debug){
-		if(joystick.GetState() != Joystick::State::kIdle){
-			Timer::TimerInt start=System::Time();
-			bt.sendStartReq();
-			System::DelayMs(1500);
-			break;
-		}
-	}
-
-
+  if(!debug){
+	bt.sendStartReq();
+	System::DelayMs(1500);
+  }
 
 //	StartlineOvertake();
 	pMotor0->SetClockwise(true);
