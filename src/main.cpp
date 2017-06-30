@@ -85,7 +85,7 @@ int main() {
   }
 
   // modify next line to switch between algorithms
-  constexpr Algorithm a = Algorithm::kOptimal;
+  constexpr Algorithm a = Algorithm::kPID;
 
   // modify next line to change which car we're working with
   CarManager::Car c = CarManager::Car::kCar1;

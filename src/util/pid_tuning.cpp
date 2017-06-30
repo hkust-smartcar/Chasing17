@@ -19,9 +19,12 @@
 #include "libsc/futaba_s3010.h"
 #include "libsc/k60/jy_mcu_bt_106.h"
 #include "libsc/lcd_console.h"
+#include "libsc/st7735r.h"
+#include "libsc/lcd_typewriter.h"
 #include "libsc/led.h"
 #include "libsc/system.h"
 #include "libutil/incremental_pid_controller.h"
+#include "libsc/joystick.h"
 
 #include "bluetooth.h"
 #include "util/util.h"
@@ -37,9 +40,50 @@ std::string inputStr;
 bool tune = false;
 std::vector<double> constVector;
 uint8_t now_angle = 0;
+DirMotor* pMotor0 = nullptr;
+DirMotor* pMotor1 = nullptr;
 
-float Kp = 0, Ki = 0, Kd = 0;
-float left_motor_target = 0, right_motor_target = 0;
+float Kp = 1, Ki = 1, Kd = 1;
+float left_motor_target = 100, right_motor_target = 100;
+
+/*
+ * @brief set motor power
+ * power: direction and magnitude; negative is going backward
+ * id: motor id, which is 0 or 1
+ */
+void SetMotorPower(int power,int id){
+	int pw = (power>0?power:-power);	//abs power
+	bool direction = (power>0);			//positive is true
+	pw = libutil::Clamp<int>(0,pw,1000);
+	switch(id){
+	case 0:
+		pMotor0->SetPower(pw);
+		pMotor0->SetClockwise(direction);	//true is forward
+		break;
+	case 1:
+		pMotor1->SetPower(pw);
+		pMotor1->SetClockwise(!direction);	//false is forward
+		break;
+	}
+}
+
+/*
+ * @brief get motor power, negative is going backward
+ * id: motor id, which is 0 or 1
+ */
+int GetMotorPower(int id){
+	switch(id){
+	case 0:
+		int power = pMotor0->GetPower();
+		return (pMotor0->IsClockwise() ? power : -power);//true is forward
+		break;
+	case 1:
+		int power = pMotor1->GetPower();
+		return (pMotor1->IsClockwise() ? -power : power);//false is forward
+		break;
+	}
+	return 0;
+}
 
 /*
  * @brief: bluetooth listener for processing tuning
@@ -92,6 +136,8 @@ void main() {
   ConfigLed.is_active_low = true;
   ConfigLed.id = 0;
   Led led0(ConfigLed);
+  ConfigLed.id=1;
+  Led led1(ConfigLed);
 
   led0.SetEnable(true);
 
@@ -111,6 +157,8 @@ void main() {
   ConfigMotor.id = 1;
   DirMotor motor1(ConfigMotor);
   motor1.SetClockwise(false);
+  pMotor0=&motor0;
+  pMotor1=&motor1;
 
   JyMcuBt106::Config bt_config;
   bt_config.id = 0;
@@ -124,8 +172,23 @@ void main() {
   IncrementalPidController<float, float> pid_right(0,0,0,0);
   pid_right.SetOutputBound(-500, 500);
 
+  St7735r::Config lcd_config;
+  lcd_config.is_revert = true;
+  St7735r lcd(lcd_config);
+  lcd.Clear();
+
+  LcdTypewriter::Config writerconfig;
+   writerconfig.lcd = &lcd;
+   LcdTypewriter writer(writerconfig);
+
+   Joystick::Config joystick_config;
+     joystick_config.id = 0;
+     joystick_config.is_active_low = true;
+     Joystick joystick(joystick_config);
+
   while (true){
 	  while (System::Time() != time_img){
+		  int curr_left=0, curr_right=0;
 		  time_img = System::Time();
 		  if (time_img % 10 == 0){
 			  pid_left.SetKp(Kp);
@@ -140,8 +203,8 @@ void main() {
 			  encoder0.Update();
 			  encoder1.Update();
 
-			  int curr_left = -encoder0.GetCount();
-			  int curr_right = encoder1.GetCount();
+			  curr_left = encoder0.GetCount();
+			  curr_right = -encoder1.GetCount();
 
 			  char speedChar[100]{};
 			  sprintf(speedChar, "%.1f,%d,%.2f,%d,%.2f\n", 1.0, curr_left, left_motor_target, curr_right, right_motor_target);
@@ -151,8 +214,17 @@ void main() {
 
 			  motor0.AddPower(pid_left.Calc(curr_left));
 			  motor1.AddPower(pid_right.Calc(curr_right));
+			  led1.SetEnable(time_img/250);
 		  }
-		  if (time_img % 500 == 0) led0.Switch();
+		  if (time_img % 500 == 0) {
+			  led0.Switch();
+			  if(joystick.GetState()==Joystick::State::kSelect){
+				  char buff[100];
+				  sprintf(buff,"kp:%.5lf \nki:%.5lf \nkd:%.5lf \nleft:%.5lf \n right:%.5lf\n left%.5lf\nright%.5lf",Kp,Ki,Kd,left_motor_target,right_motor_target,pid_left.Calc(curr_left),pid_right.Calc(curr_right));
+				  lcd.SetRegion(Lcd::Rect(0,0,128,160));
+				  writer.WriteBuffer(buff,100);
+			  }
+		  }
 	  }
   }
 }
