@@ -43,8 +43,8 @@ uint8_t now_angle = 0;
 DirMotor* pMotor0 = nullptr;
 DirMotor* pMotor1 = nullptr;
 
-float Kp = 1, Ki = 1, Kd = 1;
-float left_motor_target = 100, right_motor_target = 100;
+float Kp = 1.5, Ki = 0.001, Kd = 0;
+float left_motor_target = 0, right_motor_target = 0;
 
 /*
  * @brief set motor power
@@ -216,8 +216,8 @@ void main() {
 //			  motor0.AddPower(pid_left.Calc(curr_left));
 //			  motor1.AddPower(pid_right.Calc(curr_right));
 
-			  SetMotorPower(200,0);
-			  SetMotorPower(200,1);
+			  SetMotorPower(GetMotorPower(0)+pid_left.Calc(curr_left),0);
+			  SetMotorPower(GetMotorPower(1)+pid_right.Calc(curr_right),1);
 
 			  led1.SetEnable(time_img/250);
 		  }
@@ -225,8 +225,8 @@ void main() {
 			  led0.Switch();
 			  if(joystick.GetState()==Joystick::State::kSelect){
 				  char buff[100];
-//				  sprintf(buff,"kp:%.5lf \nki:%.5lf \nkd:%.5lf \nleft:%.5lf \n right:%.5lf\n left%.5lf\nright%.5lf",Kp,Ki,Kd,left_motor_target,right_motor_target,pid_left.Calc(curr_left),pid_right.Calc(curr_right));
-				  sprintf(buff,"%d\n%d",GetMotorPower(0),GetMotorPower(1));
+				  sprintf(buff,"kp:%.5lf \nki:%.5lf \nkd:%.5lf \nleft:%.5lf \n right:%.5lf\n left%.5lf\nright%.5lf\n%d\n%d",Kp,Ki,Kd,left_motor_target,right_motor_target,pid_left.Calc(curr_left),pid_right.Calc(curr_right),GetMotorPower(0),GetMotorPower(1));
+//				  sprintf(buff,"%d\n%d",GetMotorPower(0),GetMotorPower(1));
 				  lcd.SetRegion(Lcd::Rect(0,0,128,160));
 				  writer.WriteBuffer(buff,100);
 			  }
