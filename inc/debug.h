@@ -25,6 +25,10 @@ using libbase::k60::Flash;
 uint16_t car = 0;
 bool confirm = false;
 
+namespace debug_flag{
+	  bool lcd_debug = false;
+}
+
 void confirmCar() {
   confirm = true;
 }
@@ -33,11 +37,13 @@ void loadItems(DebugConsole* console) {
   if (car == 1) {
     using algorithm::optimal::car1::TuningVar;
 
+    console->PushItem("lcddebug", &debug_flag::lcd_debug);
     console->PushItem("roundabt", &TuningVar.starting_y, 1);
 
   } else if (car != 0) {
     using algorithm::optimal::car2::TuningVar;
 
+    console->PushItem("lcddebug", &debug_flag::lcd_debug);
     console->PushItem("roundabt", &TuningVar.starting_y, 1);
 
   }

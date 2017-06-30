@@ -98,7 +98,7 @@ int main() {
     Joystick joystick(joystick_config);
 
     reset = (joystick.GetState() == Joystick::State::kSelect ? true : false);
-    skip_debug = (joystick.GetState() == Joystick::State::kIdle ? true : false);
+//    skip_debug = (joystick.GetState() == Joystick::State::kIdle ? true : false);
   }
 
   if (!skip_debug)
@@ -115,10 +115,10 @@ int main() {
     case Algorithm::kOptimal:
       switch (c) {
         case CarManager::Car::kCar1:
-          algorithm::optimal::car1::main_car1(false);
+          algorithm::optimal::car1::main_car1(debug_flag::lcd_debug);
           break;
         case CarManager::Car::kCar2:
-          algorithm::optimal::car2::main_car2(false);
+          algorithm::optimal::car2::main_car2(debug_flag::lcd_debug);
       }
 
       break;

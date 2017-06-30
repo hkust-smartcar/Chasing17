@@ -1486,7 +1486,7 @@ void main_car2(bool debug_) {
 //    }
 //  }
 
-	while(true){
+	while(true&&!debug){
 		if(joystick.GetState() != Joystick::State::kIdle){
 			Timer::TimerInt start=System::Time();
 			bt.sendStartReq();

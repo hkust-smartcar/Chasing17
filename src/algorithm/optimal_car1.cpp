@@ -1514,7 +1514,7 @@ void main_car1(bool debug_) {
 //	  }
 
 //
-		while(joystick.GetState() == Joystick::State::kIdle){
+		while(joystick.GetState() == Joystick::State::kIdle&&!debug){
 			if(bt.hasStartReq()){
 				break;
 			}
