@@ -22,6 +22,7 @@
 #include "libsc/k60/ov7725.h"
 #include "libsc/joystick.h"
 #include "libutil/misc.h"
+#include "libutil/incremental_pid_controller.h"
 
 #include "bluetooth.h"
 #include "util/util.h"
@@ -45,6 +46,7 @@ using libsc::Timer;
 using libsc::k60::JyMcuBt106;
 using libsc::k60::Ov7725;
 using libsc::k60::Ov7725Configurator;
+using namespace libutil;
 
 namespace algorithm {
 namespace optimal {
@@ -1426,6 +1428,46 @@ void StartlineOvertake() {
 
 }  // namespace
 
+/*
+ * @brief set motor power
+ * power: direction and magnitude; negative is going backward
+ * id: motor id, which is 0 or 1
+ */
+void SetMotorPower(int power,int id){
+	int pw = (power>0?power:-power);	//abs power
+	bool direction = (power>0);			//positive is true
+	pw = libutil::Clamp<int>(0,pw,1000);
+	switch(id){
+	case 0:
+		pMotor0->SetPower(pw);
+		pMotor0->SetClockwise(direction);	//true is forward
+		break;
+	case 1:
+		pMotor1->SetPower(pw);
+		pMotor1->SetClockwise(!direction);	//false is forward
+		break;
+	}
+}
+
+/*
+ * @brief get motor power, negative is going backward
+ * id: motor id, which is 0 or 1
+ */
+int GetMotorPower(int id){
+	int power;
+	switch(id){
+	case 0:
+		power = pMotor0->GetPower();
+		return (pMotor0->IsClockwise() ? power : -power);//true is forward
+		break;
+	case 1:
+		power = pMotor1->GetPower();
+		return (pMotor1->IsClockwise() ? -power : power);//false is forward
+		break;
+	}
+	return 0;
+}
+
 void main_car2(bool debug_) {
   debug = debug_;
 
@@ -1503,6 +1545,17 @@ void main_car2(bool debug_) {
   joystick_config.id = 0;
   joystick_config.is_active_low = true;
   Joystick joystick(joystick_config);
+
+  IncrementalPidController<float, float> pid_left(0,0,0,0);
+  pid_left.SetOutputBound(-500, 500);
+  IncrementalPidController<float, float> pid_right(0,0,0,0);
+  pid_right.SetOutputBound(-500, 500);
+  pid_left.SetKp(1.5);
+  pid_right.SetKp(1.5);
+  pid_left.SetKi(0.001);
+  pid_right.SetKi(0.001);
+  pid_left.SetKd(0);
+  pid_right.SetKd(0);
 
 //  DebugConsole console(&joystick, &lcd, &writer, 10);
 
@@ -1711,11 +1764,14 @@ void main_car2(bool debug_) {
 		prev_servo_error = curr_servo_error;
 
 		/* Motor PID */
+		pid_left.SetSetpoint(TuningVar::targetSpeed);
+		pid_right.SetSetpoint(TuningVar::targetSpeed);
 		pEncoder0->Update();
 		pEncoder1->Update();
 		curr_enc_val_left = (pEncoder0->GetCount());
 		curr_enc_val_right = (pEncoder1->GetCount());
-
+		SetMotorPower(GetMotorPower(0)+pid_left.Calc(curr_enc_val_left),0);
+		SetMotorPower(GetMotorPower(1)+pid_right.Calc(curr_enc_val_right),1);
       }
     }
 

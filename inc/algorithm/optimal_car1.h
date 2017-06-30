@@ -98,7 +98,7 @@ enum struct Feature : uint8_t {
   kRoundaboutExit
 };
 
-inline int differential(int x) { return 0.005155126f*x + 0.00002657528f*x*x; }
+inline int differential(int x) { return 0.295367f*x + 0.0872415f*x*x; }
 
 /*CAR1*/
 namespace TuningVar {
