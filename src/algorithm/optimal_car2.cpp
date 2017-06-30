@@ -1494,8 +1494,8 @@ void main_car2(bool debug_) {
 //	StartlineOvertake();
 	pMotor0->SetClockwise(true);
 	pMotor1->SetClockwise(false);
-	pMotor0->SetPower(200);
-	pMotor1->SetPower(200);
+	pMotor0->SetPower(TuningVar.targetSpeed);
+	pMotor1->SetPower(TuningVar.targetSpeed);
 
   Timer::TimerInt startTime = System::Time();
   bool brake_flag = true;
@@ -1545,8 +1545,8 @@ void main_car2(bool debug_) {
 				pBT->resetFinishOvertake();
 				pMotor0->SetClockwise(true);
 				pMotor1->SetClockwise(false);
-				pMotor0->SetPower(200);
-				pMotor1->SetPower(200);
+				pMotor0->SetPower(TuningVar.targetSpeed);
+				pMotor1->SetPower(TuningVar.targetSpeed);
 			}
 //    	  if (roundaboutExitStatus == 1 && stop_before_roundexit) {
 //				if(brake_flag){
@@ -1666,7 +1666,7 @@ void main_car2(bool debug_) {
 		int curr_servo_error = CalcAngleDiff();
 
 		pServo->SetDegree(util::clamp<uint16_t>(
-                servo_bounds.kCenter - (1.3 * curr_servo_error + 0 * (curr_servo_error - prev_servo_error)),
+                servo_bounds.kCenter - (TuningVar.servo_normal_kp * curr_servo_error + TuningVar.servo_normal_kd * (curr_servo_error - prev_servo_error)),
                 servo_bounds.kRightBound,
                 servo_bounds.kLeftBound));
 		prev_servo_error = curr_servo_error;

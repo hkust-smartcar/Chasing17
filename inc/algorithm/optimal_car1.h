@@ -137,6 +137,9 @@ struct {
   int32_t roundabout_shortest_flag = 0b11000000000000000000000000000000; //1 means turn left, 0 means turn right. Reading from left to right
   uint16_t angle_div_error = 1; // translate error into angle
   uint16_t nearest_corner_threshold = 128/2;
+  float servo_normal_kp = 1.3;
+  float servo_normal_kd = 0;
+  uint16_t targetSpeed = 190;
 
 } TuningVar;
 
