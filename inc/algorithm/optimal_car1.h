@@ -101,47 +101,46 @@ enum struct Feature : uint8_t {
 inline int differential(int x) { return 0.295367f*x + 0.0872415f*x*x; }
 
 /*CAR1*/
-struct {
-  bool roundabout_turn_left = true; //Used for GenPath()
-  uint16_t starting_y = 15; //the starting y for edge detection
-  uint16_t edge_length = 159; //max length for an edge
-  uint16_t edge_hor_search_max = 4; //max for horizontal search of edge if next edge point cannot be found
-  uint16_t edge_min_worldview_bound_check = 30; //min for worldview bound check in edge finding
-  uint16_t corner_range = 7; //the square for detection would be in size corener_range*2+1
-  float corner_height_ratio = 2.9; //the max height for detection would be WorldSize.h/corner_height_ratio
-  uint16_t corner_min = 16, corner_max = 31; //threshold (in %) for corner detection
-  uint16_t min_corners_dist = 7; // Manhattan dist threshold for consecutive corners
-  uint16_t min_edges_dist = 7; // Manhattan dist threshold for edges
-  uint16_t track_width_threshold = 900; //track width threshold for consideration of sudden change (square)
-  uint16_t track_width_change_threshold = 350; //track width change threshold for consideration of sudden change
-  uint16_t sightDist = 60; // The distance from which the image pixel should be tested
-  uint16_t sightDist_exitRound = 60; //The distance from which the image pixel is used for exit testing
-  uint16_t straight_line_threshold = 45; // The threshold num. of equal width for straight line detection
-  uint16_t action_distance = 27; // The condition in which the car start handling this feature when meeting it
-  uint16_t stop_distance = 10; // The distance away from starting line - for stopping
-  libsc::Timer::TimerInt feature_inside_time = 350; // freezing time for feature extraction, the time for entering the entrance
-  uint16_t cross_cal_start_num = 80;
-  uint16_t cross_cal_ratio = 80; //Look forward @cross_cal_start_num - encoder_total/@cross_cal_ratio to determine path
-  uint16_t general_cal_num = 20; //The num of path points considered for servo angle decision except crossing
-  uint16_t cross_encoder_count = 4000; // The hardcoded encoder count that car must reach in crossroad
-  uint16_t round_enter_offset = 15;
-  uint16_t servo_offset = 0; //49
-  uint16_t min_dist_meet_crossing = 30;
-  uint16_t roundroad_min_size = 30; // When the edge is broken in roundabout, find until this threshold
-  uint16_t roundroad_exit_radius = 38; // search pixels around to double check exit of roundabout for CAR1
-  uint16_t exit_action_dist = 35; // double check to avoid corner's sudden disappear inside roundabout
-  uint16_t roundabout_offset = 15; // half of road width
-  uint16_t round_exit_offset = 20;
-  uint16_t round_encoder_count = 2600;
-  uint16_t roundExit_encoder_count = 3000;
-  int32_t roundabout_shortest_flag = 0b11000000000000000000000000000000; //1 means turn left, 0 means turn right. Reading from left to right
-  uint16_t angle_div_error = 1; // translate error into angle
-  uint16_t nearest_corner_threshold = 128/2;
-  float servo_normal_kp = 1.3;
-  float servo_normal_kd = 0;
-  uint16_t targetSpeed = 190;
-
-} TuningVar;
+namespace TuningVar {
+  extern bool roundabout_turn_left; //Used for GenPath()
+  extern uint16_t starting_y; //the starting y for edge detection
+  extern uint16_t edge_length; //max length for an edge
+  extern uint16_t edge_hor_search_max; //max for horizontal search of edge if next edge point cannot be found
+  extern uint16_t edge_min_worldview_bound_check; //min for worldview bound check in edge finding
+  extern uint16_t corner_range; //the square for detection would be in size corener_range*2+1
+  extern float corner_height_ratio; //the max height for detection would be WorldSize.h/corner_height_ratio
+  extern uint16_t corner_min, corner_max; //threshold (in %) for corner detection
+  extern uint16_t min_corners_dist; // Manhattan dist threshold for consecutive corners
+  extern uint16_t min_edges_dist; // Manhattan dist threshold for edges
+  extern uint16_t track_width_threshold; //track width threshold for consideration of sudden change (square)
+  extern uint16_t track_width_change_threshold; //track width change threshold for consideration of sudden change
+  extern uint16_t sightDist; // The distance from which the image pixel should be tested
+  extern uint16_t sightDist_exitRound; //The distance from which the image pixel is used for exit testing
+  extern uint16_t straight_line_threshold; // The threshold num. of equal width for straight line detection
+  extern uint16_t action_distance; // The condition in which the car start handling this feature when meeting it
+  extern uint16_t stop_distance; // The distance away from starting line - for stopping
+  extern libsc::Timer::TimerInt feature_inside_time; // freezing time for feature extraction, the time for entering the entrance
+  extern uint16_t cross_cal_start_num;
+  extern uint16_t cross_cal_ratio; //Look forward @cross_cal_start_num - encoder_total/@cross_cal_ratio to determine path
+  extern uint16_t general_cal_num; //The num of path points considered for servo angle decision except crossing
+  extern uint16_t cross_encoder_count; // The hardcoded encoder count that car must reach in crossroad
+  extern uint16_t round_enter_offset;
+  extern uint16_t servo_offset; //49
+  extern uint16_t min_dist_meet_crossing;
+  extern uint16_t roundroad_min_size; // When the edge is broken in roundabout, find until this threshold
+  extern uint16_t roundroad_exit_radius; // search pixels around to double check exit of roundabout for CAR1
+  extern uint16_t exit_action_dist; // double check to avoid corner's sudden disappear inside roundabout
+  extern uint16_t roundabout_offset; // half of road width
+  extern uint16_t round_exit_offset;
+  extern uint16_t round_encoder_count;
+  extern uint16_t roundExit_encoder_count;
+  extern int32_t roundabout_shortest_flag; //1 means turn left, 0 means turn right. Reading from left to right
+  extern uint16_t angle_div_error; // translate error into angle
+  extern uint16_t nearest_corner_threshold;
+  extern float servo_normal_kp;
+  extern float servo_normal_kd;
+  extern uint16_t targetSpeed;
+};
 
 /**
  * TranslateType enum struct

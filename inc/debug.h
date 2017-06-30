@@ -35,22 +35,20 @@ void confirmCar() {
 
 void loadItems(DebugConsole* console) {
   if (car == 1) {
-    using algorithm::optimal::car1::TuningVar;
+    using namespace algorithm::optimal::car1::TuningVar;
 
     console->PushItem("LCD debug", &debug_flag::lcd_debug);
-//    console->PushItem("Roundabt", &TuningVar.roundabout_shortest_flag, "left", "right");
-//    console->PushItem("Speed", &debug_flag::targetSpeed, 5);
-//    console->PushItem("Normal Kp", &TuningVar.servo_normal_kp, 0.1);
-//    console->PushItem("Normal Kd", &TuningVar.servo_normal_kd, 0.1);
+    console->PushItem("Speed", &targetSpeed, 5);
+    console->PushItem("Normal Kp", &servo_normal_kp, 0.1);
+    console->PushItem("Normal Kd", &servo_normal_kd, 0.1);
 
   } else if (car != 0) {
     using namespace algorithm::optimal::car2::TuningVar;
 
     console->PushItem("lcddebug", &debug_flag::lcd_debug);
-//    console->PushItem("roundabt", &TuningVar.roundabout_shortest_flag, "left", "right");
     console->PushItem("Speed", &targetSpeed, 5);
-//    console->PushItem("Normal Kp", &TuningVar.servo_normal_kp, 0.1);
-//    console->PushItem("Normal Kd", &TuningVar.servo_normal_kd, 0.1);
+    console->PushItem("Normal Kp", &servo_normal_kp, 0.1);
+    console->PushItem("Normal Kd", &servo_normal_kd, 0.1);
 
   }
 }
