@@ -38,13 +38,13 @@ void loadItems(DebugConsole* console) {
     using algorithm::optimal::car1::TuningVar;
 
     console->PushItem("lcddebug", &debug_flag::lcd_debug);
-    console->PushItem("roundabt", &TuningVar.starting_y, 1);
+    console->PushItem("roundabt", &TuningVar.roundabout_shortest_flag, "left", "right");
 
   } else if (car != 0) {
     using algorithm::optimal::car2::TuningVar;
 
     console->PushItem("lcddebug", &debug_flag::lcd_debug);
-    console->PushItem("roundabt", &TuningVar.starting_y, 1);
+    console->PushItem("roundabt", &TuningVar.roundabout_shortest_flag, "left", "right");
 
   }
 }
