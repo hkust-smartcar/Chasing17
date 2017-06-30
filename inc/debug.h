@@ -27,7 +27,6 @@ bool confirm = false;
 
 namespace debug_flag{
 	  bool lcd_debug = false;
-	  uint16_t targetSpeed=200;
 }
 
 void confirmCar() {
@@ -39,19 +38,19 @@ void loadItems(DebugConsole* console) {
     using algorithm::optimal::car1::TuningVar;
 
     console->PushItem("LCD debug", &debug_flag::lcd_debug);
-    console->PushItem("Roundabt", &TuningVar.roundabout_shortest_flag, "left", "right");
-    console->PushItem("Speed", &debug_flag::targetSpeed, 5);
-    console->PushItem("Normal Kp", &TuningVar.servo_normal_kp, 0.1);
-    console->PushItem("Normal Kd", &TuningVar.servo_normal_kd, 0.1);
+//    console->PushItem("Roundabt", &TuningVar.roundabout_shortest_flag, "left", "right");
+//    console->PushItem("Speed", &debug_flag::targetSpeed, 5);
+//    console->PushItem("Normal Kp", &TuningVar.servo_normal_kp, 0.1);
+//    console->PushItem("Normal Kd", &TuningVar.servo_normal_kd, 0.1);
 
   } else if (car != 0) {
-    using algorithm::optimal::car2::TuningVar;
+    using namespace algorithm::optimal::car2::TuningVar;
 
     console->PushItem("lcddebug", &debug_flag::lcd_debug);
-    console->PushItem("roundabt", &TuningVar.roundabout_shortest_flag, "left", "right");
-    console->PushItem("Speed", &debug_flag::targetSpeed, 5);
-    console->PushItem("Normal Kp", &TuningVar.servo_normal_kp, 0.1);
-    console->PushItem("Normal Kd", &TuningVar.servo_normal_kd, 0.1);
+//    console->PushItem("roundabt", &TuningVar.roundabout_shortest_flag, "left", "right");
+    console->PushItem("Speed", &targetSpeed, 5);
+//    console->PushItem("Normal Kp", &TuningVar.servo_normal_kp, 0.1);
+//    console->PushItem("Normal Kd", &TuningVar.servo_normal_kd, 0.1);
 
   }
 }
