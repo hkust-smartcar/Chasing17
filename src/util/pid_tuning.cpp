@@ -25,6 +25,7 @@
 #include "libsc/system.h"
 #include "libutil/incremental_pid_controller.h"
 #include "libsc/joystick.h"
+#include "libutil/positional_pid_controller.h"
 
 #include "bluetooth.h"
 #include "util/util.h"
@@ -42,9 +43,12 @@ std::vector<double> constVector;
 uint8_t now_angle = 0;
 DirMotor* pMotor0 = nullptr;
 DirMotor* pMotor1 = nullptr;
+int servo_angle=845;
+int start_time=0, resume_time=0;
 
-float Kp = 1.5, Ki = 0.001, Kd = 0;
-float left_motor_target = 0, right_motor_target = 0;
+
+float Kp = 2.5, Ki = 0.02, Kd = 0;
+float left_motor_target = 400, right_motor_target = 0;
 
 /*
  * @brief set motor power
@@ -133,6 +137,9 @@ bool bluetoothListener(const Byte *data, const size_t size) {
 }
 
 void main() {
+
+  start_time=System::Time();
+
   Led::Config ConfigLed;
   ConfigLed.is_active_low = true;
   ConfigLed.id = 0;
@@ -145,6 +152,7 @@ void main() {
   FutabaS3010::Config ConfigServo;
   ConfigServo.id = 0;
   FutabaS3010 servo(ConfigServo);
+  servo.SetDegree(servo_angle);
 
   DirEncoder::Config ConfigEncoder;
   ConfigEncoder.id = 0;
@@ -169,9 +177,11 @@ void main() {
   Timer::TimerInt time_img = 0;
 
   IncrementalPidController<float, float> pid_left(0,0,0,0);
-  pid_left.SetOutputBound(-500, 500);
+//  PositionalPidController<float,float> pid_left(0,0,0,0);
+  pid_left.SetOutputBound(-1000, 1000);
   IncrementalPidController<float, float> pid_right(0,0,0,0);
-  pid_right.SetOutputBound(-500, 500);
+//  PositionalPidController<float,float> pid_right(0,0,0,0);
+  pid_right.SetOutputBound(-1000, 1000);
 
   St7735r::Config lcd_config;
   lcd_config.is_revert = true;
@@ -191,21 +201,67 @@ void main() {
 	  while (System::Time() != time_img){
 		  int curr_left=0, curr_right=0;
 		  time_img = System::Time();
+
+
+//		  if(time_img>resume_time){
+//			  Ki=0.02;
+//		  }
+
+		  //test case
+		  int start=time_img-start_time;
+		  if(start>1000 && start<7000){
+			  left_motor_target=0;
+			  if(start>2500){
+				  left_motor_target=400;
+				  if(start>3000){
+					  left_motor_target=-400;
+					  if(start>4500){
+						  left_motor_target=0;
+						  if(start>5000){
+							  left_motor_target=400;
+						  }
+					  }
+				  }
+			  }
+		  }
+
+
 		  if (time_img % 10 == 0){
-			  pid_left.SetKp(Kp);
-			  pid_right.SetKp(Kp);
-			  pid_left.SetKi(Ki);
-			  pid_right.SetKi(Ki);
-			  pid_left.SetKd(Kd);
-			  pid_right.SetKd(Kd);
-			  pid_left.SetSetpoint(left_motor_target);
-			  pid_right.SetSetpoint(right_motor_target);
 
 			  encoder0.Update();
 			  encoder1.Update();
 
 			  curr_left = encoder0.GetCount();
 			  curr_right = -encoder1.GetCount();
+
+			  if(time_img-start_time<10000){
+				  float temp = (10000-0.98*(time_img-start_time))/10000.0;
+				  if(std::abs(left_motor_target - curr_left)>20){
+					  Ki=temp;
+				  }
+				  else{
+//					  Ki=0.02;
+				  }
+				  pid_left.SetKi(Ki);
+				  if(std::abs(right_motor_target - curr_right)>20){
+					  Ki=temp;
+				  }
+				  else{
+//					  Ki=0.02;
+				  }
+				  pid_right.SetKi(Ki);
+			  }
+			  else{
+				  Ki=0.02;
+				  pid_left.SetKi(Ki);
+				  pid_right.SetKi(Ki);
+			  }
+			  pid_left.SetKp(Kp);
+			  pid_right.SetKp(Kp);
+			  pid_left.SetKd(Kd);
+			  pid_right.SetKd(Kd);
+			  pid_left.SetSetpoint(left_motor_target);
+			  pid_right.SetSetpoint(right_motor_target);
 
 			  char speedChar[100]{};
 			  sprintf(speedChar, "%.1f,%d,%.2f,%d,%.2f\n", 1.0, curr_left, left_motor_target, curr_right, right_motor_target);
@@ -219,6 +275,9 @@ void main() {
 			  SetMotorPower(GetMotorPower(0)+pid_left.Calc(curr_left),0);
 			  SetMotorPower(GetMotorPower(1)+pid_right.Calc(curr_right),1);
 
+//			  SetMotorPower(pid_left.Calc(curr_left),0);
+//			  SetMotorPower(pid_right.Calc(curr_right),1);
+
 			  led1.SetEnable(time_img/250);
 		  }
 		  if (time_img % 500 == 0) {
@@ -227,6 +286,7 @@ void main() {
 				  char buff[100];
 				  sprintf(buff,"kp:%.5lf \nki:%.5lf \nkd:%.5lf \nleft:%.5lf \n right:%.5lf\n left%.5lf\nright%.5lf\n%d\n%d",Kp,Ki,Kd,left_motor_target,right_motor_target,pid_left.Calc(curr_left),pid_right.Calc(curr_right),GetMotorPower(0),GetMotorPower(1));
 //				  sprintf(buff,"%d\n%d",GetMotorPower(0),GetMotorPower(1));
+//				  sprintf(buff,"%.3lf \n%.3lf \n%.3lf \n%.3lf \n%.3lf \n%.3lf ",pid_left.GetKp(),pid_left.GetKi(),pid_left.GetKd(),pid_right.GetKp(),pid_right.GetKi(),pid_right.GetKd());
 				  lcd.SetRegion(Lcd::Rect(0,0,128,160));
 				  writer.WriteBuffer(buff,100);
 			  }
