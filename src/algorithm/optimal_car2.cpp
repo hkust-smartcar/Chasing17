@@ -111,6 +111,7 @@ uint16_t prev_corner_x; //store the latest corner coordinate appears last time d
 uint16_t prev_corner_y;
 
 /*FOR OVERTAKING*/
+bool overtake = true;
 bool is_front_car = false;
 bool stop_before_roundexit = false;
 
@@ -1618,33 +1619,35 @@ void main_car2(bool debug_) {
     	  //		  bt.SendBuffer(&speedByte, 1);
     	  //		  bt.SendStr(speedChar);
     	  //Overtake motor control
-			if (roundaboutExitStatus == 1 && stop_before_roundexit) {
-				/*Consider braking*/
-				pMotor0->SetClockwise(false);
-				pMotor1->SetClockwise(true);
-				pMotor0->SetPower(1000);
-				pMotor1->SetPower(1000);
-				System::DelayMs(220);
-				while(true){
-					pMotor0->SetPower(0);
-					pMotor1->SetPower(0);
-					if(pBT->hasFinishedOvertake()){
-						break;
-					}
-				}
-				System::DelayMs(1500);
-				stop_before_roundexit = false;
-				// roundaboutStatus = 0;
-				exit_round_ready = false;
-//					pEncoder0->Update();
-//					pEncoder1->Update();
-				encoder_total_exit = 0;
-				pBT->resetFinishOvertake();
-				pMotor0->SetClockwise(true);
-				pMotor1->SetClockwise(false);
-				pMotor0->SetPower(TuningVar::targetSpeed);
-				pMotor1->SetPower(TuningVar::targetSpeed);
-			}
+    	  if(overtake){
+    		  if (roundaboutExitStatus == 1 && stop_before_roundexit) {
+    			  /*Consider braking*/
+    			  pMotor0->SetClockwise(false);
+    			  pMotor1->SetClockwise(true);
+    			  pMotor0->SetPower(1000);
+    			  pMotor1->SetPower(1000);
+    			  System::DelayMs(220);
+    			  while(true){
+    				  pMotor0->SetPower(0);
+    				  pMotor1->SetPower(0);
+    				  if(pBT->hasFinishedOvertake()){
+    					  break;
+    				  }
+    			  }
+    			  System::DelayMs(1500);
+    			  stop_before_roundexit = false;
+    			  // roundaboutStatus = 0;
+    			  exit_round_ready = false;
+    			  //					pEncoder0->Update();
+    			  //					pEncoder1->Update();
+    			  encoder_total_exit = 0;
+    			  pBT->resetFinishOvertake();
+    			  pMotor0->SetClockwise(true);
+    			  pMotor1->SetClockwise(false);
+    			  pMotor0->SetPower(TuningVar::targetSpeed);
+    			  pMotor1->SetPower(TuningVar::targetSpeed);
+    		  }
+    	  }
 //    	  if (roundaboutExitStatus == 1 && stop_before_roundexit) {
 //				if(brake_flag){
 //					brake_flag = false;

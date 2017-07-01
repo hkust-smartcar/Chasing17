@@ -113,7 +113,8 @@ uint16_t prev_corner_x; //store the latest corner coordinate appears last time d
 uint16_t prev_corner_y;
 
 /*FOR OVERTAKING*/
-bool is_front_car = true;//false
+bool overtake = true;
+bool is_front_car = true;
 bool stop_before_roundexit = false;
 
 bool debug = true;
@@ -702,6 +703,11 @@ bool FindEdges() {
  * @note: Execute this function after calling FindEdges()
  */
 Feature featureIdent_Corner() {
+	if(overtake){
+		is_front_car = false;
+		stop_before_roundexit = false;
+	}
+
 	//1. Straight line
 	if (is_straight_line) {
 		//    roundaboutStatus = 0;// Avoid failure of detecting roundabout exit
@@ -1000,6 +1006,11 @@ void PrintCorner(Corners corners, uint16_t color) {
  * 3. Under no LEFT_NULL and RIGHT_NULL, the midpt's midpt
  */
 void GenPath(Feature feature) {
+	if(overtake){
+		is_front_car = false;
+		stop_before_roundexit = false;
+	}
+
 	int left_size = left_edge.size();
 	int right_size = right_edge.size();
 
@@ -1094,14 +1105,16 @@ void GenPath(Feature feature) {
 		roundaboutExitStatus = 0;
 		roundaboutStatus = 0;
 		/*TODO: switch carID, sendBT to another car and set has_exited on the other side to true*/
-		if(!is_front_car){//Back car
-			//switch ID
-			is_front_car = true;
-			pBT->sendFinishOvertake();
-		}
-		//switch ID after using offset to exit for original front car
-		else if(is_front_car){
-			is_front_car = false;
+		if(overtake){
+			if(!is_front_car){//Back car
+				//switch ID
+				is_front_car = true;
+				pBT->sendFinishOvertake();
+			}
+			//switch ID after using offset to exit for original front car
+			else if(is_front_car){
+				is_front_car = false;
+			}
 		}
 	}
 	if (roundaboutExitStatus == 1
@@ -1631,7 +1644,6 @@ void main_car1(bool debug_) {
 			led0.SetEnable(time_img % 500 >= 250);
 
 			if (time_img % 10 == 0) {
-		    	bt.resendNAKData();
 				//Overtake motor control
 				/*FOR DEBUGGING*/
 				if(debug){
@@ -1640,33 +1652,35 @@ void main_car1(bool debug_) {
 				}
 //				pLcd->SetRegion(Lcd::Rect(0,0,128,15));
 //				is_front_car?pWriter->WriteString("Front"):pWriter->WriteString("Back");
-
-				if (roundaboutExitStatus == 1 && stop_before_roundexit) {
-					/*Consider braking*/
-					pMotor0->SetClockwise(false);
-					pMotor1->SetClockwise(true);
-					pMotor0->SetPower(1000);
-					pMotor1->SetPower(1000);
-					System::DelayMs(200);
-					while(true){
-						pMotor0->SetPower(0);
-						pMotor1->SetPower(0);
-						if(pBT->hasFinishedOvertake()){
-							break;
+				if(overtake){
+					bt.resendNAKData();
+					if (roundaboutExitStatus == 1 && stop_before_roundexit) {
+						/*Consider braking*/
+						pMotor0->SetClockwise(false);
+						pMotor1->SetClockwise(true);
+						pMotor0->SetPower(1000);
+						pMotor1->SetPower(1000);
+						System::DelayMs(200);
+						while(true){
+							pMotor0->SetPower(0);
+							pMotor1->SetPower(0);
+							if(pBT->hasFinishedOvertake()){
+								break;
+							}
 						}
+						System::DelayMs(1500);
+						stop_before_roundexit = false;
+						// roundaboutStatus = 0;
+						exit_round_ready = false;
+						//					pEncoder0->Update();
+						//					pEncoder1->Update();
+						encoder_total_exit = 0;
+						pBT->resetFinishOvertake();
+						pMotor0->SetClockwise(true);
+						pMotor1->SetClockwise(false);
+						pMotor0->SetPower(TuningVar::targetSpeed);
+						pMotor1->SetPower(TuningVar::targetSpeed);
 					}
-					System::DelayMs(1500);
-					stop_before_roundexit = false;
-					// roundaboutStatus = 0;
-					exit_round_ready = false;
-//					pEncoder0->Update();
-//					pEncoder1->Update();
-					encoder_total_exit = 0;
-					pBT->resetFinishOvertake();
-					pMotor0->SetClockwise(true);
-					pMotor1->SetClockwise(false);
-					pMotor0->SetPower(TuningVar::targetSpeed);
-					pMotor1->SetPower(TuningVar::targetSpeed);
 				}
 //				if (roundaboutExitStatus == 1 && stop_before_roundexit) {
 //					/*Consider braking*/
