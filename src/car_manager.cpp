@@ -53,7 +53,6 @@ unique_ptr<Mpc> CarManager::epc_right_ = nullptr;
 unique_ptr<MpcDual> CarManager::epc_ = nullptr;
 unique_ptr<FutabaS3010> CarManager::servo_ = nullptr;
 unique_ptr<FcYyUsV4> CarManager::usir_ = nullptr;
-//unique_ptr<Mpu9250> CarManager::mpu_ = nullptr;
 
 void CarManager::Init(Config config) {
   static_assert(kBoundsCar1.kLeftBound > kBoundsCar1.kCenter && kBoundsCar1.kCenter > kBoundsCar1.kRightBound,
@@ -64,7 +63,6 @@ void CarManager::Init(Config config) {
   epc_left_ = move(config.epc_left);
   epc_right_ = move(config.epc_right);
   epc_ = move(config.epc);
-//  mpu_ = move(config.mpu);
   servo_ = move(config.servo);
   identity_ = config.identity;
   car_ = config.car;
@@ -74,7 +72,6 @@ void CarManager::UpdateParameters() {
   UpdateSpeed();
   UpdateServoAngle();
   UpdateDistance();
-//  UpdateSlope();
 }
 
 void CarManager::SwitchIdentity() {
@@ -215,8 +212,4 @@ void CarManager::UpdateServoAngle() {
     servo_deg_ = servo_->GetDegree();
     return;
   }
-}
-
-void CarManager::UpdateSlope() {
-  slope_deg_ = 0;
 }

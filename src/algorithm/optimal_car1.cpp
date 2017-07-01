@@ -85,7 +85,7 @@ namespace TuningVar { //tuning var declaration
   uint16_t round_exit_offset = 20;
   uint16_t round_encoder_count = 2600;
   uint16_t roundExit_encoder_count = 3000;
-  int32_t roundabout_shortest_flag = 0b11000000000000000000000000000000; //1 means turn left, 0 means turn right. Reading from left to right
+  int32_t roundabout_shortest_flag = 0b00011; //1 means turn left, 0 means turn right. Reading from left to right
   uint16_t angle_div_error = 1; // translate error into angle
   uint16_t nearest_corner_threshold = 128/2;
   float servo_exit_kp = 0.8;
@@ -1092,7 +1092,6 @@ void GenPath(Feature feature) {
 	if (roundaboutStatus == 1
 			&& abs(encoder_total_round)
 	< TuningVar::round_encoder_count/*abs(System::Time() - feature_start_time) < TuningVar::feature_inside_time*/) {
-		// TODO(Derppening): Figure out the use of the lines below
 //		pEncoder0->Update();
 //		pEncoder1->Update();
 		encoder_total_round += curr_enc_val_left/*(pEncoder0->GetCount() + pEncoder1->GetCount()) / 2*/;//Because for exit/enter, the car will first left then right which destroy the encoder
@@ -1119,7 +1118,6 @@ void GenPath(Feature feature) {
 	}
 	if (roundaboutExitStatus == 1
 			&& abs(encoder_total_exit) < TuningVar::roundExit_encoder_count) {//TODO: Be care of back turning of motor when stop will affect encoder value
-		// TODO(Derppening): Figure out the use of the lines below
 //		pEncoder0->Update();
 //		pEncoder1->Update();
 		encoder_total_exit += curr_enc_val_left/*(pEncoder0->GetCount() + pEncoder1->GetCount()) / 2*/;
@@ -1393,7 +1391,7 @@ void PrintSuddenChangeTrackWidthLocation(uint16_t color) {
  * @return: 1 means turning left, 0 means turning right
  * */
 int roundabout_shortest(uint32_t a, int pos){
-	return (a >> (31-pos)) & 1;
+	return !((a >> (pos - 1) != 0));
 }
 
 

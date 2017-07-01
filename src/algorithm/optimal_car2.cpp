@@ -84,7 +84,7 @@ namespace TuningVar{ //tuning var delaration
   uint16_t roundroad_min_size = 30; // When the edge is broken in roundabout, find until this threshold
   uint16_t exit_action_dist = 35; // double check to avoid corner's sudden disappear inside roundabout
   uint16_t roundabout_offset = 15; // half of road width
-  int32_t roundabout_shortest_flag = 0b11000000000000000000000000000000; //1 means turn left, 0 means turn right. Reading from left to right
+  int32_t roundabout_shortest_flag = 0b00011; //1 means turn left, 0 means turn right. Reading from left to right
   uint16_t angle_div_error = 1; // translate error into angle
   float servo_exit_kp = 0.8;
   float servo_normal_kp = 1.3;
@@ -741,7 +741,6 @@ Feature featureIdent_Corner() {
         && roundaboutStatus == 0
         && crossingStatus == 0) {
       //All black
-      // TODO(Derppening): Figure out the use of the following two lines
 //      pEncoder0->Update();
 //      pEncoder1->Update();
       encoder_total_round = 0;
@@ -756,7 +755,6 @@ Feature featureIdent_Corner() {
         && crossingStatus == 0
         && roundaboutStatus == 0) // avoid double check for crossing when inside the crossing (encoder_total_cross<2500)
     {
-      // TODO(Derppening): Figure out the use of the following line
 //      pEncoder0->Update();
       encoder_total_cross = 0;
       crossingStatus = 1; //Detected
@@ -841,7 +839,6 @@ Feature featureIdent_Corner() {
                 - left_corners.points.front().second)
             + (left_corners.points.front().first
                 + right_corners.points.front().first) / 2;
-        // TODO(Derppening): Figure out the use of the following line
 //        pEncoder0->Update();
         crossingStatus = 1; //Detected
         encoder_total_cross = 0;
@@ -1089,7 +1086,6 @@ void GenPath(Feature feature) {
   if (roundaboutStatus == 1
       && abs(encoder_total_round)
           < TuningVar::round_encoder_count/*abs(System::Time() - feature_start_time) < TuningVar::feature_inside_time*/) {
-    // TODO(Derppening): Figure out the use of the lines below
 //    pEncoder0->Update();
 //    pEncoder1->Update();
     encoder_total_round += curr_enc_val_left;
@@ -1114,7 +1110,6 @@ void GenPath(Feature feature) {
   }
   if (roundaboutExitStatus == 1
       && abs(encoder_total_exit) < TuningVar::roundExit_encoder_count) {
-    // TODO(Derppening): Figure out the use of the lines below
 //    pEncoder0->Update();
 //    pEncoder1->Update();
     encoder_total_exit += curr_enc_val_left;
@@ -1341,7 +1336,7 @@ void PrintSuddenChangeTrackWidthLocation(uint16_t color) {
  * @return: 1 means turning left, 0 means turning right
  * */
 int roundabout_shortest(uint32_t a, int pos){
-	return (a >> (31-pos)) & 1;
+  return !((a >> (pos - 1) != 0));
 }
 
 

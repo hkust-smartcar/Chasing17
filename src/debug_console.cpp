@@ -361,7 +361,7 @@ void DebugConsole::ListenerDo(Joystick::State key) {
       if (flag && focus == 0)//leave item click
         flag = false;
       else if (item.type == VarType::kBS) {
-        items[focus].bsIndex = (items[focus].bsIndex - 1) % 32;
+        --items[focus].bsIndex %= 32;
         PrintItem(focus, true);
       } else if (item.type != VarType::kNan) {
         ChangeItemValue(focus, 0);
