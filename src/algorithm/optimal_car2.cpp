@@ -592,12 +592,16 @@ bool FindEdges() {
   roundabout_nearest_corner_cnt_left = pow(TuningVar::corner_range * 2 + 1, 2);
   roundabout_nearest_corner_cnt_right = pow(TuningVar::corner_range * 2 + 1, 2);
   uint16_t staright_line_edge_count = 0; // Track the num. of equal width
-  while (left_edge.points.size() <= 100 && right_edge.points.size() <= 100
+  while (left_edge.points.size() <= 25 && right_edge.points.size() <= 25
       && (!flag_break_left || !flag_break_right)) {
     if (!flag_break_left)
       flag_break_left = !FindOneLeftEdge();
     if (!flag_break_right)
       flag_break_right = !FindOneRightEdge();
+
+	//check if have corners
+	if (left_corners.size() > 0) flag_break_left = true;
+	if (right_corners.size() > 0) flag_break_right = true;
 
     //check if two edges are close
     uint16_t r_back_x = right_edge.points.back().first;
