@@ -34,23 +34,13 @@
 #define CHASING17_CARMANAGER_H_
 
 #include <cmath>
-#include <memory>
 
-#include "libbase/misc_types.h"
 #include "libsc/dir_encoder.h"
 #include "libsc/futaba_s3010.h"
 
 #include "fc_yy_us_v4.h"
-#include "util/mpc.h"
-#include "util/mpc_dual.h"
 
-// forward declaration for util::Mpc, util::MpcDual, util::ServoController
-namespace util {
-class Mpc;
-class MpcDual;
-}
-
-class CarManager final {
+struct CarManager final {
  public:
   /**
    * Enum of possible features
@@ -95,22 +85,6 @@ class CarManager final {
   enum struct Car : bool {
     kCar1,
     kCar2
-  };
-
-  /**
-   * Configuration struct. Used for initialization of CarInfo.
-   *
-   * Usage:
-   * Construct objects in place or use std::move to move smart pointer.
-   */
-  struct Config {
-    std::unique_ptr<util::Mpc> epc_left = nullptr;
-    std::unique_ptr<util::Mpc> epc_right = nullptr;
-    std::unique_ptr<util::MpcDual> epc = nullptr;
-    std::unique_ptr<libsc::FutabaS3010> servo = nullptr;
-    std::unique_ptr<FcYyUsV4> usir = nullptr;
-    Identity identity;
-    Car car;
   };
 
   /**
@@ -166,69 +140,11 @@ class CarManager final {
   static constexpr const PidValues kServoPidCar1 = {{1.0, 0}, {0, 0}, {0, 0}};
   static constexpr const PidValues kServoPidCar2 = {{1.0, 0}, {0, 0}, {0, 0}};
 
-  static PidValues GetMotorPidValues();
-
-  /**
-   * Update all parameters of the car (speed, slope, servo angle, distance)
-   */
-  static void UpdateParameters();
-
-  /**
-   * Initializes all smart pointers.
-   *
-   * @note Use std::move(Config), or else there will be a compilation error.
-   *
-   * @param config
-   */
-  static void Init(Config config);
-
   // Getters
-  static uint16_t GetDistance() { return us_distance_; }
-  /**
-   * @return Current speed of left wheel in encoder values
-   */
-  static int32_t GetLeftSpeed() { return left_speed_; }
-  /**
-   * @return Current speed of right wheel in encoder values
-   */
-  static int32_t GetRightSpeed() { return right_speed_; }
-  /**
-   * @return Current servo angle in servo values
-   */
-  static uint16_t GetServoDeg() { return servo_deg_; }
-  static int8_t GetSlope() { return slope_deg_; }
-  static Side GetSide() { return side_; }
-  static Feature GetFeature() { return feature_; }
-  static Identity GetIdentity() { return identity_; }
-  static Car GetCar() { return car_; }
   static ServoAngles GetServoAngles();
   static ServoBounds GetServoBounds();
   static SideRatio GetSideRatio();
-
-  // Setters
-  static void SetFeature(const Feature f) { feature_ = f; }
-  static void SetIdentity(const Identity i) { identity_ = i; }
-  static void SetOverrideProtection(const bool override_protection, const MotorSide side = MotorSide::kBoth);
-  static void SetSide(const Side s) { side_ = s; }
-  /**
-   * @param angle Target angle in degrees
-   */
-  static void SetTargetAngle(const int16_t angle);
-  /**
-   * @param speed Target speed in encoder values
-   * @param side Where the target speed should be committed to
-   */
-  static void SetTargetSpeed(const int16_t speed, MotorSide side = MotorSide::kBoth);
-  static void SwitchIdentity();
-
- private:
-  // Static class. Disable constructor
-  CarManager() {}
-
-  // Updaters
-  static void UpdateDistance();
-  static void UpdateSpeed();
-  static void UpdateServoAngle();
+  static PidValues GetMotorPidValues();
 
   static uint16_t us_distance_;
   static int32_t left_speed_;
@@ -240,11 +156,9 @@ class CarManager final {
   static Identity identity_;
   static Car car_;
 
-  static std::unique_ptr<util::Mpc> epc_left_;
-  static std::unique_ptr<util::Mpc> epc_right_;
-  static std::unique_ptr<util::MpcDual> epc_;
-  static std::unique_ptr<libsc::FutabaS3010> servo_;
-  static std::unique_ptr<FcYyUsV4> usir_;
+ private:
+  // static class: disable ctor
+  CarManager() {}
 };
 
 #endif  // CHASING17_CARMANAGER_H_

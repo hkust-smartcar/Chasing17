@@ -11,7 +11,6 @@
  */
 
 #include "bluetooth.h"
-#include "algorithm/overtake.h"
 #include "libsc/system.h"
 
 // static variables
@@ -141,19 +140,19 @@ bool BTComm::BTListener(const Byte* data, size_t size) {
           SwitchIDReq_ = true;
           break;
         case ReqType::kSpeed:
-          sendSpeed((CarManager::GetLeftSpeed() + CarManager::GetRightSpeed()) / 200);
+          sendSpeed((CarManager::left_speed_ + CarManager::right_speed_) / 200);
           break;
         case ReqType::kSlopeDeg:
-          sendSlopeDeg(CarManager::GetSlope());
+          sendSlopeDeg(CarManager::slope_deg_);
           break;
         case ReqType::kDist:
-          sendDist(CarManager::GetDistance());
+          sendDist(CarManager::us_distance_);
           break;
         case ReqType::kFeature:
-          sendFeature(CarManager::GetFeature());
+          sendFeature(CarManager::feature_);
           break;
         case ReqType::kSide:
-          sendSide(CarManager::GetSide());
+          sendSide(CarManager::side_);
           break;
         case ReqType::kStart:
           hasStartReq_ = true;

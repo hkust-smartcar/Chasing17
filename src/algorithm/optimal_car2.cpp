@@ -1399,7 +1399,7 @@ void StartlineOvertake() {
 		for (int i = 0; i < 10; i++) FindOneRightEdge();
 		for (int i = 0; i < 10; i++) path.push(right_edge.points[i].first - 6, right_edge.points[i].second);
 
-		pServo->SetDegree(util::clamp<uint16_t>(servo_bounds.kCenter - 1.3 * CalcAngleDiff() + TuningVar::servo_offset,
+		pServo->SetDegree(util::clamp<uint16_t>(servo_bounds.kCenter - 1.3 * CalcAngleDiff(),
 				servo_bounds.kRightBound,
 				servo_bounds.kLeftBound));
 
