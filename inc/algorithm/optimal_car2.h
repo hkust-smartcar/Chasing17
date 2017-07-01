@@ -142,6 +142,7 @@ namespace TuningVar{
   extern uint16_t roundabout_offset; // half of road width
   extern int32_t roundabout_shortest_flag; //1 means turn left, 0 means turn right. Reading from left to right
   extern uint16_t angle_div_error; // translate error into angle
+  extern uint16_t nearest_corner_threshold;
   extern float servo_normal_kp;
   extern float servo_normal_kd;
   extern uint16_t targetSpeed;

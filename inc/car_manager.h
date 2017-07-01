@@ -109,7 +109,6 @@ class CarManager final {
     std::unique_ptr<util::MpcDual> epc = nullptr;
     std::unique_ptr<libsc::FutabaS3010> servo = nullptr;
     std::unique_ptr<FcYyUsV4> usir = nullptr;
-//    std::unique_ptr<Mpu9250> mpu = nullptr;
     Identity identity;
     Car car;
   };
@@ -229,7 +228,6 @@ class CarManager final {
   // Updaters
   static void UpdateDistance();
   static void UpdateSpeed();
-  static void UpdateSlope();
   static void UpdateServoAngle();
 
   static uint16_t us_distance_;
@@ -246,7 +244,6 @@ class CarManager final {
   static std::unique_ptr<util::Mpc> epc_right_;
   static std::unique_ptr<util::MpcDual> epc_;
   static std::unique_ptr<libsc::FutabaS3010> servo_;
-//  static std::unique_ptr<Mpu9250> mpu_;
   static std::unique_ptr<FcYyUsV4> usir_;
 };
 
