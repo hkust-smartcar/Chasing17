@@ -88,6 +88,7 @@ namespace TuningVar { //tuning var declaration
   int32_t roundabout_shortest_flag = 0b11000000000000000000000000000000; //1 means turn left, 0 means turn right. Reading from left to right
   uint16_t angle_div_error = 1; // translate error into angle
   uint16_t nearest_corner_threshold = 128/2;
+  float servo_exit_kp = 0.8;
   float servo_normal_kp = 1.3;
   float servo_normal_kd = 0;
   uint16_t targetSpeed = 190;
@@ -1739,8 +1740,8 @@ void main_car1(bool debug_) {
 //				PrintCorner(left_corners, Lcd::kPurple); //Print left_corner
 //				PrintCorner(right_corners, Lcd::kPurple); //Print right_corner
 //				PrintEdge(path, Lcd::kGreen); //Print path
-				//		pLcd->SetRegion(Lcd::Rect(carMid.first, carMid.second, 5, 5));
-				//		pLcd->FillColor(Lcd::kRed);
+//				pLcd->SetRegion(Lcd::Rect(carMid.first, carMid.second, 5, 5));
+//				pLcd->FillColor(Lcd::kRed);
 				if (debug) {
 					PrintWorldImage();
 					PrintEdge(left_edge, Lcd::kRed); //Print left_edge
@@ -1788,13 +1789,19 @@ void main_car1(bool debug_) {
 
 		        /* Servo PID */
 				int curr_servo_error = CalcAngleDiff();
-
-				pServo->SetDegree(util::clamp<uint16_t>(
-		                servo_bounds.kCenter - (TuningVar::servo_normal_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
-		                servo_bounds.kRightBound,
-		                servo_bounds.kLeftBound));
+				if(roundaboutExitStatus == 1){
+					pServo->SetDegree(util::clamp<uint16_t>(
+							servo_bounds.kCenter - (TuningVar::servo_exit_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
+							servo_bounds.kRightBound,
+							servo_bounds.kLeftBound));
+				}
+				else{
+					pServo->SetDegree(util::clamp<uint16_t>(
+							servo_bounds.kCenter - (TuningVar::servo_normal_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
+							servo_bounds.kRightBound,
+							servo_bounds.kLeftBound));
+				}
 				prev_servo_error = curr_servo_error;
-
 				/* Motor PID */
 				pid_left.SetSetpoint(TuningVar::targetSpeed);
 				pid_right.SetSetpoint(TuningVar::targetSpeed);
