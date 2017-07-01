@@ -90,26 +90,24 @@ int main() {
   // modify next line to change which car we're working with
   CarManager::Car c = CarManager::Car::kCar1;
 
-  bool reset = false, skip_debug = false;
+  bool reset = false;
   {
     Joystick::Config joystick_config;
     joystick_config.id = 0;
     joystick_config.is_active_low = true;
     Joystick joystick(joystick_config);
 
-    reset = (joystick.GetState() == Joystick::State::kSelect ? true : false);
-//    skip_debug = (joystick.GetState() == Joystick::State::kIdle ? true : false);
+    reset = joystick.GetState() == Joystick::State::kSelect;
   }
 
-  if (!skip_debug)
-    switch (debug(reset)) {
-      case 1:
-        c = CarManager::Car::kCar1;
-        break;
-      case 2:
-        c = CarManager::Car::kCar2;
-        break;
-    }
+   switch (debug(reset)) {
+     case 1:
+       c = CarManager::Car::kCar1;
+       break;
+     case 2:
+       c = CarManager::Car::kCar2;
+       break;
+   }
 
   switch (a) {
     case Algorithm::kOptimal:
