@@ -183,7 +183,7 @@ void PrintEdge(Edges, uint16_t);
 void PrintImage();
 void PrintSuddenChangeTrackWidthLocation(uint16_t);
 void PrintWorldImage();
-int roundabout_shortest(uint8_t a, int pos);
+int roundabout_shortest(uint32_t a, int pos);
 
 /*
  * @brief: bluetooth listener for processing tuning
@@ -1379,8 +1379,8 @@ void PrintSuddenChangeTrackWidthLocation(uint16_t color) {
  * @brief: return the shortest side of current roundabout
  * @return: 1 means turning left, 0 means turning right
  * */
-int roundabout_shortest(uint8_t a, int pos){
-	return (a >> (7-pos)) & 1;
+int roundabout_shortest(uint32_t a, int pos){
+	return (a >> (31-pos)) & 1;
 }
 
 
