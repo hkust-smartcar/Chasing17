@@ -26,6 +26,7 @@
 #include "libutil/incremental_pid_controller.h"
 #include "libsc/joystick.h"
 #include "libutil/positional_pid_controller.h"
+#include "libbase/k60/pit.h"
 
 #include "bluetooth.h"
 #include "util/util.h"
@@ -33,6 +34,7 @@
 using namespace libsc;
 using namespace libsc::k60;
 using namespace libutil;
+using namespace libbase::k60;
 
 namespace util {
 namespace pid_tuning {
@@ -43,6 +45,10 @@ std::vector<double> constVector;
 uint8_t now_angle = 0;
 DirMotor* pMotor0 = nullptr;
 DirMotor* pMotor1 = nullptr;
+DirEncoder* pEncoder0 = nullptr;
+DirEncoder* pEncoder1 = nullptr;
+IncrementalPidController<float, float> *pLeft = nullptr, *pRight = nullptr;
+JyMcuBt106* pBt = nullptr;
 int servo_angle=845;
 int start_time=0, resume_time=0;
 
@@ -88,6 +94,40 @@ int GetMotorPower(int id){
 		break;
 	}
 	return 0;
+}
+
+void SyncMotor(Pit* pit){
+
+	int time_img=System::Time();
+
+	pEncoder0->Update();
+	pEncoder1->Update();
+
+	int curr_left = pEncoder0->GetCount();
+	int curr_right = -pEncoder1->GetCount();
+
+	if(time_img-start_time<10000){
+		Ki = (10000-0.98*(time_img-start_time))/10000.0;
+	}
+	else{
+		Ki = 0.02;
+	}
+	pLeft->SetKp(Kp);
+	pRight->SetKp(Kp);
+	pLeft->SetKi(Ki);
+	pRight->SetKi(Ki);
+	pLeft->SetKd(Kd);
+	pRight->SetKd(Kd);
+	pLeft->SetSetpoint(left_motor_target);
+	pRight->SetSetpoint(right_motor_target);
+	char speedChar[100]{};
+	sprintf(speedChar, "%.1f,%d,%.2f,%d,%.2f\n", 1.0, curr_left, left_motor_target, curr_right, right_motor_target);
+	const Byte speedByte = 85;
+	pBt->SendBuffer(&speedByte, 1);
+	pBt->SendStr(speedChar);
+	SetMotorPower(GetMotorPower(0)+pLeft->Calc(curr_left),0);
+	SetMotorPower(GetMotorPower(1)+pRight->Calc(curr_right),1);
+
 }
 
 /*
@@ -159,6 +199,8 @@ void main() {
   DirEncoder encoder0(ConfigEncoder);
   ConfigEncoder.id = 1;
   DirEncoder encoder1(ConfigEncoder);
+  pEncoder0 = &encoder0;
+  pEncoder1 = &encoder1;
 
   DirMotor::Config ConfigMotor;
   ConfigMotor.id = 0;
@@ -174,6 +216,8 @@ void main() {
   bt_config.baud_rate = libbase::k60::Uart::Config::BaudRate::k115200;
   bt_config.rx_isr = &bluetoothListener;
   JyMcuBt106 bt(bt_config);
+  pBt = &bt;
+
   Timer::TimerInt time_img = 0;
 
   IncrementalPidController<float, float> pid_left(0,0,0,0);
@@ -182,6 +226,9 @@ void main() {
   IncrementalPidController<float, float> pid_right(0,0,0,0);
 //  PositionalPidController<float,float> pid_right(0,0,0,0);
   pid_right.SetOutputBound(-1000, 1000);
+
+  pLeft = &pid_left;
+  pRight = &pid_right;
 
   St7735r::Config lcd_config;
   lcd_config.is_revert = true;
@@ -196,6 +243,12 @@ void main() {
      joystick_config.id = 0;
      joystick_config.is_active_low = true;
      Joystick joystick(joystick_config);
+
+     Pit::Config pitConfig;
+     	pitConfig.channel = 0;
+     	pitConfig.count = 1000000;
+     	pitConfig.isr = &SyncMotor;
+     	Pit pit(pitConfig);
 
   while (true){
 	  while (System::Time() != time_img){
@@ -226,60 +279,60 @@ void main() {
 		  }
 
 
-		  if (time_img % 10 == 0){
-
-			  encoder0.Update();
-			  encoder1.Update();
-
-			  curr_left = encoder0.GetCount();
-			  curr_right = -encoder1.GetCount();
-
-			  if(time_img-start_time<10000){
-				  float temp = (10000-0.98*(time_img-start_time))/10000.0;
-				  if(std::abs(left_motor_target - curr_left)>20){
-					  Ki=temp;
-				  }
-				  else{
-//					  Ki=0.02;
-				  }
-				  pid_left.SetKi(Ki);
-				  if(std::abs(right_motor_target - curr_right)>20){
-					  Ki=temp;
-				  }
-				  else{
-//					  Ki=0.02;
-				  }
-				  pid_right.SetKi(Ki);
-			  }
-			  else{
-				  Ki=0.02;
-				  pid_left.SetKi(Ki);
-				  pid_right.SetKi(Ki);
-			  }
-			  pid_left.SetKp(Kp);
-			  pid_right.SetKp(Kp);
-			  pid_left.SetKd(Kd);
-			  pid_right.SetKd(Kd);
-			  pid_left.SetSetpoint(left_motor_target);
-			  pid_right.SetSetpoint(right_motor_target);
-
-			  char speedChar[100]{};
-			  sprintf(speedChar, "%.1f,%d,%.2f,%d,%.2f\n", 1.0, curr_left, left_motor_target, curr_right, right_motor_target);
-			  const Byte speedByte = 85;
-			  bt.SendBuffer(&speedByte, 1);
-			  bt.SendStr(speedChar);
-
-//			  motor0.AddPower(pid_left.Calc(curr_left));
-//			  motor1.AddPower(pid_right.Calc(curr_right));
-
-			  SetMotorPower(GetMotorPower(0)+pid_left.Calc(curr_left),0);
-			  SetMotorPower(GetMotorPower(1)+pid_right.Calc(curr_right),1);
-
-//			  SetMotorPower(pid_left.Calc(curr_left),0);
-//			  SetMotorPower(pid_right.Calc(curr_right),1);
-
-			  led1.SetEnable(time_img/250);
-		  }
+//		  if (time_img % 10 == 0){
+//
+//			  encoder0.Update();
+//			  encoder1.Update();
+//
+//			  curr_left = encoder0.GetCount();
+//			  curr_right = -encoder1.GetCount();
+//
+//			  if(time_img-start_time<10000){
+//				  float temp = (10000-0.98*(time_img-start_time))/10000.0;
+//				  if(std::abs(left_motor_target - curr_left)>20){
+//					  Ki=temp;
+//				  }
+//				  else{
+////					  Ki=0.02;
+//				  }
+//				  pid_left.SetKi(Ki);
+//				  if(std::abs(right_motor_target - curr_right)>20){
+//					  Ki=temp;
+//				  }
+//				  else{
+////					  Ki=0.02;
+//				  }
+//				  pid_right.SetKi(Ki);
+//			  }
+//			  else{
+//				  Ki=0.02;
+//				  pid_left.SetKi(Ki);
+//				  pid_right.SetKi(Ki);
+//			  }
+//			  pid_left.SetKp(Kp);
+//			  pid_right.SetKp(Kp);
+//			  pid_left.SetKd(Kd);
+//			  pid_right.SetKd(Kd);
+//			  pid_left.SetSetpoint(left_motor_target);
+//			  pid_right.SetSetpoint(right_motor_target);
+//
+//			  char speedChar[100]{};
+//			  sprintf(speedChar, "%.1f,%d,%.2f,%d,%.2f\n", 1.0, curr_left, left_motor_target, curr_right, right_motor_target);
+//			  const Byte speedByte = 85;
+//			  bt.SendBuffer(&speedByte, 1);
+//			  bt.SendStr(speedChar);
+//
+////			  motor0.AddPower(pid_left.Calc(curr_left));
+////			  motor1.AddPower(pid_right.Calc(curr_right));
+//
+//			  SetMotorPower(GetMotorPower(0)+pid_left.Calc(curr_left),0);
+//			  SetMotorPower(GetMotorPower(1)+pid_right.Calc(curr_right),1);
+//
+////			  SetMotorPower(pid_left.Calc(curr_left),0);
+////			  SetMotorPower(pid_right.Calc(curr_right),1);
+//
+//			  led1.SetEnable(time_img/250);
+//		  }
 		  if (time_img % 500 == 0) {
 			  led0.Switch();
 			  if(joystick.GetState()==Joystick::State::kSelect){
