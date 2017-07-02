@@ -31,6 +31,8 @@
 #include "bluetooth.h"
 #include "util/util.h"
 
+#include "controller.h"
+
 using namespace libsc;
 using namespace libsc::k60;
 using namespace libutil;
@@ -47,6 +49,7 @@ DirMotor* pMotor0 = nullptr;
 DirMotor* pMotor1 = nullptr;
 DirEncoder* pEncoder0 = nullptr;
 DirEncoder* pEncoder1 = nullptr;
+FutabaS3010* pServo = nullptr;
 IncrementalPidController<float, float> *pLeft = nullptr, *pRight = nullptr;
 JyMcuBt106* pBt = nullptr;
 int servo_angle=845;
@@ -54,7 +57,7 @@ int start_time=0, resume_time=0;
 
 
 float Kp = 2.5, Ki = 0.02, Kd = 0;
-float left_motor_target = 400, right_motor_target = 0;
+float left_motor_target = 000, right_motor_target = 000;
 
 /*
  * @brief set motor power
@@ -178,77 +181,90 @@ bool bluetoothListener(const Byte *data, const size_t size) {
 
 void main() {
 
-  start_time=System::Time();
+	start_time=System::Time();
 
-  Led::Config ConfigLed;
-  ConfigLed.is_active_low = true;
-  ConfigLed.id = 0;
-  Led led0(ConfigLed);
-  ConfigLed.id=1;
-  Led led1(ConfigLed);
+	Led::Config ConfigLed;
+	ConfigLed.is_active_low = true;
+	ConfigLed.id = 0;
+	Led led0(ConfigLed);
+	ConfigLed.id=1;
+	Led led1(ConfigLed);
 
-  led0.SetEnable(true);
+	led0.SetEnable(true);
 
-  FutabaS3010::Config ConfigServo;
-  ConfigServo.id = 0;
-  FutabaS3010 servo(ConfigServo);
-  servo.SetDegree(servo_angle);
+	FutabaS3010::Config ConfigServo;
+	ConfigServo.id = 0;
+	FutabaS3010 servo(ConfigServo);
+	servo.SetDegree(servo_angle);
+	pServo = &servo;
 
-  DirEncoder::Config ConfigEncoder;
-  ConfigEncoder.id = 0;
-  DirEncoder encoder0(ConfigEncoder);
-  ConfigEncoder.id = 1;
-  DirEncoder encoder1(ConfigEncoder);
-  pEncoder0 = &encoder0;
-  pEncoder1 = &encoder1;
+	DirEncoder::Config ConfigEncoder;
+	ConfigEncoder.id = 0;
+	DirEncoder encoder0(ConfigEncoder);
+	ConfigEncoder.id = 1;
+	DirEncoder encoder1(ConfigEncoder);
+	pEncoder0 = &encoder0;
+	pEncoder1 = &encoder1;
 
-  DirMotor::Config ConfigMotor;
-  ConfigMotor.id = 0;
-  DirMotor motor0(ConfigMotor);
-  ConfigMotor.id = 1;
-  DirMotor motor1(ConfigMotor);
-  motor1.SetClockwise(false);
-  pMotor0=&motor0;
-  pMotor1=&motor1;
+	DirMotor::Config ConfigMotor;
+	ConfigMotor.id = 0;
+	DirMotor motor0(ConfigMotor);
+	ConfigMotor.id = 1;
+	DirMotor motor1(ConfigMotor);
+	motor1.SetClockwise(false);
+	pMotor0=&motor0;
+	pMotor1=&motor1;
 
-  JyMcuBt106::Config bt_config;
-  bt_config.id = 0;
-  bt_config.baud_rate = libbase::k60::Uart::Config::BaudRate::k115200;
-  bt_config.rx_isr = &bluetoothListener;
-  JyMcuBt106 bt(bt_config);
-  pBt = &bt;
+	JyMcuBt106::Config bt_config;
+	bt_config.id = 0;
+	bt_config.baud_rate = libbase::k60::Uart::Config::BaudRate::k115200;
+	bt_config.rx_isr = &bluetoothListener;
+	JyMcuBt106 bt(bt_config);
+	pBt = &bt;
 
-  Timer::TimerInt time_img = 0;
+	Timer::TimerInt time_img = 0;
 
-  IncrementalPidController<float, float> pid_left(0,0,0,0);
-//  PositionalPidController<float,float> pid_left(0,0,0,0);
-  pid_left.SetOutputBound(-1000, 1000);
-  IncrementalPidController<float, float> pid_right(0,0,0,0);
-//  PositionalPidController<float,float> pid_right(0,0,0,0);
-  pid_right.SetOutputBound(-1000, 1000);
 
-  pLeft = &pid_left;
-  pRight = &pid_right;
+	IncrementalPidController<float, float> pid_left(0,0,0,0);
+	//  PositionalPidController<float,float> pid_left(0,0,0,0);
+	pid_left.SetOutputBound(-1000, 1000);
+	IncrementalPidController<float, float> pid_right(0,0,0,0);
+	//  PositionalPidController<float,float> pid_right(0,0,0,0);
+	pid_right.SetOutputBound(-1000, 1000);
 
-  St7735r::Config lcd_config;
-  lcd_config.is_revert = true;
-  St7735r lcd(lcd_config);
-  lcd.Clear();
+	pLeft = &pid_left;
+	pRight = &pid_right;
 
-  LcdTypewriter::Config writerconfig;
-   writerconfig.lcd = &lcd;
-   LcdTypewriter writer(writerconfig);
+	Controller control(pMotor0,pMotor1,pEncoder0,pEncoder1,pServo);
+	control.SetMotorTarget(100);
 
-   Joystick::Config joystick_config;
-     joystick_config.id = 0;
-     joystick_config.is_active_low = true;
-     Joystick joystick(joystick_config);
 
-     Pit::Config pitConfig;
-     	pitConfig.channel = 0;
-     	pitConfig.count = 1000000;
-     	pitConfig.isr = &SyncMotor;
-     	Pit pit(pitConfig);
+	St7735r::Config lcd_config;
+	lcd_config.is_revert = true;
+	St7735r lcd(lcd_config);
+	lcd.Clear();
+
+	LcdTypewriter::Config writerconfig;
+	writerconfig.lcd = &lcd;
+	LcdTypewriter writer(writerconfig);
+
+	Joystick::Config joystick_config;
+	joystick_config.id = 0;
+	joystick_config.is_active_low = true;
+	Joystick joystick(joystick_config);
+//	while(1){
+//		if(System::Time()%10==0)
+//			control.Sync();
+//		if(joystick.GetState()==Joystick::State::kSelect){
+//			control.debug(&lcd,&writer);
+//			}
+//	}
+
+//	Pit::Config pitConfig;
+//	pitConfig.channel = 0;
+//	pitConfig.count = 1000000;
+//	pitConfig.isr = &control.Sync;
+//	Pit pit(pitConfig);
 
   while (true){
 	  while (System::Time() != time_img){
@@ -264,20 +280,32 @@ void main() {
 		  int start=time_img-start_time;
 		  if(start>1000 && start<7000){
 			  left_motor_target=0;
+			  right_motor_target=0;
+			  control.SetMotorTarget(0);
 			  if(start>2500){
 				  left_motor_target=400;
+				  right_motor_target=400;
+				  control.SetMotorTarget(400);
 				  if(start>3000){
-					  left_motor_target=-400;
+					  left_motor_target=200;
+					  right_motor_target=200;
+					  control.SetMotorTarget(200);
 					  if(start>4500){
 						  left_motor_target=0;
+						  right_motor_target=0;
+						  control.SetMotorTarget(0);
 						  if(start>5000){
-							  left_motor_target=400;
+							  left_motor_target=100;
+							  right_motor_target=100;
+							  control.SetMotorTarget(100);
 						  }
 					  }
 				  }
 			  }
 		  }
 
+		  if(time_img % 10 == 0)
+			  control.Sync(nullptr);
 
 //		  if (time_img % 10 == 0){
 //
@@ -333,17 +361,17 @@ void main() {
 //
 //			  led1.SetEnable(time_img/250);
 //		  }
-		  if (time_img % 500 == 0) {
-			  led0.Switch();
-			  if(joystick.GetState()==Joystick::State::kSelect){
-				  char buff[100];
-				  sprintf(buff,"kp:%.5lf \nki:%.5lf \nkd:%.5lf \nleft:%.5lf \n right:%.5lf\n left%.5lf\nright%.5lf\n%d\n%d",Kp,Ki,Kd,left_motor_target,right_motor_target,pid_left.Calc(curr_left),pid_right.Calc(curr_right),GetMotorPower(0),GetMotorPower(1));
-//				  sprintf(buff,"%d\n%d",GetMotorPower(0),GetMotorPower(1));
-//				  sprintf(buff,"%.3lf \n%.3lf \n%.3lf \n%.3lf \n%.3lf \n%.3lf ",pid_left.GetKp(),pid_left.GetKi(),pid_left.GetKd(),pid_right.GetKp(),pid_right.GetKi(),pid_right.GetKd());
-				  lcd.SetRegion(Lcd::Rect(0,0,128,160));
-				  writer.WriteBuffer(buff,100);
-			  }
-		  }
+//		  if (time_img % 500 == 0) {
+//			  led0.Switch();
+//			  if(joystick.GetState()==Joystick::State::kSelect){
+//				  char buff[100];
+//				  sprintf(buff,"kp:%.5lf \nki:%.5lf \nkd:%.5lf \nleft:%.5lf \n right:%.5lf\n left%.5lf\nright%.5lf\n%d\n%d",Kp,Ki,Kd,left_motor_target,right_motor_target,pid_left.Calc(curr_left),pid_right.Calc(curr_right),GetMotorPower(0),GetMotorPower(1));
+////				  sprintf(buff,"%d\n%d",GetMotorPower(0),GetMotorPower(1));
+////				  sprintf(buff,"%.3lf \n%.3lf \n%.3lf \n%.3lf \n%.3lf \n%.3lf ",pid_left.GetKp(),pid_left.GetKi(),pid_left.GetKd(),pid_right.GetKp(),pid_right.GetKi(),pid_right.GetKd());
+//				  lcd.SetRegion(Lcd::Rect(0,0,128,160));
+//				  writer.WriteBuffer(buff,100);
+//			  }
+//		  }
 	  }
   }
 }
