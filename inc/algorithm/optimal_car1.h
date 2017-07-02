@@ -147,6 +147,7 @@ namespace TuningVar {
   extern float servo_normal_kp;
   extern float servo_normal_kd;
   extern uint16_t targetSpeed;
+  extern uint16_t targetSpeed_round;
 };
 
 /**

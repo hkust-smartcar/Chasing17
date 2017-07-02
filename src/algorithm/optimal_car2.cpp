@@ -699,7 +699,7 @@ bool FindEdges() {
  * @note: Execute this function after calling FindEdges()
  */
 Feature featureIdent_Corner() {
-	if(overtake){
+	if(!overtake){
 		is_front_car = false;
 		stop_before_roundexit = false;
 	}
@@ -995,7 +995,7 @@ void PrintCorner(Corners corners, uint16_t color) {
  * 3. Under no LEFT_NULL and RIGHT_NULL, the midpt's midpt
  */
 void GenPath(Feature feature) {
-	if(overtake){
+	if(!overtake){
 		is_front_car = false;
 		stop_before_roundexit = false;
 	}
@@ -1320,7 +1320,7 @@ void PrintSuddenChangeTrackWidthLocation(uint16_t color) {
  * @return: 1 means turning left, 0 means turning right
  * */
 int roundabout_shortest(uint32_t a, int pos){
-	return (a >> (31-pos)) & 1;
+	return !((a >> (pos - 1) != 0));
 }
 
 

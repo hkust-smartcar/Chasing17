@@ -81,13 +81,14 @@ namespace TuningVar { //tuning var declaration
   uint16_t roundabout_offset = 15; // half of road width
   uint16_t round_exit_offset = 20;
   uint16_t round_encoder_count = 2600;
-  uint16_t roundExit_encoder_count = 3000;
+  uint16_t roundExit_encoder_count = 3300;
   int32_t roundabout_shortest_flag = 0b00011; //1 means turn left, 0 means turn right. Reading from left to right
   uint16_t nearest_corner_threshold = 128/2;
-  float servo_exit_kp = 0.8;
+  float servo_exit_kp = 1.3;
   float servo_normal_kp = 1.3;
   float servo_normal_kd = 0;
-  uint16_t targetSpeed = 190;
+  uint16_t targetSpeed = 100;
+  uint16_t targetSpeed_round = 80;
 };
 
 namespace {
@@ -108,7 +109,7 @@ uint16_t prev_corner_x; //store the latest corner coordinate appears last time d
 uint16_t prev_corner_y;
 
 /*FOR OVERTAKING*/
-bool overtake = true;
+bool overtake = false;
 bool is_front_car = true;
 bool stop_before_roundexit = false;
 
@@ -698,7 +699,7 @@ bool FindEdges() {
  * @note: Execute this function after calling FindEdges()
  */
 Feature featureIdent_Corner() {
-	if(overtake){
+	if(!overtake){
 		is_front_car = false;
 		stop_before_roundexit = false;
 	}
@@ -990,7 +991,7 @@ void PrintCorner(Corners corners, uint16_t color) {
  * 3. Under no LEFT_NULL and RIGHT_NULL, the midpt's midpt
  */
 void GenPath(Feature feature) {
-	if(overtake){
+	if(!overtake){
 		is_front_car = false;
 		stop_before_roundexit = false;
 	}
@@ -1370,7 +1371,7 @@ void PrintSuddenChangeTrackWidthLocation(uint16_t color) {
  * @return: 1 means turning left, 0 means turning right
  * */
 int roundabout_shortest(uint32_t a, int pos){
-	return (a >> (31-pos)) & 1;
+	return !((a >> (pos - 1) != 0));
 }
 
 
@@ -1572,10 +1573,10 @@ void main_car1(bool debug_) {
 	pid_left.SetOutputBound(-500, 500);
 	IncrementalPidController<float, float> pid_right(0,0,0,0);
 	pid_right.SetOutputBound(-500, 500);
-	pid_left.SetKp(1.5);
-	pid_right.SetKp(1.5);
-	pid_left.SetKi(0.001);
-	pid_right.SetKi(0.001);
+	pid_left.SetKp(2.5);
+	pid_right.SetKp(2.5);
+	pid_left.SetKi(0.02);
+	pid_right.SetKi(0.02);
 	pid_left.SetKd(0);
 	pid_right.SetKd(0);
 
@@ -1602,14 +1603,14 @@ void main_car1(bool debug_) {
 	//	  }
 
 	//
-	while(!bt.hasStartReq()&&!debug&&joystick.GetState()==Joystick::State::kIdle);
+//	while(!bt.hasStartReq()&&!debug&&joystick.GetState()==Joystick::State::kIdle);
 
 	//	StartlineOvertake();
 
 	pMotor0->SetClockwise(true);
 	pMotor1->SetClockwise(false);
-	//	pMotor0->SetPower(TuningVar::targetSpeed);
-	//	pMotor1->SetPower(TuningVar::targetSpeed);
+//		pMotor0->SetPower(TuningVar::targetSpeed);
+//		pMotor1->SetPower(TuningVar::targetSpeed);
 
 	Timer::TimerInt startTime=System::Time();
 	bool brake_flag = true;
@@ -1796,20 +1797,28 @@ void main_car1(bool debug_) {
 							servo_bounds.kRightBound,
 							servo_bounds.kLeftBound));
 				}
+
+
 				prev_servo_error = curr_servo_error;
 				/* Motor PID */
-				pid_left.SetSetpoint(TuningVar::targetSpeed);
-				pid_right.SetSetpoint(TuningVar::targetSpeed);
+				if(roundaboutStatus == 1){
+					pid_left.SetSetpoint(TuningVar::targetSpeed_round*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
+					pid_right.SetSetpoint(TuningVar::targetSpeed_round* differential_left((-pServo->GetDegree() + servo_bounds.kCenter)/10));
+				}
+				else{
+					pid_left.SetSetpoint(TuningVar::targetSpeed*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
+					pid_right.SetSetpoint(TuningVar::targetSpeed* differential_left((-pServo->GetDegree() + servo_bounds.kCenter)/10));
+				}
 				pEncoder0->Update();
 				pEncoder1->Update();
 				curr_enc_val_left = pEncoder0->GetCount();
 				curr_enc_val_right = -pEncoder1->GetCount();
 				SetMotorPower(GetMotorPower(0)+pid_left.Calc(curr_enc_val_left),0);
 				SetMotorPower(GetMotorPower(1)+pid_right.Calc(curr_enc_val_right),1);
-				if(curr_enc_val_left<100||curr_enc_val_right<100){
-					pMotor0->SetPower(0);
-					pMotor1->SetPower(0);
-				}
+//				if(curr_enc_val_left<100||curr_enc_val_right<100){
+//					pMotor0->SetPower(0);
+//					pMotor1->SetPower(0);
+//				}
 			}
 		}
 

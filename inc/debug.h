@@ -40,7 +40,7 @@ void loadItems(DebugConsole* console) {
     console->PushItem("LCD debug", &debug_flag::lcd_debug);
     console->PushItem("Speed", &targetSpeed, 5);
     console->PushItem("Normal Kp", &servo_normal_kp, 0.1);
-    console->PushItem("Normal Kd", &servo_normal_kd, 0.1);
+    console->PushItem("Normal Kd", &servo_normal_kd, 0.01);
     console->PushItem("Rabt Sel", &algorithm::optimal::car1::TuningVar::roundabout_shortest_flag);
     console->PushItem("Rabt Raw", &algorithm::optimal::car1::TuningVar::roundabout_shortest_flag, 1);
 
