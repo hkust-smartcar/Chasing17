@@ -95,15 +95,16 @@ int Controller::GetMotorPower(int id){
 }
 
 void Controller::SetServoDegree(uint16_t target){
-	pServo->SetDegree(util::clamp<uint16_t>(servo_right,target,servo_left));
+	target = util::clamp<uint16_t>(target,servo_right,servo_left);
+	pServo->SetDegree(target);
 	m_delta = (target-servo_mid)/10.0f;
 	CalculateSpeed();
 }
 
 void Controller::SetServoDelta(float delta){
-	m_delta = delta;
+	m_delta = util::clamp<float>(delta,-28.5,28.5);
 	int target = delta*10+servo_mid;
-	pServo->SetDegree(util::clamp<uint16_t>(servo_right,target,servo_left));
+	pServo->SetDegree(target);
 	CalculateSpeed();
 }
 
