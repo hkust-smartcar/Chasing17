@@ -32,9 +32,6 @@ CarManager::Feature CarManager::feature_ = CarManager::Feature::kStraight;
 CarManager::Identity CarManager::identity_ = CarManager::Identity::kFront;
 CarManager::Car CarManager::car_ = CarManager::Car::kCar1;
 
-constexpr CarManager::ServoBounds CarManager::kBoundsCar1;
-constexpr CarManager::ServoBounds CarManager::kBoundsCar2;
-
 constexpr CarManager::ServoAngles CarManager::kAnglesCar1;
 constexpr CarManager::ServoAngles CarManager::kAnglesCar2;
 
@@ -43,17 +40,6 @@ constexpr CarManager::SideRatio CarManager::kRatioCar2;
 
 constexpr CarManager::PidValues CarManager::kMotorPidCar1;
 constexpr CarManager::PidValues CarManager::kMotorPidCar2;
-
-CarManager::ServoBounds CarManager::GetServoBounds() {
-  switch (car_) {
-    default:
-      // all cases covered
-    case Car::kCar1:
-      return kBoundsCar1;
-    case Car::kCar2:
-      return kBoundsCar2;
-  }
-}
 
 CarManager::ServoAngles CarManager::GetServoAngles() {
   switch (car_) {

@@ -96,9 +96,6 @@ struct CarManager final {
     uint16_t kRightBound;
   };
 
-  static constexpr ServoBounds kBoundsCar1 = {1040, 755, 470};
-  static constexpr ServoBounds kBoundsCar2 = {1145, 845, 545};
-
   /**
    * Struct of servo angles, stored in degrees
    */
@@ -147,7 +144,6 @@ struct CarManager final {
 
   // Getters
   static ServoAngles GetServoAngles();
-  static ServoBounds GetServoBounds();
   static SideRatio GetSideRatio();
   static PidValues GetMotorPidValues();
 
