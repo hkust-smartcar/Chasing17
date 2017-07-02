@@ -200,7 +200,7 @@ void DebugConsole::PrintItemValue(int index, bool isInverted) {
     default:
       return;
   }
-  Printxy(9, index - topIndex, buff, isInverted);
+  Printxy(5, index - topIndex, buff, isInverted);
   return;
 }
 

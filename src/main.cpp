@@ -24,6 +24,7 @@
 #include "util/util.h"
 #include "car_manager.h"
 #include "util/pid_tuning.h"
+#include "util/differential_tuning.h"
 
 namespace libbase {
 namespace k60 {
@@ -47,7 +48,8 @@ enum struct Algorithm {
   kOptimal,
   kTestGround,
   kDistance,
-  kPID
+  kPID,
+  kDifferential
 };
 
 int main() {
@@ -128,6 +130,9 @@ int main() {
       break;
     case Algorithm::kPID:
       util::pid_tuning::main();
+      break;
+    case Algorithm::kDifferential:
+      util::differential_tuning::main((int)c);
       break;
     default:
       // all cases covered
