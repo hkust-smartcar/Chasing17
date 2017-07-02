@@ -19,7 +19,6 @@
 #include <iterator>
 #include <memory>
 #include <string>
-#include <type_traits>
 #include <vector>
 
 #include "libbase/misc_types.h"
@@ -37,43 +36,12 @@ template<size_t size>
 void CopyByteArray(const Byte* const src, std::array<Byte, size>& dest);
 
 /**
- * Retrieves the bit value from a byte array, given a 1D coordinate.
- *
- * @tparam size Size of the byte array
- * @param byte_arr Source byte (C++11-style) array
- * @param pos Index of the bit
- * @return False if index out of bounds. Otherwise the bit value.
- */
-template<size_t size>
-bool GetBitValue(const std::array<Byte, size>& byte_arr, const size_t pos);
-
-/**
- * Retrieves the bit value from a byte array, given a 2D coordinate.
- *
- * @tparam size Size of the byte array
- * @param byte_arr Source byte (C++11-style) array
- * @param x_size Length of the row
- * @param x Column index
- * @param y Row index
- * @return False if index out of bounds. Otherwise the bit value.
- */
-template<size_t size>
-bool GetBitValue(const std::array<Byte, size>& byte_arr, const size_t x_size, const size_t x, const size_t y);
-
-/**
  * Converts an uint16_t to an array with 2 bytes.
  *
  * @param num The uint16_t number
  * @param bytes Destination byte (C++11-style) array
  */
 void Int16To2ByteArray(const uint16_t num, std::array<Byte, 2>& bytes);
-
-/**
- * Sends an image from the camera via Bluetooth every 5 seconds.
- *
- * @note The function must be called after @code System::Init() @endcode
- */
-void BtSendImage();
 
 /**
  * Extension function for LcdConsole::WriteString for std::string.

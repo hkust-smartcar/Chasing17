@@ -10,28 +10,32 @@
  *
  */
 
-#include "../../inc/algorithm/optimal_car2.h"
+#include "algorithm/optimal_car2.h"
+
+#include <cmath>
+#include <cstring>
+#include <cstdio>
+#include <sstream>
+#include <vector>
+
 #include "libsc/dir_motor.h"
 #include "libsc/dir_encoder.h"
 #include "libsc/futaba_s3010.h"
-#include "libsc/k60/jy_mcu_bt_106.h"
+#include "libsc/joystick.h"
 #include "libsc/lcd_console.h"
 #include "libsc/led.h"
 #include "libsc/st7735r.h"
 #include "libsc/system.h"
+#include "libsc/k60/jy_mcu_bt_106.h"
 #include "libsc/k60/ov7725.h"
-#include "libsc/joystick.h"
 #include "libutil/misc.h"
 #include "libutil/incremental_pid_controller.h"
 
 #include "bluetooth.h"
-#include "util/util.h"
-
+#include "car_manager.h"
 #include "debug_console.h"
 #include "algorithm/worldview/car2.h"
-
-#include <cmath>
-#include <sstream>
+#include "util/util.h"
 
 using libsc::DirMotor;
 using libsc::DirEncoder;
@@ -46,7 +50,12 @@ using libsc::Timer;
 using libsc::k60::JyMcuBt106;
 using libsc::k60::Ov7725;
 using libsc::k60::Ov7725Configurator;
+
 using namespace libutil;
+
+typedef CarManager::Feature Feature;
+typedef CarManager::ImageSize ImageSize;
+typedef CarManager::ServoBounds ServoBounds;
 
 namespace algorithm {
 namespace optimal {
@@ -161,6 +170,8 @@ DirMotor* pMotor0 = nullptr;
 DirMotor* pMotor1 = nullptr;
 
 ServoBounds servo_bounds = {1145, 845, 545};
+ImageSize CameraSize = {128, 480};
+ImageSize WorldSize = {128, 160};
 
 inline constexpr int max(int a, int b) {
 	return (a > b) ? a : b;
@@ -258,19 +269,19 @@ bool bluetoothListener(const Byte *data, const size_t size) {
  * XXX: Suspecting median filter would crash the program occasionally
  */
 int getFilteredBit(const Byte* buff, int x, int y) {
-	if (x <= 0 || x > CameraSize::w - 1 || y <= 0 || y > CameraSize::h - 1)
+	if (x <= 0 || x > CameraSize.w - 1 || y <= 0 || y > CameraSize.h - 1)
 		return 1; //-1; // Out of bound = black
-	//y = CameraSize::h - 1 - y; // set y = 0 at bottom
+	//y = CameraSize.h - 1 - y; // set y = 0 at bottom
 
-	return buff[y * CameraSize::w / 8 + x / 8] >> (7 - (x % 8)) & 1; //buff[y*CameraSize::w/8+x/8] & 0x80>>x%8;
+	return buff[y * CameraSize.w / 8 + x / 8] >> (7 - (x % 8)) & 1; //buff[y*CameraSize.w/8+x/8] & 0x80>>x%8;
 
 	// Median Filter
 	int count = 0, total = 0;
 
-	for (int i = max(0, x - 1); i < min(CameraSize::w - 1, x + 1); i++) {
-		for (int j = max(0, y - 1); j < min(CameraSize::h - 1, y + 1); j++) {
+	for (int i = max(0, x - 1); i < min(CameraSize.w - 1, x + 1); i++) {
+		for (int j = max(0, y - 1); j < min(CameraSize.h - 1, y + 1); j++) {
 			total++;
-			count += buff[j * CameraSize::w / 8 + i / 8] >> (7 - (i % 8)) & 1;
+			count += buff[j * CameraSize.w / 8 + i / 8] >> (7 - (i % 8)) & 1;
 		}
 	}
 	// Median Filter
@@ -282,10 +293,10 @@ int getFilteredBit(const Byte* buff, int x, int y) {
  * @brief To fetch bit directly from raw data
  */
 bool getBit(int i_x, int i_y) {
-	if (i_x <= 0 || i_x > CameraSize::w - 1 || i_y <= 0
-			|| i_y > CameraSize::h - 1)
+	if (i_x <= 0 || i_x > CameraSize.w - 1 || i_y <= 0
+			|| i_y > CameraSize.h - 1)
 		return -1;
-	return CameraBuf[i_y * CameraSize::w / 8 + i_x / 8] >> (7 - (i_x % 8)) & 1;
+	return CameraBuf[i_y * CameraSize.w / 8 + i_x / 8] >> (7 - (i_x % 8)) & 1;
 }
 
 /**
@@ -294,7 +305,7 @@ bool getBit(int i_x, int i_y) {
  * @return world bit
  */
 bool getWorldBit(int w_x, int w_y) {
-	if (w_x <= 0 || w_x > WorldSize::w - 1 || w_y <= 0 || w_y > WorldSize::h - 1)
+	if (w_x <= 0 || w_x > WorldSize.w - 1 || w_y <= 0 || w_y > WorldSize.h - 1)
 		return 1;
 	w_y = 160 - w_y;
 	int i_x, i_y;
@@ -356,7 +367,7 @@ void Capture() {
 	}
 
 	//Search horizontally
-	for (int i = carMid.first; i < WorldSize::w; i++) {
+	for (int i = carMid.first; i < WorldSize.w; i++) {
 		if (getWorldBit(i, TuningVar::starting_y) == 1) {
 			right_x = i - 1;
 			right_y = TuningVar::starting_y;
@@ -365,7 +376,7 @@ void Capture() {
 		}
 	}
 	if (!found_right) {
-		right_x = WorldSize::w - 1;
+		right_x = WorldSize.w - 1;
 		right_y = TuningVar::starting_y;
 	}
 
@@ -378,7 +389,7 @@ void Capture() {
  * @brief Print raw image to LCD
  */
 void PrintImage() {
-	pLcd->SetRegion(Lcd::Rect(0, 0, CameraSize::w, CameraSize::h));
+	pLcd->SetRegion(Lcd::Rect(0, 0, CameraSize.w, CameraSize.h));
 	pLcd->FillBits(0x0000, 0xFFFF, CameraBuf, spCamera->GetBufferSize() * 8);
 }
 
@@ -418,7 +429,7 @@ bool FindOneLeftEdge() {
 		for (int i = prev_x;
 				i
 				< min(prev_x + TuningVar::edge_hor_search_max,
-						WorldSize::w - 1); i++) {
+						WorldSize.w - 1); i++) {
 			if (getWorldBit(i, prev_y) == 1) {
 				left_edge.push(i - 1, prev_y);
 				break;
@@ -435,20 +446,20 @@ bool FindOneLeftEdge() {
 		left_edge.points.pop_back();
 		return false;
 	}
-	if (left_edge.points.back().second == WorldSize::h - 1)
+	if (left_edge.points.back().second == WorldSize.h - 1)
 		return false; //reaches top
 	if (left_edge.points.back().first == 1)
 		return false; //reaches left
-	if (left_edge.points.back().first == WorldSize::w - 1)
+	if (left_edge.points.back().first == WorldSize.w - 1)
 		return false; //reaches right
 
 	int CornerCheck = 0;
 	int total = 0;
 	auto last = left_edge.points.back();
 	if (last.first - TuningVar::corner_range <= 0
-			|| last.first + TuningVar::corner_range > WorldSize::w - 1
+			|| last.first + TuningVar::corner_range > WorldSize.w - 1
 			|| last.second - TuningVar::corner_range <= 0
-			|| last.second + TuningVar::corner_range > WorldSize::h - 1)
+			|| last.second + TuningVar::corner_range > WorldSize.h - 1)
 		return true;
 	for (int i = (last.first - TuningVar::corner_range);
 			i <= (last.first + TuningVar::corner_range); i++) {
@@ -460,16 +471,16 @@ bool FindOneLeftEdge() {
 	}
 	//find corners
 	if (left_edge.points.back().second
-			<= WorldSize::h / TuningVar::corner_height_ratio) {
+			<= WorldSize.h / TuningVar::corner_height_ratio) {
 		//if in this threshold, consider as corner
 		if (CornerCheck > total * TuningVar::corner_min / 100
 				&& CornerCheck < total * TuningVar::corner_max / 100) {
-			if (abs(last.first - left_corners.points.back().first)
-					+ abs(last.second - left_corners.points.back().second)
+			if (abs(last.first - left_corners.back().first)
+					+ abs(last.second - left_corners.back().second)
 					<= TuningVar::min_corners_dist) { //discard if too close
 				return true;
 			}
-			left_corners.push(last.first, last.second);
+			left_corners.push_back({last.first, last.second});
 		}
 
 	}
@@ -489,7 +500,7 @@ bool FindOneRightEdge() {
 	uint16_t prev_size = right_edge.points.size();
 
 	if (getWorldBit(prev_x, prev_y + 1) == 0) { //if white, find in CW until black
-		if (prev_x == WorldSize::w - 1) { //if align with left bound
+		if (prev_x == WorldSize.w - 1) { //if align with left bound
 			right_edge.push(prev_x, prev_y + 1);
 		} else {
 			for (int i = 7; i > 0; i--) {
@@ -502,7 +513,7 @@ bool FindOneRightEdge() {
 			for (int i = prev_x;
 					i
 					< min(prev_x + TuningVar::edge_hor_search_max,
-							WorldSize::w - 1); i++) {
+							WorldSize.w - 1); i++) {
 				if (getWorldBit(i, prev_y) == 1) {
 					right_edge.push(i - 1, prev_y);
 					break;
@@ -534,20 +545,20 @@ bool FindOneRightEdge() {
 		right_edge.points.pop_back();
 		return false;
 	}
-	if (right_edge.points.back().second == WorldSize::h - 1)
+	if (right_edge.points.back().second == WorldSize.h - 1)
 		return false; //reaches top
 	if (right_edge.points.back().first == 1)
 		return false; //reaches left
-	if (right_edge.points.back().first == WorldSize::w - 1)
+	if (right_edge.points.back().first == WorldSize.w - 1)
 		return false; //reaches right
 
 	int CornerCheck = 0;
 	int total = 0;
 	auto last = right_edge.points.back();
 	if (last.first - TuningVar::corner_range <= 0
-			|| last.first + TuningVar::corner_range > WorldSize::w - 1
+			|| last.first + TuningVar::corner_range > WorldSize.w - 1
 			|| last.second - TuningVar::corner_range <= 0
-			|| last.second + TuningVar::corner_range > WorldSize::h - 1)
+			|| last.second + TuningVar::corner_range > WorldSize.h - 1)
 		return true;
 	for (int i = (last.first - TuningVar::corner_range);
 			i <= (last.first + TuningVar::corner_range); i++) {
@@ -559,16 +570,16 @@ bool FindOneRightEdge() {
 	}
 	//find corners
 	if (right_edge.points.back().second
-			<= WorldSize::h / TuningVar::corner_height_ratio) {
+			<= WorldSize.h / TuningVar::corner_height_ratio) {
 		//if in this threshold, consider as corner
 		if (CornerCheck > total * TuningVar::corner_min / 100
 				&& CornerCheck < total * TuningVar::corner_max / 100) {
-			if (abs(last.first - right_corners.points.back().first)
-					+ abs(last.second - right_corners.points.back().second)
+			if (abs(last.first - right_corners.back().first)
+					+ abs(last.second - right_corners.back().second)
 					<= TuningVar::min_corners_dist) { //discard if too close
 				return true;
 			}
-			right_corners.push(last.first, last.second);
+			right_corners.push_back({last.first, last.second});
 		}
 	}
 	//check if the point is the point closest to corners
@@ -593,8 +604,8 @@ bool FindOneRightEdge() {
 bool FindEdges() {
 	is_straight_line = false;
 	has_inc_width_pt = false;
-	left_corners.points.clear();
-	right_corners.points.clear();
+	left_corners.clear();
+	right_corners.clear();
 	bool flag_break_left = left_edge.points.size() == 0;
 	bool flag_break_right = right_edge.points.size() == 0;
 	roundabout_nearest_corner_cnt_left = pow(TuningVar::corner_range * 2 + 1, 2);
@@ -636,24 +647,24 @@ bool FindEdges() {
 		// edges reach worldview boundaries
 
 		if (worldview::car2::transformMatrix[min(
-				left_edge.points.back().first + 1, WorldSize::w - 1)][WorldSize::h
+				left_edge.points.back().first + 1, WorldSize.w - 1)][WorldSize.h
 																	  - left_edge.points.back().second][0] == -1) {
 			flag_break_left = true;
 		}
 		if (worldview::car2::transformMatrix[max(
-				left_edge.points.back().first - 1, 1)][WorldSize::h
+				left_edge.points.back().first - 1, 1)][WorldSize.h
 													   - left_edge.points.back().second][0] == -1) {
 			flag_break_left = true;
 		}
 		if (right_edge.points.back().second
 				> TuningVar::edge_min_worldview_bound_check) {
 			if (worldview::car2::transformMatrix[min(
-					right_edge.points.back().first + 1, WorldSize::w - 1)][WorldSize::h
+					right_edge.points.back().first + 1, WorldSize.w - 1)][WorldSize.h
 																		   - right_edge.points.back().second][0] == -1) {
 				flag_break_right = true;
 			}
 			if (worldview::car2::transformMatrix[max(
-					right_edge.points.back().first - 1, 1)][WorldSize::h
+					right_edge.points.back().first - 1, 1)][WorldSize.h
 															- right_edge.points.back().second][0] == -1) {
 				flag_break_right = true;
 			}
@@ -721,15 +732,15 @@ Feature featureIdent_Corner() {
 	}
 
 	/*Only assume the first two corners are useful*/
-	if (left_corners.points.size() > 0 && right_corners.points.size() > 0) {
+	if (left_corners.size() > 0 && right_corners.size() > 0) {
 		//3. More than two valid corner case
-		uint16_t cornerMid_x = (left_corners.points.front().first
-				+ right_corners.points.front().first) / 2; //corner midpoint x-cor
-		uint16_t cornerMid_y = (left_corners.points.front().second
-				+ right_corners.points.front().second) / 2; //corner midpoint y-cor
+		uint16_t cornerMid_x = (left_corners.front().first
+				+ right_corners.front().first) / 2; //corner midpoint x-cor
+		uint16_t cornerMid_y = (left_corners.front().second
+				+ right_corners.front().second) / 2; //corner midpoint y-cor
 		/*FOR DEBUGGING*/
 		//		pLcd->SetRegion(
-		//		Lcd::Rect(cornerMid_x, WorldSize::h - cornerMid_y - 1, 2, 2));
+		//		Lcd::Rect(cornerMid_x, WorldSize.h - cornerMid_y - 1, 2, 2));
 		//		pLcd->FillColor(Lcd::kRed);
 		/*END OF DEBUGGING*/
 		if (abs(carMid.second - cornerMid_y) > TuningVar::action_distance) {
@@ -737,13 +748,13 @@ Feature featureIdent_Corner() {
 		}
 		uint16_t test_y = carMid.second + TuningVar::sightDist;
 		uint16_t test_x = (test_y - cornerMid_y)
-        		* (right_corners.points.front().second
-        				- left_corners.points.front().second)
-						/ (left_corners.points.front().first
-								- right_corners.points.front().first) + cornerMid_x;
+        		* (right_corners.front().second
+        				- left_corners.front().second)
+						/ (left_corners.front().first
+								- right_corners.front().first) + cornerMid_x;
 		/*FOR DEBUGGING*/
 		if (debug) {
-			pLcd->SetRegion(Lcd::Rect(test_x, WorldSize::h - test_y - 1, 4, 4));
+			pLcd->SetRegion(Lcd::Rect(test_x, WorldSize.h - test_y - 1, 4, 4));
 			pLcd->FillColor(Lcd::kCyan);
 		}
 		/*END OF DEBUGGING*/
@@ -776,14 +787,14 @@ Feature featureIdent_Corner() {
 					+ (TuningVar::cross_cal_start_num
 							- encoder_total_cross / TuningVar::cross_cal_ratio);
 			start_x = (start_y
-					- (left_corners.points.front().second
-							+ right_corners.points.front().second) / 2)
-        		  / (left_corners.points.front().first
-        				  - right_corners.points.front().first)
-						  * (right_corners.points.front().second
-								  - left_corners.points.front().second)
-								  + (left_corners.points.front().first
-										  + right_corners.points.front().first) / 2;
+					- (left_corners.front().second
+							+ right_corners.front().second) / 2)
+        		  / (left_corners.front().first
+        				  - right_corners.front().first)
+						  * (right_corners.front().second
+								  - left_corners.front().second)
+								  + (left_corners.front().first
+										  + right_corners.front().first) / 2;
 			return Feature::kCross;
 		}
 	}
@@ -794,8 +805,8 @@ Feature featureIdent_Corner() {
 	 * roundaboutExitStatus: Becomes 1 when exit is ready and one corner disappear, becomes 0 after encoderExit is reached
 	 * */
 	//4. Only one corner case: Only one corner - Exit/Cross/Entering crossing & roundabout
-	else if (left_corners.points.size() > 0
-			|| right_corners.points.size() > 0) {
+	else if (left_corners.size() > 0
+			|| right_corners.size() > 0) {
 		/*Double check for crossing to handle only one corner case*/
 		if (roundaboutStatus == 0 && crossingStatus == 0) { // avoid double check for crossing when inside the crossing (encoder_total_cross<2500)){ //Not inside roundabout, not Exit of Roundabout when encounter one corner case - CONDITION_1
 			//Both sides are break due to -1 - CONDITION_2
@@ -803,33 +814,33 @@ Feature featureIdent_Corner() {
 			bool crossing = false;
 
 			if ((worldview::car2::transformMatrix[min(
-					right_edge.points.back().first + 1, WorldSize::w - 1)][WorldSize::h
+					right_edge.points.back().first + 1, WorldSize.w - 1)][WorldSize.h
 																		   - right_edge.points.back().second][0] == -1)
-					&& left_corners.points.size() > 0) {
+					&& left_corners.size() > 0) {
 				//Only left corner
-				if (abs(left_corners.points.front().second - carMid.second)
+				if (abs(left_corners.front().second - carMid.second)
 						<= TuningVar::min_dist_meet_crossing) {
 					//push the midpoint of right edge into corner
-					right_corners.push(
+					right_corners.push_back({
 							(right_edge.points.front().first
 									+ right_edge.points.back().first) / 2,
 									(right_edge.points.front().second
-											+ right_edge.points.back().second) / 2);
+											+ right_edge.points.back().second) / 2});
 					crossing = true;
 				}
 			}
 			if ((worldview::car2::transformMatrix[max(
-					left_edge.points.back().first - 1, 1)][WorldSize::h
+					left_edge.points.back().first - 1, 1)][WorldSize.h
 														   - left_edge.points.back().second][0] == -1)
-					&& right_corners.points.size() > 0) {
+					&& right_corners.size() > 0) {
 				//Only right corner
-				if (abs(right_corners.points.front().second - carMid.second)
+				if (abs(right_corners.front().second - carMid.second)
 						<= TuningVar::min_dist_meet_crossing) {
-					left_corners.push(
+					left_corners.push_back({
 							(left_edge.points.front().first
 									+ left_edge.points.back().first) / 2,
 									(left_edge.points.front().second
-											+ left_edge.points.back().second) / 2);
+											+ left_edge.points.back().second) / 2});
 					crossing = true;
 				}
 			}
@@ -841,14 +852,14 @@ Feature featureIdent_Corner() {
 								- encoder_total_cross
 								/ TuningVar::cross_cal_ratio);
 				start_x = (start_y
-						- (left_corners.points.front().second
-								+ right_corners.points.front().second) / 2)
-            		/ (left_corners.points.front().first
-            				- right_corners.points.front().first)
-							* (right_corners.points.front().second
-									- left_corners.points.front().second)
-									+ (left_corners.points.front().first
-											+ right_corners.points.front().first) / 2;
+						- (left_corners.front().second
+								+ right_corners.front().second) / 2)
+            		/ (left_corners.front().first
+            				- right_corners.front().first)
+							* (right_corners.front().second
+									- left_corners.front().second)
+									+ (left_corners.front().first
+											+ right_corners.front().first) / 2;
 				//        pEncoder0->Update();
 				crossingStatus = 1; //Detected
 				encoder_total_cross = 0;
@@ -858,22 +869,22 @@ Feature featureIdent_Corner() {
 	}
 	/*Exit case handling: ready -> exit*/
 	if(is_front_car?!roundabout_shortest(TuningVar::roundabout_shortest_flag, roundabout_cnt - 1):roundabout_shortest(TuningVar::roundabout_shortest_flag, roundabout_cnt - 1)){
-		if (left_corners.points.size() > 0 && roundaboutStatus == 1 && roundaboutExitStatus == 0
+		if (left_corners.size() > 0 && roundaboutStatus == 1 && roundaboutExitStatus == 0
 				&& abs(encoder_total_round) > TuningVar::round_encoder_count) {
 			//		//keep updating until corner disappear
-			//		if (left_corners.points.size() > 0) {
-			//			prev_corner_x = left_corners.points.front().first;
-			//			prev_corner_y = left_corners.points.front().second;
+			//		if (left_corners.size() > 0) {
+			//			prev_corner_x = left_corners.front().first;
+			//			prev_corner_y = left_corners.front().second;
 			//		}
-			//		if (right_corners.points.size() > 0) {
-			//			prev_corner_x = right_corners.points.front().first;
-			//			prev_corner_y = right_corners.points.front().second;
+			//		if (right_corners.size() > 0) {
+			//			prev_corner_x = right_corners.front().first;
+			//			prev_corner_y = right_corners.front().second;
 			//		}
 			exit_round_ready = true; // Detect one corner
 		}
 	}
 	else{
-		if (right_corners.points.size() > 0 && roundaboutStatus == 1 && roundaboutExitStatus == 0
+		if (right_corners.size() > 0 && roundaboutStatus == 1 && roundaboutExitStatus == 0
 				&& abs(encoder_total_round) > TuningVar::round_encoder_count) {
 			exit_round_ready = true; // Detect one corner
 		}
@@ -898,13 +909,13 @@ Feature featureIdent_Corner() {
 			&& abs(encoder_total_round) > TuningVar::round_encoder_count /*abs(System::Time() - feature_start_time) > TuningVar::feature_inside_time*/) {
 
 		// corner disappears && close enough
-		//		meet_exit = (!(left_corners.points.size() > 0 || right_corners.points.size() > 0)) && (abs(prev_corner_y - carMid.second) < TuningVar::exit_action_dist) ? true : false;
+		//		meet_exit = (!(left_corners.size() > 0 || right_corners.size() > 0)) && (abs(prev_corner_y - carMid.second) < TuningVar::exit_action_dist) ? true : false;
 		/*CAR2*/
 
 		if (is_front_car?!roundabout_shortest(TuningVar::roundabout_shortest_flag, roundabout_cnt - 1):roundabout_shortest(TuningVar::roundabout_shortest_flag, roundabout_cnt - 1)) {
 			/*FOR DEBUGGING*/
 			if (debug) {
-				pLcd->SetRegion(Lcd::Rect(roundabout_nearest_corner_left.first, WorldSize::h - roundabout_nearest_corner_left.second - 1, 4, 4));
+				pLcd->SetRegion(Lcd::Rect(roundabout_nearest_corner_left.first, WorldSize.h - roundabout_nearest_corner_left.second - 1, 4, 4));
 				pLcd->FillColor(Lcd::kCyan);
 			}
 			/*END OF DEBUGGING*/
@@ -913,7 +924,7 @@ Feature featureIdent_Corner() {
 		} else {
 			/*FOR DEBUGGING*/
 			if (debug) {
-				pLcd->SetRegion(Lcd::Rect(roundabout_nearest_corner_right.first, WorldSize::h - roundabout_nearest_corner_right.second - 1, 4, 4));
+				pLcd->SetRegion(Lcd::Rect(roundabout_nearest_corner_right.first, WorldSize.h - roundabout_nearest_corner_right.second - 1, 4, 4));
 				pLcd->FillColor(Lcd::kCyan);
 			}
 			/*END OF DEBUGGING*/
@@ -966,7 +977,7 @@ Feature featureIdent_Corner() {
 void PrintEdge(Edges path, uint16_t color) {
 	for (auto&& entry : path.points) {
 		pLcd->SetRegion(
-				Lcd::Rect(entry.first, WorldSize::h - entry.second - 1, 2, 2));
+				Lcd::Rect(entry.first, WorldSize.h - entry.second - 1, 2, 2));
 		pLcd->FillColor(color);
 	}
 
@@ -976,9 +987,9 @@ void PrintEdge(Edges path, uint16_t color) {
  * @brief Print corners
  */
 void PrintCorner(Corners corners, uint16_t color) {
-	for (auto&& entry : corners.points) {
+	for (auto&& entry : corners) {
 		pLcd->SetRegion(
-				Lcd::Rect(entry.first, WorldSize::h - entry.second - 1, 4, 4));
+				Lcd::Rect(entry.first, WorldSize.h - entry.second - 1, 4, 4));
 		pLcd->FillColor(color);
 	}
 }
@@ -1034,7 +1045,7 @@ void GenPath(Feature feature) {
 		uint16_t new_right_x;
 		uint16_t new_left_x;
 		// find new right edge
-		for (uint16_t i = start_x; i < WorldSize::w; i++) {
+		for (uint16_t i = start_x; i < WorldSize.w; i++) {
 			if (getWorldBit(i, start_y) == 1) {
 				new_right_x = i;
 				break;
@@ -1051,7 +1062,7 @@ void GenPath(Feature feature) {
 		if (debug) {
 			pLcd->SetRegion(
 					Lcd::Rect((new_left_x + new_right_x) / 2,
-							WorldSize::h - start_y - 1, 4, 4));
+							WorldSize.h - start_y - 1, 4, 4));
 			pLcd->FillColor(Lcd::kRed);
 		}
 		/*END OF DEBUGGING*/
@@ -1235,7 +1246,7 @@ void GenPath(Feature feature) {
 						&& translate_flag == TranslateType::kNone) {
 					translate_flag = TranslateType::kRightNull;
 					shift_right_null =
-							(WorldSize::w - left_edge.points[i].first) / 2;
+							(WorldSize.w - left_edge.points[i].first) / 2;
 					//^^^ Start Translation ^^^
 					//vvv Start Averaging  vvv
 				} else if (curr_left.first != 0
@@ -1277,7 +1288,7 @@ void GenPath(Feature feature) {
 						&& translate_flag == TranslateType::kNone) {
 					translate_flag = TranslateType::kRightNull;
 					shift_right_null =
-							(WorldSize::w - left_edge.points[i].first) / 2;
+							(WorldSize.w - left_edge.points[i].first) / 2;
 					//^^^ Start Translation ^^^
 					//vvv  Start Averaging  vvv
 				} else if (curr_left.first != 0
@@ -1316,11 +1327,11 @@ void PrintSuddenChangeTrackWidthLocation(uint16_t color) {
 	if (has_inc_width_pt) {
 		pLcd->SetRegion(
 				Lcd::Rect(inc_width_pts.at(0).first,
-						WorldSize::h - inc_width_pts.at(0).second - 1, 4, 4));
+						WorldSize.h - inc_width_pts.at(0).second - 1, 4, 4));
 		pLcd->FillColor(color);
 		pLcd->SetRegion(
 				Lcd::Rect(inc_width_pts.at(1).first,
-						WorldSize::h - inc_width_pts.at(1).second - 1, 4, 4));
+						WorldSize.h - inc_width_pts.at(1).second - 1, 4, 4));
 		pLcd->FillColor(color);
 	}
 }
@@ -1330,7 +1341,7 @@ void PrintSuddenChangeTrackWidthLocation(uint16_t color) {
  * @return: 1 means turning left, 0 means turning right
  * */
 int roundabout_shortest(uint32_t a, int pos){
-	return !((a >> (pos - 1) != 0));
+	return (a >> pos) & true;
 }
 
 
@@ -1399,7 +1410,7 @@ void StartlineOvertake() {
 		for (int i = 0; i < 10; i++) FindOneRightEdge();
 		for (int i = 0; i < 10; i++) path.push(right_edge.points[i].first - 6, right_edge.points[i].second);
 
-		pServo->SetDegree(util::clamp<uint16_t>(servo_bounds.kCenter - 1.3 * CalcAngleDiff() + TuningVar::servo_offset,
+		pServo->SetDegree(util::clamp<uint16_t>(servo_bounds.kCenter - 1.3 * CalcAngleDiff(),
 				servo_bounds.kRightBound,
 				servo_bounds.kLeftBound));
 
@@ -1485,8 +1496,8 @@ void main_car2(bool debug_) {
 
 	Ov7725::Config cameraConfig;
 	cameraConfig.id = 0;
-	cameraConfig.w = CameraSize::w;
-	cameraConfig.h = CameraSize::h;
+	cameraConfig.w = CameraSize.w;
+	cameraConfig.h = CameraSize.h;
 	cameraConfig.fps = Ov7725Configurator::Config::Fps::kHigh;
 	//  cameraConfig.contrast = 0x3D;
 	cameraConfig.brightness = 0x00;
@@ -1715,11 +1726,11 @@ void main_car2(bool debug_) {
 					PrintSuddenChangeTrackWidthLocation(Lcd::kYellow); //Print sudden change track width location
 					pLcd->SetRegion(
 							Lcd::Rect(roundabout_nearest_corner_left.first,
-									WorldSize::h - roundabout_nearest_corner_left.second - 1, 4, 4));
+									WorldSize.h - roundabout_nearest_corner_left.second - 1, 4, 4));
 					pLcd->FillColor(Lcd::kYellow);
 					pLcd->SetRegion(
 							Lcd::Rect(roundabout_nearest_corner_right.first,
-									WorldSize::h - roundabout_nearest_corner_right.second - 1, 4, 4));
+									WorldSize.h - roundabout_nearest_corner_right.second - 1, 4, 4));
 					pLcd->FillColor(Lcd::kYellow);
 					char temp[100];
 					sprintf(temp, "min:%d", roundabout_nearest_corner_cnt_right);

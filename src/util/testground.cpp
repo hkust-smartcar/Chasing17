@@ -124,9 +124,6 @@ void main() {
   ConfigMotor.id = 1;
   auto motor1 = make_unique<AlternateMotor>(ConfigMotor);
 
-  auto mpc_dual = make_unique<MpcDual>(motor0.get(), motor1.get(), encoder0.get(), encoder1.get());
-  auto mpc_dual_debug = make_unique<MpcDualDebug>(mpc_dual.get());
-
   led2.SetEnable(true);
 
   St7735r::Config lcdConfig;
@@ -144,17 +141,6 @@ void main() {
   JyMcuBt106 bt(bt_config);
 
   led3.SetEnable(true);
-
-  CarManager::Config car_config;
-  car_config.servo = std::move(servo);
-//  car_config.epc = std::move(mpc_dual);
-  car_config.car = CarManager::Car::kCar2;
-  CarManager::Init(std::move(car_config));
-
-//  CarManager::SetOverrideProtection(true);
-  mpc_dual->SetForceOverride(true);
-//  CarManager::SetTargetSpeed(10000);
-  CarManager::SetTargetAngle(0);
 
   led0.SetEnable(false);
   led1.SetEnable(false);
@@ -182,28 +168,13 @@ void main() {
   led3.SetEnable(false);
 
   Timer::TimerInt time_img = 0;
-  char speedStr[32];
 
   while (true) {
-    if (time_img != System::Time()) {
-      time_img = System::Time();
-      if (time_img % 250 == 0) led0.Switch();
-      if (time_img % 10 == 0) {
-//        CarManager::SetTargetSpeed(10000);
-        mpc_dual->SetTargetSpeed(10000);
-        CarManager::UpdateParameters();
-
-//        mpc_dual_debug->OutputPidValues(&console);
-//        mpc_dual_debug->OutputEncoderMotorValues(&console, MpcDual::MotorSide::kBoth);
-        mpc_dual_debug->OutputLastEncoderValues(&console, MpcDual::MotorSide::kBoth);
-
-        sprintf(speedStr, "%.1f,%ld,%.1f\n", 1.0, mpc_dual->GetCurrentSpeed(MpcDual::MotorSide::kLeft), 10000.0);
-        std::string spdStr = std::string(speedStr);
-        const Byte speedByte = 85;
-        bt.SendBuffer(&speedByte, 1);
-        bt.SendStr(speedStr);
-      }
-    }
+    led0.Switch();
+    led1.Switch();
+    led2.Switch();
+    led3.Switch();
+    System::DelayMs(250);
   }
 }
 

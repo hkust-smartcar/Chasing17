@@ -25,7 +25,6 @@
 #include "libsc/k60/ov7725.h"
 
 #include "util/util.h"
-#include "util/mpc.h"
 
 using libsc::AlternateMotor;
 using libsc::DirEncoder;
