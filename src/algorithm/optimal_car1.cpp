@@ -126,7 +126,6 @@ bool debug = true;
 bool has_inc_width_pt = false;
 bool is_straight_line = false;
 bool exit_round_ready = false; // A flag storing corner status inside roundabout
-int roundabout_total = 3;
 int roundaboutStatus = 0; // 0: Before 1: Detected 2: Inside (After one corner)
 int crossingStatus = 0; // 0: Before 1: Detected/Inside
 int roundaboutExitStatus = 0; //0: Before 1: Detected/Inside Exit of Roundabout
@@ -1799,7 +1798,7 @@ void main_car1(bool debug_) {
 				int curr_servo_error = CalcAngleDiff();
 //				pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
 //				char timestr[100];
-//				sprintf(timestr, "error %dms", curr_servo_error);
+//				sprintf(timestr, "error %d", curr_servo_error);
 //				pWriter->WriteString(timestr);
 				/* Motor PID + Servo PID*//*Control system*/
 				if(roundaboutStatus == 1){
