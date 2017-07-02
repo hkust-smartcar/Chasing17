@@ -86,7 +86,18 @@ namespace TuningVar{ //tuning var delaration
   float servo_exit_kp = 0.8;
   float servo_normal_kp = 1.3;
   float servo_normal_kd = 0;
+  float servo_straight_kp = 1.0;
+  float servo_roundabout_kp = 1.3;
+  float servo_cross_kp = 1.0;
+  float servo_roundabout_exit_kp = 0.9;
   uint16_t targetSpeed = 200;
+  uint16_t targetSpeed = 100;
+  uint16_t targetSpeed_round = 80;
+  uint16_t normal_speed = 250;
+  uint16_t straight_speed = 500;
+  uint16_t roundabout_speed = 300;
+  uint16_t cross_speed = 300;
+  uint16_t roundabout_exit_speed = 500;
 };
 
 namespace {
