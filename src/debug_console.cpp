@@ -182,7 +182,7 @@ void DebugConsole::PrintItemValue(int index, bool isInverted) {
       sprintf(buff, "%d", *uint16t_values[item.vIndex]);
       break;
     case VarType::kInt32:
-      sprintf(buff, "%d", *int32t_values[item.vIndex]);
+      sprintf(buff, "%ld", *int32t_values[item.vIndex]);
       break;
     case VarType::kFloat:
       sprintf(buff, "%.3lf", *float_values[item.vIndex]);
