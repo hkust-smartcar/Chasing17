@@ -235,7 +235,7 @@ void main() {
 	pLeft = &pid_left;
 	pRight = &pid_right;
 
-	Controller control(pMotor0,pMotor1,pEncoder0,pEncoder1,pServo);
+	Controller control(2,pMotor0,pMotor1,pEncoder0,pEncoder1,pServo);
 	control.SetMotorTarget(100);
 
 
@@ -304,8 +304,16 @@ void main() {
 			  }
 		  }
 
+//		  control.debug(&lcd,&writer);
 		  if(time_img % 10 == 0)
 			  control.Sync(nullptr);
+
+		  if(joystick.GetState()==Joystick::State::kLeft)
+			  servo_angle--;
+		  if(joystick.GetState()==Joystick::State::kRight)
+			  servo_angle++;
+
+		  control.SetServoDegree(servo_angle);
 
 //		  if (time_img % 10 == 0){
 //

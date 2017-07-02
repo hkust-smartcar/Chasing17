@@ -34,13 +34,13 @@ using namespace libbase::k60;
 class Controller{
 
 public :
-	Controller(DirMotor* pMotor0,DirMotor* pMotor1,DirEncoder* pEncoder0,DirEncoder* pEncoder1,FutabaS3010* pServo);
+	Controller(int car, DirMotor* pMotor0,DirMotor* pMotor1,DirEncoder* pEncoder0,DirEncoder* pEncoder1,FutabaS3010* pServo);
 
 	/*
 	 * @brief set motor target
 	 * target: target encoder value for both encoder in each duty cycle
 	 */
-	void SetMotorTarget(int target);
+	void SetMotorTarget(float target);
 
 	/*
 	 * @brief get motor power, negative is going backward
@@ -49,14 +49,27 @@ public :
 	int GetMotorPower(int id);
 
 	/*
+	 * @brief : replace all servo->SetDegree with this, this will do software differential automatically
+	 */
+	void SetServoDegree(uint16_t Target);
+
+	/*
+	 * delta = (target - servo mid)/10
+	 */
+	void SetServoDelta(float delta);
+
+	/*
 	 * @brief sync the speed pid and differential
 	 * this should be called once and only once each 10ms
 	 */
-	void Sync(Pit*);
+	void Sync(Pit* pit);
 
 	void debug(Lcd* pLcd, LcdTypewriter* pWriter);
 
 private:
+
+	int m_car = 0;
+
 	uint8_t now_angle = 0;
 	DirMotor* pMotor0 = nullptr;
 	DirMotor* pMotor1 = nullptr;
@@ -68,11 +81,15 @@ private:
 	int servo_angle=845;
 	int start_time=0, resume_time=0;
 
-	int32_t encoder_val0 = 0;
-	int32_t encoder_val1 = 0;
+	float m_delta = 0;//servo angle param calculation
+	int m_target = 0;//normal speed target
+
+	int servo_left, servo_mid,servo_right;//servo bounds
+
+	int32_t encoder_val0 = 0, encoder_val1 = 0;
 
 	float Kp = 2.5, Ki = 0.02, Kd = 0;
-	float left_motor_target = 0, right_motor_target = 0;
+	int left_motor_target = 0, right_motor_target = 0;
 
 
 	/*
@@ -83,6 +100,11 @@ private:
 	 * PS(if you want to set the speed of whole, you should use SetMotorTarget Instead)
 	 */
 	void SetMotorPower(int power,int id);
+
+	/*
+	 * calculate differential
+	 */
+	void CalculateSpeed();
 };
 
 

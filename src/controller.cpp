@@ -24,27 +24,43 @@
 #include "bluetooth.h"
 #include "util/util.h"
 
-Controller::Controller(DirMotor* pMotor0,DirMotor* pMotor1,DirEncoder* pEncoder0,DirEncoder* pEncoder1,FutabaS3010* pServo):
+Controller::Controller(int car, DirMotor* pMotor0,DirMotor* pMotor1,DirEncoder* pEncoder0,DirEncoder* pEncoder1,FutabaS3010* pServo):
+	m_car(car),
 	pMotor0(pMotor0),
 	pMotor1(pMotor1),
 	pEncoder0(pEncoder0),
 	pEncoder1(pEncoder1),
 	pServo(pServo){
 
-		IncrementalPidController<float, float> pid_left(0,0,0,0);
+		IncrementalPidController<float, float> pid_left(0,Kp,Ki,Kd);
 		pid_left.SetOutputBound(-1000, 1000);
-		IncrementalPidController<float, float> pid_right(0,0,0,0);
+		IncrementalPidController<float, float> pid_right(0,Kp,Ki,Kd);
 		pid_right.SetOutputBound(-1000, 1000);
 
 		pLeft = &pid_left;
 		pRight = &pid_right;
 
 		start_time = System::Time();
+
+		if(m_car == 1){
+			servo_left = 1040;
+			servo_mid = 755;
+			servo_right = 470;
+		}
+		else{
+			servo_left = 1145;
+			servo_mid = 845;
+			servo_right = 545;
+		}
+
+//		SetMotorTarget(0);
 }
 
-void Controller::SetMotorTarget(int target){
-	left_motor_target = target;
-	right_motor_target = target;
+void Controller::SetMotorTarget(float target){
+	m_target = target;
+//	left_motor_target = target;
+//	right_motor_target = target;
+	CalculateSpeed();
 }
 
 void Controller::SetMotorPower(int power,int id){
@@ -78,6 +94,19 @@ int Controller::GetMotorPower(int id){
 	return 0;
 }
 
+void Controller::SetServoDegree(uint16_t target){
+	pServo->SetDegree(util::clamp<uint16_t>(servo_right,target,servo_left));
+	m_delta = (target-servo_mid)/10.0f;
+	CalculateSpeed();
+}
+
+void Controller::SetServoDelta(float delta){
+	m_delta = delta;
+	int target = delta*10+servo_mid;
+	pServo->SetDegree(util::clamp<uint16_t>(servo_right,target,servo_left));
+	CalculateSpeed();
+}
+
 void Controller::Sync(Pit*){
 
 	int time_img=System::Time();
@@ -94,19 +123,30 @@ void Controller::Sync(Pit*){
 //	else{
 //		Ki = 0.02;
 //	}
-	pLeft->SetKp(Kp);
-	pRight->SetKp(Kp);
-	pLeft->SetKi(Ki);
-	pRight->SetKi(Ki);
-	pLeft->SetKd(Kd);
-	pRight->SetKd(Kd);
-	pLeft->SetSetpoint(left_motor_target);
-	pRight->SetSetpoint(right_motor_target);
-//	char speedChar[100]{};
-//	sprintf(speedChar, "%.1f,%d,%.2f,%d,%.2f\n", 1.0, curr_left, left_motor_target, curr_right, right_motor_target);
-//	const Byte speedByte = 85;
-//	pBt->SendBuffer(&speedByte, 1);
-//	pBt->SendStr(speedChar);
+//	pLeft->SetKp(Kp);
+//	pRight->SetKp(Kp);
+//	pLeft->SetKi(Ki);
+//	pRight->SetKi(Ki);
+//	pLeft->SetKd(Kd);
+//	pRight->SetKd(Kd);
+	if(m_car==1){
+		pLeft->SetSetpoint(m_target * (1.00716 - 0.00776897*m_delta));
+		pRight->SetSetpoint(m_target * (1.00716 + 0.00776897*m_delta));
+	}
+	else{
+		pLeft->SetSetpoint(m_target * (0.996595 - 0.00862696*m_delta));
+		pRight->SetSetpoint(m_target * (0.996595 + 0.00862696*m_delta));
+	}
+
+//	pLeft->SetSetpoint(m_target);
+//	pRight->SetSetpoint(m_target);
+
+//
+////	char speedChar[100]{};
+////	sprintf(speedChar, "%.1f,%d,%.2f,%d,%.2f\n", 1.0, curr_left, left_motor_target, curr_right, right_motor_target);
+////	const Byte speedByte = 85;
+////	pBt->SendBuffer(&speedByte, 1);
+////	pBt->SendStr(speedChar);
 	SetMotorPower(GetMotorPower(0)+pLeft->Calc(curr_left),0);
 	SetMotorPower(GetMotorPower(1)+pRight->Calc(curr_right),1);
 
@@ -114,9 +154,25 @@ void Controller::Sync(Pit*){
 
 void Controller::debug(Lcd* pLcd, LcdTypewriter* pWriter){
 	char buff[100];
-	sprintf(buff,"%d\n%d",GetMotorPower(0),GetMotorPower(1));
+	sprintf(buff,"%f\n%f",left_motor_target,right_motor_target);
+//	sprintf(buff,"%d\n%d",GetMotorPower(0),GetMotorPower(1));
 //				  sprintf(buff,"%d\n%d",GetMotorPower(0),GetMotorPower(1));
 //				  sprintf(buff,"%.3lf \n%.3lf \n%.3lf \n%.3lf \n%.3lf \n%.3lf ",pid_left.GetKp(),pid_left.GetKi(),pid_left.GetKd(),pid_right.GetKp(),pid_right.GetKi(),pid_right.GetKd());
 	pLcd->SetRegion(Lcd::Rect(0,0,128,160));
 	pWriter->WriteBuffer(buff,100);
+}
+
+void Controller::CalculateSpeed(){
+
+	left_motor_target = m_target;
+	right_motor_target = m_target;
+	return;
+
+	if(m_car==1){
+		left_motor_target = int(m_target * (1.00716 - 0.00776897*m_delta));
+		right_motor_target = int(m_target * (1.00716 + 0.00776897*m_delta));
+	}else{
+		left_motor_target = int(m_target * (0.996595 - 0.00862696*m_delta));
+		right_motor_target = int(m_target * (0.996595 + 0.00862696*m_delta));
+	}
 }
