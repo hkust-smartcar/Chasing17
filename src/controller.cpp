@@ -150,7 +150,7 @@ void Controller::Sync(Pit*){
 
 	float toAdd_left = pLeft->Calc(curr_left);
 	float toAdd_right = pRight->Calc(curr_right);
-	if(protect_count>10){
+	if(protect_count>1){
 		pMotor0->SetPower(0);
 		pMotor1->SetPower(0);
 	}
