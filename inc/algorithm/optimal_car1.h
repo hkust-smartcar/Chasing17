@@ -59,44 +59,7 @@ struct Edges {
   std::vector<std::pair<uint16_t, uint16_t>> points;
 };
 
-/**
- * Corners struct
- *
- * An type implementation for storage of Corners
- * @member points List storing the edges sequentially
- * @member push(int, int) Push a std::pair<int, int> into the list points
- * @member size() Return the size of list points
- */
-struct Corners {
-  inline void push(int x, int y) { points.push_back(std::make_pair(x, y)); }
-  inline int size() { return points.size(); }
-
-  std::list<std::pair<uint16_t, uint16_t>> points;
-};
-
-struct CameraSize {
-  static constexpr uint16_t w = 128;
-  static constexpr uint16_t h = 480;
-};
-
-struct WorldSize {
-  static constexpr uint16_t w = 128;
-  static constexpr uint16_t h = 160;
-};
-
-struct ServoBounds {
-  uint16_t kLeftBound;
-  uint16_t kCenter;
-  uint16_t kRightBound;
-};
-
-enum struct Feature : uint8_t {
-  kStraight = 0,
-  kRoundabout,
-  kCross,
-  kNormal,
-  kRoundaboutExit
-};
+typedef std::list<std::pair<uint16_t, uint16_t>> Corners;
 
 /**
  * Usage:

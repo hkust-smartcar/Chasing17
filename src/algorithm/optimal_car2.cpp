@@ -475,12 +475,12 @@ bool FindOneLeftEdge() {
 		//if in this threshold, consider as corner
 		if (CornerCheck > total * TuningVar::corner_min / 100
 				&& CornerCheck < total * TuningVar::corner_max / 100) {
-			if (abs(last.first - left_corners.points.back().first)
-					+ abs(last.second - left_corners.points.back().second)
+			if (abs(last.first - left_corners.back().first)
+					+ abs(last.second - left_corners.back().second)
 					<= TuningVar::min_corners_dist) { //discard if too close
 				return true;
 			}
-			left_corners.push(last.first, last.second);
+			left_corners.push_back({last.first, last.second});
 		}
 
 	}
@@ -574,12 +574,12 @@ bool FindOneRightEdge() {
 		//if in this threshold, consider as corner
 		if (CornerCheck > total * TuningVar::corner_min / 100
 				&& CornerCheck < total * TuningVar::corner_max / 100) {
-			if (abs(last.first - right_corners.points.back().first)
-					+ abs(last.second - right_corners.points.back().second)
+			if (abs(last.first - right_corners.back().first)
+					+ abs(last.second - right_corners.back().second)
 					<= TuningVar::min_corners_dist) { //discard if too close
 				return true;
 			}
-			right_corners.push(last.first, last.second);
+			right_corners.push_back({last.first, last.second});
 		}
 	}
 	//check if the point is the point closest to corners
@@ -604,8 +604,8 @@ bool FindOneRightEdge() {
 bool FindEdges() {
 	is_straight_line = false;
 	has_inc_width_pt = false;
-	left_corners.points.clear();
-	right_corners.points.clear();
+	left_corners.clear();
+	right_corners.clear();
 	bool flag_break_left = left_edge.points.size() == 0;
 	bool flag_break_right = right_edge.points.size() == 0;
 	roundabout_nearest_corner_cnt_left = pow(TuningVar::corner_range * 2 + 1, 2);
@@ -732,12 +732,12 @@ Feature featureIdent_Corner() {
 	}
 
 	/*Only assume the first two corners are useful*/
-	if (left_corners.points.size() > 0 && right_corners.points.size() > 0) {
+	if (left_corners.size() > 0 && right_corners.size() > 0) {
 		//3. More than two valid corner case
-		uint16_t cornerMid_x = (left_corners.points.front().first
-				+ right_corners.points.front().first) / 2; //corner midpoint x-cor
-		uint16_t cornerMid_y = (left_corners.points.front().second
-				+ right_corners.points.front().second) / 2; //corner midpoint y-cor
+		uint16_t cornerMid_x = (left_corners.front().first
+				+ right_corners.front().first) / 2; //corner midpoint x-cor
+		uint16_t cornerMid_y = (left_corners.front().second
+				+ right_corners.front().second) / 2; //corner midpoint y-cor
 		/*FOR DEBUGGING*/
 		//		pLcd->SetRegion(
 		//		Lcd::Rect(cornerMid_x, WorldSize.h - cornerMid_y - 1, 2, 2));
@@ -748,10 +748,10 @@ Feature featureIdent_Corner() {
 		}
 		uint16_t test_y = carMid.second + TuningVar::sightDist;
 		uint16_t test_x = (test_y - cornerMid_y)
-        		* (right_corners.points.front().second
-        				- left_corners.points.front().second)
-						/ (left_corners.points.front().first
-								- right_corners.points.front().first) + cornerMid_x;
+        		* (right_corners.front().second
+        				- left_corners.front().second)
+						/ (left_corners.front().first
+								- right_corners.front().first) + cornerMid_x;
 		/*FOR DEBUGGING*/
 		if (debug) {
 			pLcd->SetRegion(Lcd::Rect(test_x, WorldSize.h - test_y - 1, 4, 4));
@@ -787,14 +787,14 @@ Feature featureIdent_Corner() {
 					+ (TuningVar::cross_cal_start_num
 							- encoder_total_cross / TuningVar::cross_cal_ratio);
 			start_x = (start_y
-					- (left_corners.points.front().second
-							+ right_corners.points.front().second) / 2)
-        		  / (left_corners.points.front().first
-        				  - right_corners.points.front().first)
-						  * (right_corners.points.front().second
-								  - left_corners.points.front().second)
-								  + (left_corners.points.front().first
-										  + right_corners.points.front().first) / 2;
+					- (left_corners.front().second
+							+ right_corners.front().second) / 2)
+        		  / (left_corners.front().first
+        				  - right_corners.front().first)
+						  * (right_corners.front().second
+								  - left_corners.front().second)
+								  + (left_corners.front().first
+										  + right_corners.front().first) / 2;
 			return Feature::kCross;
 		}
 	}
@@ -805,8 +805,8 @@ Feature featureIdent_Corner() {
 	 * roundaboutExitStatus: Becomes 1 when exit is ready and one corner disappear, becomes 0 after encoderExit is reached
 	 * */
 	//4. Only one corner case: Only one corner - Exit/Cross/Entering crossing & roundabout
-	else if (left_corners.points.size() > 0
-			|| right_corners.points.size() > 0) {
+	else if (left_corners.size() > 0
+			|| right_corners.size() > 0) {
 		/*Double check for crossing to handle only one corner case*/
 		if (roundaboutStatus == 0 && crossingStatus == 0) { // avoid double check for crossing when inside the crossing (encoder_total_cross<2500)){ //Not inside roundabout, not Exit of Roundabout when encounter one corner case - CONDITION_1
 			//Both sides are break due to -1 - CONDITION_2
@@ -816,31 +816,31 @@ Feature featureIdent_Corner() {
 			if ((worldview::car2::transformMatrix[min(
 					right_edge.points.back().first + 1, WorldSize.w - 1)][WorldSize.h
 																		   - right_edge.points.back().second][0] == -1)
-					&& left_corners.points.size() > 0) {
+					&& left_corners.size() > 0) {
 				//Only left corner
-				if (abs(left_corners.points.front().second - carMid.second)
+				if (abs(left_corners.front().second - carMid.second)
 						<= TuningVar::min_dist_meet_crossing) {
 					//push the midpoint of right edge into corner
-					right_corners.push(
+					right_corners.push_back({
 							(right_edge.points.front().first
 									+ right_edge.points.back().first) / 2,
 									(right_edge.points.front().second
-											+ right_edge.points.back().second) / 2);
+											+ right_edge.points.back().second) / 2});
 					crossing = true;
 				}
 			}
 			if ((worldview::car2::transformMatrix[max(
 					left_edge.points.back().first - 1, 1)][WorldSize.h
 														   - left_edge.points.back().second][0] == -1)
-					&& right_corners.points.size() > 0) {
+					&& right_corners.size() > 0) {
 				//Only right corner
-				if (abs(right_corners.points.front().second - carMid.second)
+				if (abs(right_corners.front().second - carMid.second)
 						<= TuningVar::min_dist_meet_crossing) {
-					left_corners.push(
+					left_corners.push_back({
 							(left_edge.points.front().first
 									+ left_edge.points.back().first) / 2,
 									(left_edge.points.front().second
-											+ left_edge.points.back().second) / 2);
+											+ left_edge.points.back().second) / 2});
 					crossing = true;
 				}
 			}
@@ -852,14 +852,14 @@ Feature featureIdent_Corner() {
 								- encoder_total_cross
 								/ TuningVar::cross_cal_ratio);
 				start_x = (start_y
-						- (left_corners.points.front().second
-								+ right_corners.points.front().second) / 2)
-            		/ (left_corners.points.front().first
-            				- right_corners.points.front().first)
-							* (right_corners.points.front().second
-									- left_corners.points.front().second)
-									+ (left_corners.points.front().first
-											+ right_corners.points.front().first) / 2;
+						- (left_corners.front().second
+								+ right_corners.front().second) / 2)
+            		/ (left_corners.front().first
+            				- right_corners.front().first)
+							* (right_corners.front().second
+									- left_corners.front().second)
+									+ (left_corners.front().first
+											+ right_corners.front().first) / 2;
 				//        pEncoder0->Update();
 				crossingStatus = 1; //Detected
 				encoder_total_cross = 0;
@@ -869,22 +869,22 @@ Feature featureIdent_Corner() {
 	}
 	/*Exit case handling: ready -> exit*/
 	if(is_front_car?!roundabout_shortest(TuningVar::roundabout_shortest_flag, roundabout_cnt - 1):roundabout_shortest(TuningVar::roundabout_shortest_flag, roundabout_cnt - 1)){
-		if (left_corners.points.size() > 0 && roundaboutStatus == 1 && roundaboutExitStatus == 0
+		if (left_corners.size() > 0 && roundaboutStatus == 1 && roundaboutExitStatus == 0
 				&& abs(encoder_total_round) > TuningVar::round_encoder_count) {
 			//		//keep updating until corner disappear
-			//		if (left_corners.points.size() > 0) {
-			//			prev_corner_x = left_corners.points.front().first;
-			//			prev_corner_y = left_corners.points.front().second;
+			//		if (left_corners.size() > 0) {
+			//			prev_corner_x = left_corners.front().first;
+			//			prev_corner_y = left_corners.front().second;
 			//		}
-			//		if (right_corners.points.size() > 0) {
-			//			prev_corner_x = right_corners.points.front().first;
-			//			prev_corner_y = right_corners.points.front().second;
+			//		if (right_corners.size() > 0) {
+			//			prev_corner_x = right_corners.front().first;
+			//			prev_corner_y = right_corners.front().second;
 			//		}
 			exit_round_ready = true; // Detect one corner
 		}
 	}
 	else{
-		if (right_corners.points.size() > 0 && roundaboutStatus == 1 && roundaboutExitStatus == 0
+		if (right_corners.size() > 0 && roundaboutStatus == 1 && roundaboutExitStatus == 0
 				&& abs(encoder_total_round) > TuningVar::round_encoder_count) {
 			exit_round_ready = true; // Detect one corner
 		}
@@ -909,7 +909,7 @@ Feature featureIdent_Corner() {
 			&& abs(encoder_total_round) > TuningVar::round_encoder_count /*abs(System::Time() - feature_start_time) > TuningVar::feature_inside_time*/) {
 
 		// corner disappears && close enough
-		//		meet_exit = (!(left_corners.points.size() > 0 || right_corners.points.size() > 0)) && (abs(prev_corner_y - carMid.second) < TuningVar::exit_action_dist) ? true : false;
+		//		meet_exit = (!(left_corners.size() > 0 || right_corners.size() > 0)) && (abs(prev_corner_y - carMid.second) < TuningVar::exit_action_dist) ? true : false;
 		/*CAR2*/
 
 		if (is_front_car?!roundabout_shortest(TuningVar::roundabout_shortest_flag, roundabout_cnt - 1):roundabout_shortest(TuningVar::roundabout_shortest_flag, roundabout_cnt - 1)) {
@@ -987,7 +987,7 @@ void PrintEdge(Edges path, uint16_t color) {
  * @brief Print corners
  */
 void PrintCorner(Corners corners, uint16_t color) {
-	for (auto&& entry : corners.points) {
+	for (auto&& entry : corners) {
 		pLcd->SetRegion(
 				Lcd::Rect(entry.first, WorldSize.h - entry.second - 1, 4, 4));
 		pLcd->FillColor(color);
