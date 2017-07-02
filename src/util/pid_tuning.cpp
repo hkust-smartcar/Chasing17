@@ -315,9 +315,9 @@ void main() {
 			  control.Sync(nullptr);
 
 		  if(joystick.GetState()==Joystick::State::kLeft)
-			  servo_angle--;
+			  servo_angle=util::clamp<int>(--servo_angle,545,1145);
 		  if(joystick.GetState()==Joystick::State::kRight)
-			  servo_angle++;
+			  servo_angle=util::clamp<int>(++servo_angle,545,1145);
 
 		  control.SetServoDegree(servo_angle);
 
