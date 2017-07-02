@@ -304,6 +304,12 @@ void main() {
 			  }
 		  }
 
+		  char buff[10];
+		  sprintf(buff,"%d",control.GetEncoder());
+
+		  if(time_img%1000==0)
+		  writer.WriteBuffer(buff,10);
+
 //		  control.debug(&lcd,&writer);
 		  if(time_img % 10 == 0)
 			  control.Sync(nullptr);

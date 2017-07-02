@@ -150,6 +150,9 @@ void Controller::Sync(Pit*){
 	SetMotorPower(GetMotorPower(0)+pLeft->Calc(curr_left),0);
 	SetMotorPower(GetMotorPower(1)+pRight->Calc(curr_right),1);
 
+	encoder_val0+=curr_left;
+	encoder_val1+=curr_right;
+
 }
 
 void Controller::debug(Lcd* pLcd, LcdTypewriter* pWriter){

@@ -34,6 +34,8 @@ using namespace libbase::k60;
 class Controller{
 
 public :
+
+	//car = 1 is car1, else is car 2
 	Controller(int car, DirMotor* pMotor0,DirMotor* pMotor1,DirEncoder* pEncoder0,DirEncoder* pEncoder1,FutabaS3010* pServo);
 
 	/*
@@ -65,6 +67,15 @@ public :
 	void Sync(Pit* pit);
 
 	void debug(Lcd* pLcd, LcdTypewriter* pWriter);
+
+	int32_t GetEncoder(){
+		return (encoder_val0+encoder_val1)/2;
+	}
+
+	void ClearEncoder(){
+		encoder_val0=0;
+		encoder_val1=0;
+	}
 
 private:
 
