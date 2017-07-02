@@ -147,8 +147,23 @@ void Controller::Sync(Pit*){
 ////	const Byte speedByte = 85;
 ////	pBt->SendBuffer(&speedByte, 1);
 ////	pBt->SendStr(speedChar);
-	SetMotorPower(GetMotorPower(0)+pLeft->Calc(curr_left),0);
-	SetMotorPower(GetMotorPower(1)+pRight->Calc(curr_right),1);
+
+	float toAdd_left = pLeft->Calc(curr_left);
+	float toAdd_right = pRight->Calc(curr_right);
+	if(protect_count>10){
+		pMotor0->SetPower(0);
+		pMotor1->SetPower(0);
+	}
+	else{
+		SetMotorPower(GetMotorPower(0)+toAdd_left,0);
+		SetMotorPower(GetMotorPower(1)+toAdd_right,1);
+	}
+	if( std::abs(m_target)>10 && (std::abs(curr_left)<10 || std::abs(curr_right)<10) ){
+		protect_count++;
+	}
+	else{
+		protect_count=0;
+	}
 
 	encoder_val0+=curr_left;
 	encoder_val1+=curr_right;

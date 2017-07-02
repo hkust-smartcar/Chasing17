@@ -102,6 +102,8 @@ private:
 	float Kp = 2.5, Ki = 0.02, Kd = 0;
 	int left_motor_target = 0, right_motor_target = 0;
 
+	int protect_count = 0;
+
 
 	/*
 	 * @brief set motor power
