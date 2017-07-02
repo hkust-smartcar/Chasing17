@@ -119,7 +119,7 @@ namespace TuningVar{
   extern uint16_t roundabout_speed;
   extern uint16_t cross_speed;
   extern uint16_t roundabout_exit_speed;
-};
+}  // namespace TuningVar
 
 
 /**
@@ -133,7 +133,7 @@ enum struct TranslateType {
 
 
 
-}
-}
-}
+}  // namespace car2
+}  // namespace optimal
+}  // namespace algorithm
 #endif //CHASING17_ALGORITHM_OPTIMAL_CAR2_H_
