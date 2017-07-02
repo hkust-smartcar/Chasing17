@@ -39,18 +39,38 @@ void loadItems(DebugConsole* console) {
 
     console->PushItem("LCD debug", &debug_flag::lcd_debug);
     console->PushItem("Speed", &targetSpeed, 5);
+    console->PushItem("Normal Speed", &normal_speed, 50);
     console->PushItem("Normal Kp", &servo_normal_kp, 0.1);
     console->PushItem("Normal Kd", &servo_normal_kd, 0.01);
+    console->PushItem("Straight Speed", &straight_speed, 50);
+    console->PushItem("Straight Kp", &servo_straight_kp, 0.1);
+    console->PushItem("Cross Speed", &cross_speed, 50);
+    console->PushItem("Cross Kp", &servo_cross_kp, 0.1);
+    console->PushItem("Rabt Speed", &roundabout_speed, 50);
+    console->PushItem("Rabt Kp", &servo_roundabout_kp, 0.1);
+    console->PushItem("Exit Rabt Speed", &roundabout_exit_speed, 50);
+    console->PushItem("Exit Rabt Kp", &servo_roundabout_exit_kp, 0.1);
+    console->PushItem("Exit Rabt Kp", &servo_exit_kp, 0.1);
     console->PushItem("Rabt Sel", &algorithm::optimal::car1::TuningVar::roundabout_shortest_flag);
     console->PushItem("Rabt Raw", &algorithm::optimal::car1::TuningVar::roundabout_shortest_flag, 1);
 
   } else if (car != 0) {
     using namespace algorithm::optimal::car2::TuningVar;
 
-    console->PushItem("lcddebug", &debug_flag::lcd_debug);
+    console->PushItem("LCD debug", &debug_flag::lcd_debug);
     console->PushItem("Speed", &targetSpeed, 5);
+    console->PushItem("Normal Speed", &normal_speed, 50);
     console->PushItem("Normal Kp", &servo_normal_kp, 0.1);
-    console->PushItem("Normal Kd", &servo_normal_kd, 0.1);
+    console->PushItem("Normal Kd", &servo_normal_kd, 0.01);
+    console->PushItem("Straight Speed", &straight_speed, 50);
+    console->PushItem("Straight Kp", &servo_straight_kp, 0.1);
+    console->PushItem("Cross Speed", &cross_speed, 50);
+    console->PushItem("Cross Kp", &servo_cross_kp, 0.1);
+    console->PushItem("Rabt Speed", &roundabout_speed, 50);
+    console->PushItem("Rabt Kp", &servo_roundabout_kp, 0.1);
+    console->PushItem("Exit Rabt Speed", &roundabout_exit_speed, 50);
+    console->PushItem("Exit Rabt Kp", &servo_roundabout_exit_kp, 0.1);
+    console->PushItem("Exit Rabt Kp", &servo_exit_kp, 0.1);
     console->PushItem("Rabt Sel", &algorithm::optimal::car1::TuningVar::roundabout_shortest_flag);
     console->PushItem("Rabt Raw", &algorithm::optimal::car1::TuningVar::roundabout_shortest_flag, 1);
 

@@ -87,8 +87,17 @@ namespace TuningVar { //tuning var declaration
   float servo_exit_kp = 1.3;
   float servo_normal_kp = 1.3;
   float servo_normal_kd = 0;
+  float servo_straight_kp = 1.0;
+  float servo_roundabout_kp = 1.3;
+  float servo_cross_kp = 1.0;
+  float servo_roundabout_exit_kp = 0.9;
   uint16_t targetSpeed = 100;
   uint16_t targetSpeed_round = 80;
+  uint16_t normal_speed = 250;
+  uint16_t straight_speed = 500;
+  uint16_t roundabout_speed = 300;
+  uint16_t cross_speed = 300;
+  uint16_t roundabout_exit_speed = 500;
 };
 
 namespace {
@@ -1614,6 +1623,7 @@ void main_car1(bool debug_) {
 //		pMotor1->SetPower(TuningVar::targetSpeed);
 
 	Timer::TimerInt startTime=System::Time();
+	bool met_stop_line=false;
 	bool brake_flag = true;
 
 	//	int servoAngle = 0;
@@ -1623,6 +1633,7 @@ void main_car1(bool debug_) {
 			led0.SetEnable(time_img % 500 >= 250);
 
 			if (time_img % 10 == 0) {
+				bool skip_motor_protection=false;
 				//Overtake motor control
 				/*FOR DEBUGGING*/
 				if(debug){
@@ -1700,20 +1711,19 @@ void main_car1(bool debug_) {
 				//        Timer::TimerInt new_time = System::Time();
 				Capture(); //Capture until two base points are identified
 				if (FindStoppingLine() && time_img - startTime > 10000) {
-					if (FindStoppingLine() && time_img-startTime > 10000) {
-						if(is_front_car){
-							pMotor0->SetPower(0);
-							pMotor1->SetPower(0);
-						}else{
-							pMotor0->SetClockwise(false);
-							pMotor1->SetClockwise(true);
-							pMotor0->SetPower(1000);
-							pMotor1->SetPower(1000);
-							System::DelayMs(18);
-							pMotor0->SetPower(0);
-							pMotor1->SetPower(0);
-						}
+					if(is_front_car){
+						pMotor0->SetPower(0);
+						pMotor1->SetPower(0);
+					}else{
+						pMotor0->SetClockwise(false);
+						pMotor1->SetClockwise(true);
+						pMotor0->SetPower(1000);
+						pMotor1->SetPower(1000);
+						System::DelayMs(18);
+						pMotor0->SetPower(0);
+						pMotor1->SetPower(0);
 					}
+					met_stop_line=true;
 					pWriter->WriteString("Stopping Line Detected");
 				}
 				FindEdges();
@@ -1815,10 +1825,10 @@ void main_car1(bool debug_) {
 				curr_enc_val_right = -pEncoder1->GetCount();
 				SetMotorPower(GetMotorPower(0)+pid_left.Calc(curr_enc_val_left),0);
 				SetMotorPower(GetMotorPower(1)+pid_right.Calc(curr_enc_val_right),1);
-//				if(curr_enc_val_left<100||curr_enc_val_right<100){
-//					pMotor0->SetPower(0);
-//					pMotor1->SetPower(0);
-//				}
+				if((curr_enc_val_left<100 || curr_enc_val_right<100) && (System::Time()-startTime>1000 || skip_motor_protection)){
+					pMotor0->SetPower(0);
+					pMotor1->SetPower(0);
+				}
 			}
 		}
 
