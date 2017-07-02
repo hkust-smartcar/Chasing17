@@ -13,6 +13,7 @@
 #include "debug_console.h"
 
 #include <cstdio>
+#include <memory>
 
 #include "libsc/joystick.h"
 #include "libsc/lcd_typewriter.h"
@@ -177,7 +178,6 @@ void DebugConsole::PrintItemValue(int index, bool isInverted) {
   switch (item.type) {
     case VarType::kNan:
       return;
-      break;
     case VarType::kUint16:
       sprintf(buff, "%d", *uint16t_values[item.vIndex]);
       break;
@@ -197,79 +197,80 @@ void DebugConsole::PrintItemValue(int index, bool isInverted) {
               (*int32t_values[item.vIndex] >> item.bsIndex) & 1 ? item.true_text : item.false_text);
       Printxy(7, index - topIndex, buff, isInverted);
       return;
-      break;
     default:
       return;
-      break;
   }
   Printxy(9, index - topIndex, buff, isInverted);
   return;
 }
 
 void DebugConsole::Load() {
-
   if (flash == nullptr) return;
+
   int start = 0;
-  Byte* buff = new Byte[flash_sum];
-  flash->Read(buff, flash_sum);
+  std::unique_ptr<Byte[]> buff(new Byte[flash_sum]);
+  flash->Read(buff.get(), flash_sum);
   for (int i = 0; i < uint16t_values.size(); i++) {
     uint16_t* v = uint16t_values[i];
-    uint16_t temp = 0;
-    memcpy((unsigned char*) &temp, buff + start, sizeof(*v));
+    volatile uint16_t temp = 0;
+    memcpy((unsigned char*) &temp, buff.get() + start, sizeof(*v));
     start += sizeof(*v);
     if (temp == temp)*v = temp;
   }
   for (int i = 0; i < int32t_values.size(); i++) {
     int32_t* v = int32t_values[i];
-    int32_t temp = 0;
-    memcpy((unsigned char*) &temp, buff + start, sizeof(*v));
+    volatile int32_t temp = 0;
+    memcpy((unsigned char*) &temp, buff.get() + start, sizeof(*v));
     start += sizeof(*v);
     if (temp == temp)*v = temp;
   }
   for (int i = 0; i < float_values.size(); i++) {
     float* v = float_values[i];
-    float temp = 0;
-    memcpy((unsigned char*) &temp, buff + start, sizeof(*v));
+    volatile float temp = 0;
+    memcpy((unsigned char*) &temp, buff.get() + start, sizeof(*v));
     start += sizeof(*v);
     if (temp == temp)*v = temp;
   }
   for (int i = 0; i < bool_values.size(); i++) {
     bool* v = bool_values[i];
-    bool temp = 0;
-    memcpy((unsigned char*) &temp, buff + start, sizeof(*v));
+    volatile bool temp = 0;
+    memcpy((unsigned char*) &temp, buff.get() + start, sizeof(*v));
     start += sizeof(*v);
     if (temp == temp)*v = temp;
   }
-  delete[] buff;
+
+  buff.reset();
 }
 
 void DebugConsole::Save() {
   if (flash == nullptr) return;
+
   int start = 0;
-  Byte* buff = new Byte[flash_sum];
+  std::unique_ptr<Byte[]> buff(new Byte[flash_sum]);
   for (int i = 0; i < uint16t_values.size(); i++) {
     uint16_t* v = uint16t_values[i];
-    memcpy(buff + start, (unsigned char*) v, sizeof(*v));
+    memcpy(buff.get() + start, (unsigned char*) v, sizeof(*v));
     start += sizeof(*v);
   }
   for (int i = 0; i < int32t_values.size(); i++) {
     int32_t* v = int32t_values[i];
-    memcpy(buff + start, (unsigned char*) v, sizeof(*v));
+    memcpy(buff.get() + start, (unsigned char*) v, sizeof(*v));
     start += sizeof(*v);
   }
   for (int i = 0; i < float_values.size(); i++) {
     float* v = float_values[i];
-    memcpy(buff + start, (unsigned char*) v, sizeof(*v));
+    memcpy(buff.get() + start, (unsigned char*) v, sizeof(*v));
     start += sizeof(*v);
   }
   for (int i = 0; i < bool_values.size(); i++) {
     bool* v = bool_values[i];
-    memcpy(buff + start, (unsigned char*) v, sizeof(*v));
+    memcpy(buff.get() + start, (unsigned char*) v, sizeof(*v));
     start += sizeof(*v);
   }
-  flash->Write(buff, flash_sum);
+  flash->Write(buff.get(), flash_sum);
   System::DelayMs(100);
-  delete[] buff;
+
+  buff.reset();
 }
 
 DebugConsole* DebugConsole::SetDisplayLength(int length) {

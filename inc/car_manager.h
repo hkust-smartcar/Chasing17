@@ -140,6 +140,11 @@ struct CarManager final {
   static constexpr const PidValues kServoPidCar1 = {{1.0, 0}, {0, 0}, {0, 0}};
   static constexpr const PidValues kServoPidCar2 = {{1.0, 0}, {0, 0}, {0, 0}};
 
+  struct ImageSize {
+    uint16_t w;
+    uint16_t h;
+  };
+
   // Getters
   static ServoAngles GetServoAngles();
   static ServoBounds GetServoBounds();
