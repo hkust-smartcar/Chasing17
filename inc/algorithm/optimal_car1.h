@@ -107,20 +107,16 @@ namespace TuningVar {
   extern int32_t roundabout_shortest_flag; //1 means turn left, 0 means turn right. Reading from left to right
   extern uint16_t angle_div_error; // translate error into angle
   extern uint16_t nearest_corner_threshold;
-  extern float servo_exit_kp;
-  extern float servo_normal_kp;
-  extern float servo_normal_kd;
   extern float servo_straight_kp;
+  extern float servo_normal_kp;
   extern float servo_roundabout_kp;
-  extern float servo_cross_kp;
+  extern float servo_sharp_turn_kp;
+  extern float servo_normal_kd;
   extern float servo_roundabout_exit_kp;
-  extern uint16_t targetSpeed;
+  extern uint16_t targetSpeed_straight;
+  extern uint16_t targetSpeed_normal;//normal turning
   extern uint16_t targetSpeed_round;
-  extern uint16_t normal_speed;
-  extern uint16_t straight_speed;
-  extern uint16_t roundabout_speed;
-  extern uint16_t cross_speed;
-  extern uint16_t roundabout_exit_speed;
+  extern uint16_t targetSpeed_sharp_turn;
 }  // namespace TuningVar
 
 /**

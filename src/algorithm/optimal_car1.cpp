@@ -94,20 +94,16 @@ namespace TuningVar { //tuning var declaration
   uint16_t roundExit_encoder_count = 3300;
   int32_t roundabout_shortest_flag = 0b00011; //1 means turn left, 0 means turn right. Reading from left to right
   uint16_t nearest_corner_threshold = 128/2;
-  float servo_exit_kp = 1.3;
-  float servo_normal_kp = 1.3;
-  float servo_normal_kd = 0;
-  float servo_straight_kp = 1.0;
+  float servo_straight_kp = 0.9;
+  float servo_normal_kp = 1.1;
   float servo_roundabout_kp = 1.3;
-  float servo_cross_kp = 1.0;
+  float servo_sharp_turn_kp = 1.2;
+  float servo_normal_kd = 0;
   float servo_roundabout_exit_kp = 0.9;
-  uint16_t targetSpeed = 100;
+  uint16_t targetSpeed_straight = 120;
+  uint16_t targetSpeed_normal = 100;//normal turning
   uint16_t targetSpeed_round = 80;
-  uint16_t normal_speed = 250;
-  uint16_t straight_speed = 500;
-  uint16_t roundabout_speed = 300;
-  uint16_t cross_speed = 300;
-  uint16_t roundabout_exit_speed = 500;
+  uint16_t targetSpeed_sharp_turn = 90;
 }  // namespace TuningVar
 
 namespace {
@@ -1599,10 +1595,10 @@ void main_car1(bool debug_) {
 					bt.resendNAKData();
 					if (roundaboutExitStatus == 1 && stop_before_roundexit) {
 						/*Consider braking*/
-						pCtrl->SetMotorTarget(400);
+//						pCtrl->SetMotorTarget(-400);
 						System::DelayMs(200);
 						while(true){
-							pCtrl->SetMotorTarget(0);
+//							pCtrl->SetMotorTarget(0);
 							if(pBT->hasFinishedOvertake()){
 								break;
 							}
@@ -1615,60 +1611,25 @@ void main_car1(bool debug_) {
 						//					pEncoder1->Update();
 						encoder_total_exit = 0;
 						pBT->resetFinishOvertake();
-						pMotor0->SetClockwise(true);
-						pMotor1->SetClockwise(false);
-						pCtrl->SetMotorTarget(TuningVar::targetSpeed);
+//						pCtrl->SetMotorTarget(TuningVar::targetSpeed);
 					}
 				}
-				//				if (roundaboutExitStatus == 1 && stop_before_roundexit) {
-				//					/*Consider braking*/
-				//					if(brake_flag){
-				//						brake_flag = false;
-				//						pMotor0->SetClockwise(false);
-				//						pMotor1->SetClockwise(true);
-				//						pMotor0->SetPower(1000);
-				//						pMotor1->SetPower(1000);
-				//						System::DelayMs(250);
-				//					}
-				//					else{
-				//						pMotor0->SetPower(0);
-				//						pMotor1->SetPower(0);
-				//					}
-				//				}
-				//				else{
-				//					pMotor0->SetClockwise(true);
-				//					pMotor1->SetClockwise(false);
-				//					pMotor0->SetPower(190);
-				//					pMotor1->SetPower(190);
-				//				}
-				//				if(roundaboutExitStatus ==0){
-				//					brake_flag = true;
-				//				}
-				//Double check
-				//				if(pMotor0->GetPower() == 0 && pMotor1->GetPower() == 0){
-				//					if(pBT->hasFinishedOvertake()){
-				//						System::DelayMs(2000);
-				//						stop_before_roundexit = false;
-				//						// roundaboutStatus = 0;
-				//						exit_round_ready = false;
-				//						encoder_total_exit = 0;
-				//						pBT->resetFinishOvertake();
-				//					}
-				//				}
 
 				//        Timer::TimerInt new_time = System::Time();
 				Capture(); //Capture until two base points are identified
-				if (FindStoppingLine() && time_img - startTime > 10000) {
-					if(is_front_car){
-						pCtrl->SetMotorTarget(0);
-					}else{
-						pCtrl->SetMotorTarget(400);
-						System::DelayMs(18);
-						pCtrl->SetMotorTarget(0);
-					}
-					met_stop_line=true;
-					pWriter->WriteString("Stopping Line Detected");
-				}
+//				if (FindStoppingLine() && time_img - startTime > 10000) {
+//					if(is_front_car){
+//                        pCtrl->SetMotorTarget(0);
+//					}else{
+//                      pCtrl->SetMotorTarget(-400);
+//						System::DelayMs(18);
+//                      pCtrl->SetMotorTarget(0);
+//						pMotor0->SetPower(0);
+//						pMotor1->SetPower(0);
+//					}
+//					met_stop_line=true;
+//					pWriter->WriteString("Stopping Line Detected");
+//				}
 				FindEdges();
 				Feature feature = featureIdent_Corner();
 				GenPath(feature); //Generate path
@@ -1735,23 +1696,35 @@ void main_car1(bool debug_) {
 					//              pWriter->WriteString("Straight");
 					//              break;
 					//          }
+					//				pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
+					//				char timestr[100];
+					//				sprintf(timestr, "error %d", curr_servo_error);
+					//				pWriter->WriteString(timestr);
+
 				}
 				/*END OF DEBUGGING*/
 
-				/* Servo PID */
 				int curr_servo_error = CalcAngleDiff();
-//				pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
-//				char timestr[100];
-//				sprintf(timestr, "error %d", curr_servo_error);
-//				pWriter->WriteString(timestr);
-				/* Motor PID + Servo PID*//*Control system*/
+				/* Motor PID + Servo PID* for different situations*/
+				//roundabout case
 				if(roundaboutStatus == 1){
-					pCtrl->SetServoDegree(servo_bounds.kCenter - (TuningVar::servo_exit_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)));
+					pCtrl->SetServoDegree(servo_bounds.kCenter - (TuningVar::servo_roundabout_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)));
 					pCtrl->SetMotorTarget(TuningVar::targetSpeed_round);
 				}
+				//sharp turning case
+				else if(abs(curr_servo_error) > 180){
+                  pCtrl->SetServoDegree(servo_bounds.kCenter - (TuningVar::servo_sharp_turn_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)));
+				  pCtrl->SetMotorTarget(TuningVar::targetSpeed_sharp_turn);
+				}
+				//straight case
+				else if(abs(curr_servo_error) < 40){
+                  pCtrl->SetServoDegree(servo_bounds.kCenter - (TuningVar::servo_straight_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)));
+				  pCtrl->SetMotorTarget(TuningVar::targetSpeed_straight);
+				}
+				//normal turning case
 				else{
 					pCtrl->SetServoDegree(servo_bounds.kCenter - (TuningVar::servo_normal_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)));
-					pCtrl->SetMotorTarget(TuningVar::targetSpeed);
+					pCtrl->SetMotorTarget(TuningVar::targetSpeed_normal);
 				}
 				prev_servo_error = curr_servo_error;
 
