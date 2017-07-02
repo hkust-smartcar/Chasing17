@@ -88,7 +88,7 @@ int main() {
   constexpr Algorithm a = Algorithm::kOptimal;
 
   // modify next line to change which car we're working with
-  CarManager::Car c = CarManager::Car::kCar1;
+  CarManager::Car c = CarManager::Car::kCar2;
 
   bool reset = false;
   {

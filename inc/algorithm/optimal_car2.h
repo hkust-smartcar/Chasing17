@@ -94,31 +94,28 @@ namespace TuningVar{
   extern uint16_t general_cal_num; //The num of path points considered for servo angle decision except crossing
   extern uint16_t cross_encoder_count; // The hardcoded encoder count that car must reach in crossroad
   extern uint16_t round_enter_offset;
+  extern uint16_t servo_offset; //49
+  extern uint16_t min_dist_meet_crossing;
+  extern uint16_t roundroad_min_size; // When the edge is broken in roundabout, find until this threshold
+  extern uint16_t roundroad_exit_radius; // search pixels around to double check exit of roundabout for CAR1
+  extern uint16_t exit_action_dist; // double check to avoid corner's sudden disappear inside roundabout
+  extern uint16_t roundabout_offset; // half of road width
   extern uint16_t round_exit_offset;
   extern uint16_t round_encoder_count;
   extern uint16_t roundExit_encoder_count;
-  extern uint16_t roundroad_exit_radius;
-  extern uint16_t servo_offset;//149
-  extern uint16_t min_dist_meet_crossing;
-  extern uint16_t roundroad_min_size; // When the edge is broken in roundabout, find until this threshold
-  extern uint16_t exit_action_dist; // double check to avoid corner's sudden disappear inside roundabout
-  extern uint16_t roundabout_offset; // half of road width
   extern int32_t roundabout_shortest_flag; //1 means turn left, 0 means turn right. Reading from left to right
   extern uint16_t angle_div_error; // translate error into angle
   extern uint16_t nearest_corner_threshold;
-  extern float servo_exit_kp;
-  extern float servo_normal_kp;
-  extern float servo_normal_kd;
   extern float servo_straight_kp;
+  extern float servo_normal_kp;
   extern float servo_roundabout_kp;
-  extern float servo_cross_kp;
+  extern float servo_sharp_turn_kp;
+  extern float servo_normal_kd;
   extern float servo_roundabout_exit_kp;
-  extern uint16_t targetSpeed;
-  extern uint16_t normal_speed;
-  extern uint16_t straight_speed;
-  extern uint16_t roundabout_speed;
-  extern uint16_t cross_speed;
-  extern uint16_t roundabout_exit_speed;
+  extern uint16_t targetSpeed_straight;
+  extern uint16_t targetSpeed_normal;//normal turning
+  extern uint16_t targetSpeed_round;
+  extern uint16_t targetSpeed_sharp_turn;
 };
 
 
