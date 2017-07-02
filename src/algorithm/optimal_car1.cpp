@@ -117,6 +117,7 @@ bool debug = true;
 bool has_inc_width_pt = false;
 bool is_straight_line = false;
 bool exit_round_ready = false; // A flag storing corner status inside roundabout
+int roundabout_total = 3;
 int roundaboutStatus = 0; // 0: Before 1: Detected 2: Inside (After one corner)
 int crossingStatus = 0; // 0: Before 1: Detected/Inside
 int roundaboutExitStatus = 0; //0: Before 1: Detected/Inside Exit of Roundabout
@@ -1371,7 +1372,7 @@ void PrintSuddenChangeTrackWidthLocation(uint16_t color) {
  * @return: 1 means turning left, 0 means turning right
  * */
 int roundabout_shortest(uint32_t a, int pos){
-	return !((a >> (pos - 1) != 0));
+	return (a >> pos) & 1;
 }
 
 
@@ -1738,14 +1739,15 @@ void main_car1(bool debug_) {
 				//				PrintEdge(path, Lcd::kGreen); //Print path
 				//				pLcd->SetRegion(Lcd::Rect(carMid.first, carMid.second, 5, 5));
 				//				pLcd->FillColor(Lcd::kRed);
-				if (debug) {
-					PrintWorldImage();
-					PrintEdge(left_edge, Lcd::kRed); //Print left_edge
-					PrintEdge(right_edge, Lcd::kBlue); //Print right_edge
-					PrintCorner(left_corners, Lcd::kPurple); //Print left_corner
-					PrintCorner(right_corners, Lcd::kPurple); //Print right_corner
-					PrintEdge(path, Lcd::kGreen); //Print path
+				if (false) {
+//					PrintWorldImage();
+//					PrintEdge(left_edge, Lcd::kRed); //Print left_edge
+//					PrintEdge(right_edge, Lcd::kBlue); //Print right_edge
+//					PrintCorner(left_corners, Lcd::kPurple); //Print left_corner
+//					PrintCorner(right_corners, Lcd::kPurple); //Print right_corner
+//					PrintEdge(path, Lcd::kGreen); //Print path
 					char timestr[100];
+					pLcd->SetRegion(Lcd::Rect(0,30,128,15));
 					sprintf(timestr, "Roun_cnt: %d", roundabout_cnt);
 					pWriter->WriteString(timestr);
 
@@ -1785,30 +1787,28 @@ void main_car1(bool debug_) {
 
 				/* Servo PID */
 				int curr_servo_error = CalcAngleDiff();
-				if(roundaboutExitStatus == 1){
+//				pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
+//				char timestr[100];
+//				sprintf(timestr, "error %dms", curr_servo_error);
+//				pWriter->WriteString(timestr);
+				/* Motor PID + Servo PID*//*Control system*/
+				if(roundaboutStatus == 1){
 					pServo->SetDegree(util::clamp<uint16_t>(
 							servo_bounds.kCenter - (TuningVar::servo_exit_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
 							servo_bounds.kRightBound,
 							servo_bounds.kLeftBound));
+					pid_left.SetSetpoint(TuningVar::targetSpeed_round*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
+					pid_right.SetSetpoint(TuningVar::targetSpeed_round* differential_left((-pServo->GetDegree() + servo_bounds.kCenter)/10));
 				}
 				else{
 					pServo->SetDegree(util::clamp<uint16_t>(
 							servo_bounds.kCenter - (TuningVar::servo_normal_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
 							servo_bounds.kRightBound,
 							servo_bounds.kLeftBound));
-				}
-
-
-				prev_servo_error = curr_servo_error;
-				/* Motor PID */
-				if(roundaboutStatus == 1){
-					pid_left.SetSetpoint(TuningVar::targetSpeed_round*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
-					pid_right.SetSetpoint(TuningVar::targetSpeed_round* differential_left((-pServo->GetDegree() + servo_bounds.kCenter)/10));
-				}
-				else{
 					pid_left.SetSetpoint(TuningVar::targetSpeed*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
 					pid_right.SetSetpoint(TuningVar::targetSpeed* differential_left((-pServo->GetDegree() + servo_bounds.kCenter)/10));
 				}
+				prev_servo_error = curr_servo_error;
 				pEncoder0->Update();
 				pEncoder1->Update();
 				curr_enc_val_left = pEncoder0->GetCount();
