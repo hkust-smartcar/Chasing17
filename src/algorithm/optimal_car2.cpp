@@ -91,7 +91,6 @@ namespace TuningVar{ //tuning var delaration
   float servo_cross_kp = 1.0;
   float servo_roundabout_exit_kp = 0.9;
   uint16_t targetSpeed = 200;
-  uint16_t targetSpeed = 100;
   uint16_t targetSpeed_round = 80;
   uint16_t normal_speed = 250;
   uint16_t straight_speed = 500;
@@ -1586,6 +1585,7 @@ void main_car2(bool debug_) {
 	pMotor1->SetPower(TuningVar::targetSpeed);
 
 	Timer::TimerInt startTime = System::Time();
+	bool met_stop_line=false;
 	bool brake_flag = true;
 	while (true) {
 		while (time_img != System::Time()) {
@@ -1593,6 +1593,7 @@ void main_car2(bool debug_) {
 			led0.SetEnable(time_img % 500 >= 250);
 
 			if (time_img % 10 == 0) {
+				bool skip_motor_protection=false;
 				bt.resendNAKData();
 				/*Send Data*/
 				//		  char speedChar[15] = {};
@@ -1676,20 +1677,19 @@ void main_car2(bool debug_) {
 				//    	  Timer::TimerInt algo_start_time = System::Time();
 				Capture(); //Capture until two base points are identified
 				if (FindStoppingLine() && time_img - startTime > 10000) {
-					if (FindStoppingLine() && time_img-startTime > 10000) {
-						if(is_front_car){
-							pMotor0->SetPower(0);
-							pMotor1->SetPower(0);
-						}else{
-							pMotor0->SetClockwise(false);
-							pMotor1->SetClockwise(true);
-							pMotor0->SetPower(1000);
-							pMotor1->SetPower(1000);
-							System::DelayMs(25);
-							pMotor0->SetPower(0);
-							pMotor1->SetPower(0);
-						}
+					if(is_front_car){
+						pMotor0->SetPower(0);
+						pMotor1->SetPower(0);
+					}else{
+						pMotor0->SetClockwise(false);
+						pMotor1->SetClockwise(true);
+						pMotor0->SetPower(1000);
+						pMotor1->SetPower(1000);
+						System::DelayMs(25);
+						pMotor0->SetPower(0);
+						pMotor1->SetPower(0);
 					}
+					met_stop_line=true;
 					pWriter->WriteString("Stopping Line Detected");
 				}
 				FindEdges();
@@ -1778,7 +1778,7 @@ void main_car2(bool debug_) {
 				curr_enc_val_right = (pEncoder1->GetCount());
 				SetMotorPower(GetMotorPower(0)+pid_left.Calc(curr_enc_val_left),0);
 				SetMotorPower(GetMotorPower(1)+pid_right.Calc(curr_enc_val_right),1);
-				if(curr_enc_val_left<100||curr_enc_val_right<100){
+				if((curr_enc_val_left<100 || curr_enc_val_right<100) && (System::Time()-startTime>1000 || skip_motor_protection)){
 					pMotor0->SetPower(0);
 					pMotor1->SetPower(0);
 				}
