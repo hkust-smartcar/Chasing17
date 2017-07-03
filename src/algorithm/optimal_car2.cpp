@@ -1575,6 +1575,7 @@ void main_car2(bool debug_) {
 						bt.resendNAKData();
 					}
 
+					if (joystick.GetState() == Joystick::State::kSelect) bt.sendStopCar();
 					//	Timer::TimerInt algo_start_time = System::Time();
 					Capture(); //Capture until two base points are identified
 

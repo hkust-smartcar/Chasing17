@@ -1554,6 +1554,7 @@ void main_car1(bool debug_) {
 //					pLcd->Clear();
 
 					bool skip_motor_protection=false;
+					if (joystick.GetState() == Joystick::State::kSelect) bt.sendStopCar();
 					//Overtake motor control
 					/*FOR DEBUGGING*/
 					if(debug){
