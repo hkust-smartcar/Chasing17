@@ -307,6 +307,13 @@ class BTComm {
   }
 
   /**
+   * Send stop car request from another car
+   */
+  void sendStopCar(){
+	  sendData(DataType::kReq, ReqType::kStopCar);
+  }
+
+  /**
    * Return if stop_car_ flag is true, for Processing remote stop car
    */
   bool hasStopCar(){
