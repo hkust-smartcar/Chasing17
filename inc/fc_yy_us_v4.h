@@ -40,7 +40,6 @@ class FcYyUsV4 {
    * @return The distance measured by the sensor (mm)
    */
   uint16_t GetDistance() const { return distance_; }
-  uint16_t GetAvgDistance() const { return distance_; }
 
   /**
    * @brief Reset the filter
