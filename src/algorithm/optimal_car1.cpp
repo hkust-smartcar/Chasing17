@@ -91,17 +91,25 @@ namespace TuningVar { //tuning var declaration
   uint16_t roundExit_encoder_count = 3300;
   int32_t roundabout_shortest_flag = 0b00011; //1 means turn left, 0 means turn right. Reading from left to right
   uint16_t nearest_corner_threshold = 128/2;
+
+  // servo pid values
   float servo_straight_kp = 0.9;
+  float servo_straight_kd = 0;
   float servo_normal_kp = 1.1;
-  float servo_roundabout_kp = 1.3;
-  float servo_sharp_turn_kp = 1.2;
   float servo_normal_kd = 0;
+  float servo_roundabout_kp = 1.3;
+  float servo_roundabout_kd = 0;
+  float servo_sharp_turn_kp = 1.2;
+  float servo_sharp_turn_kd = 0;
   float servo_roundabout_exit_kp = 0.9;
+  float servo_roundabout_exit_kd = 0;
+
+  // target speed values
   uint16_t targetSpeed_straight = 120;
   uint16_t targetSpeed_normal = 100;//normal turning
   uint16_t targetSpeed_round = 80;
   uint16_t targetSpeed_sharp_turn = 90;
-};
+}  // namespace TuningVar
 
 namespace {
 //BT listener
@@ -1788,6 +1796,6 @@ void main_car1(bool debug_) {
 
 }
 
+}  // namespace car1
 }  // namespace optimal
 }  // namespace algorithm
-}
