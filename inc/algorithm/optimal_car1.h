@@ -115,7 +115,7 @@ namespace TuningVar {
   extern float servo_normal_kp;
   extern float servo_roundabout_kp;
   extern float servo_roundabout_kd;
-  extern float servo_sharp_turn_kp;  
+  extern float servo_sharp_turn_kp;
   extern float servo_sharp_turn_kd;
   extern float servo_roundabout_exit_kp;
   extern float servo_roundabout_exit_kd;
@@ -126,7 +126,7 @@ namespace TuningVar {
   extern uint16_t targetSpeed_round;
   extern uint16_t targetSpeed_sharp_turn;
   extern uint16_t targetSpeed_slow;//slow down speed during straight
-};
+}  // namespace TuningVar
 
 /**
  * TranslateType enum struct

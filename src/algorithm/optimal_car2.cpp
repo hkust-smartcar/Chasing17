@@ -97,19 +97,23 @@ namespace TuningVar{ //tuning var delaration
 
   // servo pid values
   float servo_straight_kp = 0.9;
+  float servo_straight_kd = 0;
   float servo_normal_kp = 1.1;
-  float servo_roundabout_kp = 1.3;
-  float servo_sharp_turn_kp = 1.2;
   float servo_normal_kd = 0;
+  float servo_roundabout_kp = 1.3;
   float servo_roundabout_kd = 0;
+  float servo_sharp_turn_kp = 1.2;
   float servo_sharp_turn_kd = 0;
   float servo_roundabout_exit_kp = 0.9;
+  float servo_roundabout_exit_kd = 0;
+
+  // target speed values
   uint16_t targetSpeed_straight = 120;
   uint16_t targetSpeed_normal = 100;//normal turning
   uint16_t targetSpeed_round = 80;
   uint16_t targetSpeed_sharp_turn = 90;
   uint16_t targetSpeed_slow = 100;
-};
+}  // namespace TuningVar
 
 namespace {
 //BT listener
@@ -1796,6 +1800,6 @@ void main_car2(bool debug_) {
 
 }
 
+}  // namespace car2
 }  // namespace optimal
 }  // namespace algorithm
-}
