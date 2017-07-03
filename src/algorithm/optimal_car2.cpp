@@ -128,6 +128,7 @@ bool overtake = false;
 bool is_front_car = false;
 bool stop_before_roundexit = false;
 
+bool run =true;//for bluetooth stopping
 bool debug = true;
 bool has_inc_width_pt = false;
 bool is_straight_line = false;
@@ -165,6 +166,8 @@ DirEncoder* pEncoder0 = nullptr;
 DirEncoder* pEncoder1 = nullptr;
 DirMotor* pMotor0 = nullptr;
 DirMotor* pMotor1 = nullptr;
+IncrementalPidController<float, float>* pid_left_p = nullptr;
+IncrementalPidController<float, float>* pid_right_p = nullptr;
 
 ServoBounds servo_bounds = {1145, 845, 545};
 ImageSize CameraSize = {128, 480};
@@ -1488,8 +1491,10 @@ void main_car2(bool debug_) {
 
 	/*motor PID setting*/
 	IncrementalPidController<float, float> pid_left(0,0,0,0);
+	pid_left_p = &pid_left;
 	pid_left.SetOutputBound(-500, 500);
 	IncrementalPidController<float, float> pid_right(0,0,0,0);
+	pid_right_p = &pid_right;
 	pid_right.SetOutputBound(-500, 500);
 	pid_left.SetKp(2.5);
 	pid_right.SetKp(2.5);
@@ -1534,223 +1539,224 @@ void main_car2(bool debug_) {
 
 
 	while (true) {
-		while (time_img != System::Time()) {
-			time_img = System::Time();
-			led0.SetEnable(time_img % 500 >= 250);
+		if(run){
+			while (time_img != System::Time()) {
+				time_img = System::Time();
+				led0.SetEnable(time_img % 500 >= 250);
 
-			if (time_img % 10 == 0) {
-				bool skip_motor_protection=false;
-				/*Send Data*/
-				//		  char speedChar[15] = {};
-				//		  //				sprintf(speedChar, "%.1f,%.3f,%.4f,%.4f,%.3f,%.4f,%.4f\n", 1.0, leftPowSpeedP, leftPowSpeedI, leftPowSpeedD, rightPowSpeedP, rightPowSpeedI, rightPowSpeedD);
-				//		  //				sprintf(speedChar, "%.1f,%.2f,%.2f\n", 1.0, targetAng, tempTargetAng);
-				//		  //				sprintf(speedChar, "%.1f,%.2f,%.2f\n", 1.0, leftSpeed, leftTempTargetSpeed);
-				//		  //				sprintf(speedChar, "%.1f,%.2f,%.2f\n", 1.0, rightSpeed, rightTempTargetSpeed);
-				//		  //				sprintf(speedChar, "%.1f,%.2f,%.2f,%.2f,%.2f\n", 1.0, targetAng, tempTargetAng, curSpeed, targetSpeed);
-				//		  //			  	sprintf(speedChar, "%.1f,%.3f\n", 1.0, dt);
-				//	  sprintf(speedChar, "%.1f, %d,%d,%d,%d\n",1.0,0-curr_enc_val_right,target_enc_val_right,curr_enc_val_left,target_enc_val_left);
-				//
-				////    	  			  std::string speedStr = speedChar;
-				//		  const Byte speedByte = 85;
-				//		  bt.SendBuffer(&speedByte, 1);
-				//		  bt.SendStr(speedChar);
-				//Overtake motor control
-				if(overtake){
-					bt.resendNAKData();
-					if (roundaboutExitStatus == 1 && stop_before_roundexit) {
-						/*Consider braking*/
-						pMotor0->SetClockwise(false);
-						pMotor1->SetClockwise(true);
-//						pMotor0->SetPower(1000);
-//						pMotor1->SetPower(1000);
-						System::DelayMs(220);
-						while(true){
-							pMotor0->SetPower(0);
-							pMotor1->SetPower(0);
-							if(pBT->hasFinishedOvertake()){
-								break;
+				if (time_img % 10 == 0) {
+					bool skip_motor_protection=false;
+					/*Send Data*/
+					//		  char speedChar[15] = {};
+					//		  //				sprintf(speedChar, "%.1f,%.3f,%.4f,%.4f,%.3f,%.4f,%.4f\n", 1.0, leftPowSpeedP, leftPowSpeedI, leftPowSpeedD, rightPowSpeedP, rightPowSpeedI, rightPowSpeedD);
+					//		  //				sprintf(speedChar, "%.1f,%.2f,%.2f\n", 1.0, targetAng, tempTargetAng);
+					//		  //				sprintf(speedChar, "%.1f,%.2f,%.2f\n", 1.0, leftSpeed, leftTempTargetSpeed);
+					//		  //				sprintf(speedChar, "%.1f,%.2f,%.2f\n", 1.0, rightSpeed, rightTempTargetSpeed);
+					//		  //				sprintf(speedChar, "%.1f,%.2f,%.2f,%.2f,%.2f\n", 1.0, targetAng, tempTargetAng, curSpeed, targetSpeed);
+					//		  //			  	sprintf(speedChar, "%.1f,%.3f\n", 1.0, dt);
+					//	  sprintf(speedChar, "%.1f, %d,%d,%d,%d\n",1.0,0-curr_enc_val_right,target_enc_val_right,curr_enc_val_left,target_enc_val_left);
+					//
+					////    	  			  std::string speedStr = speedChar;
+					//		  const Byte speedByte = 85;
+					//		  bt.SendBuffer(&speedByte, 1);
+					//		  bt.SendStr(speedChar);
+					//Overtake motor control
+					if(overtake){
+						bt.resendNAKData();
+						if (roundaboutExitStatus == 1 && stop_before_roundexit) {
+							/*Consider braking*/
+							pMotor0->SetClockwise(false);
+							pMotor1->SetClockwise(true);
+							//						pMotor0->SetPower(1000);
+							//						pMotor1->SetPower(1000);
+							System::DelayMs(220);
+							while(true){
+								pMotor0->SetPower(0);
+								pMotor1->SetPower(0);
+								if(pBT->hasFinishedOvertake()){
+									break;
+								}
 							}
+							System::DelayMs(1500);
+							stop_before_roundexit = false;
+							// roundaboutStatus = 0;
+							exit_round_ready = false;
+							//					pEncoder0->Update();
+							//					pEncoder1->Update();
+							encoder_total_exit = 0;
+							pBT->resetFinishOvertake();
+							pMotor0->SetClockwise(true);
+							pMotor1->SetClockwise(false);
+							//						pMotor0->SetPower(TuningVar::targetSpeed);
+							//						pMotor1->SetPower(TuningVar::targetSpeed);
 						}
-						System::DelayMs(1500);
-						stop_before_roundexit = false;
-						// roundaboutStatus = 0;
-						exit_round_ready = false;
-						//					pEncoder0->Update();
-						//					pEncoder1->Update();
-						encoder_total_exit = 0;
-						pBT->resetFinishOvertake();
-						pMotor0->SetClockwise(true);
-						pMotor1->SetClockwise(false);
-//						pMotor0->SetPower(TuningVar::targetSpeed);
-//						pMotor1->SetPower(TuningVar::targetSpeed);
 					}
-				}
-				//    	  if (roundaboutExitStatus == 1 && stop_before_roundexit) {
-				//				if(brake_flag){
-				//					brake_flag = false;
-				//					pMotor0->SetClockwise(false);
-				//					pMotor1->SetClockwise(true);
-				//					pMotor0->SetPower(1000);
-				//					pMotor1->SetPower(1000);
-				//					System::DelayMs(250);
-				//				}
-				//				else{
-				//					pMotor0->SetPower(0);
-				//					pMotor1->SetPower(0);
-				//				}
-				//    	  }
-				//    	  else{
-				//				pMotor0->SetClockwise(true);
-				//				pMotor1->SetClockwise(false);
-				//				pMotor0->SetPower(190);
-				//				pMotor1->SetPower(190);
-				//    	  }
-				//    	  if(roundaboutExitStatus ==0){
-				//    		  brake_flag = true;
-				//    	  }
-				//    	  //Double check
-				//    	  if(pMotor0->GetPower() == 0 && pMotor1->GetPower() == 0){
-				//    		  if(pBT->hasFinishedOvertake()){
-				//    			  System::DelayMs(2000);
-				//    			  stop_before_roundexit = false;
-				//    			  // roundaboutStatus = 0;
-				//    			  exit_round_ready = false;
-				//    			  encoder_total_exit = 0;
-				//    			  pBT->resetFinishOvertake();
-				//    		  }
-				//    	  }
+					//    	  if (roundaboutExitStatus == 1 && stop_before_roundexit) {
+					//				if(brake_flag){
+					//					brake_flag = false;
+					//					pMotor0->SetClockwise(false);
+					//					pMotor1->SetClockwise(true);
+					//					pMotor0->SetPower(1000);
+					//					pMotor1->SetPower(1000);
+					//					System::DelayMs(250);
+					//				}
+					//				else{
+					//					pMotor0->SetPower(0);
+					//					pMotor1->SetPower(0);
+					//				}
+					//    	  }
+					//    	  else{
+					//				pMotor0->SetClockwise(true);
+					//				pMotor1->SetClockwise(false);
+					//				pMotor0->SetPower(190);
+					//				pMotor1->SetPower(190);
+					//    	  }
+					//    	  if(roundaboutExitStatus ==0){
+					//    		  brake_flag = true;
+					//    	  }
+					//    	  //Double check
+					//    	  if(pMotor0->GetPower() == 0 && pMotor1->GetPower() == 0){
+					//    		  if(pBT->hasFinishedOvertake()){
+					//    			  System::DelayMs(2000);
+					//    			  stop_before_roundexit = false;
+					//    			  // roundaboutStatus = 0;
+					//    			  exit_round_ready = false;
+					//    			  encoder_total_exit = 0;
+					//    			  pBT->resetFinishOvertake();
+					//    		  }
+					//    	  }
 
-				//    	  Timer::TimerInt algo_start_time = System::Time();
-				Capture(); //Capture until two base points are identified
-//				if (FindStoppingLine() && time_img - startTime > 10000) {
-//					if(is_front_car){
-//						pMotor0->SetPower(0);
-//						pMotor1->SetPower(0);
-//					}else{
-//						pMotor0->SetClockwise(false);
-//						pMotor1->SetClockwise(true);
-//						pMotor0->SetPower(1000);
-//						pMotor1->SetPower(1000);
-//						System::DelayMs(25);
-//						pMotor0->SetPower(0);
-//						pMotor1->SetPower(0);
-//					}
-//					met_stop_line=true;
-//					pWriter->WriteString("Stopping Line Detected");
-//				}
-				FindEdges();
-				Feature feature = featureIdent_Corner();
-				GenPath(feature); //Generate path
-				/*FOR DEBUGGING*/
-				//        PrintWorldImage();
-				//        PrintEdge(left_edge, Lcd::kRed); //Print left_edge
-				//        PrintEdge(right_edge, Lcd::kBlue); //Print right_edge
-				//        PrintCorner(left_corners, Lcd::kPurple); //Print left_corner
-				//        PrintCorner(right_corners, Lcd::kPurple); //Print right_corner
-				//        PrintEdge(path, Lcd::kGreen); //Print path`
-				if (debug) {
-					char time_str[100];
-					//          sprintf(time_str, "Time:%dms", System::Time()-algo_start_time);
-					pLcd->SetRegion(Lcd::Rect(0,0,128,15));
-					pWriter->WriteString(time_str);
-					PrintWorldImage();
-					PrintEdge(left_edge, Lcd::kRed); //Print left_edge
-					PrintEdge(right_edge, Lcd::kBlue); //Print right_edge
-					PrintCorner(left_corners, Lcd::kPurple); //Print left_corner
-					PrintCorner(right_corners, Lcd::kPurple); //Print right_corner
-					PrintSuddenChangeTrackWidthLocation(Lcd::kYellow); //Print sudden change track width location
-					pLcd->SetRegion(
-							Lcd::Rect(roundabout_nearest_corner_left.first,
-									WorldSize.h - roundabout_nearest_corner_left.second - 1, 4, 4));
-					pLcd->FillColor(Lcd::kYellow);
-					pLcd->SetRegion(
-							Lcd::Rect(roundabout_nearest_corner_right.first,
-									WorldSize.h - roundabout_nearest_corner_right.second - 1, 4, 4));
-					pLcd->FillColor(Lcd::kYellow);
-					char temp[100];
-					sprintf(temp, "min:%d", roundabout_nearest_corner_cnt_right);
-					pLcd->SetRegion(Lcd::Rect(0, 140, 128, 15));
-					pWriter->WriteString(temp);
-					PrintEdge(path, Lcd::kGreen); //Print path
+					//    	  Timer::TimerInt algo_start_time = System::Time();
+					Capture(); //Capture until two base points are identified
+					//				if (FindStoppingLine() && time_img - startTime > 10000) {
+					//					if(is_front_car){
+					//						pMotor0->SetPower(0);
+					//						pMotor1->SetPower(0);
+					//					}else{
+					//						pMotor0->SetClockwise(false);
+					//						pMotor1->SetClockwise(true);
+					//						pMotor0->SetPower(1000);
+					//						pMotor1->SetPower(1000);
+					//						System::DelayMs(25);
+					//						pMotor0->SetPower(0);
+					//						pMotor1->SetPower(0);
+					//					}
+					//					met_stop_line=true;
+					//					pWriter->WriteString("Stopping Line Detected");
+					//				}
+					FindEdges();
+					Feature feature = featureIdent_Corner();
+					GenPath(feature); //Generate path
+					/*FOR DEBUGGING*/
+					//        PrintWorldImage();
+					//        PrintEdge(left_edge, Lcd::kRed); //Print left_edge
+					//        PrintEdge(right_edge, Lcd::kBlue); //Print right_edge
+					//        PrintCorner(left_corners, Lcd::kPurple); //Print left_corner
+					//        PrintCorner(right_corners, Lcd::kPurple); //Print right_corner
+					//        PrintEdge(path, Lcd::kGreen); //Print path`
+					if (debug) {
+						char time_str[100];
+						//          sprintf(time_str, "Time:%dms", System::Time()-algo_start_time);
+						pLcd->SetRegion(Lcd::Rect(0,0,128,15));
+						pWriter->WriteString(time_str);
+						PrintWorldImage();
+						PrintEdge(left_edge, Lcd::kRed); //Print left_edge
+						PrintEdge(right_edge, Lcd::kBlue); //Print right_edge
+						PrintCorner(left_corners, Lcd::kPurple); //Print left_corner
+						PrintCorner(right_corners, Lcd::kPurple); //Print right_corner
+						PrintSuddenChangeTrackWidthLocation(Lcd::kYellow); //Print sudden change track width location
+						pLcd->SetRegion(
+								Lcd::Rect(roundabout_nearest_corner_left.first,
+										WorldSize.h - roundabout_nearest_corner_left.second - 1, 4, 4));
+						pLcd->FillColor(Lcd::kYellow);
+						pLcd->SetRegion(
+								Lcd::Rect(roundabout_nearest_corner_right.first,
+										WorldSize.h - roundabout_nearest_corner_right.second - 1, 4, 4));
+						pLcd->FillColor(Lcd::kYellow);
+						char temp[100];
+						sprintf(temp, "min:%d", roundabout_nearest_corner_cnt_right);
+						pLcd->SetRegion(Lcd::Rect(0, 140, 128, 15));
+						pWriter->WriteString(temp);
+						PrintEdge(path, Lcd::kGreen); //Print path
 
-					switch (feature) {
-					case Feature::kCross:
-						pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
-						pWriter->WriteString("Crossing");
-						break;
-					case Feature::kRoundabout:
-						pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
-						pWriter->WriteString("Roundabout");
-						break;
-					case Feature::kNormal:
-						pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
-						pWriter->WriteString("Normal");
-						break;
-					case Feature::kRoundaboutExit:
-						pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
-						pWriter->WriteString("Exit of Roundabout");
-						break;
-					case Feature::kStraight:
-						pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
-						pWriter->WriteString("Straight");
-						break;
+						switch (feature) {
+						case Feature::kCross:
+							pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
+							pWriter->WriteString("Crossing");
+							break;
+						case Feature::kRoundabout:
+							pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
+							pWriter->WriteString("Roundabout");
+							break;
+						case Feature::kNormal:
+							pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
+							pWriter->WriteString("Normal");
+							break;
+						case Feature::kRoundaboutExit:
+							pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
+							pWriter->WriteString("Exit of Roundabout");
+							break;
+						case Feature::kStraight:
+							pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
+							pWriter->WriteString("Straight");
+							break;
+						}
 					}
-				}
-				/*END OF DEBUGGING*/
+					/*END OF DEBUGGING*/
 
-				/* Servo PID */
-				int curr_servo_error = CalcAngleDiff();
-				/* Motor PID + Servo PID* for different situations*/
-				//roundabout case
-				if(roundaboutStatus == 1){
-					pServo->SetDegree(util::clamp<uint16_t>(
-							servo_bounds.kCenter - (TuningVar::servo_roundabout_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
-							servo_bounds.kRightBound,
-							servo_bounds.kLeftBound));
-					pid_left.SetSetpoint(TuningVar::targetSpeed_round*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
-					pid_right.SetSetpoint(TuningVar::targetSpeed_round* differential_left((-pServo->GetDegree() + servo_bounds.kCenter)/10));
+					/* Servo PID */
+					int curr_servo_error = CalcAngleDiff();
+					/* Motor PID + Servo PID* for different situations*/
+					//roundabout case
+					if(roundaboutStatus == 1){
+						pServo->SetDegree(util::clamp<uint16_t>(
+								servo_bounds.kCenter - (TuningVar::servo_roundabout_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
+								servo_bounds.kRightBound,
+								servo_bounds.kLeftBound));
+						pid_left.SetSetpoint(TuningVar::targetSpeed_round*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
+						pid_right.SetSetpoint(TuningVar::targetSpeed_round* differential_left((-pServo->GetDegree() + servo_bounds.kCenter)/10));
+					}
+					//sharp turning case
+					else if(abs(curr_servo_error) > 180){
+						pServo->SetDegree(util::clamp<uint16_t>(
+								servo_bounds.kCenter - (TuningVar::servo_sharp_turn_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
+								servo_bounds.kRightBound,
+								servo_bounds.kLeftBound));
+						pid_left.SetSetpoint(TuningVar::targetSpeed_sharp_turn*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
+						pid_right.SetSetpoint(TuningVar::targetSpeed_sharp_turn* differential_left((-pServo->GetDegree() + servo_bounds.kCenter)/10));
+					}
+					//straight case
+					else if(abs(curr_servo_error) < 40){
+						pServo->SetDegree(util::clamp<uint16_t>(
+								servo_bounds.kCenter - (TuningVar::servo_straight_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
+								servo_bounds.kRightBound,
+								servo_bounds.kLeftBound));
+						pid_left.SetSetpoint(TuningVar::targetSpeed_straight*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
+						pid_right.SetSetpoint(TuningVar::targetSpeed_straight* differential_left((-pServo->GetDegree() + servo_bounds.kCenter)/10));
+					}
+					//normal turning case
+					else{
+						pServo->SetDegree(util::clamp<uint16_t>(
+								servo_bounds.kCenter - (TuningVar::servo_normal_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
+								servo_bounds.kRightBound+85,
+								servo_bounds.kLeftBound-85));
+						pid_left.SetSetpoint(TuningVar::targetSpeed_normal*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
+						pid_right.SetSetpoint(TuningVar::targetSpeed_normal* differential_left((-pServo->GetDegree() + servo_bounds.kCenter)/10));
+					}
+					prev_servo_error = curr_servo_error;
+					pEncoder0->Update();
+					pEncoder1->Update();
+					curr_enc_val_left = pEncoder0->GetCount();
+					curr_enc_val_right = -pEncoder1->GetCount();
+					SetMotorPower(GetMotorPower(0)+pid_left.Calc(curr_enc_val_left),0);
+					SetMotorPower(GetMotorPower(1)+pid_right.Calc(curr_enc_val_right),1);
+					//				if((curr_enc_val_left<100 || curr_enc_val_right<100) && (System::Time()-startTime>1000 || skip_motor_protection)){
+					//					pMotor0->SetPower(0);
+					//					pMotor1->SetPower(0);
+					//				}
 				}
-				//sharp turning case
-				else if(abs(curr_servo_error) > 180){
-					pServo->SetDegree(util::clamp<uint16_t>(
-							servo_bounds.kCenter - (TuningVar::servo_sharp_turn_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
-							servo_bounds.kRightBound,
-							servo_bounds.kLeftBound));
-					pid_left.SetSetpoint(TuningVar::targetSpeed_sharp_turn*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
-					pid_right.SetSetpoint(TuningVar::targetSpeed_sharp_turn* differential_left((-pServo->GetDegree() + servo_bounds.kCenter)/10));
-				}
-				//straight case
-				else if(abs(curr_servo_error) < 40){
-					pServo->SetDegree(util::clamp<uint16_t>(
-					servo_bounds.kCenter - (TuningVar::servo_straight_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
-							servo_bounds.kRightBound,
-							servo_bounds.kLeftBound));
-							pid_left.SetSetpoint(TuningVar::targetSpeed_straight*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
-							pid_right.SetSetpoint(TuningVar::targetSpeed_straight* differential_left((-pServo->GetDegree() + servo_bounds.kCenter)/10));
-				}
-				//normal turning case
-				else{
-					pServo->SetDegree(util::clamp<uint16_t>(
-							servo_bounds.kCenter - (TuningVar::servo_normal_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
-							servo_bounds.kRightBound+85,
-							servo_bounds.kLeftBound-85));
-					pid_left.SetSetpoint(TuningVar::targetSpeed_normal*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
-					pid_right.SetSetpoint(TuningVar::targetSpeed_normal* differential_left((-pServo->GetDegree() + servo_bounds.kCenter)/10));
-				}
-				prev_servo_error = curr_servo_error;
-				pEncoder0->Update();
-				pEncoder1->Update();
-				curr_enc_val_left = pEncoder0->GetCount();
-				curr_enc_val_right = -pEncoder1->GetCount();
-				SetMotorPower(GetMotorPower(0)+pid_left.Calc(curr_enc_val_left),0);
-				SetMotorPower(GetMotorPower(1)+pid_right.Calc(curr_enc_val_right),1);
-//				if((curr_enc_val_left<100 || curr_enc_val_right<100) && (System::Time()-startTime>1000 || skip_motor_protection)){
-//					pMotor0->SetPower(0);
-//					pMotor1->SetPower(0);
-//				}
 			}
 		}
-
 	}
 
 }
