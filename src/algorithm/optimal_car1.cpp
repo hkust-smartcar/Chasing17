@@ -66,9 +66,9 @@ namespace TuningVar { //tuning var declaration
   uint16_t edge_length = 159; //max length for an edge
   uint16_t edge_hor_search_max = 4; //max for horizontal search of edge if next edge point cannot be found
   uint16_t edge_min_worldview_bound_check = 30; //min for worldview bound check in edge finding
-  uint16_t corner_range = 7; //the square for detection would be in size corener_range*2+1
+  uint16_t corner_range = 4; //the square for detection would be in size corener_range*2+1
   float corner_height_ratio = 2.9; //the max height for detection would be WorldSize.h/corner_height_ratio
-  uint16_t corner_min = 16, corner_max = 31; //threshold (in %) for corner detection
+  uint16_t corner_min = 16, corner_max = 32; //threshold (in %) for corner detection
   uint16_t min_corners_dist = 7; // Manhattan dist threshold for consecutive corners
   uint16_t min_edges_dist = 7; // Manhattan dist threshold for edges
   uint16_t track_width_threshold = 900; //track width threshold for consideration of sudden change (square)
@@ -621,7 +621,7 @@ bool FindEdges() {
 	uint16_t staright_line_edge_count = 0; // Track the num. of equal width
 	roundabout_nearest_corner_cnt_left = pow(TuningVar::corner_range * 2 + 1, 2);
 	roundabout_nearest_corner_cnt_right = pow(TuningVar::corner_range * 2 + 1, 2);
-	while (left_edge.points.size() <= 25 && right_edge.points.size() <= 25
+	while (left_edge.points.size() <= 35 && right_edge.points.size() <= 35
 			&& (!flag_break_left || !flag_break_right)) {
 		if (!flag_break_left)
 			flag_break_left = !FindOneLeftEdge();
@@ -762,10 +762,12 @@ Feature featureIdent_Corner() {
 		//			pLcd->FillColor(Lcd::kYellow);
 		//		}
 		/*END OF DEBUGGING*/
-		if (getWorldBit(test_x, test_y) && getWorldBit(test_x + 1, test_y)
-				&& getWorldBit(test_x, test_y + 1)
-				&& getWorldBit(test_x - 1, test_y)
-				&& roundaboutStatus == 0
+		bool is_round = false;
+		bool is_cross = false;
+		while (!getWorldBit(test_x, test_y) && (test_y >cornerMid_y)){test_y--;}
+		if(test_y >cornerMid_y){is_round = true;}// have one black
+		if(test_y == cornerMid_y){is_cross = true;}// all white
+		if (is_round && roundaboutStatus == 0
 				&& crossingStatus == 0/*Temporary close*/) {
 			//All black
 			encoder_total_round = 0;
@@ -773,11 +775,7 @@ Feature featureIdent_Corner() {
 //			feature_start_time = System::Time(); // Mark the startTime of latest enter time
 			roundabout_cnt++;
 			return Feature::kRoundabout;
-		} else if (!getWorldBit(test_x, test_y)
-				&& !getWorldBit(test_x + 1, test_y)
-				&& !getWorldBit(test_x, test_y + 1)
-				&& !getWorldBit(test_x - 1, test_y)
-				&& crossingStatus == 0
+		} else if (is_cross && crossingStatus == 0
 				&& roundaboutStatus == 0) // avoid double check for crossing when inside the crossing (encoder_total_cross<2500)
 		{
 			encoder_total_cross = 0;
@@ -1552,6 +1550,9 @@ void main_car1(bool debug_) {
 				led0.SetEnable(time_img % 500 >= 250);
 
 				if (time_img % 10 == 0) {
+					if (bt.hasStopCar()) met_stop_line = true;
+//					pLcd->Clear();
+
 					bool skip_motor_protection=false;
 					//Overtake motor control
 					/*FOR DEBUGGING*/
@@ -1650,6 +1651,10 @@ void main_car1(bool debug_) {
 
 					/*-------------CONTROL SYSTEM-----------------------*/
 					int curr_servo_error = CalcAngleDiff();
+//					char timestr[100];
+//					pLcd->SetRegion(Lcd::Rect(0, 15, 128, 15));
+//					sprintf(timestr, "error: %d", curr_servo_error);
+//					pWriter->WriteString(timestr);
 					/* Motor PID + Servo PID* for different situations*/
 
 					if(roundaboutExitStatus == 1){
@@ -1725,8 +1730,9 @@ void main_car1(bool debug_) {
 					}
 
 					//straight case + TODO:double check further image to decide whether add speed or not
-					else if(abs(curr_servo_error) < 40){
-
+					else if(abs(curr_servo_error) < 50){
+//						              pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
+//						              pWriter->WriteString("Pstraight");
 						/*find more 25 edges*/
 						while ((left_edge.points.size() < 50) && FindOneLeftEdge()) {}
 						while ((right_edge.points.size() < 50) && FindOneRightEdge()) {}
@@ -1741,7 +1747,11 @@ void main_car1(bool debug_) {
 							pid_left.SetSetpoint(TuningVar::targetSpeed_slow*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
 							pid_right.SetSetpoint(TuningVar::targetSpeed_slow* differential_left((-pServo->GetDegree() + servo_bounds.kCenter)/10));
 						}
+						// both edges have 50
 						else{
+							for(int i =24; i<50; i++){
+								path.push((left_edge.points[i].first + right_edge.points[i].first)/2,(left_edge.points[i].second + right_edge.points[i].second)/2);
+							}
 							int further_servo_error = 0;
 							int sum = 0;
 							for (auto&& point : path.points) {
@@ -1749,9 +1759,14 @@ void main_car1(bool debug_) {
 								if(sum<25) continue; // only consider latter 25 points
 								further_servo_error += (point.first - carMid.first);
 							}
-							further_servo_error = further_servo_error / 26 *20;
+//							further_servo_error = further_servo_error;
+//							pLcd->SetRegion(Lcd::Rect(0, 45, 128, 15));
+//							sprintf(timestr, "Ferror: %d", further_servo_error);
+//							pWriter->WriteString(timestr);
+
+
 							// case two: the upper 25 path points produce error bigger than 100 - reduce speed in advance
-							if(further_servo_error>100) {
+							if(abs(further_servo_error)>300) {
 								pServo->SetDegree(util::clamp<uint16_t>(
 										servo_bounds.kCenter - (TuningVar::servo_straight_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
 										servo_bounds.kRightBound,
@@ -1761,6 +1776,8 @@ void main_car1(bool debug_) {
 							}
 							// case three: real straight - add full power
 							else{
+//					              pLcd->SetRegion(Lcd::Rect(0, 30, 128, 15));
+//					              pWriter->WriteString("Straight");
 								pServo->SetDegree(util::clamp<uint16_t>(
 										servo_bounds.kCenter - (TuningVar::servo_straight_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
 										servo_bounds.kRightBound,

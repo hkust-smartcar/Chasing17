@@ -69,9 +69,9 @@ namespace TuningVar{ //tuning var delaration
   uint16_t edge_length = 159; //max length for an edge
   uint16_t edge_hor_search_max = 4; //max for horizontal search of edge if next edge point cannot be found
   uint16_t edge_min_worldview_bound_check = 30; //min for worldview bound check in edge finding
-  uint16_t corner_range = 7; //the square for detection would be in size corener_range*2+1
+  uint16_t corner_range = 4; //the square for detection would be in size corener_range*2+1
   float corner_height_ratio = 2.9; //the max height for detection would be WorldSize.h/corner_height_ratio
-  uint16_t corner_min = 16, corner_max = 31; //threshold (in %) for corner detection
+  uint16_t corner_min = 16, corner_max = 32; //threshold (in %) for corner detection
   uint16_t min_corners_dist = 7; // Manhattan dist threshold for consecutive corners
   uint16_t min_edges_dist = 7; // Manhattan dist threshold for edges
   uint16_t track_width_threshold = 900; //track width threshold for consideration of sudden change (square)
@@ -134,6 +134,7 @@ uint16_t prev_corner_x; //store the latest corner coordinate appears last time d
 uint16_t prev_corner_y;
 
 /*FOR OVERTAKING*/
+
 bool overtake = false;
 bool is_front_car = false;
 bool stop_before_roundexit = false;
@@ -621,7 +622,7 @@ bool FindEdges() {
 	roundabout_nearest_corner_cnt_left = pow(TuningVar::corner_range * 2 + 1, 2);
 	roundabout_nearest_corner_cnt_right = pow(TuningVar::corner_range * 2 + 1, 2);
 	uint16_t staright_line_edge_count = 0; // Track the num. of equal width
-	while (left_edge.points.size() <= 25 && right_edge.points.size() <= 25
+	while (left_edge.points.size() <= 35 && right_edge.points.size() <= 35
 			&& (!flag_break_left || !flag_break_right)) {
 		if (!flag_break_left)
 			flag_break_left = !FindOneLeftEdge();
@@ -770,22 +771,20 @@ Feature featureIdent_Corner() {
 			pLcd->FillColor(Lcd::kCyan);
 		}
 		/*END OF DEBUGGING*/
-		if (getWorldBit(test_x, test_y) && getWorldBit(test_x + 1, test_y)
-				&& getWorldBit(test_x, test_y + 1)
-				&& getWorldBit(test_x - 1, test_y)
-				&& roundaboutStatus == 0
-				&& crossingStatus == 0) {
+		bool is_round = false;
+		bool is_cross = false;
+		while (!getWorldBit(test_x, test_y) && (test_y >cornerMid_y)){test_y--;}
+		if(test_y >cornerMid_y){is_round = true;}// have one black
+		if(test_y == cornerMid_y){is_cross = true;}// all white
+		if (is_round && roundaboutStatus == 0
+				&& crossingStatus == 0/*Temporary close*/) {
 			//All black
 			encoder_total_round = 0;
 			roundaboutStatus = 1; //Detected
 //			feature_start_time = System::Time(); // Mark the startTime of latest enter time
 			roundabout_cnt++;
 			return Feature::kRoundabout;
-		} else if (!getWorldBit(test_x, test_y)
-				&& !getWorldBit(test_x + 1, test_y)
-				&& !getWorldBit(test_x, test_y + 1)
-				&& !getWorldBit(test_x - 1, test_y)
-				&& crossingStatus == 0
+		} else if (is_cross && crossingStatus == 0
 				&& roundaboutStatus == 0) // avoid double check for crossing when inside the crossing (encoder_total_cross<2500)
 		{
 			encoder_total_cross = 0;
