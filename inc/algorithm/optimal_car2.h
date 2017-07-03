@@ -116,6 +116,7 @@ namespace TuningVar{
   extern uint16_t targetSpeed_normal;//normal turning
   extern uint16_t targetSpeed_round;
   extern uint16_t targetSpeed_sharp_turn;
+  extern uint16_t targetSpeed_slow;//slow down speed during straight
 };
 
 

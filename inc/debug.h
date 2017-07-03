@@ -40,6 +40,7 @@ void loadItems(DebugConsole* console) {
     console->PushItem("LCD debug", &debug_flag::lcd_debug);
     console->PushItem("Speed_stt", &targetSpeed_straight, 5);
     console->PushItem("Stt Kp", &servo_straight_kp, 0.1);
+    console->PushItem("Speed_slow", &targetSpeed_slow, 5);
     console->PushItem("Speed_nor", &targetSpeed_normal, 5);
     console->PushItem("Nor Kp", &servo_normal_kp, 0.1);
     console->PushItem("Speed_rabt", &targetSpeed_round, 5);
@@ -56,6 +57,7 @@ void loadItems(DebugConsole* console) {
     console->PushItem("LCD debug", &debug_flag::lcd_debug);
     console->PushItem("Speed_stt", &targetSpeed_straight, 5);
     console->PushItem("Straight Kp", &servo_straight_kp, 0.1);
+    console->PushItem("Speed_slow", &targetSpeed_slow, 5);
     console->PushItem("Speed_nor", &targetSpeed_normal, 5);
     console->PushItem("Normal Kp", &servo_normal_kp, 0.1);
     console->PushItem("Speed_rabt", &targetSpeed_round, 5);
