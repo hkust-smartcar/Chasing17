@@ -307,6 +307,20 @@ class BTComm {
   }
 
   /**
+   * Return if stop_car_ flag is true, for Processing remote stop car
+   */
+  bool hasStopCar(){
+	  return stop_car_;
+  }
+
+  /**
+   * Reset stop car flag
+   */
+  bool resetStopCar(){
+	  stop_car_ = false;
+  }
+
+  /**
    * Resend those information that are unacknowledged.
    *
    * @note should be called with short time intervals.
@@ -343,6 +357,7 @@ class BTComm {
     static constexpr Byte kFeature = 0xC3;
     static constexpr Byte kSide = 0xC4;
     static constexpr Byte kStart = 0xB0;
+    static constexpr Byte kStopCar = 0xA0;
   };
 
   std::unique_ptr<libsc::k60::JyMcuBt106> bluetooth_;
@@ -371,7 +386,7 @@ class BTComm {
 
   static uint8_t mapIndex_;
 
-  static bool testBool;
+  static bool stop_car_;
 
   /**
    * Generic send data through bluetooth function.

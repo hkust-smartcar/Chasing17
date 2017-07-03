@@ -137,44 +137,18 @@ void main() {
   JyMcuBt106::Config bt_config;
   bt_config.id = 0;
   bt_config.baud_rate = libbase::k60::Uart::Config::BaudRate::k115200;
-  bt_config.rx_isr = &BluetoothListener;
+//  bt_config.rx_isr = &BluetoothListener;
   JyMcuBt106 bt(bt_config);
 
-  led3.SetEnable(true);
-
-  led0.SetEnable(false);
-  led1.SetEnable(false);
-  led2.SetEnable(false);
-  led3.SetEnable(false);
-  System::DelayMs(250);
-  led0.SetEnable(true);
-  led1.SetEnable(true);
-  led2.SetEnable(true);
-  led3.SetEnable(true);
-  System::DelayMs(250);
-  led0.SetEnable(false);
-  led1.SetEnable(false);
-  led2.SetEnable(false);
-  led3.SetEnable(false);
-  System::DelayMs(250);
-  led0.SetEnable(true);
-  led1.SetEnable(true);
-  led2.SetEnable(true);
-  led3.SetEnable(true);
-  System::DelayMs(250);
-  led0.SetEnable(false);
-  led1.SetEnable(false);
-  led2.SetEnable(false);
-  led3.SetEnable(false);
+  FcYyUsV4 usir(libbase::k60::Pin::Name::kPtb0);
 
   Timer::TimerInt time_img = 0;
 
   while (true) {
     led0.Switch();
-    led1.Switch();
-    led2.Switch();
-    led3.Switch();
-    System::DelayMs(250);
+    char temp[100];
+    sprintf(temp, "%d\n", usir.GetDistance());
+    bt.SendStr(temp);
   }
 }
 
