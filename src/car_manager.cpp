@@ -6,21 +6,11 @@
  *
  * Author: David Mak (Derppening), Peter Tse (mcreng)
  *
- * Implementations for CarManager class.
+ * Implementations for CarManager struct.
  *
  */
 
 #include "car_manager.h"
-
-#include <memory>
-
-#include "libsc/futaba_s3010.h"
-
-#include "util/util.h"
-
-using libsc::FutabaS3010;
-using std::move;
-using std::unique_ptr;
 
 uint16_t CarManager::us_distance_ = 0;
 int32_t CarManager::left_speed_ = 0;
@@ -38,11 +28,19 @@ constexpr CarManager::ServoAngles CarManager::kAnglesCar2;
 constexpr CarManager::SideRatio CarManager::kRatioCar1;
 constexpr CarManager::SideRatio CarManager::kRatioCar2;
 
-constexpr CarManager::PidValues CarManager::kMotorPidCar1;
-constexpr CarManager::PidValues CarManager::kMotorPidCar2;
-
 CarManager::ServoAngles CarManager::GetServoAngles() {
   switch (car_) {
+    default:
+      // all cases covered
+    case Car::kCar1:
+      return kAnglesCar1;
+    case Car::kCar2:
+      return kAnglesCar2;
+  }
+}
+
+CarManager::ServoAngles CarManager::GetServoAngles(Car c) {
+  switch (c) {
     default:
       // all cases covered
     case Car::kCar1:
@@ -63,12 +61,13 @@ CarManager::SideRatio CarManager::GetSideRatio() {
   }
 }
 
-CarManager::PidValues CarManager::GetMotorPidValues() {
-  switch (car_) {
+CarManager::SideRatio CarManager::GetSideRatio(Car c) {
+  switch (c) {
     default:
-    case CarManager::Car::kCar1:
-      return kMotorPidCar1;
-    case CarManager::Car::kCar2:
-      return kMotorPidCar2;
+      // all cases covered
+    case Car::kCar1:
+      return kRatioCar1;
+    case Car::kCar2:
+      return kRatioCar2;
   }
 }

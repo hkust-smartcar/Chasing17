@@ -37,36 +37,54 @@ void loadItems(DebugConsole* console) {
   if (car == 1) {
     using namespace algorithm::optimal::car1::TuningVar;
 
-    console->PushItem("LCD debug", &debug_flag::lcd_debug);
-    console->PushItem("Speed_stt", &targetSpeed_straight, 5);
-    console->PushItem("Stt Kp", &servo_straight_kp, 0.1);
-    console->PushItem("Speed_slow", &targetSpeed_slow, 5);
-    console->PushItem("Speed_nor", &targetSpeed_normal, 5);
-    console->PushItem("Nor Kp", &servo_normal_kp, 0.1);
-    console->PushItem("Speed_rabt", &targetSpeed_round, 5);
-    console->PushItem("Rabt Kp", &servo_roundabout_kp, 0.1);
-    console->PushItem("Speed_sharp", &targetSpeed_sharp_turn, 5);
-    console->PushItem("Sharp Kp", &servo_sharp_turn_kp, 0.1);
-    console->PushItem("Nor Kd", &servo_normal_kd, 0.01);
-    console->PushItem("Rabt Sel", &roundabout_shortest_flag);
-//    console->PushItem("Rabt Raw", &algorithm::optimal::car1::TuningVar::roundabout_shortest_flag, 1);
+    // misc
+    console->PushItem("lcd debug", &debug_flag::lcd_debug);
+    console->PushItem("rndabt sel", &roundabout_shortest_flag, "l", "r");
+
+    // speed
+    console->PushItem("target spd:", &foo, "", "");
+    console->PushItem("slow", &targetSpeed_slow, 5);
+    console->PushItem("strght", &targetSpeed_straight, 5);
+    console->PushItem("normal", &targetSpeed_normal, 5);
+    console->PushItem("rndabt", &targetSpeed_round, 5);
+    console->PushItem("s_turn", &targetSpeed_sharp_turn, 5);
+
+    // servo
+    console->PushItem("servo pid:", &foo, "", "");
+    console->PushItem("strght-p", &servo_straight_kp, 0.1);
+    console->PushItem("strght-d", &servo_straight_kp, 0.01);
+    console->PushItem("normal-p", &servo_normal_kp, 0.1);
+    console->PushItem("normal-d", &servo_normal_kd, 0.01);
+    console->PushItem("rndabt-p", &servo_roundabout_kp, 0.1);
+    console->PushItem("rndabt-d", &servo_roundabout_kd, 0.01);
+    console->PushItem("s_turn-p", &servo_sharp_turn_kp, 0.1);
+    console->PushItem("s_turn-d", &servo_sharp_turn_kd, 0.01);
 
   } else if (car != 0) {
     using namespace algorithm::optimal::car2::TuningVar;
 
-    console->PushItem("LCD debug", &debug_flag::lcd_debug);
-    console->PushItem("Speed_stt", &targetSpeed_straight, 5);
-    console->PushItem("Straight Kp", &servo_straight_kp, 0.1);
-    console->PushItem("Speed_slow", &targetSpeed_slow, 5);
-    console->PushItem("Speed_nor", &targetSpeed_normal, 5);
-    console->PushItem("Normal Kp", &servo_normal_kp, 0.1);
-    console->PushItem("Speed_rabt", &targetSpeed_round, 5);
-    console->PushItem("Rabt Kp", &servo_roundabout_kp, 0.1);
-    console->PushItem("Speed_sharp", &targetSpeed_sharp_turn, 5);
-    console->PushItem("Sharp Kp", &servo_sharp_turn_kp, 0.1);
-    console->PushItem("Normal Kd", &servo_normal_kd, 0.01);
-    console->PushItem("Rabt Sel", &roundabout_shortest_flag);
-//    console->PushItem("Rabt Raw", &algorithm::optimal::car2::TuningVar::roundabout_shortest_flag, 1);
+    // misc
+    console->PushItem("lcd debug", &debug_flag::lcd_debug);
+    console->PushItem("rndabt sel", &roundabout_shortest_flag, "l", "r");
+
+    // speed
+    console->PushItem("target spd:", &foo, "", "");
+    console->PushItem("slow", &targetSpeed_slow, 5);
+    console->PushItem("strght", &targetSpeed_straight, 5);
+    console->PushItem("normal", &targetSpeed_normal, 5);
+    console->PushItem("rndabt", &targetSpeed_round, 5);
+    console->PushItem("s_turn", &targetSpeed_sharp_turn, 5);
+
+    // servo
+    console->PushItem("servo pid:", &foo, "", "");
+    console->PushItem("strght-p", &servo_straight_kp, 0.1);
+    console->PushItem("strght-d", &servo_straight_kp, 0.01);
+    console->PushItem("normal-p", &servo_normal_kp, 0.1);
+    console->PushItem("normal-d", &servo_normal_kd, 0.01);
+    console->PushItem("rndabt-p", &servo_roundabout_kp, 0.1);
+    console->PushItem("rndabt-d", &servo_roundabout_kd, 0.01);
+    console->PushItem("s_turn-p", &servo_sharp_turn_kp, 0.1);
+    console->PushItem("s_turn-d", &servo_sharp_turn_kd, 0.01);
 
   }
 }

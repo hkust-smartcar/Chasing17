@@ -6,27 +6,9 @@
  *
  * Author: Peter Tse (mcreng), David Mak (Derppening)
  *
- * CarManager class
- * Stores an important selection of parameters of the current car, including
- * speed, servo degree, slope, side, and identity. This class also provides an
- * interface for other classes to access the motor controller, servo and
- * gyroscope.
- *
- * Usage:
- * Initialize a config, then construct the objects in place or use std::move to
- * move the smart pointer. Call Init(), and the rest will be handled by the
- * class.
- *
- * Getters are designed to be used universally, but Setters aren't. In particular:
- * - SetFeature is exclusively for the camera algorithm.
- * - SetIdentity/SwitchIdentity is exclusively for the overtaking algorithm.
- * - Other Setters are designed to set target values.
- *
- * Prerequisites:
- * - util::MpcDual OR util::Mpc
- * - util::ServoController OR libsc::FutubaS3010
- * - FcYyUsV4
- * - Mpu9250
+ * CarManager struct
+ * Arbitrary location for common definitions of structs, some constants, and
+ * global-scope variable storage.
  *
  */
 
@@ -34,11 +16,7 @@
 #define CHASING17_CARMANAGER_H_
 
 #include <cmath>
-
-#include "libsc/dir_encoder.h"
-#include "libsc/futaba_s3010.h"
-
-#include "fc_yy_us_v4.h"
+#include <cstdint>
 
 struct CarManager final {
  public:
@@ -122,20 +100,10 @@ struct CarManager final {
   static constexpr SideRatio kRatioCar2 = {std::tan(kAnglesCar2.kLeftAngle), std::tan(kAnglesCar2.kRightAngle)};
 
   struct PidValues {
-    enum Side {
-      kLeft = 0,
-      kRight
-    };
-
-    float kP[2];
-    float kI[2];
-    float kD[2];
+    float kP;
+    float kI;
+    float kD;
   };
-
-  static constexpr const PidValues kMotorPidCar1 = {{7, 7}, {0.07323, 0.03221}, {0, 0}};
-  static constexpr const PidValues kMotorPidCar2 = {{0.5, 0.0}, {0.0, 0.0}, {0, 0.0}};
-  static constexpr const PidValues kServoPidCar1 = {{1.0, 0}, {0, 0}, {0, 0}};
-  static constexpr const PidValues kServoPidCar2 = {{1.0, 0}, {0, 0}, {0, 0}};
 
   struct ImageSize {
     uint16_t w;
@@ -144,8 +112,9 @@ struct CarManager final {
 
   // Getters
   static ServoAngles GetServoAngles();
+  static ServoAngles GetServoAngles(Car);
   static SideRatio GetSideRatio();
-  static PidValues GetMotorPidValues();
+  static SideRatio GetSideRatio(Car);
 
   static uint16_t us_distance_;
   static int32_t left_speed_;
