@@ -25,6 +25,8 @@ using libbase::k60::Flash;
 uint16_t car = 0;
 bool confirm = false;
 
+bool foo = false;
+
 namespace debug_flag{
 	  bool lcd_debug = false;
 }

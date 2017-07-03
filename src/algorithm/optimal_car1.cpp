@@ -109,12 +109,10 @@ namespace TuningVar { //tuning var declaration
   uint16_t targetSpeed_normal = 100;//normal turning
   uint16_t targetSpeed_round = 80;
   uint16_t targetSpeed_sharp_turn = 90;
-<<<<<<< HEAD
   uint16_t targetSpeed_slow = 100;
-};
-=======
+
 }  // namespace TuningVar
->>>>>>> 99dc6effb407c7207c6bb7eea4efe2398ce26e71
+
 
 namespace {
 //BT listener
