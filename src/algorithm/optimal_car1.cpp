@@ -1692,7 +1692,7 @@ void main_car1(bool debug_) {
 					//roundabout case
 					else if(roundaboutStatus == 1){
 
-						//for slowing down the car in advance
+						//for slowing down the car in advance when need to stop
 						if(stop_before_roundexit && overtake){
 							pServo->SetDegree(util::clamp<uint16_t>(
 									servo_bounds.kCenter - (TuningVar::servo_roundabout_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
@@ -1706,7 +1706,17 @@ void main_car1(bool debug_) {
 								// roundaboutStatus = 0;
 							}
 						}
-
+						//the speed inside roundabout
+						else if(abs(encoder_total_round) > TuningVar::round_encoder_count){
+							pServo->SetDegree(util::clamp<uint16_t>(
+									//use roundabout kp or normal kp?
+									servo_bounds.kCenter - (TuningVar::servo_roundabout_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
+									servo_bounds.kRightBound,
+									servo_bounds.kLeftBound));
+							pid_left.SetSetpoint(TuningVar::targetSpeed_normal*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
+							pid_right.SetSetpoint(TuningVar::targetSpeed_normal* differential_left((-pServo->GetDegree() + servo_bounds.kCenter)/10));
+						}
+						//the speed during the entrance
 						else{
 							pServo->SetDegree(util::clamp<uint16_t>(
 									servo_bounds.kCenter - (TuningVar::servo_roundabout_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
