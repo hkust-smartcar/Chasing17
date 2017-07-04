@@ -54,14 +54,13 @@ void USIRDemo() {
   while (true) {
     if (time != System::Time()) {
       time = System::Time();
-      if (time % 100 == 0) {
+      if (time % 10 == 0) {
         unsigned int dist = US.GetDistance();
         char temp[100];
-        sprintf(temp, "\tdist = %d\n", dist);
-//        bt.SendStr(temp);
-        pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
-        pWriter->WriteString(temp);
-        led4.SetEnable(dist != FcYyUsV4::kMaxDistance && dist != FcYyUsV4::kMinDistance);
+        sprintf(temp, "%d\n", dist);
+        bt.SendStr(temp);
+//        pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
+//        pWriter->WriteString(temp);
         led1.Switch();
       }
     }

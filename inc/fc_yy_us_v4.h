@@ -28,9 +28,6 @@ using libbase::k60::Pin;
 
 class FcYyUsV4 {
  public:
-  static constexpr uint16_t kMinDistance = 0;
-  static constexpr uint16_t kMaxDistance = std::numeric_limits<uint16_t>::max();
-
   /**
    * @param pin Name of Pin connected to the sensor
    */
@@ -41,11 +38,6 @@ class FcYyUsV4 {
    */
   uint16_t GetDistance() const { return distance_; }
 
-  /**
-   * @brief Reset the filter
-   */
-  void resetFilter();
-
  private:
   static void listener(Gpi* gpi);
 
@@ -54,8 +46,6 @@ class FcYyUsV4 {
 
   static uint32_t impulse_start_time_;
   static float distance_;
-  static bool reset_flag;
-  static uint16_t rep_cnt;
 };
 
 #endif  // CHASING17_FCYYUSV4_H_
