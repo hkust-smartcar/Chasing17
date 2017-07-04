@@ -135,7 +135,6 @@ uint16_t prev_corner_x; //store the latest corner coordinate appears last time d
 uint16_t prev_corner_y;
 
 /*FOR OVERTAKING*/
-bool overtake = TuningVar::overtake;
 bool is_front_car = true;
 bool stop_before_roundexit = true;
 
@@ -197,7 +196,7 @@ const int8_t dy[9] = { 1, 1, 0, -1, -1, -1, 0, 1, 1 };
 
 // prototype declarations
 int16_t CalcAngleDiff();
-void Capture();
+void Capture(uint16_t y0 = TuningVar::starting_y);
 Feature featureIdent_Corner();
 bool FindStoppingLine();
 bool FindEdges();
@@ -349,7 +348,7 @@ void PrintWorldImage() {
  * 3. Search right starting point with increasing x at (x_0, y_0)
  * 4. If to no avail, choose (width-1, 1) as starting point
  */
-void Capture() {
+void Capture(uint16_t y0) {
 	left_edge.points.clear();
 	right_edge.points.clear();
 	bool found_left = false, found_right = false;
@@ -360,30 +359,30 @@ void Capture() {
 
 	//Search horizontally
 	for (int i = WorldSize.w / 2; i > 0; i--) {
-		if (getWorldBit(i, TuningVar::starting_y) == 1) {
+		if (getWorldBit(i, y0) == 1) {
 			left_x = i + 1;
-			left_y = TuningVar::starting_y;
+			left_y = y0;
 			found_left = true;
 			break;
 		}
 	}
 	if (!found_left) {
 		left_x = 1;
-		left_y = TuningVar::starting_y;
+		left_y = y0;
 	}
 
 	//Search horizontally
 	for (int i = WorldSize.w / 2; i < WorldSize.w; i++) {
-		if (getWorldBit(i, TuningVar::starting_y) == 1) {
+		if (getWorldBit(i, y0) == 1) {
 			right_x = i - 1;
-			right_y = TuningVar::starting_y;
+			right_y = y0;
 			found_right = true;
 			break;
 		}
 	}
 	if (!found_right) {
 		right_x = WorldSize.w - 1;
-		right_y = TuningVar::starting_y;
+		right_y = y0;
 	}
 
 	pLed3->Switch();
@@ -701,7 +700,7 @@ bool FindEdges() {
  * @note: Execute this function after calling FindEdges()
  */
 Feature featureIdent_Corner() {
-	if(!overtake){
+	if(!TuningVar::overtake){
 		is_front_car = false;
 		stop_before_roundexit = false;
 	}
@@ -984,7 +983,7 @@ void PrintCorner(Corners corners, uint16_t color) {
  * 3. Under no LEFT_NULL and RIGHT_NULL, the midpt's midpt
  */
 void GenPath(Feature feature) {
-	if(!overtake){
+	if(!TuningVar::overtake){
 		is_front_car = false;
 		stop_before_roundexit = false;
 	}
@@ -1074,7 +1073,7 @@ void GenPath(Feature feature) {
 		roundaboutExitStatus = 0;
 		roundaboutStatus = 0;
 		/*TODO: switch carID, sendBT to another car and set has_exited on the other side to true*/
-		if(overtake){
+		if(TuningVar::overtake){
 			if(!is_front_car){//Back car
 				//switch ID
 				is_front_car = true;
@@ -1517,18 +1516,19 @@ void main_car1(bool debug_) {
 					bool skip_motor_protection=false;
 					if (joystick.GetState() == Joystick::State::kSelect) bt.sendStopCar();
 					//Overtake motor control
-					if(overtake){
+					if(TuningVar::overtake){
 						bt.resendNAKData();
 					}
 
 					//        Timer::TimerInt new_time = System::Time();
 					Capture(); //Capture until two base points are identified
-					if (FindStoppingLine() && time_img - startTime > 10000) {
-						if(!is_front_car){
+					if (FindStoppingLine()) {
+						if(!is_front_car && time_img - startTime > 10000){
 							bt.sendStopCar();
 							met_stop_line=true;
+						}else{
+							Capture(25);
 						}
-						pWriter->WriteString("Stopping Line Detected");
 					}
 					FindEdges();
 					Feature feature = featureIdent_Corner();
@@ -1612,7 +1612,7 @@ void main_car1(bool debug_) {
 
 					if(roundaboutExitStatus == 1){
 						//for stopping the car completely
-						if(stop_before_roundexit && overtake){
+						if(stop_before_roundexit && TuningVar::overtake){
 							pServo->SetDegree(util::clamp<uint16_t>(
 									servo_bounds.kCenter - (TuningVar::servo_roundabout_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
 									servo_bounds.kRightBound,
@@ -1648,7 +1648,7 @@ void main_car1(bool debug_) {
 					else if(roundaboutStatus == 1){
 
 						//for slowing down the car in advance when need to stop
-						if(stop_before_roundexit && overtake){
+						if(stop_before_roundexit && TuningVar::overtake){
 							pServo->SetDegree(util::clamp<uint16_t>(
 									servo_bounds.kCenter - (TuningVar::servo_roundabout_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
 									servo_bounds.kRightBound,
