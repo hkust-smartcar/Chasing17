@@ -4,7 +4,7 @@
  * Copyright (c) 2014-2017 HKUST SmartCar Team
  * Refer to LICENSE for details
  *
- * Author: Peter Tse (mcreng), King Huang (XuhuaKing)
+ * Author: Peter Tse (mcreng), King Huang (XuhuaKing), Lee Chun Hei (LeeChunHei)
  *
  * Optimal Path Algorithm Header File
  *

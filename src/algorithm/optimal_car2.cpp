@@ -4,7 +4,7 @@
  * Copyright (c) 2014-2017 HKUST SmartCar Team
  * Refer to LICENSE for details
  *
- * Author: Peter Tse (mcreng), Dipsy Wong, King Huang (XUHUAKing)
+ * Author: Peter Tse (mcreng), Dipsy Wong, King Huang (XUHUAKing), Lee Chun Hei (LeeChunHei)
  *
  * Optimal Path Algorithm CPP File
  *
@@ -1783,8 +1783,8 @@ void main_car2(bool debug_) {
 					pEncoder0->Update();
 					pEncoder1->Update();
 					if(System::Time() - startTime < 1000){
-						pid_left.SetSetpoint(140);
-						pid_right.SetSetpoint(140);
+						pid_left.SetSetpoint(120);
+						pid_right.SetSetpoint(120);
 					}
 					if(met_stop_line){
 						pid_left.SetSetpoint(0);
