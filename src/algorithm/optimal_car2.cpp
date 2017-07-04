@@ -113,9 +113,9 @@ namespace TuningVar{ //tuning var delaration
   float servo_roundabout_exit_kd = 0;
 
   // target speed values
-  uint16_t targetSpeed_straight = 120;
+  uint16_t targetSpeed_straight = 150;
   uint16_t targetSpeed_normal = 100;//normal turning
-  uint16_t targetSpeed_round = 80;
+  uint16_t targetSpeed_round = 90;
   uint16_t targetSpeed_sharp_turn = 90;
   uint16_t targetSpeed_slow = 100;
 }  // namespace TuningVar
@@ -1537,7 +1537,7 @@ void main_car2(bool debug_) {
 	uint8_t stop_count = 0;
 	bool brake_flag = true;
 
-
+	pServo->SetDegree(servo_bounds.kCenter);
 	while (true) {
 		if(run){
 			while (time_img != System::Time()) {
@@ -1570,7 +1570,7 @@ void main_car2(bool debug_) {
 						}
 						Capture(25);
 					}
-					if ((stop_count>50 && !is_front_car) || (stop_count>150 && is_front_car)) met_stop_line = true;
+					if ((stop_count>25 && !is_front_car) || (stop_count>50 && is_front_car)) met_stop_line = true;
 
 					FindEdges();
 					Feature feature = featureIdent_Corner();
