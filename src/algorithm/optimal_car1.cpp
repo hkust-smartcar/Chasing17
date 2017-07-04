@@ -1528,6 +1528,7 @@ void main_car1(bool debug_) {
 
 	Timer::TimerInt startTime=System::Time();
 	bool met_stop_line=false;
+	uint8_t stop_count=0;
 	bool brake_flag = true;
 
 	//	int servoAngle = 0;
@@ -1553,14 +1554,17 @@ void main_car1(bool debug_) {
 
 					//        Timer::TimerInt new_time = System::Time();
 					Capture(); //Capture until two base points are identified
+					if (stop_count) stop_count++;
 					if (FindStoppingLine()) {
-						if(!is_front_car && time_img - startTime > 10000){
+						if(is_front_car && time_img - startTime > 10000){
+							stop_count++;
+						}else if(time_img - startTime > 10000){
 							bt.sendStopCar();
 							met_stop_line=true;
-						}else{
-							Capture(25);
 						}
+						Capture(25);
 					}
+					if (stop_count>50) met_stop_line = true;
 					FindEdges();
 					Feature feature = featureIdent_Corner();
 					if(feature == Feature::kRoundabout && is_front_car) bt.sendFeature(feature);

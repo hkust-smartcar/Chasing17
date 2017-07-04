@@ -1533,7 +1533,8 @@ void main_car2(bool debug_) {
 	pMotor1->SetClockwise(false);
 
 	Timer::TimerInt startTime = System::Time();
-	bool met_stop_line=false;
+	bool met_stop_line = false;
+	uint8_t stop_count = 0;
 	bool brake_flag = true;
 
 
@@ -1559,14 +1560,17 @@ void main_car2(bool debug_) {
 					Capture(); //Capture until two base points are identified
 
 					/*STOPPING LINE DETECTION*/
+					if (stop_count) stop_count++;
 					if (FindStoppingLine()) {
-						if(!is_front_car && time_img - startTime > 10000){
-							met_stop_line=true;
+						if(is_front_car && time_img - startTime > 10000){
+							stop_count++;
+						}else if(time_img - startTime > 10000){
 							bt.sendStopCar();
-						}else{
-							Capture(25);
+							met_stop_line=true;
 						}
+						Capture(25);
 					}
+					if (stop_count>50) met_stop_line = true;
 
 					FindEdges();
 					Feature feature = featureIdent_Corner();
