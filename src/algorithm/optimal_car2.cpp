@@ -4,7 +4,7 @@
  * Copyright (c) 2014-2017 HKUST SmartCar Team
  * Refer to LICENSE for details
  *
- * Author: Peter Tse (mcreng), Dipsy Wong, King Huang (XUHUAKing)
+ * Author: Peter Tse (mcreng), Dipsy Wong, King Huang (XUHUAKing), Lee Chun Hei (LeeChunHei)
  *
  * Optimal Path Algorithm CPP File
  *
@@ -113,9 +113,9 @@ namespace TuningVar{ //tuning var delaration
   float servo_roundabout_exit_kd = 0;
 
   // target speed values
-  uint16_t targetSpeed_straight = 120;
+  uint16_t targetSpeed_straight = 150;
   uint16_t targetSpeed_normal = 100;//normal turning
-  uint16_t targetSpeed_round = 80;
+  uint16_t targetSpeed_round = 90;
   uint16_t targetSpeed_sharp_turn = 90;
   uint16_t targetSpeed_slow = 100;
 }  // namespace TuningVar
@@ -1533,10 +1533,11 @@ void main_car2(bool debug_) {
 	pMotor1->SetClockwise(false);
 
 	Timer::TimerInt startTime = System::Time();
-	bool met_stop_line=false;
+	bool met_stop_line = false;
+	uint8_t stop_count = 0;
 	bool brake_flag = true;
 
-
+	pServo->SetDegree(servo_bounds.kCenter);
 	while (true) {
 		if(run){
 			while (time_img != System::Time()) {
@@ -1559,14 +1560,17 @@ void main_car2(bool debug_) {
 					Capture(); //Capture until two base points are identified
 
 					/*STOPPING LINE DETECTION*/
+					if (stop_count) stop_count++;
 					if (FindStoppingLine()) {
-						if(!is_front_car && time_img - startTime > 10000){
-							met_stop_line=true;
+						if(is_front_car && time_img - startTime > 10000){
+							stop_count++;
+						}else if(time_img - startTime > 10000){
 							bt.sendStopCar();
-						}else{
-							Capture(25);
+							stop_count++;
 						}
+						Capture(25);
 					}
+					if ((stop_count>25 && !is_front_car) || (stop_count>50 && is_front_car)) met_stop_line = true;
 
 					FindEdges();
 					Feature feature = featureIdent_Corner();
@@ -1778,6 +1782,10 @@ void main_car2(bool debug_) {
 					prev_servo_error = curr_servo_error;
 					pEncoder0->Update();
 					pEncoder1->Update();
+					if(System::Time() - startTime < 1000){
+						pid_left.SetSetpoint(120);
+						pid_right.SetSetpoint(120);
+					}
 					if(met_stop_line){
 						pid_left.SetSetpoint(0);
 						pid_right.SetSetpoint(0);
