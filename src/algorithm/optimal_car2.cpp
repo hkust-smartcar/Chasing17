@@ -734,13 +734,18 @@ Feature featureIdent_Corner() {
 			pLcd->SetRegion(Lcd::Rect(test_x, WorldSize.h - test_y - 1, 4, 4));
 			pLcd->FillColor(Lcd::kCyan);
 		}
-		/*END OF DEBUGGING*/
-		bool is_round = false;
-		bool is_cross = false;
-		while (!getWorldBit(test_x, test_y) && (test_y >cornerMid_y)){test_y--;}
-		if(test_y >cornerMid_y){is_round = true;}// have one black
-		if(test_y == cornerMid_y){is_cross = true;}// all white
-		if (is_round && roundaboutStatus == 0
+//		/*END OF DEBUGGING*/
+//		bool is_round = false;
+//		bool is_cross = false;
+//		while (!getWorldBit(test_x, test_y) && (test_y >cornerMid_y)){test_y--;}
+//		if(test_y >cornerMid_y){is_round = true;}// have one black
+//		if(test_y == cornerMid_y){is_cross = true;}// all white
+//		if (is_round && roundaboutStatus == 0
+		if (getWorldBit(test_x, test_y)
+				&& getWorldBit(test_x + 1, test_y)
+				&& getWorldBit(test_x, test_y + 1)
+				&& getWorldBit(test_x - 1, test_y)
+				&& roundaboutStatus == 0
 				&& crossingStatus == 0/*Temporary close*/) {
 			//All black
 			if (abs(carMid.second - cornerMid_y) < TuningVar::action_distance) {
@@ -771,7 +776,12 @@ Feature featureIdent_Corner() {
 			else{
 				need_slow_down = true;
 			}
-		} else if (is_cross && crossingStatus == 0
+//		} else if (is_cross && crossingStatus == 0
+		} else if (!getWorldBit(test_x, test_y)
+				&& !getWorldBit(test_x + 1, test_y)
+				&& !getWorldBit(test_x, test_y + 1)
+				&& !getWorldBit(test_x - 1, test_y)
+				&& crossingStatus == 0
 				&& roundaboutStatus == 0) // avoid double check for crossing when inside the crossing (encoder_total_cross<2500)
 		{
 			if (abs(carMid.second - cornerMid_y) < TuningVar::action_distance) {
