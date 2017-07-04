@@ -1566,11 +1566,11 @@ void main_car2(bool debug_) {
 							stop_count++;
 						}else if(time_img - startTime > 10000){
 							bt.sendStopCar();
-							met_stop_line=true;
+							stop_count++;
 						}
 						Capture(25);
 					}
-					if (stop_count>50) met_stop_line = true;
+					if ((stop_count>50 && !is_front_car) || (stop_count>150 && is_front_car)) met_stop_line = true;
 
 					FindEdges();
 					Feature feature = featureIdent_Corner();
