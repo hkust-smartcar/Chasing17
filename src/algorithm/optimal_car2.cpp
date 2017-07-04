@@ -64,6 +64,8 @@ namespace algorithm {
 namespace optimal {
 namespace car2 {
 namespace TuningVar{ //tuning var delaration
+  bool show_algo_time = false;
+  bool overtake = true;
   bool roundabout_turn_left = true; //Used for GenPath()
   uint16_t starting_y = 15; //the starting y for edge detection
   uint16_t edge_length = 159; //max length for an edge
@@ -129,7 +131,6 @@ Edges right_edge;
 Edges path;
 Corners left_corners;
 Corners right_corners;
-std::array<std::pair<uint16_t, uint16_t>, 2> inc_width_pts; //0:left, 1:right
 uint16_t start_y; //For crossing, store the last start point coordinate
 uint16_t start_x;
 uint16_t prev_corner_x; //store the latest corner coordinate appears last time during roundabout
@@ -137,14 +138,12 @@ uint16_t prev_corner_y;
 
 /*FOR OVERTAKING*/
 
-bool overtake = true;
 bool is_front_car = false;
 bool stop_before_roundexit = false;
 
 bool need_slow_down = false;
 bool run =true;//for bluetooth stopping
 bool debug = true;
-bool has_inc_width_pt = false;
 bool is_straight_line = false;
 bool exit_round_ready = false; // A flag storing corner status inside roundabout
 int roundaboutStatus = 0; // 0: Before 1: Detected 2: Inside (After one corner)
@@ -617,7 +616,6 @@ bool FindOneRightEdge() {
  */
 bool FindEdges() {
 	is_straight_line = false;
-	has_inc_width_pt = false;
 	left_corners.clear();
 	right_corners.clear();
 	bool flag_break_left = left_edge.points.size() == 0;
@@ -683,37 +681,6 @@ bool FindEdges() {
 				flag_break_right = true;
 			}
 		}
-
-		//check sudden change in track width
-		if (!has_inc_width_pt) {
-			uint16_t dist = (left_edge.points.back().first
-					- right_edge.points.back().first)
-        		  * (left_edge.points.back().first
-        				  - right_edge.points.back().first)
-						  + (left_edge.points.back().second
-								  - right_edge.points.back().second)
-								  * (left_edge.points.back().second
-										  - right_edge.points.back().second);
-			//      /*FOR DEBUGGING*/
-			//      char temp[100];
-			//      sprintf(temp, "_dist:%d", dist - prev_track_width);
-			//      pLcd->SetRegion(Lcd::Rect(0, 54, 128, 15));
-			//      pWriter->WriteString(temp);
-
-			//Straight line + Starting line judgement
-			if (left_edge.points.size() > 1 && right_edge.points.size() > 1
-					&& abs(dist - prev_track_width) < 3) {
-				staright_line_edge_count++;
-			}
-			if (dist >= TuningVar::track_width_threshold
-					&& dist - prev_track_width
-					>= TuningVar::track_width_change_threshold) {
-				inc_width_pts.at(0) = left_edge.points.back();
-				inc_width_pts.at(1) = right_edge.points.back();
-				has_inc_width_pt = true;
-			} else
-				prev_track_width = dist;
-		}
 	}
 
 	//Straight line judgement - helper for feature_corner()
@@ -736,7 +703,7 @@ bool FindEdges() {
  * @note: Execute this function after calling FindEdges()
  */
 Feature featureIdent_Corner() {
-	if(!overtake){
+	if(!TuningVar::overtake){
 		is_front_car = false;
 		stop_before_roundexit = false;
 	}
@@ -1028,7 +995,7 @@ void PrintCorner(Corners corners, uint16_t color) {
  * 3. Under no LEFT_NULL and RIGHT_NULL, the midpt's midpt
  */
 void GenPath(Feature feature) {
-	if(!overtake){
+	if(!TuningVar::overtake){
 		is_front_car = false;
 		stop_before_roundexit = false;
 	}
@@ -1118,7 +1085,7 @@ void GenPath(Feature feature) {
 		roundaboutExitStatus = 0;
 		roundaboutStatus = 0;
 		/*TODO: switch carID, sendBT to another car and set has_exited on the other side to true*/
-		if(overtake){
+		if(TuningVar::overtake){
 			if(!is_front_car){//Back car
 				//switch ID
 				is_front_car = true;
@@ -1274,21 +1241,6 @@ void GenPath(Feature feature) {
 	}
 }
 
-/**
- * @brief Print sudden change track width location
- */
-void PrintSuddenChangeTrackWidthLocation(uint16_t color) {
-	if (has_inc_width_pt) {
-		pLcd->SetRegion(
-				Lcd::Rect(inc_width_pts.at(0).first,
-						WorldSize.h - inc_width_pts.at(0).second - 1, 4, 4));
-		pLcd->FillColor(color);
-		pLcd->SetRegion(
-				Lcd::Rect(inc_width_pts.at(1).first,
-						WorldSize.h - inc_width_pts.at(1).second - 1, 4, 4));
-		pLcd->FillColor(color);
-	}
-}
 
 /*
  * @brief: return the shortest side of current roundabout
@@ -1453,7 +1405,7 @@ void main_car2(bool debug_) {
 	cameraConfig.w = CameraSize.w;
 	cameraConfig.h = CameraSize.h;
 	cameraConfig.fps = Ov7725Configurator::Config::Fps::kHigh;
-	//  cameraConfig.contrast = 0x3D;
+	cameraConfig.contrast = 0x3D;
 	cameraConfig.brightness = 0x00;
 	std::unique_ptr<Ov7725> camera = util::make_unique<Ov7725>(cameraConfig);
 	spCamera = std::move(camera);
@@ -1578,10 +1530,13 @@ void main_car2(bool debug_) {
 				led0.SetEnable(time_img % 500 >= 250);
 
 				if (time_img % 10 == 0) {
+					if(TuningVar::show_algo_time){
+						time_img=System::Time();
+					}
 					if (bt.hasStopCar()) met_stop_line = true;
 					need_slow_down = false;
 					bool skip_motor_protection=false;
-					if(overtake){
+					if(TuningVar::overtake){
 						bt.resendNAKData();
 					}
 
@@ -1612,7 +1567,6 @@ void main_car2(bool debug_) {
 						PrintEdge(right_edge, Lcd::kBlue); //Print right_edge
 						PrintCorner(left_corners, Lcd::kPurple); //Print left_corner
 						PrintCorner(right_corners, Lcd::kPurple); //Print right_corner
-//						PrintSuddenChangeTrackWidthLocation(Lcd::kYellow); //Print sudden change track width location
 //						pLcd->SetRegion(Lcd::Rect(roundabout_nearest_corner_left.first,
 //											WorldSize.h - roundabout_nearest_corner_left.second - 1, 4, 4));
 //						pLcd->FillColor(Lcd::kYellow);
@@ -1652,7 +1606,7 @@ void main_car2(bool debug_) {
 					//roundaboutExit case
 					if(roundaboutExitStatus == 1){
 						//for stopping the car completely
-						if(stop_before_roundexit && overtake){
+						if(stop_before_roundexit && TuningVar::overtake){
 							pServo->SetDegree(util::clamp<uint16_t>(
 									servo_bounds.kCenter - (TuningVar::servo_roundabout_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
 									servo_bounds.kRightBound,
@@ -1687,7 +1641,7 @@ void main_car2(bool debug_) {
 					//roundabout case
 					else if(roundaboutStatus == 1){
 						//for slowing down the car in advance
-						if(stop_before_roundexit && overtake){
+						if(stop_before_roundexit && TuningVar::overtake){
 							pServo->SetDegree(util::clamp<uint16_t>(
 									servo_bounds.kCenter - (TuningVar::servo_roundabout_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
 									servo_bounds.kRightBound,
@@ -1797,6 +1751,12 @@ void main_car2(bool debug_) {
 					//					pMotor0->SetPower(0);
 					//					pMotor1->SetPower(0);
 					//				}
+					if(TuningVar::show_algo_time){
+						char buf[10] = {};
+						sprintf(buf, "%d", System::Time()-time_img);
+						pLcd->SetRegion(Lcd::Rect(5,5,100,15));
+						pWriter->WriteString(buf);
+					}
 				}
 			}
 		}
