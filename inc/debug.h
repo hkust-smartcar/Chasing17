@@ -74,6 +74,7 @@ void loadItems(DebugConsole* console) {
     // misc
     console->PushItem("lcd debug", &debug_flag::lcd_debug);
     console->PushItem("algo time", &show_algo_time, "true", "false");
+    console->PushItem("distance", &start_car_distance, 10);
     console->PushItem("overtake", &overtake);
     console->PushItem("rndabt sel", &roundabout_shortest_flag, "l", "r");
     console->PushItem("over_time", &overtake_interval_time, 5);

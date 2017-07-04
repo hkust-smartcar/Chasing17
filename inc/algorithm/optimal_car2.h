@@ -110,6 +110,7 @@ namespace TuningVar{
   extern uint16_t angle_div_error; // translate error into angle
   extern uint16_t nearest_corner_threshold;
   extern uint16_t overtake_interval_time;
+  extern uint16_t start_car_distance;
 
   // servo pid values
   extern float servo_straight_kp;

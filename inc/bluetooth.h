@@ -163,6 +163,13 @@ class BTComm {
   }
 
   /**
+   * Reset feature
+   */
+  void resetFeature(){
+	  feat_ = CarManager::Feature::kNormal;
+  }
+
+  /**
    * Send current position (left or right) to the other car through bluetooth.
    *
    * @param side Current position (left or right)

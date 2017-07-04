@@ -736,7 +736,8 @@ Feature featureIdent_Corner() {
 		if (is_round && roundaboutStatus == 0
 				&& crossingStatus == 0/*Temporary close*/) {
 			//All black
-			if (abs(carMid.second - cornerMid_y) < TuningVar::action_distance) {
+			if (abs(carMid.second - cornerMid_y) < TuningVar::action_distance && (is_front_car || pBT->getBufferFeature() == Feature::kRoundabout || !TuningVar::overtake)) {
+				pBT->resetFeature();
 				encoder_total_round = 0;
 				roundaboutStatus = 1; //Detected
 	//			feature_start_time = System::Time(); // Mark the startTime of latest enter time
@@ -1534,6 +1535,7 @@ void main_car1(bool debug_) {
 					}
 					FindEdges();
 					Feature feature = featureIdent_Corner();
+					if(feature == Feature::kRoundabout && is_front_car) bt.sendFeature(feature);
 					GenPath(feature); //Generate path
 					/*FOR DEBUGGING*/
 					if(debug){

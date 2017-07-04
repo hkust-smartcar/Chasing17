@@ -98,6 +98,7 @@ namespace TuningVar{ //tuning var delaration
   int32_t roundabout_shortest_flag = 0b00011; //1 means turn left, 0 means turn right. Reading from left to right
   uint16_t nearest_corner_threshold = 128/2;
   uint16_t overtake_interval_time = 600;
+  uint16_t start_car_distance = 500;
 
   // servo pid values
   float servo_straight_kp = 0.8;
@@ -747,7 +748,8 @@ Feature featureIdent_Corner() {
 		if (is_round && roundaboutStatus == 0
 				&& crossingStatus == 0/*Temporary close*/) {
 			//All black
-			if (abs(carMid.second - cornerMid_y) < TuningVar::action_distance) {
+			if (abs(carMid.second - cornerMid_y) < TuningVar::action_distance && (is_front_car || pBT->getBufferFeature() == Feature::kRoundabout || !TuningVar::overtake)) {
+				pBT->resetFeature();
 				encoder_total_round = 0;
 				roundaboutStatus = 1; //Detected
 	//			feature_start_time = System::Time(); // Mark the startTime of latest enter time
@@ -1501,7 +1503,7 @@ void main_car2(bool debug_) {
 	if(!debug){
 		bt.sendStartReq();
 		Timer::TimerInt start=System::Time();
-		while(System::Time()-start < 1500000 && YYdistance.GetDistance() < 500) System::DelayMs(10);
+		while(System::Time()-start < 15000 && YYdistance.GetDistance() < TuningVar::start_car_distance) System::DelayMs(10);
 	}
 
 	//	StartlineOvertake();
@@ -1546,6 +1548,7 @@ void main_car2(bool debug_) {
 
 					FindEdges();
 					Feature feature = featureIdent_Corner();
+					if(feature == Feature::kRoundabout && is_front_car) bt.sendFeature(feature);
 					GenPath(feature); //Generate path
 					/*FOR DEBUGGING*/
 					if(debug){
