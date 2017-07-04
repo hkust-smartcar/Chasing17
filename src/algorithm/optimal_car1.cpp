@@ -94,7 +94,7 @@ namespace TuningVar { //tuning var declaration
   uint16_t roundExit_encoder_count = 3700;
   int32_t roundabout_shortest_flag = 0b00011; //1 means turn left, 0 means turn right. Reading from left to right
   uint16_t nearest_corner_threshold = 128/2;
-  uint16_t overtake_interval_time = 600;
+  uint16_t overtake_interval_time = 1000;
 
   // servo pid values
   float servo_straight_kp = 0.8;
@@ -863,7 +863,7 @@ Feature featureIdent_Corner() {
 	}
 	/*FOR DEBUGGING*/
 	if (debug) {
-		//		char temp_1[100];
+		//				char temp_1[100];
 		//				sprintf(temp_1, "Ycor:%d", abs(roundabout_nearest_corner_right.second - carMid.second));
 		//				pLcd->SetRegion(Lcd::Rect(0, 75, 128, 15));
 		//				pWriter->WriteString(temp_1);
