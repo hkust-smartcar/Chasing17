@@ -1525,7 +1525,7 @@ void main_car2(bool debug_) {
 	if(!debug){
 		bt.sendStartReq();
 		Timer::TimerInt start=System::Time();
-		while(System::Time()-start < 15000 && YYdistance.GetDistance() < TuningVar::start_car_distance) System::DelayMs(10);
+		while(System::Time()-start < 1500 && YYdistance.GetDistance() < TuningVar::start_car_distance) System::DelayMs(10);
 	}
 
 	//	StartlineOvertake();
