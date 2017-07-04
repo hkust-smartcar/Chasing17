@@ -29,7 +29,7 @@ void USIRDemo() {
 
   Joystick::Config config_joystick;
   config_joystick.id = 0;
-  config_joystick.dispatcher = [&US](const uint8_t id, const Joystick::State which){US.resetFilter();};
+//  config_joystick.dispatcher = [&US](const uint8_t id, const Joystick::State which){US.resetFilter();};
 
   St7735r::Config lcd_config;
   lcd_config.is_revert = true;

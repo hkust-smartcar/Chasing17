@@ -1501,17 +1501,7 @@ void main_car2(bool debug_) {
 	if(!debug){
 		bt.sendStartReq();
 		Timer::TimerInt start=System::Time();
-		while(System::Time()-start<1500);
-//		int count = 0;
-//		while(count<5){//System::Time()-start<1500)
-//			pLcd->SetRegion(Lcd::Rect(0,0,128,15));
-//			char temp[100];
-//			sprintf(temp, "dist = %d", YYdistance.GetDistance());
-//			pWriter->WriteString(temp);
-//			if(YYdistance.GetDistance()>500){
-//				count++;
-//			}
-//		}
+		while(System::Time()-start < 1500000 && YYdistance.GetDistance() < 500) System::DelayMs(10);
 	}
 
 	//	StartlineOvertake();
