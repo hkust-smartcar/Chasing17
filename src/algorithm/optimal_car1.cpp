@@ -1403,7 +1403,7 @@ void main_car1(bool debug_) {
 	cameraConfig.w = CameraSize.w;
 	cameraConfig.h = CameraSize.h;
 	cameraConfig.fps = Ov7725Configurator::Config::Fps::kHigh;
-	//	cameraConfig.contrast = 0x3D;
+	cameraConfig.contrast = 0x2C;
 	cameraConfig.brightness = 0x00;
 	std::unique_ptr<Ov7725> camera = util::make_unique<Ov7725>(cameraConfig);
 	spCamera = std::move(camera);
