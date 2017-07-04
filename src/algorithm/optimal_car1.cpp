@@ -1625,9 +1625,9 @@ void main_car1(bool debug_) {
 							pid_right.SetSetpoint(0);
 
 							//below part only used for restarting the car after stopping
-							if(pBT->hasFinishedOvertake()){
+							if(pBT->hasFinishedOvertake() && (System::Time() - pBT->getOvertakeTime())>TuningVar::overtake_interval_time){
 								//only delay when it really stops inside roundabout
-								System::DelayMs(TuningVar::overtake_interval_time);
+//								System::DelayMs(TuningVar::overtake_interval_time);
 								stop_before_roundexit = false;
 								// roundaboutStatus = 0;
 								exit_round_ready = false;
