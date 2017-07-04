@@ -42,6 +42,7 @@ void loadItems(DebugConsole* console) {
     // misc
     console->PushItem("lcd debug", &debug_flag::lcd_debug);
     console->PushItem("rndabt sel", &roundabout_shortest_flag, "l", "r");
+    console->PushItem("over_time", &overtake_interval_time, 5);
 
     // speed
     console->PushItem("target spd:", &foo, "", "");
@@ -54,7 +55,7 @@ void loadItems(DebugConsole* console) {
     // servo
     console->PushItem("servo pid:", &foo, "", "");
     console->PushItem("strght-p", &servo_straight_kp, 0.1);
-    console->PushItem("strght-d", &servo_straight_kp, 0.01);
+    console->PushItem("strght-d", &servo_straight_kd, 0.01);
     console->PushItem("normal-p", &servo_normal_kp, 0.1);
     console->PushItem("normal-d", &servo_normal_kd, 0.01);
     console->PushItem("rndabt-p", &servo_roundabout_kp, 0.1);
@@ -68,6 +69,7 @@ void loadItems(DebugConsole* console) {
     // misc
     console->PushItem("lcd debug", &debug_flag::lcd_debug);
     console->PushItem("rndabt sel", &roundabout_shortest_flag, "l", "r");
+    console->PushItem("over_time", &overtake_interval_time, 5);
 
     // speed
     console->PushItem("target spd:", &foo, "", "");
@@ -80,7 +82,7 @@ void loadItems(DebugConsole* console) {
     // servo
     console->PushItem("servo pid:", &foo, "", "");
     console->PushItem("strght-p", &servo_straight_kp, 0.1);
-    console->PushItem("strght-d", &servo_straight_kp, 0.01);
+    console->PushItem("strght-d", &servo_straight_kd, 0.01);
     console->PushItem("normal-p", &servo_normal_kp, 0.1);
     console->PushItem("normal-d", &servo_normal_kd, 0.01);
     console->PushItem("rndabt-p", &servo_roundabout_kp, 0.1);

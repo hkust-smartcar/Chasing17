@@ -30,6 +30,7 @@ libsc::Led* BTComm::led_ptr = nullptr;
 bool BTComm::hasStartReq_ = false;
 bool BTComm::hasFinishedOvertake_ = false;
 bool BTComm::stop_car_ = false;
+libsc::Timer::TimerInt BTComm::overtake_time_ = 0;
 
 void BTComm::sendData(unsigned char type, uint16_t data) {
   uint8_t ID = (mapIndex_ %= 10)++;
@@ -130,6 +131,7 @@ bool BTComm::BTListener(const Byte* data, size_t size) {
           break;
         case ReqType::kFinishOvertake:
           hasFinishedOvertake_ = true;
+          overtake_time_ = libsc::System::Time();
           break;
         case ReqType::kOvertakeAgr:
           OvertakeReq_ = OvertakeStatus::kAgreed;

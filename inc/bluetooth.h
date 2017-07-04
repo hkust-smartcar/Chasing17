@@ -328,6 +328,13 @@ class BTComm {
   }
 
   /**
+   * Return the time when stop_car_ flag is received
+   */
+  libsc::Timer::TimerInt getOvertakeTime(){
+	  return overtake_time_;
+  }
+
+  /**
    * Resend those information that are unacknowledged.
    *
    * @note should be called with short time intervals.
@@ -385,6 +392,7 @@ class BTComm {
 
   static OvertakeStatus OvertakeReq_;
   static bool hasFinishedOvertake_;
+  static libsc::Timer::TimerInt overtake_time_;
   static bool SwitchIDReq_;
   static bool hasStartReq_;
 

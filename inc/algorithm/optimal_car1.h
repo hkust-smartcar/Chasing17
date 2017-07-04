@@ -84,7 +84,8 @@ namespace TuningVar {
   extern uint16_t min_edges_dist; // Manhattan dist threshold for edges
   extern uint16_t track_width_threshold; //track width threshold for consideration of sudden change (square)
   extern uint16_t track_width_change_threshold; //track width change threshold for consideration of sudden change
-  extern uint16_t sightDist; // The distance from which the image pixel should be tested
+  extern uint16_t testDist; // The distance from which the image pixel should be tested and identify feature
+  extern uint16_t slowDownDist; // the distance from which the image pixel should be tested and know whether it should slow down in advance
   extern uint16_t sightDist_exitRound; //The distance from which the image pixel is used for exit testing
   extern uint16_t straight_line_threshold; // The threshold num. of equal width for straight line detection
   extern uint16_t action_distance; // The condition in which the car start handling this feature when meeting it
@@ -107,6 +108,7 @@ namespace TuningVar {
   extern int32_t roundabout_shortest_flag; //1 means turn left, 0 means turn right. Reading from left to right
   extern uint16_t angle_div_error; // translate error into angle
   extern uint16_t nearest_corner_threshold;
+  extern uint16_t overtake_interval_time;
 
   // servo pid values
   extern float servo_straight_kp;
