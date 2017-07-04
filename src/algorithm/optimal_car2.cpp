@@ -199,7 +199,7 @@ const int8_t dy[9] = {1, 1, 0, -1, -1, -1, 0, 1, 1};
 
 // prototype declarations
 int16_t CalcAngleDiff();
-void Capture();
+void Capture(uint16_t y0 = TuningVar::starting_y);
 Feature featureIdent_Corner();
 bool FindStoppingLine();
 bool FindEdges();
@@ -356,7 +356,7 @@ void PrintWorldImage() {
  * 3. Search right starting point with increasing x at (x_0, y_0)
  * 4. If to no avail, choose (width-1, 1) as starting point
  */
-void Capture() {
+void Capture(uint16_t y0) {
 	left_edge.points.clear();
 	right_edge.points.clear();
 	bool found_left = false, found_right = false;
@@ -367,30 +367,30 @@ void Capture() {
 
 	//Search horizontally
 	for (int i = carMid.first; i > 0; i--) {
-		if (getWorldBit(i, TuningVar::starting_y) == 1) {
+		if (getWorldBit(i, y0) == 1) {
 			left_x = i + 1;
-			left_y = TuningVar::starting_y;
+			left_y = y0;
 			found_left = true;
 			break;
 		}
 	}
 	if (!found_left) {
 		left_x = 1;
-		left_y = TuningVar::starting_y;
+		left_y = y0;
 	}
 
 	//Search horizontally
 	for (int i = carMid.first; i < WorldSize.w; i++) {
-		if (getWorldBit(i, TuningVar::starting_y) == 1) {
+		if (getWorldBit(i, y0) == 1) {
 			right_x = i - 1;
-			right_y = TuningVar::starting_y;
+			right_y = y0;
 			found_right = true;
 			break;
 		}
 	}
 	if (!found_right) {
 		right_x = WorldSize.w - 1;
-		right_y = TuningVar::starting_y;
+		right_y = y0;
 	}
 
 	pLed3->Switch();
@@ -1545,12 +1545,13 @@ void main_car2(bool debug_) {
 					Capture(); //Capture until two base points are identified
 
 					/*STOPPING LINE DETECTION*/
-					if (FindStoppingLine() && time_img - startTime > 10000) {
-						if(!is_front_car){
+					if (FindStoppingLine()) {
+						if(!is_front_car && time_img - startTime > 10000){
 							met_stop_line=true;
 							bt.sendStopCar();
+						}else{
+							Capture(25);
 						}
-						pWriter->WriteString("Stopping Line Detected");
 					}
 
 					FindEdges();
