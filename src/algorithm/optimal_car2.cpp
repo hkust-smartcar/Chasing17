@@ -94,7 +94,7 @@ namespace TuningVar{ //tuning var delaration
   uint16_t roundabout_offset = 15; // half of road width
   uint16_t round_exit_offset = 24;
   uint16_t round_encoder_count = 2600;
-  uint16_t roundExit_encoder_count = 3300;
+  uint16_t roundExit_encoder_count = 3700;
   int32_t roundabout_shortest_flag = 0b00011; //1 means turn left, 0 means turn right. Reading from left to right
   uint16_t nearest_corner_threshold = 128/2;
   uint16_t overtake_interval_time = 600;
@@ -726,9 +726,7 @@ Feature featureIdent_Corner() {
 		//		Lcd::Rect(cornerMid_x, WorldSize.h - cornerMid_y - 1, 2, 2));
 		//		pLcd->FillColor(Lcd::kRed);
 		/*END OF DEBUGGING*/
-		if (abs(carMid.second - cornerMid_y) > TuningVar::action_distance) {
-			return Feature::kNormal;
-		}
+
 		uint16_t test_y = cornerMid_y + TuningVar::testDist;
 		uint16_t test_x = (test_y - cornerMid_y)
         		* (right_corners.front().second
@@ -862,12 +860,14 @@ Feature featureIdent_Corner() {
 			//			prev_corner_x = right_corners.front().first;
 			//			prev_corner_y = right_corners.front().second;
 			//		}
+			need_slow_down = true;// slow down in advance
 			exit_round_ready = true; // Detect one corner
 		}
 	}
 	else{
 		if (right_corners.size() > 0 && roundaboutStatus == 1 && roundaboutExitStatus == 0
 				&& abs(encoder_total_round) > TuningVar::round_encoder_count) {
+			need_slow_down = true;
 			exit_round_ready = true; // Detect one corner
 		}
 	}
@@ -1558,6 +1558,11 @@ void main_car2(bool debug_) {
 					Feature feature = featureIdent_Corner();
 					GenPath(feature); //Generate path
 					/*FOR DEBUGGING*/
+					if(debug){
+						pLcd->SetRegion(Lcd::Rect(0,100,128,15));
+//						stop_before_roundexit?pWriter->WriteString("StopB"):pWriter->WriteString("No StopB");
+						need_slow_down?pWriter->WriteString("Slow"):pWriter->WriteString("No Slow");
+					}
 					if (debug) {
 						char time_str[100];
 						//          sprintf(time_str, "Time:%dms", System::Time()-algo_start_time);
@@ -1654,6 +1659,14 @@ void main_car2(bool debug_) {
 								stop_before_roundexit = false;
 								// roundaboutStatus = 0;
 							}
+						}
+						else if(need_slow_down){
+							pServo->SetDegree(util::clamp<uint16_t>(
+									servo_bounds.kCenter - (TuningVar::servo_roundabout_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
+									servo_bounds.kRightBound,
+									servo_bounds.kLeftBound));
+							pid_left.SetSetpoint(TuningVar::targetSpeed_slow*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
+							pid_right.SetSetpoint(TuningVar::targetSpeed_slow* differential_left((-pServo->GetDegree() + servo_bounds.kCenter)/10));
 						}
 						//the speed inside roundabout
 						else if(abs(encoder_total_round) > TuningVar::round_encoder_count){
