@@ -1782,6 +1782,10 @@ void main_car2(bool debug_) {
 					prev_servo_error = curr_servo_error;
 					pEncoder0->Update();
 					pEncoder1->Update();
+					if(System::Time() - startTime < 1000){
+						pid_left.SetSetpoint(140);
+						pid_right.SetSetpoint(140);
+					}
 					if(met_stop_line){
 						pid_left.SetSetpoint(0);
 						pid_right.SetSetpoint(0);
