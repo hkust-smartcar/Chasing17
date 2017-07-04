@@ -743,13 +743,30 @@ Feature featureIdent_Corner() {
 		if (is_round && roundaboutStatus == 0
 				&& crossingStatus == 0/*Temporary close*/) {
 			//All black
-			if (abs(carMid.second - cornerMid_y) < TuningVar::action_distance && (is_front_car || pBT->getBufferFeature() == Feature::kRoundabout || !TuningVar::overtake)) {
-				pBT->resetFeature();
-				encoder_total_round = 0;
-				roundaboutStatus = 1; //Detected
-	//			feature_start_time = System::Time(); // Mark the startTime of latest enter time
-				roundabout_cnt++;
-				return Feature::kRoundabout;
+			if (abs(carMid.second - cornerMid_y) < TuningVar::action_distance) {
+				if(is_front_car || pBT->getBufferFeature() == Feature::kRoundabout || !TuningVar::overtake){
+					pBT->resetFeature();
+					encoder_total_round = 0;
+					roundaboutStatus = 1; //Detected
+		//			feature_start_time = System::Time(); // Mark the startTime of latest enter time
+					roundabout_cnt++;
+					return Feature::kRoundabout;
+				}else{
+					encoder_total_cross = 0;
+					crossingStatus = 1; //Detected
+					//		feature_start_time = System::Time(); // Mark the startTime of latest enter time
+					//      roundaboutStatus = 0;// Avoid failure of detecting roundabout exit
+					start_y = carMid.second
+							+ (TuningVar::cross_cal_start_num
+									- encoder_total_cross / TuningVar::cross_cal_ratio);
+					start_x = (start_y - (left_corners.front().second + right_corners.front().second) / 2)
+		        								  / (left_corners.front().first - right_corners.front().first)
+												  * (right_corners.front().second
+														  - left_corners.front().second)
+														  + (left_corners.front().first
+																  + right_corners.front().first) / 2;
+					return Feature::kCross;
+				}
 			}
 			else{
 				need_slow_down = true;
