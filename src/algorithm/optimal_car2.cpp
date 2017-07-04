@@ -97,8 +97,8 @@ namespace TuningVar{ //tuning var delaration
   uint16_t roundExit_encoder_count = 3700;
   int32_t roundabout_shortest_flag = 0b00011; //1 means turn left, 0 means turn right. Reading from left to right
   uint16_t nearest_corner_threshold = 128/2;
-  uint16_t overtake_interval_time = 600;
   uint16_t start_car_distance = 500;
+  uint16_t overtake_interval_time = 1000;
 
   // servo pid values
   float servo_straight_kp = 0.8;
@@ -722,11 +722,6 @@ Feature featureIdent_Corner() {
 				+ right_corners.front().first) / 2; //corner midpoint x-cor
 		uint16_t cornerMid_y = (left_corners.front().second
 				+ right_corners.front().second) / 2; //corner midpoint y-cor
-		/*FOR DEBUGGING*/
-		//		pLcd->SetRegion(
-		//		Lcd::Rect(cornerMid_x, WorldSize.h - cornerMid_y - 1, 2, 2));
-		//		pLcd->FillColor(Lcd::kRed);
-		/*END OF DEBUGGING*/
 
 		uint16_t test_y = cornerMid_y + TuningVar::testDist;
 		uint16_t test_x = (test_y - cornerMid_y)
@@ -1614,9 +1609,9 @@ void main_car2(bool debug_) {
 							pid_right.SetSetpoint(0);
 
 							//below part only used for restarting the car after stopping
-							if(pBT->hasFinishedOvertake()){
+							if(pBT->hasFinishedOvertake() && (System::Time() - pBT->getOvertakeTime())>TuningVar::overtake_interval_time){
 								//only delay when it really stops inside roundabout
-								System::DelayMs(TuningVar::overtake_interval_time);
+//								System::DelayMs(TuningVar::overtake_interval_time);
 								stop_before_roundexit = false;
 								// roundaboutStatus = 0;
 								exit_round_ready = false;
