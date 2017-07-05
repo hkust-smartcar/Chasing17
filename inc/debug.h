@@ -59,14 +59,22 @@ void loadItems(DebugConsole* console) {
 
     // servo
     console->PushItem("servo pid:", &foo, "", "");
-    console->PushItem("strght-p", &servo_straight_kp, 0.1);
-    console->PushItem("strght-d", &servo_straight_kd, 0.01);
-    console->PushItem("normal-p", &servo_normal_kp, 0.1);
-    console->PushItem("normal-d", &servo_normal_kd, 0.01);
-    console->PushItem("rndabt-p", &servo_roundabout_kp, 0.1);
-    console->PushItem("rndabt-d", &servo_roundabout_kd, 0.01);
-    console->PushItem("s_turn-p", &servo_sharp_turn_kp, 0.1);
-    console->PushItem("s_turn-d", &servo_sharp_turn_kd, 0.01);
+    console->PushItem("strght-p-right", &servo_straight_kp_right, 0.1);
+    console->PushItem("strght-d-right", &servo_straight_kd_right, 0.01);
+    console->PushItem("strght-p-left", &servo_straight_kp_left, 0.1);
+    console->PushItem("strght-d-left", &servo_straight_kd_left, 0.01);
+    console->PushItem("normal-p-right", &servo_normal_kp_right, 0.1);
+    console->PushItem("normal-d-right", &servo_normal_kd_right, 0.01);
+    console->PushItem("normal-p-left", &servo_normal_kp_left, 0.1);
+    console->PushItem("normal-d-left", &servo_normal_kd_left, 0.01);
+    console->PushItem("rndabt-p-right", &servo_roundabout_kp_right, 0.1);
+    console->PushItem("rndabt-d-right", &servo_roundabout_kd_right, 0.01);
+    console->PushItem("rndabt-p-left", &servo_roundabout_kp_left, 0.1);
+    console->PushItem("rndabt-d-left", &servo_roundabout_kd_left, 0.01);
+    console->PushItem("s_turn-p-right", &servo_sharp_turn_kp_right, 0.1);
+    console->PushItem("s_turn-d-right", &servo_sharp_turn_kd_right, 0.01);
+    console->PushItem("s_turn-p-left", &servo_sharp_turn_kp_left, 0.1);
+    console->PushItem("s_turn-d-left", &servo_sharp_turn_kd_left, 0.01);
 
   } else if (car != 0) {
     using namespace algorithm::optimal::car2::TuningVar;
@@ -92,14 +100,22 @@ void loadItems(DebugConsole* console) {
 
     // servo
     console->PushItem("servo pid:", &foo, "", "");
-    console->PushItem("strght-p", &servo_straight_kp, 0.1);
-    console->PushItem("strght-d", &servo_straight_kd, 0.01);
-    console->PushItem("normal-p", &servo_normal_kp, 0.1);
-    console->PushItem("normal-d", &servo_normal_kd, 0.01);
-    console->PushItem("rndabt-p", &servo_roundabout_kp, 0.1);
-    console->PushItem("rndabt-d", &servo_roundabout_kd, 0.01);
-    console->PushItem("s_turn-p", &servo_sharp_turn_kp, 0.1);
-    console->PushItem("s_turn-d", &servo_sharp_turn_kd, 0.01);
+    console->PushItem("strght-p-right", &servo_straight_kp_right, 0.1);
+    console->PushItem("strght-d-right", &servo_straight_kd_right, 0.01);
+    console->PushItem("strght-p-left", &servo_straight_kp_left, 0.1);
+    console->PushItem("strght-d-left", &servo_straight_kd_left, 0.01);
+    console->PushItem("normal-p-right", &servo_normal_kp_right, 0.1);
+    console->PushItem("normal-d-right", &servo_normal_kd_right, 0.01);
+    console->PushItem("normal-p-left", &servo_normal_kp_left, 0.1);
+    console->PushItem("normal-d-left", &servo_normal_kd_left, 0.01);
+    console->PushItem("rndabt-p-right", &servo_roundabout_kp_right, 0.1);
+    console->PushItem("rndabt-d-right", &servo_roundabout_kd_right, 0.01);
+    console->PushItem("rndabt-p-left", &servo_roundabout_kp_left, 0.1);
+    console->PushItem("rndabt-d-left", &servo_roundabout_kd_left, 0.01);
+    console->PushItem("s_turn-p-right", &servo_sharp_turn_kp_right, 0.1);
+    console->PushItem("s_turn-d-right", &servo_sharp_turn_kd_right, 0.01);
+    console->PushItem("s_turn-p-left", &servo_sharp_turn_kp_left, 0.1);
+    console->PushItem("s_turn-d-left", &servo_sharp_turn_kd_left, 0.01);
 
   }
 }

@@ -113,15 +113,25 @@ namespace TuningVar {
   extern uint16_t nearest_corner_threshold;
   extern uint16_t overtake_interval_time;
 
-  // servo pid values
-  extern float servo_straight_kp;
-  extern float servo_straight_kd;
-  extern float servo_normal_kd;
-  extern float servo_normal_kp;
-  extern float servo_roundabout_kp;
-  extern float servo_roundabout_kd;
-  extern float servo_sharp_turn_kp;
-  extern float servo_sharp_turn_kd;
+  // servo right pid values
+  extern float servo_straight_kp_right;
+  extern float servo_straight_kd_right;
+  extern float servo_normal_kd_right;
+  extern float servo_normal_kp_right;
+  extern float servo_roundabout_kp_right;
+  extern float servo_roundabout_kd_right;
+  extern float servo_sharp_turn_kp_right;
+  extern float servo_sharp_turn_kd_right;
+
+  // servo left pid values
+  extern float servo_straight_kp_left;
+  extern float servo_straight_kd_left;
+  extern float servo_normal_kd_left;
+  extern float servo_normal_kp_left;
+  extern float servo_roundabout_kp_left;
+  extern float servo_roundabout_kd_left;
+  extern float servo_sharp_turn_kp_left;
+  extern float servo_sharp_turn_kd_left;
 
   // target speed values
   extern uint16_t targetSpeed_straight;
