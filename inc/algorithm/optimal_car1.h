@@ -123,8 +123,6 @@ namespace TuningVar {
   extern float servo_roundabout_kd;
   extern float servo_sharp_turn_kp;
   extern float servo_sharp_turn_kd;
-  extern float servo_roundabout_exit_kp;
-  extern float servo_roundabout_exit_kd;
 
   // target speed values
   extern uint16_t targetSpeed_straight;
