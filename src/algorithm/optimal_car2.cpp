@@ -1425,12 +1425,11 @@ int GetMotorPower(int id){
 	return 0;
 }
 
-int servoDegreeFix(int degree){
-	int error = degree - servo_bounds.kCenter;
-	if(error > 0){
-		return servo_bounds.kCenter + error * 0.969;
+int servoDegreeFix(int error){
+	if(error < 0){
+		return error * 0.854;
 	}else{
-		return degree;
+		return error;
 	}
 }
 
