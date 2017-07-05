@@ -65,7 +65,6 @@ namespace optimal {
 namespace car2 {
 namespace TuningVar{ //tuning var delaration
   bool show_algo_time = false;
-  bool overtake = true;
   bool roundabout_turn_left = true; //Used for GenPath()
   bool single_car_testing = false;
   uint16_t starting_y = 15; //the starting y for edge detection
@@ -1131,7 +1130,7 @@ void GenPath(Feature feature) {
 				is_front_car = false;
 			}
 		}
-		overtake = roundabout_overtake(TuningVar::roundabout_overtake_flag, roundabout_cnt-1);
+		overtake = roundabout_overtake(TuningVar::roundabout_overtake_flag, roundabout_cnt); // ready for next time roundabout
 	}
 	if (roundaboutExitStatus == 1
 			&& abs(encoder_total_exit) < TuningVar::roundExit_encoder_count) {
@@ -1429,7 +1428,7 @@ int GetMotorPower(int id){
 int servoDegreeFix(int degree){
 	int error = degree-servo_bounds.kCenter;
 	if(error > 0){
-		return degree - error * 1.0722;
+		return degree + error * 1.0722;
 	}else{
 		return degree;
 	}
@@ -1567,7 +1566,7 @@ void main_car2(bool debug_) {
 	bool met_stop_line = false;
 	uint8_t stop_count = 0;
 	bool brake_flag = true;
-	overtake = roundabout_overtake(TuningVar::roundabout_overtake_flag, 0);
+	overtake = roundabout_overtake(TuningVar::roundabout_overtake_flag, 0);// get ready for the first roundabout
 
 	pServo->SetDegree(servo_bounds.kCenter);
 	while (true) {

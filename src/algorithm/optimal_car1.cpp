@@ -62,7 +62,6 @@ namespace optimal {
 namespace car1 {
 namespace TuningVar { //tuning var declaration
   bool show_algo_time = false;
-  bool overtake = true;
   bool roundabout_turn_left = true; //Used for GenPath()
   bool single_car_testing = false;
   uint16_t starting_y = 15; //the starting y for edge detection
@@ -1129,10 +1128,10 @@ void GenPath(Feature feature) {
 				is_front_car = false;
 			}
 		}
-		overtake = roundabout_overtake(TuningVar::roundabout_overtake_flag, roundabout_cnt-1);
+		overtake = roundabout_overtake(TuningVar::roundabout_overtake_flag, roundabout_cnt);//ready for next time roundabout
 	}
 	if (roundaboutExitStatus == 1
-			&& abs(encoder_total_exit) < TuningVar::roundExit_encoder_count) {//TODO: Be care of back turning of motor when stop will affect encoder value
+			&& abs(encoder_total_exit) < TuningVar::roundExit_encoder_count) {
 		//		pEncoder0->Update();
 		//		pEncoder1->Update();
 		encoder_total_exit += curr_enc_val_left/*(pEncoder0->GetCount() + pEncoder1->GetCount()) / 2*/;
@@ -1431,7 +1430,7 @@ int GetMotorPower(int id){
 int servoDegreeFix(int degree){
 	int error = servo_bounds.kCenter-degree;
 	if(error > 0){
-		return degree - error * 1.0677;
+		return degree + error * 1.0677;
 	}else{
 		return degree;
 	}

@@ -73,7 +73,6 @@ inline float differential_left(float x) { return 1.00716 - 0.00776897*x; }
 /*CAR1*/
 namespace TuningVar {
   extern bool show_algo_time;
-  extern bool overtake;
   extern bool roundabout_turn_left; //Used for GenPath()
   extern bool single_car_testing;
   extern uint16_t starting_y; //the starting y for edge detection
