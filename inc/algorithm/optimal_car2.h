@@ -160,24 +160,18 @@ namespace stable {
 const PidValues kServoStraightLeft = {0.8, 0, 0.01};
 const PidValues kServoNormalLeft = {1.2, 0, 0};
 const PidValues kServoRoundaboutLeft = {1.4, 0, 0.01};
-const PidValues kServoSharpTurnLeft = {1.4, 0, 0.005};
+const PidValues kServoSharpTurnLeft = {1.04, 0, 0.00};
 
-const uint16_t kSpeedStraightLeft = 120;
-const uint16_t kSpeedNormalLeft = 95;
-const uint16_t kSpeedRoundaboutLeft = 90;
-const uint16_t kSpeedSharpTurnLeft = 90;
-const uint16_t kSpeedSlowLeft = 100;
+const uint16_t kSpeedStraight = 120;
+const uint16_t kSpeedNormal = 95;
+const uint16_t kSpeedRoundabout = 90;
+const uint16_t kSpeedSharpTurn = 120;
+const uint16_t kSpeedSlow = 100;
 
 const PidValues kServoStraightRight = {0.8, 0, 0.01};
 const PidValues kServoNormalRight = {1.2, 0, 0};
 const PidValues kServoRoundaboutRight = {1.4, 0, 0.01};
-const PidValues kServoSharpTurnRight = {1.4, 0, 0.005};
-
-const uint16_t kSpeedStraightRight = 120;
-const uint16_t kSpeedNormalRight = 95;
-const uint16_t kSpeedRoundaboutRight = 90;
-const uint16_t kSpeedSharpTurnRight = 90;
-const uint16_t kSpeedSlowRight = 100;
+const PidValues kServoSharpTurnRight = {1.03, 0, 0.00};
 }  // namespace stable
 
 namespace current {

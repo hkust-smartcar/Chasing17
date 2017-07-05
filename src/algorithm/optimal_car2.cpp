@@ -1884,10 +1884,10 @@ void main_car2(bool debug_) {
 					curr_enc_val_right = -pEncoder1->GetCount();
 					SetMotorPower(GetMotorPower(0)+pid_left.Calc(curr_enc_val_left),0);
 					SetMotorPower(GetMotorPower(1)+pid_right.Calc(curr_enc_val_right),1);
-					//				if((curr_enc_val_left<100 || curr_enc_val_right<100) && (System::Time()-startTime>1000 || skip_motor_protection)){
-					//					pMotor0->SetPower(0);
-					//					pMotor1->SetPower(0);
-					//				}
+					if((curr_enc_val_left<100 || curr_enc_val_right<100) && (System::Time()-startTime>1000 || skip_motor_protection)){
+						pMotor0->SetPower(0);
+						pMotor1->SetPower(0);
+					}
 					if(TuningVar::show_algo_time){
 						char buf[10] = {};
 						sprintf(buf, "%d", System::Time()-time_img);
