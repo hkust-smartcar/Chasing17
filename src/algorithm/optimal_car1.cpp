@@ -179,7 +179,7 @@ DirMotor* pMotor1 = nullptr;
 IncrementalPidController<float, float>* pid_left_p = nullptr;
 IncrementalPidController<float, float>* pid_right_p = nullptr;
 
-ServoBounds servo_bounds = {1040, 755, 470};
+ServoBounds servo_bounds = {1070, 755, 460};
 ImageSize CameraSize = {128, 480};
 ImageSize WorldSize = {128, 160};
 
@@ -1409,6 +1409,15 @@ int GetMotorPower(int id){
 	return 0;
 }
 
+int servoDegreeFix(int degree){
+	int error = servo_bounds.kCenter-degree;
+	if(error > 0){
+		return degree - error * 1.0677;
+	}else{
+		return degree;
+	}
+}
+
 void main_car1(bool debug_) {
 
 	debug = debug_;
@@ -1659,7 +1668,7 @@ void main_car1(bool debug_) {
 							if( !pBT->hasFinishedOvertake() || (pBT->hasFinishedOvertake()
 									&& (System::Time() - pBT->getOvertakeTime()) <= TuningVar::overtake_interval_time )){
 								pServo->SetDegree(util::clamp<uint16_t>(
-										servo_bounds.kCenter - (TuningVar::servo_roundabout_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
+										servo_bounds.kCenter - servoDegreeFix(TuningVar::servo_roundabout_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
 										servo_bounds.kRightBound,
 										servo_bounds.kLeftBound));
 								pid_left.SetSetpoint(0);
@@ -1683,7 +1692,7 @@ void main_car1(bool debug_) {
 						//go
 						else{
 							pServo->SetDegree(util::clamp<uint16_t>(
-									servo_bounds.kCenter - (TuningVar::servo_roundabout_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
+									servo_bounds.kCenter - servoDegreeFix(TuningVar::servo_roundabout_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
 									servo_bounds.kRightBound,
 									servo_bounds.kLeftBound));
 							pid_left.SetSetpoint(TuningVar::targetSpeed_round*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
@@ -1697,7 +1706,7 @@ void main_car1(bool debug_) {
 						//for slowing down the car in advance when need to stop
 						if(stop_before_roundexit && TuningVar::overtake){
 							pServo->SetDegree(util::clamp<uint16_t>(
-									servo_bounds.kCenter - (TuningVar::servo_roundabout_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
+									servo_bounds.kCenter - servoDegreeFix(TuningVar::servo_roundabout_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
 									servo_bounds.kRightBound,
 									servo_bounds.kLeftBound));
 							pid_left.SetSetpoint(60);//TODO: only used for first roundabout
@@ -1710,7 +1719,7 @@ void main_car1(bool debug_) {
 						}
 						else if(need_slow_down){
 							pServo->SetDegree(util::clamp<uint16_t>(
-									servo_bounds.kCenter - (TuningVar::servo_roundabout_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
+									servo_bounds.kCenter - servoDegreeFix(TuningVar::servo_roundabout_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
 									servo_bounds.kRightBound,
 									servo_bounds.kLeftBound));
 							pid_left.SetSetpoint(TuningVar::targetSpeed_slow*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
@@ -1720,7 +1729,7 @@ void main_car1(bool debug_) {
 						else if(abs(encoder_total_round) > TuningVar::round_encoder_count){
 							pServo->SetDegree(util::clamp<uint16_t>(
 									//use roundabout kp or normal kp?
-									servo_bounds.kCenter - (TuningVar::servo_roundabout_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
+									servo_bounds.kCenter - servoDegreeFix(TuningVar::servo_roundabout_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
 									servo_bounds.kRightBound,
 									servo_bounds.kLeftBound));
 							pid_left.SetSetpoint(TuningVar::targetSpeed_normal*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
@@ -1729,7 +1738,7 @@ void main_car1(bool debug_) {
 						//the speed during the entrance
 						else{
 							pServo->SetDegree(util::clamp<uint16_t>(
-									servo_bounds.kCenter - (TuningVar::servo_roundabout_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
+									servo_bounds.kCenter - servoDegreeFix(TuningVar::servo_roundabout_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
 									servo_bounds.kRightBound,
 									servo_bounds.kLeftBound));
 							pid_left.SetSetpoint(TuningVar::targetSpeed_round*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
@@ -1740,7 +1749,7 @@ void main_car1(bool debug_) {
 					//sharp turning case TODO: 180 needs tuning
 					else if(abs(curr_servo_error) > 180){
 						pServo->SetDegree(util::clamp<uint16_t>(
-								servo_bounds.kCenter - (TuningVar::servo_sharp_turn_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
+								servo_bounds.kCenter - servoDegreeFix(TuningVar::servo_sharp_turn_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
 								servo_bounds.kRightBound,
 								servo_bounds.kLeftBound));
 						pid_left.SetSetpoint(TuningVar::targetSpeed_sharp_turn*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
@@ -1759,7 +1768,7 @@ void main_car1(bool debug_) {
 						if(left_edge.points.size() < 50 || right_edge.points.size() < 50){
 							//still use straight_kp
 							pServo->SetDegree(util::clamp<uint16_t>(
-									servo_bounds.kCenter - (TuningVar::servo_straight_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
+									servo_bounds.kCenter - servoDegreeFix(TuningVar::servo_straight_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
 									servo_bounds.kRightBound,
 									servo_bounds.kLeftBound));
 							pid_left.SetSetpoint(TuningVar::targetSpeed_slow*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
@@ -1786,7 +1795,7 @@ void main_car1(bool debug_) {
 							// case two: the upper 25 path points produce error bigger than 100 - reduce speed in advance
 							if(abs(further_servo_error)>300 || need_slow_down) {
 								pServo->SetDegree(util::clamp<uint16_t>(
-										servo_bounds.kCenter - (TuningVar::servo_straight_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
+										servo_bounds.kCenter - servoDegreeFix(TuningVar::servo_straight_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
 										servo_bounds.kRightBound,
 										servo_bounds.kLeftBound));
 								pid_left.SetSetpoint(TuningVar::targetSpeed_slow*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
@@ -1797,7 +1806,7 @@ void main_car1(bool debug_) {
 //					              pLcd->SetRegion(Lcd::Rect(0, 30, 128, 15));
 //					              pWriter->WriteString("Straight");
 								pServo->SetDegree(util::clamp<uint16_t>(
-										servo_bounds.kCenter - (TuningVar::servo_straight_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
+										servo_bounds.kCenter - servoDegreeFix(TuningVar::servo_straight_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
 										servo_bounds.kRightBound,
 										servo_bounds.kLeftBound));
 								pid_left.SetSetpoint(TuningVar::targetSpeed_straight*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
@@ -1809,7 +1818,7 @@ void main_car1(bool debug_) {
 					//normal turning case
 					else{
 						pServo->SetDegree(util::clamp<uint16_t>(
-								servo_bounds.kCenter - (TuningVar::servo_normal_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
+								servo_bounds.kCenter - servoDegreeFix(TuningVar::servo_normal_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
 								servo_bounds.kRightBound+85,
 								servo_bounds.kLeftBound-85));
 						pid_left.SetSetpoint(TuningVar::targetSpeed_normal*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
