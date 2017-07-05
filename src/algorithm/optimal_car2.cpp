@@ -104,29 +104,29 @@ namespace TuningVar{ //tuning var delaration
   // servo right pid values
   float servo_straight_kp_right = 0.8;
   float servo_straight_kd_right = 0.01;
-  float servo_normal_kp_right = 1.2;
+  float servo_normal_kp_right = 1.15;
   float servo_normal_kd_right = 0;
-  float servo_roundabout_kp_right = 1.4;
-  float servo_roundabout_kd_right = 0.01;
-  float servo_sharp_turn_kp_right = 1.4;
+  float servo_roundabout_kp_right = 1.3;
+  float servo_roundabout_kd_right = 0;
+  float servo_sharp_turn_kp_right = 1.35;
   float servo_sharp_turn_kd_right = 0;
 
   // servo left pid values
   float servo_straight_kp_left = 0.8;
   float servo_straight_kd_left = 0.01;
-  float servo_normal_kp_left = 1.1;
+  float servo_normal_kp_left = 1.15;
   float servo_normal_kd_left = 0;
   float servo_roundabout_kp_left = 1.3;
   float servo_roundabout_kd_left = 0;
-  float servo_sharp_turn_kp_left = 1.2;
-  float servo_sharp_turn_kd_left = 0.005;
+  float servo_sharp_turn_kp_left = 1.35;
+  float servo_sharp_turn_kd_left = 0;
 
   // target speed values
-  uint16_t targetSpeed_straight = 120;
-  uint16_t targetSpeed_normal = 95;//normal turning
-  uint16_t targetSpeed_round = 90;
+  uint16_t targetSpeed_straight = 150;
+  uint16_t targetSpeed_normal = 110;//normal turning
+  uint16_t targetSpeed_round = 85;
   uint16_t targetSpeed_sharp_turn = 90;
-  uint16_t targetSpeed_slow = 100;
+  uint16_t targetSpeed_slow = 90;
 }  // namespace TuningVar
 
 namespace {
@@ -1435,14 +1435,6 @@ int GetMotorPower(int id){
 	return 0;
 }
 
-int servoDegreeFix(int error){
-	if(error < 0){
-		return error * 0.854;
-	}else{
-		return error;
-	}
-}
-
 void main_car2(bool debug_) {
 	debug = debug_;
 
@@ -1802,11 +1794,11 @@ void main_car2(bool debug_) {
 						if(left_edge.points.size() < 50 || right_edge.points.size() < 50){
 							//still use straight_kp
 							if(curr_servo_error > 0){
-								tempKp = TuningVar::servo_straight_kp_right;
-								tempKd = TuningVar::servo_straight_kd_right;
+								tempKp = TuningVar::servo_sharp_turn_kp_right;
+								tempKd = TuningVar::servo_sharp_turn_kd_right;
 							}else{
-								tempKp = TuningVar::servo_straight_kp_left;
-								tempKd = TuningVar::servo_straight_kd_left;
+								tempKp = TuningVar::servo_sharp_turn_kp_left;
+								tempKd = TuningVar::servo_sharp_turn_kd_left;
 							}
 							pid_left.SetSetpoint(TuningVar::targetSpeed_slow*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
 							pid_right.SetSetpoint(TuningVar::targetSpeed_slow* differential_left((-pServo->GetDegree() + servo_bounds.kCenter)/10));
