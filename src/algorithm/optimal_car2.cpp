@@ -1667,6 +1667,10 @@ void main_car2(bool debug_) {
 
 					/*-------------CONTROL SYSTEM-----------------------*/
 					int curr_servo_error = CalcAngleDiff();
+//						char temp[100];
+//						sprintf(temp, "error: %d", curr_servo_error);
+//						pLcd->SetRegion(Lcd::Rect(0, 16, 128, 15));
+//						pWriter->WriteString(temp);
 					/* Motor PID + Servo PID* for different situations*/
 
 					//roundaboutExit case
@@ -1774,8 +1778,8 @@ void main_car2(bool debug_) {
 						}
 					}
 
-					//sharp turning case TODO: 180 needs tuning
-					else if(abs(curr_servo_error) > 180){
+					//sharp turning case TODO: 140 needs tuning
+					else if(abs(curr_servo_error) > 140){
 						if(curr_servo_error > 0){
 							tempKp = TuningVar::servo_sharp_turn_kp_right;
 							tempKd = TuningVar::servo_sharp_turn_kd_right;

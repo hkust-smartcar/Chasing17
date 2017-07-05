@@ -1792,8 +1792,8 @@ void main_car1(bool debug_) {
 						}
 					}
 
-					//sharp turning case TODO: 180 needs tuning
-					else if(abs(curr_servo_error) > 180){
+					//sharp turning case TODO: 140 needs tuning
+					else if(abs(curr_servo_error) > 140){
 						if(curr_servo_error > 0){
 							tempKp = TuningVar::servo_sharp_turn_kp_right;
 							tempKd = TuningVar::servo_sharp_turn_kd_right;
