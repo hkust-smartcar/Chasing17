@@ -183,7 +183,7 @@ DirMotor* pMotor1 = nullptr;
 IncrementalPidController<float, float>* pid_left_p = nullptr;
 IncrementalPidController<float, float>* pid_right_p = nullptr;
 
-ServoBounds servo_bounds = {1045, 782, 500};
+ServoBounds servo_bounds = {1170, 845, 530};
 ImageSize CameraSize = {128, 480};
 ImageSize WorldSize = {128, 160};
 
