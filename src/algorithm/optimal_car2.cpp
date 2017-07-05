@@ -1435,14 +1435,6 @@ int GetMotorPower(int id){
 	return 0;
 }
 
-int servoDegreeFix(int error){
-	if(error < 0){
-		return error * 0.854;
-	}else{
-		return error;
-	}
-}
-
 void main_car2(bool debug_) {
 	debug = debug_;
 
@@ -1802,11 +1794,11 @@ void main_car2(bool debug_) {
 						if(left_edge.points.size() < 50 || right_edge.points.size() < 50){
 							//still use straight_kp
 							if(curr_servo_error > 0){
-								tempKp = TuningVar::servo_straight_kp_right;
-								tempKd = TuningVar::servo_straight_kd_right;
+								tempKp = TuningVar::servo_sharp_turn_kp_right;
+								tempKd = TuningVar::servo_sharp_turn_kd_right;
 							}else{
-								tempKp = TuningVar::servo_straight_kp_left;
-								tempKd = TuningVar::servo_straight_kd_left;
+								tempKp = TuningVar::servo_sharp_turn_kp_left;
+								tempKd = TuningVar::servo_sharp_turn_kd_left;
 							}
 							pid_left.SetSetpoint(TuningVar::targetSpeed_slow*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
 							pid_right.SetSetpoint(TuningVar::targetSpeed_slow* differential_left((-pServo->GetDegree() + servo_bounds.kCenter)/10));

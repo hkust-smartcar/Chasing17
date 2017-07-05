@@ -45,9 +45,9 @@ void loadItems(DebugConsole* console) {
     console->PushItem("overt_sel", &roundabout_overtake_flag, "y", "n");
     console->PushItem("rndabt sel", &roundabout_shortest_flag, "l", "r");
     console->PushItem("over_time", &overtake_interval_time, 5);
-    console->PushItem("corner_size", &corner_range, 1);
-    console->PushItem("corner_min", &corner_min, 1);
-    console->PushItem("corner_max", &corner_max, 1);
+//    console->PushItem("corner_size", &corner_range, 1);
+//    console->PushItem("corner_min", &corner_min, 1);
+//    console->PushItem("corner_max", &corner_max, 1);
 
     // speed
     console->PushItem("target spd:", &foo, "", "");
@@ -86,9 +86,9 @@ void loadItems(DebugConsole* console) {
     console->PushItem("overt_sel", &roundabout_overtake_flag, "y", "n");
     console->PushItem("rndabt sel", &roundabout_shortest_flag, "l", "r");
     console->PushItem("over_time", &overtake_interval_time, 5);
-    console->PushItem("corner_size", &corner_range, 1);
-    console->PushItem("corner_min", &corner_min, 1);
-    console->PushItem("corner_max", &corner_max, 1);
+//    console->PushItem("corner_size", &corner_range, 1);
+//    console->PushItem("corner_min", &corner_min, 1);
+//    console->PushItem("corner_max", &corner_max, 1);
 
     // speed
     console->PushItem("target spd:", &foo, "", "");
