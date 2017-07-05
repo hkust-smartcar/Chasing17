@@ -20,9 +20,13 @@
 
 #include "libsc/system.h"
 
+#include "car_manager.h"
+
 namespace algorithm {
 namespace optimal {
 namespace car1 {
+
+typedef CarManager::PidValues PidValues;
 
 void main_car1(bool debug_ = false);
 
@@ -68,11 +72,12 @@ typedef std::list<std::pair<uint16_t, uint16_t>> Corners;
  * right = differential_left(-delta_degree) * t;
  *
  */
-inline float differential_left(float x) { return 1.00716 - 0.00776897*x; }
+inline float differential_left(float x) { return 0.990737 - 0.00870460 * x; }
 
 /*CAR1*/
 namespace TuningVar {
   extern bool show_algo_time;
+  extern bool overtake;
   extern bool roundabout_turn_left; //Used for GenPath()
   extern bool single_car_testing;
   extern uint16_t starting_y; //the starting y for edge detection
@@ -149,6 +154,54 @@ namespace TuningVar {
 enum struct TranslateType {
   kNone = 0, kLeftNull, kRightNull
 };
+
+namespace stable {
+const PidValues kServoStraightLeft = {0.8, 0, 0.01};
+const PidValues kServoNormalLeft = {1.2, 0, 0};
+const PidValues kServoRoundaboutLeft = {1.4, 0, 0.01};
+const PidValues kServoSharpTurnLeft = {1.4, 0, 0.005};
+
+const uint16_t kSpeedStraightLeft = 120;
+const uint16_t kSpeedNormalLeft = 95;
+const uint16_t kSpeedRoundaboutLeft = 90;
+const uint16_t kSpeedSharpTurnLeft = 90;
+const uint16_t kSpeedSlowLeft = 100;
+
+const PidValues kServoStraightRight = {0.8, 0, 0.01};
+const PidValues kServoNormalRight = {1.2, 0, 0};
+const PidValues kServoRoundaboutRight = {1.4, 0, 0.01};
+const PidValues kServoSharpTurnRight = {1.4, 0, 0.005};
+
+const uint16_t kSpeedStraightRight = 120;
+const uint16_t kSpeedNormalRight = 95;
+const uint16_t kSpeedRoundaboutRight = 90;
+const uint16_t kSpeedSharpTurnRight = 90;
+const uint16_t kSpeedSlowRight = 100;
+}  // namespace stable
+
+namespace current {
+const PidValues kServoStraightLeft = {0.8, 0, 0.01};
+const PidValues kServoNormalLeft = {1.8, 0, 0.005};
+const PidValues kServoRoundaboutLeft = {1.4, 0, 0.01};
+const PidValues kServoSharpTurnLeft = {1.8, 0, 0.005};
+
+const uint16_t kSpeedStraightLeft = 150;
+const uint16_t kSpeedNormalLeft = 100;
+const uint16_t kSpeedRoundaboutLeft = 95;
+const uint16_t kSpeedSharpTurnLeft = 90;
+const uint16_t kSpeedSlowLeft = 110;
+
+const PidValues kServoStraightRight = {0.8, 0, 0.01};
+const PidValues kServoNormalRight = {1.8, 0, 0.005};
+const PidValues kServoRoundaboutRight = {1.4, 0, 0.01};
+const PidValues kServoSharpTurnRight = {1.8, 0, 0.005};
+
+const uint16_t kSpeedStraightRight = 150;
+const uint16_t kSpeedNormalRight = 100;
+const uint16_t kSpeedRoundaboutRight = 95;
+const uint16_t kSpeedSharpTurnRight = 90;
+const uint16_t kSpeedSlowRight = 110;
+}  // namespace current
 
 }  // namespace car1
 }  // namespace optimal
