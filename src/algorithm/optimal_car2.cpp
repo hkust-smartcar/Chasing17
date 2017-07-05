@@ -184,7 +184,7 @@ DirMotor* pMotor1 = nullptr;
 IncrementalPidController<float, float>* pid_left_p = nullptr;
 IncrementalPidController<float, float>* pid_right_p = nullptr;
 
-ServoBounds servo_bounds = {1045, 782, 500};
+ServoBounds servo_bounds = {1170, 845, 530};
 ImageSize CameraSize = {128, 480};
 ImageSize WorldSize = {128, 160};
 
@@ -1427,9 +1427,9 @@ int GetMotorPower(int id){
 }
 
 int servoDegreeFix(int degree){
-	int error = degree-servo_bounds.kCenter;
+	int error = servo_bounds.kCenter - degree;
 	if(error > 0){
-		return degree - error * 1.0722;
+		return servo_bounds.kCenter + error * 1.0317;
 	}else{
 		return degree;
 	}
