@@ -66,7 +66,7 @@ namespace car2 {
 namespace TuningVar{ //tuning var delaration
   bool show_algo_time = false;
   bool roundabout_turn_left = true; //Used for GenPath()
-  bool single_car_testing = false;
+  bool single_car_testing = true;// still need to set overtake flag to false
   uint16_t starting_y = 15; //the starting y for edge detection
   uint16_t edge_length = 159; //max length for an edge
   uint16_t edge_hor_search_max = 4; //max for horizontal search of edge if next edge point cannot be found
@@ -1943,10 +1943,10 @@ void main_car2(bool debug_) {
 					curr_enc_val_right = -pEncoder1->GetCount();
 					SetMotorPower(GetMotorPower(0)+pid_left.Calc(curr_enc_val_left),0);
 					SetMotorPower(GetMotorPower(1)+pid_right.Calc(curr_enc_val_right),1);
-					//				if((curr_enc_val_left<100 || curr_enc_val_right<100) && (System::Time()-startTime>1000 || skip_motor_protection)){
-					//					pMotor0->SetPower(0);
-					//					pMotor1->SetPower(0);
-					//				}
+//					if((curr_enc_val_left<100 || curr_enc_val_right<100) && (System::Time()-startTime>1000 || skip_motor_protection)){
+//						pMotor0->SetPower(0);
+//						pMotor1->SetPower(0);
+//					}
 					if(TuningVar::show_algo_time){
 						char buf[10] = {};
 						sprintf(buf, "%d", System::Time()-time_img);
