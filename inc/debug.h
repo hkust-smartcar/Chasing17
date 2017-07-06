@@ -138,6 +138,21 @@ uint16_t debug(bool call_reset) {
   joystick_config.is_active_low = true;
   Joystick joystick(joystick_config);
 
+  if(call_reset){
+	  DebugConsole resetConfirmConsole(&joystick, &lcd, &writer);
+	  resetConfirmConsole.PushItem("Sure Reset?",&call_reset,"yes","no");
+	  resetConfirmConsole.PushItem("Confirm",&foo,"","");
+	  Item item = resetConfirmConsole.GetItem(1);
+	  item.listener = &confirmCar;
+	  resetConfirmConsole.SetItem(1,item);
+	  resetConfirmConsole.ListItems();
+	  while(!confirm){
+		  resetConfirmConsole.Listen();
+	  }
+	  confirm=false;
+  }
+
+
   Flash::Config flash_config;
   Flash flash(flash_config);
 
