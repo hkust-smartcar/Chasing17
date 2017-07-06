@@ -34,55 +34,30 @@ using namespace libsc::k60;
 namespace util {
 namespace testground {
 
-struct {
-  std::string input = "";
-  bool tune = false;
-  std::vector<double> vars{};
-} tuning_vars;
+uint16_t config = 0;
 
-bool BluetoothListener(const Byte* data, const std::size_t size) {
-  if (data[0] == 't') {
-    tuning_vars.tune = true;
-    tuning_vars.input.clear();
+TestVals vals = {0, 0.0};
+
+TestVals t1 = {1, 1.0};
+TestVals t2 = {2, 2.0};
+
+void Inflate() {
+  switch (config) {
+    case 1:
+      vals = t1;
+      break;
+    case 2:
+      vals = t2;
+      break;
+    default:
+      // retain values
+      break;
   }
-
-  if (tuning_vars.tune) {
-    unsigned int i = 0;
-    while (i < size) {
-      if (data[i] != 't' && data[i] != '\n') {
-        tuning_vars.input.push_back(data[i]);
-      } else if (data[i] == '\n') {
-        tuning_vars.tune = false;
-        break;
-      }
-      i++;
-    }
-
-    if (!tuning_vars.tune) {
-      tuning_vars.vars.clear();
-      char* pch = strtok(&tuning_vars.input[0], ",");
-      while (pch != nullptr) {
-        double constant;
-        std::stringstream(pch) >> constant;
-        tuning_vars.vars.push_back(constant);
-        pch = strtok(nullptr, ",");
-      }
-
-      // variable assignments here
-//      CarManager::kMotorPidCar1.kP[0] = tuning_vars.vars.at(0);
-//      CarManager::kMotorPidCar1.kI[0] = tuning_vars.vars.at(1);
-//      CarManager::kMotorPidCar1.kD[0] = tuning_vars.vars.at(2);
-//
-//      CarManager::kMotorPidCar1.kP[1] = tuning_vars.vars.at(3);
-//      CarManager::kMotorPidCar1.kI[1] = tuning_vars.vars.at(4);
-//      CarManager::kMotorPidCar1.kD[1] = tuning_vars.vars.at(5);
-    }
-  }
-
-  return true;
 }
 
 void main() {
+  Inflate();
+
   Led::Config ConfigLed;
   ConfigLed.is_active_low = true;
   ConfigLed.id = 0;
@@ -144,12 +119,11 @@ void main() {
 
   Timer::TimerInt time_img = 0;
 
-  while (true) {
-    led0.Switch();
-    char temp[100];
-    sprintf(temp, "%d\n", usir.GetDistance());
-    bt.SendStr(temp);
-  }
+  ConsoleWriteString(&console, "i: " + to_string(vals.i));
+  console.SetCursorRow(1);
+  ConsoleWriteString(&console, "f: " + to_string(vals.f));
+
+  while (true);
 }
 
 } //namesapce testground
