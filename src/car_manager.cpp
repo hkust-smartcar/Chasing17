@@ -23,3 +23,13 @@ CarManager::Identity CarManager::identity_ = CarManager::Identity::kFront;
 CarManager::Car CarManager::car_ = CarManager::Car::kCar1;
 
 uint16_t CarManager::config = 0;
+
+CarManager::Edges CarManager::Edges::grad() {
+  Edges temp;
+  for (int i = 1; i < this->size(); i++) {
+    auto last = this->points[i];
+    auto second_last = this->points[i - 1];
+    temp.push(last.first - second_last.first, last.second - second_last.second);
+  }
+  return temp;
+}

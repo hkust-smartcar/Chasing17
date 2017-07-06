@@ -330,7 +330,7 @@ class BTComm {
   /**
    * Reset stop car flag
    */
-  bool resetStopCar(){
+  void resetStopCar(){
 	  stop_car_ = false;
   }
 

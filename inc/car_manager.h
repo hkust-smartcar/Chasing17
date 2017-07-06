@@ -18,6 +18,7 @@
 #include <cmath>
 #include <cstdint>
 #include <string>
+#include <vector>
 
 struct CarManager final {
  public:
@@ -107,6 +108,31 @@ struct CarManager final {
     uint16_t targetSpeed_round;
     uint16_t targetSpeed_sharp_turn;
     uint16_t targetSpeed_slow;//slow down speed during straight
+  };
+
+  /**
+ * Edges struct
+ *
+ * An type implementation for storage of Edges
+ * @member points Vector storing the edges sequentially
+ * @member push(int, int) Push a std::pair<int, int> into the vector points
+ * @member push(Edges) Push a Edges into the vector points
+ * @member size() Return the size of vector points
+ * @member insert(int, int, int) Insert a std::pair<int, int> into some position of vector points
+ * @member insert(int, Edges) Insert an Edges type into some position of vector points
+ * @member grad() Take the gradient of certain Edges
+ */
+  struct Edges {
+    void push(int x, int y) { points.push_back(std::make_pair(x, y)); }
+    void push(Edges edge) { points.insert(points.end(), edge.points.begin(), edge.points.end()); }
+    uint32_t size() { return points.size(); }
+    void insert(int pos, int x, int y) { points.emplace(points.begin() + pos, std::make_pair(x, y)); }
+    void insert(int pos, Edges edge) {
+      points.insert(points.begin() + pos, edge.points.begin(), edge.points.end());
+    }
+    Edges grad();
+
+    std::vector<std::pair<uint16_t, uint16_t>> points;
   };
 
   static uint16_t config;
