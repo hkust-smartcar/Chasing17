@@ -100,29 +100,37 @@ namespace TuningVar { //tuning var declaration
   // servo right pid values
   float servo_straight_kp_right = 0.8;
   float servo_straight_kd_right = 0.01;
-  float servo_normal_kp_right = 1.15;
+  float servo_normal_kp_right = 1.43;
   float servo_normal_kd_right = 0;
   float servo_roundabout_kp_right = 1.3;
   float servo_roundabout_kd_right = 0;
-  float servo_sharp_turn_kp_right = 1.35;
+  float servo_sharp_turn_kp_right = 1.10;
   float servo_sharp_turn_kd_right = 0;
+  float servo_trans_kp_right = 1.15;
+  float servo_trans_kd_right = 0;
+
 
   // servo left pid values
   float servo_straight_kp_left = 0.8;
   float servo_straight_kd_left = 0.01;
-  float servo_normal_kp_left = 1.15;
+  float servo_normal_kp_left = 1.45;
   float servo_normal_kd_left = 0;
   float servo_roundabout_kp_left = 1.3;
   float servo_roundabout_kd_left = 0;
-  float servo_sharp_turn_kp_left = 1.35;
+  float servo_sharp_turn_kp_left = 0.94;
   float servo_sharp_turn_kd_left = 0;
+  float servo_trans_kp_left = 0.94;
+  float servo_trans_kd_left = 0;
 
   // target speed values
   uint16_t targetSpeed_straight = 150;
   uint16_t targetSpeed_normal = 110;//normal turning
   uint16_t targetSpeed_round = 85;
-  uint16_t targetSpeed_sharp_turn = 90;
+  uint16_t targetSpeed_sharp_turn = 120;
   uint16_t targetSpeed_slow = 90;
+  uint16_t targetSpeed_trans = 120;
+
+
 }  // namespace TuningVar
 
 namespace {
@@ -136,13 +144,13 @@ const PidSet kStablePid = {
 		{1.2, 0, 0},		// kServoNormalLeft
 		{1.4, 0, 0.01},		// kServoRoundaboutLeft
 		{1.4, 0, 0.005},	// kServoSharpTurnLeft
-		
+
 		// servo right
 		{0.8, 0, 0.01},		// kServoStraightRight
 		{1.35, 0, 0},		// kServoNormalRight
 		{1.4, 0, 0.01},		// kServoRoundaboutRight
 		{1.4, 0, 0.005},	// kServoSharpTurnRight
-		
+
 		// speed
 		120,				// kSpeedStraight
 		95,					// kSpeedNormal
@@ -185,7 +193,7 @@ int encoder_total_round = 0; // for roundabout
 int encoder_total_exit = 0;
 int roundabout_cnt = 0; // count the roundabout
 //Timer::TimerInt feature_start_time;
-std::pair<int, int> carMid {61, 0};
+std::pair<int, int> carMid {63, 0};
 int roundabout_nearest_corner_cnt_left = pow(TuningVar::corner_range * 2 + 1, 2); // for finding the nearest corner point for roundabout
 int roundabout_nearest_corner_cnt_right = pow(TuningVar::corner_range * 2 + 1, 2);
 std::pair<int, int> roundabout_nearest_corner_left{0, 0};
@@ -248,17 +256,17 @@ int roundabout_overtake(uint32_t a, int pos);
 
 std::string InflatePidValues() {
 	using namespace TuningVar;
-	
+
 	PidSet p;
-	
+
 	switch (CarManager::config) {
 		case 1:
 			p = kStablePid;
 			break;
 		default:
 			return "Custom";
-	} 
-	
+	}
+
 	// inflate the pid values
 	servo_straight_kp_left = p.ServoStraightLeft.kP;
 	servo_straight_kd_left = p.ServoStraightLeft.kD;
@@ -277,7 +285,7 @@ std::string InflatePidValues() {
 	servo_roundabout_kd_right = p.ServoRoundaboutRight.kD;
 	servo_sharp_turn_kp_right = p.ServoSharpTurnRight.kP;
 	servo_sharp_turn_kd_right = p.ServoSharpTurnRight.kD;
-	
+
 	targetSpeed_straight = p.targetSpeed_straight;
 	targetSpeed_normal = p.targetSpeed_normal;
 	targetSpeed_round = p.targetSpeed_round;
@@ -1849,7 +1857,7 @@ void main_car1(bool debug_) {
 					}
 
 					//sharp turning case TODO: 140 needs tuning
-					else if(abs(curr_servo_error) > 140){
+					else if(abs(curr_servo_error) > 150){
 						if(curr_servo_error > 0){
 							tempKp = TuningVar::servo_sharp_turn_kp_right;
 							tempKd = TuningVar::servo_sharp_turn_kd_right;
@@ -1860,6 +1868,20 @@ void main_car1(bool debug_) {
 						pid_left.SetSetpoint(TuningVar::targetSpeed_sharp_turn*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
 						pid_right.SetSetpoint(TuningVar::targetSpeed_sharp_turn* differential_left((-pServo->GetDegree() + servo_bounds.kCenter)/10));
 					}
+
+					// transition PID to reduce discontinuous changing of PID between sharp and normal
+					else if(abs(curr_servo_error) > 130){
+						if(curr_servo_error > 0){
+							tempKp = TuningVar::servo_trans_kp_right;
+							tempKd = TuningVar::servo_trans_kd_right;
+						}else{
+							tempKp = TuningVar::servo_trans_kp_left;
+							tempKd = TuningVar::servo_trans_kd_left;
+						}
+						pid_left.SetSetpoint(TuningVar::targetSpeed_trans*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
+						pid_right.SetSetpoint(TuningVar::targetSpeed_trans* differential_left((-pServo->GetDegree() + servo_bounds.kCenter)/10));
+					}
+
 
 					//straight case + TODO:double check further image to decide whether add speed or not
 					else if(abs(curr_servo_error) < 50){
@@ -1882,6 +1904,7 @@ void main_car1(bool debug_) {
 							pid_left.SetSetpoint(TuningVar::targetSpeed_slow*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
 							pid_right.SetSetpoint(TuningVar::targetSpeed_slow* differential_left((-pServo->GetDegree() + servo_bounds.kCenter)/10));
 						}
+
 						// both edges have 50
 						else{
 							for(int i =34; i<50; i++){

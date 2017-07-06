@@ -56,26 +56,31 @@ void loadItems(DebugConsole* console) {
     console->PushItem("strght", &targetSpeed_straight, 5);
     console->PushItem("normal", &targetSpeed_normal, 5);
     console->PushItem("rndabt", &targetSpeed_round, 5);
+    console->PushItem("trans_turn", &targetSpeed_trans, 5);
     console->PushItem("s_turn", &targetSpeed_sharp_turn, 5);
 
     // servo
     console->PushItem("servo pid:");
     console->PushItem("strght-p-r", &servo_straight_kp_right, 0.01);
-    console->PushItem("strght-d-r", &servo_straight_kd_right, 0.005);
+    console->PushItem("strght-d-r", &servo_straight_kd_right, 0.001);
     console->PushItem("strght-p-l", &servo_straight_kp_left, 0.01);
-    console->PushItem("strght-d-l", &servo_straight_kd_left, 0.005);
+    console->PushItem("strght-d-l", &servo_straight_kd_left, 0.001);
     console->PushItem("normal-p-r", &servo_normal_kp_right, 0.01);
-    console->PushItem("normal-d-r", &servo_normal_kd_right, 0.005);
+    console->PushItem("normal-d-r", &servo_normal_kd_right, 0.001);
     console->PushItem("normal-p-l", &servo_normal_kp_left, 0.01);
-    console->PushItem("normal-d-l", &servo_normal_kd_left, 0.005);
+    console->PushItem("normal-d-l", &servo_normal_kd_left, 0.001);
     console->PushItem("rndabt-p-r", &servo_roundabout_kp_right, 0.01);
-    console->PushItem("rndabt-d-r", &servo_roundabout_kd_right, 0.005);
+    console->PushItem("rndabt-d-r", &servo_roundabout_kd_right, 0.001);
     console->PushItem("rndabt-p-l", &servo_roundabout_kp_left, 0.01);
-    console->PushItem("rndabt-d-l", &servo_roundabout_kd_left, 0.005);
+    console->PushItem("rndabt-d-l", &servo_roundabout_kd_left, 0.001);
+    console->PushItem("trans-p-r", &servo_trans_kp_right, 0.01);
+    console->PushItem("trans-d-r", &servo_trans_kd_right, 0.001);
+    console->PushItem("trans-p-l", &servo_trans_kp_left, 0.01);
+    console->PushItem("trans-d-l", &servo_trans_kd_left, 0.001);
     console->PushItem("s_turn-p-r", &servo_sharp_turn_kp_right, 0.01);
-    console->PushItem("s_turn-d-r", &servo_sharp_turn_kd_right, 0.005);
+    console->PushItem("s_turn-d-r", &servo_sharp_turn_kd_right, 0.001);
     console->PushItem("s_turn-p-l", &servo_sharp_turn_kp_left, 0.01);
-    console->PushItem("s_turn-d-l", &servo_sharp_turn_kd_left, 0.005);
+    console->PushItem("s_turn-d-l", &servo_sharp_turn_kd_left, 0.001);
 
   } else if (car != 0) {
     using namespace algorithm::optimal::car2::TuningVar;
@@ -98,26 +103,31 @@ void loadItems(DebugConsole* console) {
     console->PushItem("strght", &targetSpeed_straight, 5);
     console->PushItem("normal", &targetSpeed_normal, 5);
     console->PushItem("rndabt", &targetSpeed_round, 5);
+    console->PushItem("trans_turn", &targetSpeed_trans, 5);
     console->PushItem("s_turn", &targetSpeed_sharp_turn, 5);
 
     // servo
     console->PushItem("servo pid:");
     console->PushItem("strght-p-r", &servo_straight_kp_right, 0.01);
-    console->PushItem("strght-d-r", &servo_straight_kd_right, 0.005);
+    console->PushItem("strght-d-r", &servo_straight_kd_right, 0.001);
     console->PushItem("strght-p-l", &servo_straight_kp_left, 0.01);
-    console->PushItem("strght-d-l", &servo_straight_kd_left, 0.005);
+    console->PushItem("strght-d-l", &servo_straight_kd_left, 0.001);
     console->PushItem("normal-p-r", &servo_normal_kp_right, 0.01);
-    console->PushItem("normal-d-r", &servo_normal_kd_right, 0.005);
+    console->PushItem("normal-d-r", &servo_normal_kd_right, 0.001);
     console->PushItem("normal-p-l", &servo_normal_kp_left, 0.01);
-    console->PushItem("normal-d-l", &servo_normal_kd_left, 0.005);
+    console->PushItem("normal-d-l", &servo_normal_kd_left, 0.001);
     console->PushItem("rndabt-p-r", &servo_roundabout_kp_right, 0.01);
-    console->PushItem("rndabt-d-r", &servo_roundabout_kd_right, 0.005);
+    console->PushItem("rndabt-d-r", &servo_roundabout_kd_right, 0.001);
     console->PushItem("rndabt-p-l", &servo_roundabout_kp_left, 0.01);
-    console->PushItem("rndabt-d-l", &servo_roundabout_kd_left, 0.005);
+    console->PushItem("rndabt-d-l", &servo_roundabout_kd_left, 0.001);
+    console->PushItem("trans-p-r", &servo_trans_kp_right, 0.01);
+    console->PushItem("trans-d-r", &servo_trans_kd_right, 0.001);
+    console->PushItem("trans-p-l", &servo_trans_kp_left, 0.01);
+    console->PushItem("trans-d-l", &servo_trans_kd_left, 0.001);
     console->PushItem("s_turn-p-r", &servo_sharp_turn_kp_right, 0.01);
-    console->PushItem("s_turn-d-r", &servo_sharp_turn_kd_right, 0.005);
+    console->PushItem("s_turn-d-r", &servo_sharp_turn_kd_right, 0.001);
     console->PushItem("s_turn-p-l", &servo_sharp_turn_kp_left, 0.01);
-    console->PushItem("s_turn-d-l", &servo_sharp_turn_kd_left, 0.005);
+    console->PushItem("s_turn-d-l", &servo_sharp_turn_kd_left, 0.001);
 
   }
 }
@@ -137,6 +147,21 @@ uint16_t debug(bool call_reset) {
   joystick_config.id = 0;
   joystick_config.is_active_low = true;
   Joystick joystick(joystick_config);
+
+  if(call_reset){
+	  DebugConsole resetConfirmConsole(&joystick, &lcd, &writer);
+	  resetConfirmConsole.PushItem("Sure Reset?",&call_reset,"yes","no");
+	  resetConfirmConsole.PushItem("Confirm",&foo,"","");
+	  Item item = resetConfirmConsole.GetItem(1);
+	  item.listener = &confirmCar;
+	  resetConfirmConsole.SetItem(1,item);
+	  resetConfirmConsole.ListItems();
+	  while(!confirm){
+		  resetConfirmConsole.Listen();
+	  }
+	  confirm=false;
+  }
+
 
   Flash::Config flash_config;
   Flash flash(flash_config);
