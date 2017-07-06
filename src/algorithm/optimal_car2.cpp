@@ -130,6 +130,32 @@ namespace TuningVar{ //tuning var delaration
 }  // namespace TuningVar
 
 namespace {
+typedef CarManager::PidSet PidSet;
+
+const PidSet kStablePid = {
+		"c2_stable",		// set name
+
+		// servo left
+		{0.8, 0, 0.01},		// kServoStraightLeft
+		{1.2, 0, 0},		// kServoNormalLeft
+		{1.4, 0, 0.01},		// kServoRoundaboutLeft
+		{1.4, 0, 0.005},	// kServoSharpTurnLeft
+
+		// servo right
+		{0.8, 0, 0.01},		// kServoStraightRight
+		{1.2, 0, 0},		// kServoNormalRight
+		{1.4, 0, 0.01},		// kServoRoundaboutRight
+		{1.4, 0, 0.005},	// kServoSharpTurnRight
+
+		// speed
+		120,				// kSpeedStraight
+		95,					// kSpeedNormal
+		90,					// kSpeedRoundabout
+		90,					// kSpeedSharpTurn
+		100					// kSpeedSlow
+};
+
+
 //BT listener
 std::string inputStr;
 bool tune = false;
@@ -218,6 +244,7 @@ bool FindOneLeftEdge();
 bool FindOneRightEdge();
 void GenPath(Feature);
 bool getWorldBit(int, int);
+std::string InflatePidValues();
 void PrintCorner(Corners, uint16_t);
 void PrintEdge(Edges, uint16_t);
 void PrintImage();
@@ -226,6 +253,46 @@ void PrintWorldImage();
 int roundabout_shortest(uint32_t a, int pos);
 int roundabout_overtake(uint32_t a, int pos);
 
+std::string InflatePidValues() {
+	using namespace TuningVar;
+
+	PidSet p;
+
+	switch (CarManager::config) {
+		case 1:
+			p = kStablePid;
+		break;
+		default:
+			return "Custom";
+	}
+
+	// inflate the pid values
+	servo_straight_kp_left = p.ServoStraightLeft.kP;
+	servo_straight_kd_left = p.ServoStraightLeft.kD;
+	servo_normal_kp_left = p.ServoNormalLeft.kP;
+	servo_normal_kd_left = p.ServoNormalLeft.kD;
+	servo_roundabout_kp_left = p.ServoRoundaboutLeft.kP;
+	servo_roundabout_kd_left = p.ServoRoundaboutLeft.kD;
+	servo_sharp_turn_kp_left = p.ServoSharpTurnLeft.kP;
+	servo_sharp_turn_kd_left = p.ServoSharpTurnLeft.kD;
+
+	servo_straight_kp_right = p.ServoStraightRight.kP;
+	servo_straight_kd_right = p.ServoStraightRight.kD;
+	servo_normal_kp_right = p.ServoNormalRight.kP;
+	servo_normal_kd_right = p.ServoNormalRight.kD;
+	servo_roundabout_kp_right = p.ServoRoundaboutRight.kP;
+	servo_roundabout_kd_right = p.ServoRoundaboutRight.kD;
+	servo_sharp_turn_kp_right = p.ServoSharpTurnRight.kP;
+	servo_sharp_turn_kd_right = p.ServoSharpTurnRight.kD;
+
+	targetSpeed_straight = p.targetSpeed_straight;
+	targetSpeed_normal = p.targetSpeed_normal;
+	targetSpeed_round = p.targetSpeed_round;
+	targetSpeed_sharp_turn = p.targetSpeed_sharp_turn;
+	targetSpeed_slow = p.targetSpeed_slow;
+
+	return p.name;
+}
 
 /*
  * @brief: bluetooth listener for processing tuning

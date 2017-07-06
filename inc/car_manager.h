@@ -17,6 +17,7 @@
 
 #include <cmath>
 #include <cstdint>
+#include <string>
 
 struct CarManager final {
  public:
@@ -74,31 +75,6 @@ struct CarManager final {
     uint16_t kRightBound;
   };
 
-  /**
-   * Struct of servo angles, stored in degrees
-   */
-  struct ServoAngles {
-    uint8_t kLeftAngle;
-    uint8_t kRightAngle;
-  };
-
-  static constexpr ServoAngles kAnglesCar1 = {36, 38};
-  static constexpr ServoAngles kAnglesCar2 = {38, 41};
-
-  static constexpr float kWheelbase = 19.65;
-  static constexpr float kAxleLength = 15.2;
-
-  /**
-   * Struct of side ratios, i.e. the speed ratio between the side of the car and the middle of the car.
-   */
-  struct SideRatio {
-    float kLeft;
-    float kRight;
-  };
-
-  static constexpr SideRatio kRatioCar1 = {std::tan(kAnglesCar1.kLeftAngle), std::tan(kAnglesCar1.kRightAngle)};
-  static constexpr SideRatio kRatioCar2 = {std::tan(kAnglesCar2.kLeftAngle), std::tan(kAnglesCar2.kRightAngle)};
-
   struct PidValues {
     float kP;
     float kI;
@@ -110,11 +86,30 @@ struct CarManager final {
     uint16_t h;
   };
 
-  // Getters
-  static ServoAngles GetServoAngles();
-  static ServoAngles GetServoAngles(Car);
-  static SideRatio GetSideRatio();
-  static SideRatio GetSideRatio(Car);
+  struct PidSet {
+    std::string name;
+
+    // servo left pid values
+    PidValues ServoStraightLeft;
+    PidValues ServoNormalLeft;
+    PidValues ServoRoundaboutLeft;
+    PidValues ServoSharpTurnLeft;
+
+    // servo right pid values
+    PidValues ServoStraightRight;
+    PidValues ServoNormalRight;
+    PidValues ServoRoundaboutRight;
+    PidValues ServoSharpTurnRight;
+
+    // target speed values
+    uint16_t targetSpeed_straight;
+    uint16_t targetSpeed_normal;//normal turning
+    uint16_t targetSpeed_round;
+    uint16_t targetSpeed_sharp_turn;
+    uint16_t targetSpeed_slow;//slow down speed during straight
+  };
+
+  static uint16_t config;
 
   static uint16_t us_distance_;
   static int32_t left_speed_;

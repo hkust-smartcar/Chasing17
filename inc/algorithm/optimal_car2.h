@@ -26,8 +26,6 @@ namespace algorithm {
 namespace optimal {
 namespace car2 {
 
-typedef CarManager::PidValues PidValues;
-
 void main_car2(bool debug_ = false);
 
 /**
@@ -155,54 +153,6 @@ namespace TuningVar{
 enum struct TranslateType {
   kNone = 0, kLeftNull, kRightNull
 };
-
-namespace stable {
-const PidValues kServoStraightLeft = {0.8, 0, 0.01};
-const PidValues kServoNormalLeft = {1.2, 0, 0};
-const PidValues kServoRoundaboutLeft = {1.4, 0, 0.01};
-const PidValues kServoSharpTurnLeft = {1.4, 0, 0.005};
-
-const uint16_t kSpeedStraightLeft = 120;
-const uint16_t kSpeedNormalLeft = 95;
-const uint16_t kSpeedRoundaboutLeft = 90;
-const uint16_t kSpeedSharpTurnLeft = 90;
-const uint16_t kSpeedSlowLeft = 100;
-
-const PidValues kServoStraightRight = {0.8, 0, 0.01};
-const PidValues kServoNormalRight = {1.2, 0, 0};
-const PidValues kServoRoundaboutRight = {1.4, 0, 0.01};
-const PidValues kServoSharpTurnRight = {1.4, 0, 0.005};
-
-const uint16_t kSpeedStraightRight = 120;
-const uint16_t kSpeedNormalRight = 95;
-const uint16_t kSpeedRoundaboutRight = 90;
-const uint16_t kSpeedSharpTurnRight = 90;
-const uint16_t kSpeedSlowRight = 100;
-}  // namespace stable
-
-namespace current {
-const PidValues kServoStraightLeft = {0.8, 0, 0.01};
-const PidValues kServoNormalLeft = {1.8, 0, 0.005};
-const PidValues kServoRoundaboutLeft = {1.4, 0, 0.01};
-const PidValues kServoSharpTurnLeft = {1.8, 0, 0.005};
-
-const uint16_t kSpeedStraightLeft = 150;
-const uint16_t kSpeedNormalLeft = 100;
-const uint16_t kSpeedRoundaboutLeft = 95;
-const uint16_t kSpeedSharpTurnLeft = 90;
-const uint16_t kSpeedSlowLeft = 110;
-
-const PidValues kServoStraightRight = {0.8, 0, 0.01};
-const PidValues kServoNormalRight = {1.8, 0, 0.005};
-const PidValues kServoRoundaboutRight = {1.4, 0, 0.01};
-const PidValues kServoSharpTurnRight = {1.8, 0, 0.005};
-
-const uint16_t kSpeedStraightRight = 150;
-const uint16_t kSpeedNormalRight = 100;
-const uint16_t kSpeedRoundaboutRight = 95;
-const uint16_t kSpeedSharpTurnRight = 90;
-const uint16_t kSpeedSlowRight = 110;
-}  // namespace current
 
 }  // namespace car2
 }  // namespace optimal

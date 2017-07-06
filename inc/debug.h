@@ -10,11 +10,16 @@
 
 #include "libsc/st7735r.h"
 #include "libsc/lcd_typewriter.h"
+#include "libsc/led.h"
 #include "libsc/joystick.h"
 #include "libbase/k60/flash.h"
 #include "debug_console.h"
 
 #include "car_manager.h"
+#include "util/util.h"
+#include "util/unit_tests.h"
+
+#include "algorithm/optimal_car1.h"
 
 using libsc::St7735r;
 using libsc::System;
@@ -25,8 +30,6 @@ using libbase::k60::Flash;
 uint16_t car = 0;
 bool confirm = false;
 
-bool foo = false;
-
 namespace debug_flag{
 	  bool lcd_debug = false;
 }
@@ -36,7 +39,9 @@ void confirmCar() {
 }
 
 void loadItems(DebugConsole* console) {
-  if (car == 1) {
+  console->PushItem("config", &CarManager::config, 1.0);
+
+    if (car == 1) {
     using namespace algorithm::optimal::car1::TuningVar;
 
     // misc
@@ -50,7 +55,7 @@ void loadItems(DebugConsole* console) {
 //    console->PushItem("corner_max", &corner_max, 1);
 
     // speed
-    console->PushItem("target spd:", &foo, "", "");
+    console->PushItem("target spd:");
     console->PushItem("slow", &targetSpeed_slow, 5);
     console->PushItem("strght", &targetSpeed_straight, 5);
     console->PushItem("normal", &targetSpeed_normal, 5);
@@ -58,7 +63,7 @@ void loadItems(DebugConsole* console) {
     console->PushItem("s_turn", &targetSpeed_sharp_turn, 5);
 
     // servo
-    console->PushItem("servo pid:", &foo, "", "");
+    console->PushItem("servo pid:");
     console->PushItem("strght-p-r", &servo_straight_kp_right, 0.01);
     console->PushItem("strght-d-r", &servo_straight_kd_right, 0.005);
     console->PushItem("strght-p-l", &servo_straight_kp_left, 0.01);
@@ -81,7 +86,7 @@ void loadItems(DebugConsole* console) {
 
     // misc
     console->PushItem("lcd debug", &debug_flag::lcd_debug);
-    console->PushItem("algo time", &show_algo_time, "true", "false");
+    console->PushItem("algo time", &show_algo_time, "yes", "no");
     console->PushItem("distance", &start_car_distance, 10);
     console->PushItem("overt_sel", &roundabout_overtake_flag, "y", "n");
     console->PushItem("rndabt sel", &roundabout_shortest_flag, "l", "r");
@@ -91,7 +96,7 @@ void loadItems(DebugConsole* console) {
 //    console->PushItem("corner_max", &corner_max, 1);
 
     // speed
-    console->PushItem("target spd:", &foo, "", "");
+    console->PushItem("target spd:");
     console->PushItem("slow", &targetSpeed_slow, 5);
     console->PushItem("strght", &targetSpeed_straight, 5);
     console->PushItem("normal", &targetSpeed_normal, 5);
@@ -99,7 +104,7 @@ void loadItems(DebugConsole* console) {
     console->PushItem("s_turn", &targetSpeed_sharp_turn, 5);
 
     // servo
-    console->PushItem("servo pid:", &foo, "", "");
+    console->PushItem("servo pid:");
     console->PushItem("strght-p-r", &servo_straight_kp_right, 0.01);
     console->PushItem("strght-d-r", &servo_straight_kd_right, 0.005);
     console->PushItem("strght-p-l", &servo_straight_kp_left, 0.01);
