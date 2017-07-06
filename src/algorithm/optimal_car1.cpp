@@ -169,7 +169,7 @@ int encoder_total_round = 0; // for roundabout
 int encoder_total_exit = 0;
 int roundabout_cnt = 0; // count the roundabout
 //Timer::TimerInt feature_start_time;
-std::pair<int, int> carMid {61, 0};
+std::pair<int, int> carMid {63, 0};
 int roundabout_nearest_corner_cnt_left = pow(TuningVar::corner_range * 2 + 1, 2); // for finding the nearest corner point for roundabout
 int roundabout_nearest_corner_cnt_right = pow(TuningVar::corner_range * 2 + 1, 2);
 std::pair<int, int> roundabout_nearest_corner_left{0, 0};
