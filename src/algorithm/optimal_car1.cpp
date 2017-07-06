@@ -106,7 +106,7 @@ namespace TuningVar { //tuning var declaration
   float servo_roundabout_kd_right = 0;
   float servo_sharp_turn_kp_right = 1.10;
   float servo_sharp_turn_kd_right = 0;
-  float servo_trans_kp_right = 1.10;
+  float servo_trans_kp_right = 1.15;
   float servo_trans_kd_right = 0;
 
 
