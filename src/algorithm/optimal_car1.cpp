@@ -68,7 +68,7 @@ namespace TuningVar { //tuning var declaration
   uint16_t edge_length = 159; //max length for an edge
   uint16_t edge_hor_search_max = 4; //max for horizontal search of edge if next edge point cannot be found
   uint16_t edge_min_worldview_bound_check = 30; //min for worldview bound check in edge finding
-  uint16_t corner_range = 6; //the square for detection would be in size corener_range*2+1
+  uint16_t corner_range = 5; //the square for detection would be in size corener_range*2+1
   float corner_height_ratio = 2.9; //the max height for detection would be WorldSize.h/corner_height_ratio
   uint16_t corner_min = 16, corner_max = 32; //threshold (in %) for corner detection
   uint16_t min_corners_dist = 7; // Manhattan dist threshold for consecutive corners
@@ -106,6 +106,9 @@ namespace TuningVar { //tuning var declaration
   float servo_roundabout_kd_right = 0;
   float servo_sharp_turn_kp_right = 1.10;
   float servo_sharp_turn_kd_right = 0;
+  float servo_trans_kp_right = 1.10;
+  float servo_trans_kd_right = 0;
+
 
   // servo left pid values
   float servo_straight_kp_left = 0.8;
@@ -116,6 +119,8 @@ namespace TuningVar { //tuning var declaration
   float servo_roundabout_kd_left = 0;
   float servo_sharp_turn_kp_left = 0.94;
   float servo_sharp_turn_kd_left = 0;
+  float servo_trans_kp_left = 0.94;
+  float servo_trans_kd_left = 0;
 
   // target speed values
   uint16_t targetSpeed_straight = 150;
@@ -123,6 +128,8 @@ namespace TuningVar { //tuning var declaration
   uint16_t targetSpeed_round = 85;
   uint16_t targetSpeed_sharp_turn = 120;
   uint16_t targetSpeed_slow = 90;
+  uint16_t targetSpeed_trans = 120;
+
 
 }  // namespace TuningVar
 
@@ -1784,7 +1791,7 @@ void main_car1(bool debug_) {
 					}
 
 					//sharp turning case TODO: 140 needs tuning
-					else if(abs(curr_servo_error) > 140){
+					else if(abs(curr_servo_error) > 150){
 						if(curr_servo_error > 0){
 							tempKp = TuningVar::servo_sharp_turn_kp_right;
 							tempKd = TuningVar::servo_sharp_turn_kd_right;
@@ -1795,6 +1802,20 @@ void main_car1(bool debug_) {
 						pid_left.SetSetpoint(TuningVar::targetSpeed_sharp_turn*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
 						pid_right.SetSetpoint(TuningVar::targetSpeed_sharp_turn* differential_left((-pServo->GetDegree() + servo_bounds.kCenter)/10));
 					}
+
+					// transition PID to reduce discontinuous changing of PID between sharp and normal
+					else if(abs(curr_servo_error) > 130){
+						if(curr_servo_error > 0){
+							tempKp = TuningVar::servo_trans_kp_right;
+							tempKd = TuningVar::servo_trans_kd_right;
+						}else{
+							tempKp = TuningVar::servo_trans_kp_left;
+							tempKd = TuningVar::servo_trans_kd_left;
+						}
+						pid_left.SetSetpoint(TuningVar::targetSpeed_trans*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
+						pid_right.SetSetpoint(TuningVar::targetSpeed_trans* differential_left((-pServo->GetDegree() + servo_bounds.kCenter)/10));
+					}
+
 
 					//straight case + TODO:double check further image to decide whether add speed or not
 					else if(abs(curr_servo_error) < 50){
@@ -1817,6 +1838,7 @@ void main_car1(bool debug_) {
 							pid_left.SetSetpoint(TuningVar::targetSpeed_slow*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
 							pid_right.SetSetpoint(TuningVar::targetSpeed_slow* differential_left((-pServo->GetDegree() + servo_bounds.kCenter)/10));
 						}
+
 						// both edges have 50
 						else{
 							for(int i =34; i<50; i++){
