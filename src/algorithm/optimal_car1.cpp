@@ -68,7 +68,7 @@ namespace TuningVar { //tuning var declaration
   uint16_t edge_length = 159; //max length for an edge
   uint16_t edge_hor_search_max = 4; //max for horizontal search of edge if next edge point cannot be found
   uint16_t edge_min_worldview_bound_check = 30; //min for worldview bound check in edge finding
-  uint16_t corner_range = 5; //the square for detection would be in size corener_range*2+1
+  uint16_t corner_range = 6; //the square for detection would be in size corener_range*2+1
   float corner_height_ratio = 2.9; //the max height for detection would be WorldSize.h/corner_height_ratio
   uint16_t corner_min = 16, corner_max = 32; //threshold (in %) for corner detection
   uint16_t min_corners_dist = 7; // Manhattan dist threshold for consecutive corners
