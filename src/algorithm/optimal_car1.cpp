@@ -100,28 +100,28 @@ namespace TuningVar { //tuning var declaration
   // servo right pid values
   float servo_straight_kp_right = 0.8;
   float servo_straight_kd_right = 0.01;
-  float servo_normal_kp_right = 1.15;
+  float servo_normal_kp_right = 1.43;
   float servo_normal_kd_right = 0;
   float servo_roundabout_kp_right = 1.3;
   float servo_roundabout_kd_right = 0;
-  float servo_sharp_turn_kp_right = 1.35;
+  float servo_sharp_turn_kp_right = 1.10;
   float servo_sharp_turn_kd_right = 0;
 
   // servo left pid values
   float servo_straight_kp_left = 0.8;
   float servo_straight_kd_left = 0.01;
-  float servo_normal_kp_left = 1.15;
+  float servo_normal_kp_left = 1.45;
   float servo_normal_kd_left = 0;
   float servo_roundabout_kp_left = 1.3;
   float servo_roundabout_kd_left = 0;
-  float servo_sharp_turn_kp_left = 1.35;
+  float servo_sharp_turn_kp_left = 0.94;
   float servo_sharp_turn_kd_left = 0;
 
   // target speed values
   uint16_t targetSpeed_straight = 150;
   uint16_t targetSpeed_normal = 110;//normal turning
   uint16_t targetSpeed_round = 85;
-  uint16_t targetSpeed_sharp_turn = 90;
+  uint16_t targetSpeed_sharp_turn = 120;
   uint16_t targetSpeed_slow = 90;
 
 }  // namespace TuningVar
