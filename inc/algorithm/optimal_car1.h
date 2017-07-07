@@ -93,8 +93,8 @@ namespace TuningVar {
   extern float servo_roundabout_kd_right;
   extern float servo_sharp_turn_kp_right;
   extern float servo_sharp_turn_kd_right;
-  extern float servo_trans_kp_right;
-  extern float servo_trans_kd_right;
+  extern float servo_trans_kp_slope_right;
+  extern float servo_trans_kd_slope_right;
 
   // servo left pid values
   extern float servo_straight_kp_left;
@@ -105,8 +105,8 @@ namespace TuningVar {
   extern float servo_roundabout_kd_left;
   extern float servo_sharp_turn_kp_left;
   extern float servo_sharp_turn_kd_left;
-  extern float servo_trans_kp_left;
-  extern float servo_trans_kd_left;
+  extern float servo_trans_kp_slope_left;
+  extern float servo_trans_kd_slope_left;
 
   // target speed values
   extern uint16_t targetSpeed_straight;
