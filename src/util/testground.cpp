@@ -126,13 +126,15 @@ void main() {
 
   led2.SetEnable(true);
 
-  St7735r::Config lcdConfig;
-  lcdConfig.is_revert = true;
-  St7735r lcd(lcdConfig);
+	St7735r::Config lcdConfig;
+	lcdConfig.is_revert = true;
+	St7735r lcd(lcdConfig);
+	auto pLcd = &lcd;
 
-  LcdConsole::Config console_config;
-  console_config.lcd = &lcd;
-  LcdConsole console(console_config);
+	LcdTypewriter::Config writerConfig;
+	writerConfig.lcd = pLcd;
+	LcdTypewriter writer(writerConfig);
+	auto pWriter = &writer;
 
   JyMcuBt106::Config bt_config;
   bt_config.id = 0;
@@ -140,15 +142,39 @@ void main() {
 //  bt_config.rx_isr = &BluetoothListener;
   JyMcuBt106 bt(bt_config);
 
+  CarManager::ServoBounds servo_bounds = {1070, 755, 460};
+  int cur_servo_val = servo_bounds.kCenter;
+
+  Joystick::Config jy_config;
+  jy_config.id = 0;
+  jy_config.dispatcher = [&cur_servo_val](const uint8_t id, const Joystick::State which){
+	  switch(which){
+	  case Joystick::State::kLeft:
+		  cur_servo_val -= 5;
+		  break;
+	  case Joystick::State::kRight:
+		  cur_servo_val += 5;
+		  break;
+	  }
+  };
+  Joystick jy(jy_config);
+
   FcYyUsV4 usir(libbase::k60::Pin::Name::kPtb0);
 
   Timer::TimerInt time_img = 0;
 
   while (true) {
-    led0.Switch();
-    char temp[100];
-    sprintf(temp, "%d\n", usir.GetDistance());
-    bt.SendStr(temp);
+	  while (time_img != System::Time()){
+		  time_img = System::Time();
+		  if (time_img % 10 == 0){
+			  led0.Switch();
+			  servo->SetDegree(cur_servo_val);
+			  char temp[100];
+			  sprintf(temp, "servo:%d", cur_servo_val);
+			  pLcd->SetRegion(Lcd::Rect(0,0,128,15));
+			  pWriter->WriteString(temp);
+		  }
+	  }
   }
 }
 
