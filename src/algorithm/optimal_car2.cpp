@@ -78,7 +78,7 @@ namespace TuningVar{ //tuning var delaration
   uint16_t min_edges_dist = 7; // Manhattan dist threshold for edges
   uint16_t track_width_threshold = 900; //track width threshold for consideration of sudden change (square)
   uint16_t track_width_change_threshold = 350; //track width change threshold for consideration of sudden change
-  uint16_t testDist = 35; // The distance from which the image pixel should be tested and identify feature
+  uint16_t testDist = 43; // The distance from which the image pixel should be tested and identify feature
   uint16_t slowDownDist = 100; // the distance from which the image pixel should be tested and know whether it should slow down in advance
   uint16_t straight_line_threshold = 45; // The threshold num. of equal width for straight line detection
   uint16_t action_distance = 27; // The condition in which the car start handling this feature when meeting it
@@ -109,21 +109,21 @@ namespace TuningVar{ //tuning var delaration
   float servo_roundabout_kp_right = 1.3;
   float servo_roundabout_kd_right = 0;
   float servo_sharp_turn_kp_right = 1.35;
-  float servo_sharp_turn_kd_right = 0;
-  float servo_trans_kp_right = 1.10;
-  float servo_trans_kd_right = 0;
+  float servo_sharp_turn_kd_right = 0.01;
+  float servo_trans_kp_slope_right = 0.01;
+  float servo_trans_kd_slope_right = 1;
 
   // servo left pid values
   float servo_straight_kp_left = 0.8;
   float servo_straight_kd_left = 0.01;
   float servo_normal_kp_left = 1.15;
-  float servo_normal_kd_left = 0;
+  float servo_normal_kd_left = 0.01;
   float servo_roundabout_kp_left = 1.3;
   float servo_roundabout_kd_left = 0;
   float servo_sharp_turn_kp_left = 1.35;
-  float servo_sharp_turn_kd_left = 0;
-  float servo_trans_kp_left = 0.94;
-  float servo_trans_kd_left = 0;
+  float servo_sharp_turn_kd_left = 0.01;
+  float servo_trans_kp_slope_left = 0.01;
+  float servo_trans_kd_slope_left = 1;
 
   // target speed values
   uint16_t targetSpeed_straight = 150;
@@ -132,6 +132,7 @@ namespace TuningVar{ //tuning var delaration
   uint16_t targetSpeed_sharp_turn = 90;
   uint16_t targetSpeed_slow = 90;
   uint16_t targetSpeed_trans = 120;
+  uint16_t targetSpeed_trans_slope = 100;
 
 }  // namespace TuningVar
 
@@ -1792,11 +1793,11 @@ void main_car2(bool debug_) {
 					// transition PID to reduce discontinuous changing of PID between sharp and normal
 					else if(abs(curr_servo_error) > 130){
 						if(curr_servo_error > 0){
-							tempKp = TuningVar::servo_trans_kp_right;
-							tempKd = TuningVar::servo_trans_kd_right;
+							tempKp = abs(curr_servo_error)*TuningVar::servo_trans_kp_slope_right;
+							tempKd = abs(curr_servo_error)*TuningVar::servo_trans_kd_slope_right;
 						}else{
-							tempKp = TuningVar::servo_trans_kp_left;
-							tempKd = TuningVar::servo_trans_kd_left;
+							tempKp = abs(curr_servo_error)*TuningVar::servo_trans_kp_slope_left;
+							tempKd = abs(curr_servo_error)*TuningVar::servo_trans_kd_slope_left;
 						}
 						pid_left.SetSetpoint(TuningVar::targetSpeed_trans*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
 						pid_right.SetSetpoint(TuningVar::targetSpeed_trans* differential_left((-pServo->GetDegree() + servo_bounds.kCenter)/10));
