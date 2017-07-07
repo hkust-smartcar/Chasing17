@@ -59,6 +59,10 @@ class BTComm {
     ptrBT_->SendBuffer(&data, 1);
   }
 
+  void sendStr(char* str){
+	ptrBT_->SendStr(str);
+  }
+
 
   static int fetchSize(){
 	  return NAKbuffer_.size();

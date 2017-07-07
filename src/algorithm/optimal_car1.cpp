@@ -106,7 +106,7 @@ namespace TuningVar { //tuning var declaration
   float servo_roundabout_kd_right = 0;
   float servo_sharp_turn_kp_right = 1.10;
   float servo_sharp_turn_kd_right = 0;
-  float servo_trans_kp_slope_right = 1.15;
+  float servo_trans_kp_slope_right = -0.0165;
   float servo_trans_kd_slope_right = 0;
 
 
@@ -124,7 +124,7 @@ namespace TuningVar { //tuning var declaration
 
   // target speed values
   uint16_t targetSpeed_straight = 150;
-  uint16_t targetSpeed_normal = 110;//normal turning
+  uint16_t targetSpeed_normal = 120;//normal turning
   uint16_t targetSpeed_round = 85;
   uint16_t targetSpeed_sharp_turn = 120;
   uint16_t targetSpeed_slow = 90;
@@ -1589,6 +1589,11 @@ void main_car1(bool debug_) {
 	//  DebugConsole console(&joystick, &lcd, &writer, 10);
 
 	Timer::TimerInt time_img = 0;
+	TuningVar::servo_trans_kp_slope_left = (TuningVar::servo_sharp_turn_kp_left - TuningVar::servo_normal_kp_left) / 2;
+	TuningVar::servo_trans_kp_slope_right = (TuningVar::servo_sharp_turn_kp_right - TuningVar::servo_normal_kp_right) / 2;
+	TuningVar::servo_trans_kd_slope_left = (TuningVar::servo_sharp_turn_kd_left - TuningVar::servo_normal_kd_left) / 2;
+	TuningVar::servo_trans_kd_slope_right = (TuningVar::servo_sharp_turn_kd_right - TuningVar::servo_normal_kd_right) / 2;
+
 	float tempKp;
 	float tempKd;
 
@@ -1857,11 +1862,11 @@ void main_car1(bool debug_) {
 					// transition PID to reduce discontinuous changing of PID between sharp and normal
 					else if(abs(curr_servo_error) > 130){
 						if(curr_servo_error > 0){
-							tempKp = abs(curr_servo_error)*TuningVar::servo_trans_kp_slope_right;
-							tempKd = abs(curr_servo_error)*TuningVar::servo_trans_kd_slope_right;
+							tempKp = abs(curr_servo_error - 130) * TuningVar::servo_trans_kp_slope_right + TuningVar::servo_normal_kp_right;
+							tempKd = abs(curr_servo_error - 130) * TuningVar::servo_trans_kd_slope_right + TuningVar::servo_normal_kd_right;
 						}else{
-							tempKp = abs(curr_servo_error)*TuningVar::servo_trans_kp_slope_left;
-							tempKd = abs(curr_servo_error)*TuningVar::servo_trans_kd_slope_left;
+							tempKp = abs(curr_servo_error - 130) * TuningVar::servo_trans_kp_slope_left + TuningVar::servo_normal_kp_left;
+							tempKd = abs(curr_servo_error - 130) * TuningVar::servo_trans_kd_slope_left + TuningVar::servo_normal_kd_left;
 						}
 						pid_left.SetSetpoint(TuningVar::targetSpeed_trans*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
 						pid_right.SetSetpoint(TuningVar::targetSpeed_trans* differential_left((-pServo->GetDegree() + servo_bounds.kCenter)/10));
@@ -1980,6 +1985,11 @@ void main_car1(bool debug_) {
 						pLcd->SetRegion(Lcd::Rect(5,5,100,15));
 						pWriter->WriteString(buf);
 					}
+
+					char temp[100];
+					sprintf(temp, "%d\n", pServo->GetDegree());
+					bt.sendStr(temp);
+
 				}
 			}
 
