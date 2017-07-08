@@ -1687,6 +1687,10 @@ void main_car2(bool debug_) {
 						PrintEdge(right_edge, Lcd::kBlue); //Print right_edge
 						PrintCorner(left_corners, Lcd::kPurple); //Print left_corner
 						PrintCorner(right_corners, Lcd::kPurple); //Print right_corner
+						pLcd->SetRegion(Lcd::Rect(carMid.first, carMid.second,1,160));
+						pLcd->FillColor(Lcd::kRed);
+						pLcd->SetRegion(Lcd::Rect(0, WorldSize.h - path.points[20].second+1, 128, 1));
+						pLcd->FillColor(Lcd::kRed);
 //						pLcd->SetRegion(Lcd::Rect(roundabout_nearest_corner_left.first,
 //											WorldSize.h - roundabout_nearest_corner_left.second - 1, 4, 4));
 //						pLcd->FillColor(Lcd::kYellow);
@@ -1721,10 +1725,11 @@ void main_car2(bool debug_) {
 
 					/*-------------CONTROL SYSTEM-----------------------*/
 					int curr_servo_error = CalcAngleDiff();
-//						char temp[100];
-//						sprintf(temp, "error: %d", curr_servo_error);
-//						pLcd->SetRegion(Lcd::Rect(0, 16, 128, 15));
-//						pWriter->WriteString(temp);
+
+						char temp[100];
+						sprintf(temp, "error: %d", curr_servo_error);
+						pLcd->SetRegion(Lcd::Rect(0, 16, 128, 15));
+						pWriter->WriteString(temp);
 					/* Motor PID + Servo PID* for different situations*/
 
 					//roundaboutExit case

@@ -1691,6 +1691,10 @@ void main_car1(bool debug_) {
 						PrintCorner(left_corners, Lcd::kPurple); //Print left_corner
 						PrintCorner(right_corners, Lcd::kPurple); //Print right_corner
 						PrintEdge(path, Lcd::kGreen); //Print path
+						pLcd->SetRegion(Lcd::Rect(carMid.first, carMid.second,1,160));
+						pLcd->FillColor(Lcd::kRed);
+						pLcd->SetRegion(Lcd::Rect(0, WorldSize.h - path.points[20].second+1, 128, 1));
+						pLcd->FillColor(Lcd::kRed);
 						//						char timestr[100];
 						//						pLcd->SetRegion(Lcd::Rect(0,30,128,15));
 						//						sprintf(timestr, "Roun_cnt: %d", roundabout_cnt);
