@@ -95,19 +95,22 @@ struct CarManager final {
     PidValues ServoNormalLeft;
     PidValues ServoRoundaboutLeft;
     PidValues ServoSharpTurnLeft;
+    PidValues ServoTransitionalSlopeLeft;
 
     // servo right pid values
     PidValues ServoStraightRight;
     PidValues ServoNormalRight;
     PidValues ServoRoundaboutRight;
     PidValues ServoSharpTurnRight;
+    PidValues ServoTransitionalSlopeRight;
 
     // target speed values
-    uint16_t targetSpeed_straight;
-    uint16_t targetSpeed_normal;//normal turning
-    uint16_t targetSpeed_round;
-    uint16_t targetSpeed_sharp_turn;
-    uint16_t targetSpeed_slow;//slow down speed during straight
+    uint16_t SpeedStraight;
+    uint16_t SpeedNormal;//normal turning
+    uint16_t SpeedRound;
+    uint16_t SpeedSharpTurn;
+    uint16_t SpeedSlow;//slow down speed during straight
+    uint16_t SpeedTransitionalSlope;
   };
 
   /**

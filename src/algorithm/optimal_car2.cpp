@@ -142,23 +142,52 @@ const PidSet kStablePid = {
 		"c2_stable",		// set name
 
 		// servo left
-		{0.8, 0, 0.01},		// kServoStraightLeft
-		{1.2, 0, 0},		// kServoNormalLeft
-		{1.4, 0, 0.01},		// kServoRoundaboutLeft
-		{1.4, 0, 0.005},	// kServoSharpTurnLeft
+		{0.8, 0, 0.01},		// ServoStraightLeft
+		{1.15, 0, 0.01},	// ServoNormalLeft
+		{1.3, 0, 0},		// ServoRoundaboutLeft
+		{1.08, 0, 0.01},	// ServoSharpTurnLeft
+        {0.01, 0, 0},		// ServoTransitionalSlopeLeft
 
 		// servo right
-		{0.8, 0, 0.01},		// kServoStraightRight
-		{1.2, 0, 0},		// kServoNormalRight
-		{1.4, 0, 0.01},		// kServoRoundaboutRight
-		{1.4, 0, 0.005},	// kServoSharpTurnRight
+		{0.8, 0, 0.01},		// ServoStraightRight
+		{1.15, 0, 0},		// ServoNormalRight
+		{1.3, 0, 0},		// ServoRoundaboutRight
+		{1.04, 0, 0.01},	// ServoSharpTurnRight
+		{0.01, 0, 1},		// ServoTransitionalSlopeRight
 
 		// speed
-		120,				// kSpeedStraight
-		95,					// kSpeedNormal
-		90,					// kSpeedRoundabout
-		90,					// kSpeedSharpTurn
-		100					// kSpeedSlow
+		150,				// SpeedStraight
+		160,				// SpeedNormal
+		85,					// SpeedRoundabout
+		120,				// SpeedSharpTurn
+		90,					// SpeedSlow
+		120					// SpeedTransitionalSlope
+};
+
+const PidSet kUnstablePid = {
+		"c2_unstable",		// set name
+
+		// servo left
+		{0.8, 0, 0.01},		// ServoStraightLeft
+		{1.45, 0, 0},		// ServoNormalLeft
+		{1.4, 0, 0.01},		// ServoRoundaboutLeft
+		{1.04, 0, 0},		// ServoSharpTurnLeft
+		{0, 0, 0},			// ServoTransitionalSlopeLeft
+
+		// servo right
+		{0.8, 0, 0.01},		// ServoStraightRight
+		{1.58, 0, 0},		// ServoNormalRight
+		{1.4, 0, 0.01},		// ServoRoundaboutRight
+		{1.03, 0, 0},		// ServoSharpTurnRight
+		{0, 0, 0},			// ServoTransitionalSlopeRight
+
+		// speed
+		120,				// SpeedStraight
+		200,				// SpeedNormal
+		90,					// SpeedRoundabout
+		90,					// SpeedSharpTurn
+		100,				// SpeedSlow
+		0					// SpeedTransitionalSlope
 };
 
 
@@ -270,6 +299,9 @@ std::string InflatePidValues() {
 		case 1:
 			p = kStablePid;
 		break;
+		case 2:
+			p = kUnstablePid;
+		break;
 		default:
 			return "Custom";
 	}
@@ -283,6 +315,8 @@ std::string InflatePidValues() {
 	servo_roundabout_kd_left = p.ServoRoundaboutLeft.kD;
 	servo_sharp_turn_kp_left = p.ServoSharpTurnLeft.kP;
 	servo_sharp_turn_kd_left = p.ServoSharpTurnLeft.kD;
+	servo_trans_kp_slope_left = p.ServoTransitionalSlopeLeft.kP;
+	servo_trans_kd_slope_left = p.ServoTransitionalSlopeLeft.kD;
 
 	servo_straight_kp_right = p.ServoStraightRight.kP;
 	servo_straight_kd_right = p.ServoStraightRight.kD;
@@ -292,12 +326,15 @@ std::string InflatePidValues() {
 	servo_roundabout_kd_right = p.ServoRoundaboutRight.kD;
 	servo_sharp_turn_kp_right = p.ServoSharpTurnRight.kP;
 	servo_sharp_turn_kd_right = p.ServoSharpTurnRight.kD;
+	servo_trans_kp_slope_right = p.ServoTransitionalSlopeRight.kP;
+	servo_trans_kd_slope_right = p.ServoTransitionalSlopeRight.kD;
 
-	targetSpeed_straight = p.targetSpeed_straight;
-	targetSpeed_normal = p.targetSpeed_normal;
-	targetSpeed_round = p.targetSpeed_round;
-	targetSpeed_sharp_turn = p.targetSpeed_sharp_turn;
-	targetSpeed_slow = p.targetSpeed_slow;
+	targetSpeed_straight = p.SpeedStraight;
+	targetSpeed_normal = p.SpeedNormal;
+	targetSpeed_round = p.SpeedRound;
+	targetSpeed_sharp_turn = p.SpeedSharpTurn;
+	targetSpeed_slow = p.SpeedSlow;
+	targetSpeed_trans = p.SpeedTransitionalSlope;
 
 	return p.name;
 }
@@ -1561,6 +1598,8 @@ int GetMotorPower(int id){
 }
 
 void main_car2(bool debug_) {
+	const std::string kPidProfile = InflatePidValues();
+
 	debug = debug_;
 
 	Led::Config ConfigLed;
@@ -1638,8 +1677,6 @@ void main_car2(bool debug_) {
 	joystick_config.id = 0;
 	joystick_config.is_active_low = true;
 	Joystick joystick(joystick_config);
-
-
 
 	/*motor PID setting*/
 	IncrementalPidController<float, float> pid_left(0,0,0,0);

@@ -57,6 +57,7 @@ void loadItems(DebugConsole* console) {
     console->PushItem("normal", &targetSpeed_normal, 5);
     console->PushItem("rndabt", &targetSpeed_round, 5);
     console->PushItem("s_turn", &targetSpeed_sharp_turn, 5);
+    console->PushItem("trans", &targetSpeed_trans, 5);
 
     // servo
     console->PushItem("servo pid:");
@@ -76,6 +77,10 @@ void loadItems(DebugConsole* console) {
     console->PushItem("s_turn-d-r", &servo_sharp_turn_kd_right, 0.001);
     console->PushItem("s_turn-p-l", &servo_sharp_turn_kp_left, 0.01);
     console->PushItem("s_turn-d-l", &servo_sharp_turn_kd_left, 0.001);
+    console->PushItem("trans-p-r", &servo_trans_kp_slope_right, 0.01);
+    console->PushItem("trans-d-r", &servo_trans_kd_slope_right, 0.001);
+    console->PushItem("trans-p-l", &servo_trans_kp_slope_left, 0.01);
+    console->PushItem("trans-d-l", &servo_trans_kd_slope_left, 0.001);
 
   } else if (car != 0) {
     using namespace algorithm::optimal::car2::TuningVar;
@@ -99,6 +104,7 @@ void loadItems(DebugConsole* console) {
     console->PushItem("normal", &targetSpeed_normal, 5);
     console->PushItem("rndabt", &targetSpeed_round, 5);
     console->PushItem("s_turn", &targetSpeed_sharp_turn, 5);
+    console->PushItem("trans", &targetSpeed_trans, 5);
 
     // servo
     console->PushItem("servo pid:");
@@ -118,6 +124,10 @@ void loadItems(DebugConsole* console) {
     console->PushItem("s_turn-d-r", &servo_sharp_turn_kd_right, 0.001);
     console->PushItem("s_turn-p-l", &servo_sharp_turn_kp_left, 0.01);
     console->PushItem("s_turn-d-l", &servo_sharp_turn_kd_left, 0.001);
+    console->PushItem("trans-p-r", &servo_trans_kp_slope_right, 0.01);
+    console->PushItem("trans-d-r", &servo_trans_kd_slope_right, 0.001);
+    console->PushItem("trans-p-l", &servo_trans_kp_slope_left, 0.01);
+    console->PushItem("trans-d-l", &servo_trans_kd_slope_left, 0.001);
 
   }
 }
@@ -141,7 +151,7 @@ uint16_t debug(bool call_reset) {
   if(call_reset){
 	  DebugConsole resetConfirmConsole(&joystick, &lcd, &writer);
 	  resetConfirmConsole.PushItem("Sure Reset?",&call_reset,"yes","no");
-	  resetConfirmConsole.PushItem("Confirm",&foo,"","");
+	  resetConfirmConsole.PushItem("Confirm");
 	  Item item = resetConfirmConsole.GetItem(1);
 	  item.listener = &confirmCar;
 	  resetConfirmConsole.SetItem(1,item);
