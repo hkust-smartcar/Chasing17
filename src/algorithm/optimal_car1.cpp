@@ -104,7 +104,7 @@ namespace TuningVar { //tuning var declaration
   float servo_normal_kd_right = 0;
   float servo_roundabout_kp_right = 1.3;
   float servo_roundabout_kd_right = 0;
-  float servo_sharp_turn_kp_right = 1.10;
+  float servo_sharp_turn_kp_right = 1.25;
   float servo_sharp_turn_kd_right = 0;
   float servo_trans_kp_slope_right = -0.0165;
   float servo_trans_kd_slope_right = 0;
@@ -117,14 +117,14 @@ namespace TuningVar { //tuning var declaration
   float servo_normal_kd_left = 0;
   float servo_roundabout_kp_left = 1.3;
   float servo_roundabout_kd_left = 0;
-  float servo_sharp_turn_kp_left = 0.94;
+  float servo_sharp_turn_kp_left = 0.98;
   float servo_sharp_turn_kd_left = 0;
   float servo_trans_kp_slope_left = 0.94;
   float servo_trans_kd_slope_left = 0;
 
   // target speed values
   uint16_t targetSpeed_straight = 150;
-  uint16_t targetSpeed_normal = 120;//normal turning
+  uint16_t targetSpeed_normal = 160;//normal turning
   uint16_t targetSpeed_round = 85;
   uint16_t targetSpeed_sharp_turn = 120;
   uint16_t targetSpeed_slow = 90;
@@ -238,7 +238,7 @@ const int8_t dx[9] = { 0, -1, -1, -1, 0, 1, 1, 1, 0 };
 const int8_t dy[9] = { 1, 1, 0, -1, -1, -1, 0, 1, 1 };
 
 // prototype declarations
-int16_t CalcAngleDiff();
+float CalcAngleDiff();
 void Capture(uint16_t y0 = TuningVar::starting_y);
 Feature featureIdent_Corner();
 bool FindStoppingLine();
@@ -1453,8 +1453,8 @@ int roundabout_overtake(uint32_t a, int pos){
 /**
  * @brief Calculate the servo angle diff
  */
-int16_t CalcAngleDiff() {
-	int16_t error = 0, sum = 0;
+float CalcAngleDiff() {
+	float error = 0, sum = 0;
 	int avg = 0;
 	for (auto&& point : path.points) {
 		if (sum > (roundaboutExitStatus == 1 ? 40 : 20)) //consider first 20 points
@@ -1469,7 +1469,7 @@ int16_t CalcAngleDiff() {
 	//	pLcd->SetRegion(Lcd::Rect(0, 16, 128, 15));
 	//	pWriter->WriteString(temp);
 
-	return error / sum * 20;
+	return error / sum * 20.0;
 }
 
 /*
@@ -1655,10 +1655,11 @@ void main_car1(bool debug_) {
 	//  DebugConsole console(&joystick, &lcd, &writer, 10);
 
 	Timer::TimerInt time_img = 0;
-	TuningVar::servo_trans_kp_slope_left = (TuningVar::servo_sharp_turn_kp_left - TuningVar::servo_normal_kp_left) / 2;
-	TuningVar::servo_trans_kp_slope_right = (TuningVar::servo_sharp_turn_kp_right - TuningVar::servo_normal_kp_right) / 2;
-	TuningVar::servo_trans_kd_slope_left = (TuningVar::servo_sharp_turn_kd_left - TuningVar::servo_normal_kd_left) / 2;
-	TuningVar::servo_trans_kd_slope_right = (TuningVar::servo_sharp_turn_kd_right - TuningVar::servo_normal_kd_right) / 2;
+	TuningVar::servo_trans_kp_slope_left = (TuningVar::servo_sharp_turn_kp_left - TuningVar::servo_normal_kp_left) / 20;
+	TuningVar::servo_trans_kp_slope_right = (TuningVar::servo_sharp_turn_kp_right - TuningVar::servo_normal_kp_right) / 20;
+	TuningVar::servo_trans_kd_slope_left = (TuningVar::servo_sharp_turn_kd_left - TuningVar::servo_normal_kd_left) / 20;
+	TuningVar::servo_trans_kd_slope_right = (TuningVar::servo_sharp_turn_kd_right - TuningVar::servo_normal_kd_right) / 20;
+	TuningVar::targetSpeed_trans = (TuningVar::targetSpeed_normal - TuningVar::targetSpeed_sharp_turn) / 20;
 
 	float tempKp;
 	float tempKd;
@@ -1756,6 +1757,10 @@ void main_car1(bool debug_) {
 						PrintCorner(left_corners, Lcd::kPurple); //Print left_corner
 						PrintCorner(right_corners, Lcd::kPurple); //Print right_corner
 						PrintEdge(path, Lcd::kGreen); //Print path
+						pLcd->SetRegion(Lcd::Rect(carMid.first, carMid.second,1,160));
+						pLcd->FillColor(Lcd::kRed);
+						pLcd->SetRegion(Lcd::Rect(0, WorldSize.h - path.points[20].second+1, 128, 1));
+						pLcd->FillColor(Lcd::kRed);
 						//						char timestr[100];
 						//						pLcd->SetRegion(Lcd::Rect(0,30,128,15));
 						//						sprintf(timestr, "Roun_cnt: %d", roundabout_cnt);
@@ -1802,10 +1807,10 @@ void main_car1(bool debug_) {
 
 					/*-------------CONTROL SYSTEM-----------------------*/
 					int curr_servo_error = CalcAngleDiff();
-//					char timestr[100];
-//					pLcd->SetRegion(Lcd::Rect(0, 15, 128, 15));
-//					sprintf(timestr, "error: %d", curr_servo_error);
-//					pWriter->WriteString(timestr);
+					char timestr[100];
+					pLcd->SetRegion(Lcd::Rect(0, 15, 128, 15));
+					sprintf(timestr, "error: %d", curr_servo_error);
+					pWriter->WriteString(timestr);
 					/* Motor PID + Servo PID* for different situations*/
 
 					if(roundaboutExitStatus == 1){
@@ -1928,14 +1933,14 @@ void main_car1(bool debug_) {
 					// transition PID to reduce discontinuous changing of PID between sharp and normal
 					else if(abs(curr_servo_error) > 130){
 						if(curr_servo_error > 0){
-							tempKp = abs(curr_servo_error - 130) * TuningVar::servo_trans_kp_slope_right + TuningVar::servo_normal_kp_right;
-							tempKd = abs(curr_servo_error - 130) * TuningVar::servo_trans_kd_slope_right + TuningVar::servo_normal_kd_right;
+							tempKp = (abs(curr_servo_error) - 130) * TuningVar::servo_trans_kp_slope_right + TuningVar::servo_normal_kp_right;
+							tempKd = (abs(curr_servo_error) - 130) * TuningVar::servo_trans_kd_slope_right + TuningVar::servo_normal_kd_right;
 						}else{
-							tempKp = abs(curr_servo_error - 130) * TuningVar::servo_trans_kp_slope_left + TuningVar::servo_normal_kp_left;
-							tempKd = abs(curr_servo_error - 130) * TuningVar::servo_trans_kd_slope_left + TuningVar::servo_normal_kd_left;
+							tempKp = (abs(curr_servo_error) - 130) * TuningVar::servo_trans_kp_slope_left + TuningVar::servo_normal_kp_left;
+							tempKd = (abs(curr_servo_error) - 130) * TuningVar::servo_trans_kd_slope_left + TuningVar::servo_normal_kd_left;
 						}
-						pid_left.SetSetpoint(TuningVar::targetSpeed_trans*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
-						pid_right.SetSetpoint(TuningVar::targetSpeed_trans* differential_left((-pServo->GetDegree() + servo_bounds.kCenter)/10));
+						pid_left.SetSetpoint(((abs(curr_servo_error) - 130) * TuningVar::targetSpeed_trans + TuningVar::targetSpeed_sharp_turn) *differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
+						pid_right.SetSetpoint(((abs(curr_servo_error) - 130) * TuningVar::targetSpeed_trans + TuningVar::targetSpeed_sharp_turn) * differential_left((-pServo->GetDegree() + servo_bounds.kCenter)/10));
 					}
 
 
