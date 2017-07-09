@@ -116,7 +116,7 @@ namespace TuningVar{ //tuning var delaration
   // servo left pid values
   float servo_straight_kp_left = 0.8;
   float servo_straight_kd_left = 0.01;
-  float servo_normal_kp_left = 1.15;
+  float servo_normal_kp_left = 1.1;
   float servo_normal_kd_left = 0.01;
   float servo_roundabout_kp_left = 1.3;
   float servo_roundabout_kd_left = 0;
@@ -127,11 +127,11 @@ namespace TuningVar{ //tuning var delaration
 
   // target speed values
   uint16_t targetSpeed_straight = 150;
-  uint16_t targetSpeed_normal = 160;//normal turning
+  uint16_t targetSpeed_normal = 140;//normal turning
   uint16_t targetSpeed_round = 85;
-  uint16_t targetSpeed_sharp_turn = 120;
+  uint16_t targetSpeed_sharp_turn = 130;
   uint16_t targetSpeed_slow = 90;
-  uint16_t targetSpeed_trans = 120;
+  uint16_t targetSpeed_trans = 130;
 
 }  // namespace TuningVar
 
@@ -823,10 +823,10 @@ Feature featureIdent_Corner() {
 					pBT->resetFeature();
 					encoder_total_round = 0;
 					roundaboutStatus = 1; //Detected
-		//			feature_start_time = System::Time(); // Mark the startTime of latest enter time
+					//			feature_start_time = System::Time(); // Mark the startTime of latest enter time
 					roundabout_cnt++;
 					return Feature::kRoundabout;
-				// judge as crossing
+					// judge as crossing
 				}else{
 					encoder_total_cross = 0;
 					crossingStatus = 1; //Detected
@@ -836,18 +836,18 @@ Feature featureIdent_Corner() {
 							+ (TuningVar::cross_cal_start_num
 									- encoder_total_cross / TuningVar::cross_cal_ratio);
 					start_x = (start_y - (left_corners.front().second + right_corners.front().second) / 2)
-		        								  / (left_corners.front().first - right_corners.front().first)
-												  * (right_corners.front().second
-														  - left_corners.front().second)
-														  + (left_corners.front().first
-																  + right_corners.front().first) / 2;
+		        										  / (left_corners.front().first - right_corners.front().first)
+														  * (right_corners.front().second
+																  - left_corners.front().second)
+																  + (left_corners.front().first
+																		  + right_corners.front().first) / 2;
 					return Feature::kCross;
 				}
 			}
 			else{
 				need_slow_down = true;
 			}
-//		} else if (is_cross && crossingStatus == 0
+			//		} else if (is_cross && crossingStatus == 0
 		} else if (!getWorldBit(test_x, test_y)
 				&& !getWorldBit(test_x + 1, test_y)
 				&& !getWorldBit(test_x, test_y + 1)
@@ -1572,22 +1572,6 @@ void main_car2(bool debug_) {
 	joystick_config.is_active_low = true;
 	Joystick joystick(joystick_config);
 
-
-
-	/*motor PID setting*/
-	IncrementalPidController<float, float> pid_left(0,0,0,0);
-	pid_left_p = &pid_left;
-	pid_left.SetOutputBound(-500, 500);
-	IncrementalPidController<float, float> pid_right(0,0,0,0);
-	pid_right_p = &pid_right;
-	pid_right.SetOutputBound(-500, 500);
-	pid_left.SetKp(2.5);
-	pid_right.SetKp(2.5);
-	pid_left.SetKi(0.02);
-	pid_right.SetKi(0.02);
-	pid_left.SetKd(0);
-	pid_right.SetKd(0);
-
 	//  DebugConsole console(&joystick, &lcd, &writer, 10);
 
 	Timer::TimerInt time_img = 0;
@@ -1617,6 +1601,14 @@ void main_car2(bool debug_) {
 	//  }
 
 	while(!debug&&joystick.GetState()==Joystick::State::kIdle);
+
+	/*motor PID setting*/
+	IncrementalPidController<float, float> pid_left(0,2.5,0.02,0);
+	pid_left_p = &pid_left;
+	pid_left.SetOutputBound(-500, 500);
+	IncrementalPidController<float, float> pid_right(0,2.5,0.02,0);
+	pid_right_p = &pid_right;
+	pid_right.SetOutputBound(-500, 500);
 
 	if(!debug){
 		bt.sendStartReq();
@@ -1678,10 +1670,10 @@ void main_car2(bool debug_) {
 						need_slow_down?pWriter->WriteString("Slow"):pWriter->WriteString("No Slow");
 					}
 					if (debug) {
-						char time_str[100];
-						//          sprintf(time_str, "Time:%dms", System::Time()-algo_start_time);
-						pLcd->SetRegion(Lcd::Rect(0,0,128,15));
-						pWriter->WriteString(time_str);
+//						char time_str[100];
+//						//          sprintf(time_str, "Time:%dms", System::Time()-algo_start_time);
+//						pLcd->SetRegion(Lcd::Rect(0,0,128,15));
+//						pWriter->WriteString(time_str);
 						PrintWorldImage();
 						PrintEdge(left_edge, Lcd::kRed); //Print left_edge
 						PrintEdge(right_edge, Lcd::kBlue); //Print right_edge
@@ -1698,38 +1690,39 @@ void main_car2(bool debug_) {
 //											WorldSize.h - roundabout_nearest_corner_right.second - 1, 4, 4));
 //						pLcd->FillColor(Lcd::kYellow);
 						PrintEdge(path, Lcd::kGreen); //Print path
-						switch (feature) {
-						case Feature::kCross:
-							pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
-							pWriter->WriteString("Crossing");
-							break;
-						case Feature::kRoundabout:
-							pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
-							pWriter->WriteString("Roundabout");
-							break;
-						case Feature::kNormal:
-							pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
-							pWriter->WriteString("Normal");
-							break;
-						case Feature::kRoundaboutExit:
-							pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
-							pWriter->WriteString("Exit of Roundabout");
-							break;
-						case Feature::kStraight:
-							pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
-							pWriter->WriteString("Straight");
-							break;
-						}
+//						switch (feature) {
+//						case Feature::kCross:
+//							pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
+//							pWriter->WriteString("Crossing");
+//							break;
+//						case Feature::kRoundabout:
+//							pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
+//							pWriter->WriteString("Roundabout");
+//							break;
+//						case Feature::kNormal:
+//							pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
+//							pWriter->WriteString("Normal");
+//							break;
+//						case Feature::kRoundaboutExit:
+//							pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
+//							pWriter->WriteString("Exit of Roundabout");
+//							break;
+//						case Feature::kStraight:
+//							pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
+//							pWriter->WriteString("Straight");
+//							break;
+//						}
 					}
 					/*END OF DEBUGGING*/
 
 					/*-------------CONTROL SYSTEM-----------------------*/
 					int curr_servo_error = CalcAngleDiff();
-
+					if(debug){
 						char temp[100];
 						sprintf(temp, "error: %d", curr_servo_error);
 						pLcd->SetRegion(Lcd::Rect(0, 16, 128, 15));
 						pWriter->WriteString(temp);
+					}
 					/* Motor PID + Servo PID* for different situations*/
 
 					//roundaboutExit case
@@ -1782,25 +1775,22 @@ void main_car2(bool debug_) {
 
 					//roundabout case
 					else if(roundaboutStatus == 1){
-						//for slowing down the car in advance
-						if(stop_before_roundexit && overtake){
-							if(curr_servo_error > 0){
-								tempKp = TuningVar::servo_roundabout_kp_right;
-								tempKd = TuningVar::servo_roundabout_kd_right;
-							}else{
-								tempKp = TuningVar::servo_roundabout_kp_left;
-								tempKd = TuningVar::servo_roundabout_kd_left;
-							}
-							pid_left.SetSetpoint(60);//TODO: only used for first roundabout
-							pid_right.SetSetpoint(60);
-							//avoid another car's early pass the exit
-							if(pBT->hasFinishedOvertake()){
-								stop_before_roundexit = false;
-								// roundaboutStatus = 0;
-							}
+						//avoid another car's early pass the exit
+						if(stop_before_roundexit && overtake && pBT->hasFinishedOvertake()){
+							stop_before_roundexit = false;
+							// roundaboutStatus = 0;
+//							if(curr_servo_error > 0){
+//								tempKp = TuningVar::servo_roundabout_kp_right;
+//								tempKd = TuningVar::servo_roundabout_kd_right;
+//							}else{
+//								tempKp = TuningVar::servo_roundabout_kp_left;
+//								tempKd = TuningVar::servo_roundabout_kd_left;
+//							}
+//							pid_left.SetSetpoint(60);//TODO: only used for first roundabout
+//							pid_right.SetSetpoint(60);
 						}
 						//slow down the car when the exit is ready
-						else if(need_slow_down){
+						if(need_slow_down){
 							if(curr_servo_error > 0){
 								tempKp = TuningVar::servo_roundabout_kp_right;
 								tempKd = TuningVar::servo_roundabout_kd_right;
@@ -1811,17 +1801,59 @@ void main_car2(bool debug_) {
 							pid_left.SetSetpoint(TuningVar::targetSpeed_slow*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
 							pid_right.SetSetpoint(TuningVar::targetSpeed_slow* differential_left((-pServo->GetDegree() + servo_bounds.kCenter)/10));
 						}
-						//the speed inside roundabout
+						//the speed inside roundabout based on error
 						else if(abs(encoder_total_round) > TuningVar::round_encoder_count){
-							if(curr_servo_error > 0){
-								tempKp = TuningVar::servo_roundabout_kp_right;
-								tempKd = TuningVar::servo_roundabout_kd_right;
-							}else{
-								tempKp = TuningVar::servo_roundabout_kp_left;
-								tempKd = TuningVar::servo_roundabout_kd_left;
+							//TODO: change the error range to different case
+							// case one: sharp roundabout
+							if(curr_servo_error > 160 || curr_servo_error < -200){
+								if(debug){
+									pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
+									pWriter->WriteString("sharp rnd");
+								}
+								if(curr_servo_error > 0){
+									tempKp = TuningVar::servo_sharp_turn_kp_right;
+									tempKd = TuningVar::servo_sharp_turn_kd_right;
+								}else{
+									tempKp = TuningVar::servo_sharp_turn_kp_left;
+									tempKd = TuningVar::servo_sharp_turn_kd_left;
+								}
+								pid_left.SetSetpoint(TuningVar::targetSpeed_sharp_turn*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
+								pid_right.SetSetpoint(TuningVar::targetSpeed_sharp_turn* differential_left((-pServo->GetDegree() + servo_bounds.kCenter)/10));
 							}
-							pid_left.SetSetpoint(TuningVar::targetSpeed_normal*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
-							pid_right.SetSetpoint(TuningVar::targetSpeed_normal* differential_left((-pServo->GetDegree() + servo_bounds.kCenter)/10));
+							// case two: transition roundabout
+							else if(curr_servo_error > 140 || curr_servo_error < -180){
+								if(debug){
+									pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
+									pWriter->WriteString("trans rnd");
+								}
+								if(curr_servo_error > 0){
+									tempKp = (abs(curr_servo_error) - 140) * TuningVar::servo_trans_kp_slope_right + TuningVar::servo_normal_kp_right;
+									tempKd = (abs(curr_servo_error) - 140) * TuningVar::servo_trans_kd_slope_right + TuningVar::servo_normal_kd_right;
+									pid_left.SetSetpoint(((abs(curr_servo_error) - 140) * TuningVar::targetSpeed_trans + TuningVar::targetSpeed_sharp_turn) *differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
+									pid_right.SetSetpoint(((abs(curr_servo_error) - 140) * TuningVar::targetSpeed_trans + TuningVar::targetSpeed_sharp_turn) * differential_left((-pServo->GetDegree() + servo_bounds.kCenter)/10));
+								}else{
+									tempKp = (abs(curr_servo_error) - 180) * TuningVar::servo_trans_kp_slope_left + TuningVar::servo_normal_kp_left;
+									tempKd = (abs(curr_servo_error) - 180) * TuningVar::servo_trans_kd_slope_left + TuningVar::servo_normal_kd_left;
+									pid_left.SetSetpoint(((abs(curr_servo_error) - 180) * TuningVar::targetSpeed_trans + TuningVar::targetSpeed_sharp_turn) *differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
+									pid_right.SetSetpoint(((abs(curr_servo_error) - 180) * TuningVar::targetSpeed_trans + TuningVar::targetSpeed_sharp_turn) * differential_left((-pServo->GetDegree() + servo_bounds.kCenter)/10));
+								}
+							}
+							// case three: normal roundabout
+							else{
+								if(debug){
+									pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
+									pWriter->WriteString("normal rnd");
+								}
+								if(curr_servo_error > 0){
+									tempKp = TuningVar::servo_normal_kp_right;
+									tempKd = TuningVar::servo_normal_kd_right;
+								}else{
+									tempKp = TuningVar::servo_normal_kp_left;
+									tempKd = TuningVar::servo_normal_kd_left;
+								}
+								pid_left.SetSetpoint(TuningVar::targetSpeed_normal*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
+								pid_right.SetSetpoint(TuningVar::targetSpeed_normal* differential_left((-pServo->GetDegree() + servo_bounds.kCenter)/10));
+							}
 						}
 						//the speed during the entrance
 						else{
@@ -1837,8 +1869,12 @@ void main_car2(bool debug_) {
 						}
 					}
 
-					//sharp turning case TODO: 140 needs tuning, >150
-					else if(abs(curr_servo_error) > 150){
+					//sharp turning case TODO: Left: < -200 Right: >160
+					else if(curr_servo_error > 160 || curr_servo_error < -200){
+						if(debug){
+							pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
+							pWriter->WriteString("sharp turn");
+						}
 						if(curr_servo_error > 0){
 							tempKp = TuningVar::servo_sharp_turn_kp_right;
 							tempKd = TuningVar::servo_sharp_turn_kd_right;
@@ -1850,28 +1886,37 @@ void main_car2(bool debug_) {
 						pid_right.SetSetpoint(TuningVar::targetSpeed_sharp_turn* differential_left((-pServo->GetDegree() + servo_bounds.kCenter)/10));
 					}
 
-					// transition PID to reduce discontinuous changing of PID between sharp and normal
-					else if(abs(curr_servo_error) > 130){
-						if(curr_servo_error > 0){
-							tempKp = (abs(curr_servo_error) - 130) * TuningVar::servo_trans_kp_slope_right + TuningVar::servo_normal_kp_right;
-							tempKd = (abs(curr_servo_error) - 130) * TuningVar::servo_trans_kd_slope_right + TuningVar::servo_normal_kd_right;
-						}else{
-							tempKp = (abs(curr_servo_error) - 130) * TuningVar::servo_trans_kp_slope_left + TuningVar::servo_normal_kp_left;
-							tempKd = (abs(curr_servo_error) - 130) * TuningVar::servo_trans_kd_slope_left + TuningVar::servo_normal_kd_left;
+					// transition PID to reduce discontinuous changing of PID between sharp and normal: Left: -200 ~ -180 Right: 140 ~ 160
+					else if(curr_servo_error > 140 || curr_servo_error < -180){
+						if(debug){
+							pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
+							pWriter->WriteString("trans turn");
 						}
-						pid_left.SetSetpoint(((abs(curr_servo_error) - 130) * TuningVar::targetSpeed_trans + TuningVar::targetSpeed_sharp_turn) *differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
-						pid_right.SetSetpoint(((abs(curr_servo_error) - 130) * TuningVar::targetSpeed_trans + TuningVar::targetSpeed_sharp_turn) * differential_left((-pServo->GetDegree() + servo_bounds.kCenter)/10));
+						if(curr_servo_error > 0){
+							tempKp = (abs(curr_servo_error) - 140) * TuningVar::servo_trans_kp_slope_right + TuningVar::servo_normal_kp_right;
+							tempKd = (abs(curr_servo_error) - 140) * TuningVar::servo_trans_kd_slope_right + TuningVar::servo_normal_kd_right;
+							pid_left.SetSetpoint(((abs(curr_servo_error) - 140) * TuningVar::targetSpeed_trans + TuningVar::targetSpeed_sharp_turn) *differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
+							pid_right.SetSetpoint(((abs(curr_servo_error) - 140) * TuningVar::targetSpeed_trans + TuningVar::targetSpeed_sharp_turn) * differential_left((-pServo->GetDegree() + servo_bounds.kCenter)/10));
+						}else{
+							tempKp = (abs(curr_servo_error) - 180) * TuningVar::servo_trans_kp_slope_left + TuningVar::servo_normal_kp_left;
+							tempKd = (abs(curr_servo_error) - 180) * TuningVar::servo_trans_kd_slope_left + TuningVar::servo_normal_kd_left;
+							pid_left.SetSetpoint(((abs(curr_servo_error) - 180) * TuningVar::targetSpeed_trans + TuningVar::targetSpeed_sharp_turn) *differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
+							pid_right.SetSetpoint(((abs(curr_servo_error) - 180) * TuningVar::targetSpeed_trans + TuningVar::targetSpeed_sharp_turn) * differential_left((-pServo->GetDegree() + servo_bounds.kCenter)/10));
+						}
 					}
 
-					//straight case + TODO:double check further image to decide whether add speed or not < 50
-					else if(abs(curr_servo_error) < 50){
-
-						/*find more 25 edges*/
-						while ((left_edge.points.size() < 50) && FindOneLeftEdge()) {}
-						while ((right_edge.points.size() < 50) && FindOneRightEdge()) {}
+					//straight case + TODO:double check further image to decide whether add speed or not < 60
+					else if(abs(curr_servo_error) < 60){
+						if(debug){
+							pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
+							pWriter->WriteString("straight");
+						}
+						/*find more 20 edges*/
+						while ((left_edge.points.size() < 55) && FindOneLeftEdge()) {}
+						while ((right_edge.points.size() < 55) && FindOneRightEdge()) {}
 
 						// case one: have reached worldview boundary - must be NON-straight
-						if(left_edge.points.size() < 50 || right_edge.points.size() < 50){
+						if(left_edge.points.size() < 55 || right_edge.points.size() < 55){
 							//still use straight_kp
 							if(curr_servo_error > 0){
 								tempKp = TuningVar::servo_sharp_turn_kp_right;
@@ -1884,19 +1929,22 @@ void main_car2(bool debug_) {
 							pid_right.SetSetpoint(TuningVar::targetSpeed_slow* differential_left((-pServo->GetDegree() + servo_bounds.kCenter)/10));
 						}
 						else{
-							for(int i =34; i<50; i++){
+							for(int i =34; i<55; i++){
 								path.push((left_edge.points[i].first + right_edge.points[i].first)/2,(left_edge.points[i].second + right_edge.points[i].second)/2);
 							}
 							int further_servo_error = 0;
 							int sum = 0;
 							for (auto&& point : path.points) {
 								sum++;
-								if(sum<25) continue; // only consider latter 25 points
+								if(sum<25) continue; // only consider latter 30 points
 								further_servo_error += (point.first - carMid.first);
 							}
-//							further_servo_error = further_servo_error / 26 *20;
+//							char temp_[100];
+//							sprintf(temp_, "fur_error: %d", further_servo_error);
+//							pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
+//							pWriter->WriteString(temp_);
 							// case two: the upper 25 path points produce error bigger than 100 - reduce speed in advance
-							if(abs(further_servo_error)>300 || need_slow_down) {
+							if(abs(further_servo_error)>400 || need_slow_down) {
 								if(curr_servo_error > 0){
 									tempKp = TuningVar::servo_straight_kp_right;
 									tempKd = TuningVar::servo_straight_kd_right;
@@ -1920,11 +1968,14 @@ void main_car2(bool debug_) {
 								pid_right.SetSetpoint(TuningVar::targetSpeed_straight* differential_left((-pServo->GetDegree() + servo_bounds.kCenter)/10));
 							}
 						}
-
 					}
 
-					//normal turning case 50-130
+					//normal turning case Right: 60-140 Left: -180 ~ -60
 					else{
+						if(debug){
+							pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
+							pWriter->WriteString("normal turn");
+						}
 						if(curr_servo_error > 0){
 							tempKp = TuningVar::servo_normal_kp_right;
 							tempKd = TuningVar::servo_normal_kd_right;
