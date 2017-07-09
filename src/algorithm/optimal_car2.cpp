@@ -78,7 +78,7 @@ namespace TuningVar{ //tuning var delaration
   uint16_t min_edges_dist = 7; // Manhattan dist threshold for edges
   uint16_t track_width_threshold = 900; //track width threshold for consideration of sudden change (square)
   uint16_t track_width_change_threshold = 350; //track width change threshold for consideration of sudden change
-  uint16_t testDist = 43; // The distance from which the image pixel should be tested and identify feature
+  uint16_t testDist = 38; // The distance from which the image pixel should be tested and identify feature
   uint16_t slowDownDist = 100; // the distance from which the image pixel should be tested and know whether it should slow down in advance
   uint16_t straight_line_threshold = 45; // The threshold num. of equal width for straight line detection
   uint16_t action_distance = 27; // The condition in which the car start handling this feature when meeting it
@@ -87,12 +87,11 @@ namespace TuningVar{ //tuning var delaration
   uint16_t cross_cal_ratio = 80; //Look forward @cross_cal_start_num - encoder_total/@cross_cal_ratio to determine path
   uint16_t general_cal_num = 20; //The num of path points considered for servo angle decision except crossing
   uint16_t cross_encoder_count = 4000; // The hardcoded encoder count that car must reach in crossroad
-  uint16_t round_enter_offset = 17;
   uint16_t min_dist_meet_crossing = 30;
   uint16_t roundroad_min_size = 30; // When the edge is broken in roundabout, find until this threshold
   uint16_t exit_action_dist = 35; // double check to avoid corner's sudden disappear inside roundabout
-  uint16_t roundabout_offset = 15; // half of road width
-  uint16_t round_exit_offset = 24;
+  uint16_t roundabout_offset = 15; // enter of roundabout
+  uint16_t round_exit_offset = 23;
   uint16_t round_encoder_count = 2600;
   uint16_t roundExit_encoder_count = 3700;
   int32_t roundabout_shortest_flag = 0b00011; //1 means turn left, 0 means turn right. Reading from left to right
@@ -102,21 +101,21 @@ namespace TuningVar{ //tuning var delaration
   uint16_t overtake_interval_time = 1000;
 
   // servo right pid values
-  float servo_straight_kp_right = 0.8;
+  float servo_straight_kp_right = 0.6;
   float servo_straight_kd_right = 0.01;
-  float servo_normal_kp_right = 1.15;
+  float servo_normal_kp_right = 1.4;
   float servo_normal_kd_right = 0;
   float servo_roundabout_kp_right = 1.3;
   float servo_roundabout_kd_right = 0;
-  float servo_sharp_turn_kp_right = 1.04;
+  float servo_sharp_turn_kp_right = 1.32;
   float servo_sharp_turn_kd_right = 0.01;
   float servo_trans_kp_slope_right = 0.01;
   float servo_trans_kd_slope_right = 1;
 
   // servo left pid values
-  float servo_straight_kp_left = 0.8;
+  float servo_straight_kp_left = 0.6;
   float servo_straight_kd_left = 0.01;
-  float servo_normal_kp_left = 1.1;
+  float servo_normal_kp_left = 1.15;
   float servo_normal_kd_left = 0.01;
   float servo_roundabout_kp_left = 1.3;
   float servo_roundabout_kd_left = 0;
@@ -126,12 +125,12 @@ namespace TuningVar{ //tuning var delaration
   float servo_trans_kd_slope_left = 0;
 
   // target speed values
-  uint16_t targetSpeed_straight = 150;
-  uint16_t targetSpeed_normal = 140;//normal turning
-  uint16_t targetSpeed_round = 85;
-  uint16_t targetSpeed_sharp_turn = 130;
+  uint16_t targetSpeed_straight = 170;
+  uint16_t targetSpeed_normal = 120;//normal turning
+  uint16_t targetSpeed_round = 90;
+  uint16_t targetSpeed_sharp_turn = 120;
   uint16_t targetSpeed_slow = 90;
-  uint16_t targetSpeed_trans = 130;
+  uint16_t targetSpeed_trans = 120;
 
 }  // namespace TuningVar
 

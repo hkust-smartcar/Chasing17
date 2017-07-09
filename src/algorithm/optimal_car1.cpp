@@ -84,7 +84,6 @@ namespace TuningVar { //tuning var declaration
   uint16_t cross_cal_ratio = 80; //Look forward @cross_cal_start_num - encoder_total/@cross_cal_ratio to determine path
   uint16_t general_cal_num = 20; //The num of path points considered for servo angle decision except crossing
   uint16_t cross_encoder_count = 4000; // The hardcoded encoder count that car must reach in crossroad
-  uint16_t round_enter_offset = 15;
   uint16_t min_dist_meet_crossing = 30;
   uint16_t roundroad_min_size = 30; // When the edge is broken in roundabout, find until this threshold
   uint16_t exit_action_dist = 35; // double check to avoid corner's sudden disappear inside roundabout
@@ -98,37 +97,37 @@ namespace TuningVar { //tuning var declaration
   uint16_t overtake_interval_time = 1000;
 
   // servo right pid values
-  float servo_straight_kp_right = 0.8;
+  float servo_straight_kp_right = 0.6;
   float servo_straight_kd_right = 0.01;
-  float servo_normal_kp_right = 1.43;
+  float servo_normal_kp_right = 1.42;
   float servo_normal_kd_right = 0;
   float servo_roundabout_kp_right = 1.3;
   float servo_roundabout_kd_right = 0;
-  float servo_sharp_turn_kp_right = 1.25;
+  float servo_sharp_turn_kp_right = 1.46;
   float servo_sharp_turn_kd_right = 0;
   float servo_trans_kp_slope_right = 0.01;
   float servo_trans_kd_slope_right = 0;
 
 
   // servo left pid values
-  float servo_straight_kp_left = 0.8;
+  float servo_straight_kp_left = 0.6;
   float servo_straight_kd_left = 0.01;
-  float servo_normal_kp_left = 1.45;
+  float servo_normal_kp_left = 1.20;
   float servo_normal_kd_left = 0;
   float servo_roundabout_kp_left = 1.3;
   float servo_roundabout_kd_left = 0;
-  float servo_sharp_turn_kp_left = 0.93;
+  float servo_sharp_turn_kp_left = 1.02;
   float servo_sharp_turn_kd_left = 0;
   float servo_trans_kp_slope_left = 0.94;
   float servo_trans_kd_slope_left = 0;
 
   // target speed values
   uint16_t targetSpeed_straight = 150;
-  uint16_t targetSpeed_normal = 140;//normal turning
+  uint16_t targetSpeed_normal = 120;//normal turning
   uint16_t targetSpeed_round = 85;
-  uint16_t targetSpeed_sharp_turn = 130;
+  uint16_t targetSpeed_sharp_turn = 120;
   uint16_t targetSpeed_slow = 90;
-  uint16_t targetSpeed_trans = 130;
+  uint16_t targetSpeed_trans = 120;
 
 
 }  // namespace TuningVar
