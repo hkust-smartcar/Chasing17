@@ -57,6 +57,14 @@ void ServoTest();
  */
 void AltMotorTest();
 /**
+ * Tests the direct-motor of the mainboard
+ *
+ * Turns both direct motors on at 10%.
+ *
+ * @note Motor will be initialized within the function.
+ */
+void DirMotorTest();
+/**
  * Tests the direct-encoder of the mainboard
  *
  * Turns on both alternate motors on at 10%, and displays raw encoder values
@@ -65,15 +73,6 @@ void AltMotorTest();
  * @note Motor, encoder and LCD will be initialized within the function.
  */
 void DirEncoderTest();
-/**
- * Tests the Mpc class
- *
- * Turns on both alternate motors, keep the motor running at 4500 val/sec,
- * and displays the encoder value (in val/sec) and motor power on the LCD.
- *
- * @note Motor, encoder, and LCD will be initialized within the function.
- */
-void MpcTest();
 }  // namespace util
 
 #endif  // CHASING17_UTIL_UNIT_TESTS_H_

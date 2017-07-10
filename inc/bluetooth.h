@@ -59,6 +59,10 @@ class BTComm {
     ptrBT_->SendBuffer(&data, 1);
   }
 
+  void sendStr(char* str){
+	ptrBT_->SendStr(str);
+  }
+
 
   static int fetchSize(){
 	  return NAKbuffer_.size();
@@ -160,6 +164,13 @@ class BTComm {
    */
   void reqFeature(){
     sendData(DataType::kReq, ReqType::kFeature);
+  }
+
+  /**
+   * Reset feature
+   */
+  void resetFeature(){
+	  feat_ = CarManager::Feature::kNormal;
   }
 
   /**
@@ -307,6 +318,34 @@ class BTComm {
   }
 
   /**
+   * Send stop car request from another car
+   */
+  void sendStopCar(){
+	  sendData(DataType::kReq, ReqType::kStopCar);
+  }
+
+  /**
+   * Return if stop_car_ flag is true, for Processing remote stop car
+   */
+  bool hasStopCar(){
+	  return stop_car_;
+  }
+
+  /**
+   * Reset stop car flag
+   */
+  void resetStopCar(){
+	  stop_car_ = false;
+  }
+
+  /**
+   * Return the time when stop_car_ flag is received
+   */
+  libsc::Timer::TimerInt getOvertakeTime(){
+	  return overtake_time_;
+  }
+
+  /**
    * Resend those information that are unacknowledged.
    *
    * @note should be called with short time intervals.
@@ -343,6 +382,7 @@ class BTComm {
     static constexpr Byte kFeature = 0xC3;
     static constexpr Byte kSide = 0xC4;
     static constexpr Byte kStart = 0xB0;
+    static constexpr Byte kStopCar = 0xA0;
   };
 
   std::unique_ptr<libsc::k60::JyMcuBt106> bluetooth_;
@@ -363,6 +403,7 @@ class BTComm {
 
   static OvertakeStatus OvertakeReq_;
   static bool hasFinishedOvertake_;
+  static libsc::Timer::TimerInt overtake_time_;
   static bool SwitchIDReq_;
   static bool hasStartReq_;
 
@@ -371,7 +412,7 @@ class BTComm {
 
   static uint8_t mapIndex_;
 
-  static bool testBool;
+  static bool stop_car_;
 
   /**
    * Generic send data through bluetooth function.

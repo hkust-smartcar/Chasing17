@@ -10,6 +10,9 @@
 
 #include "util/testground.h"
 
+#include <cstring>
+#include <sstream>
+
 #include "libsc/alternate_motor.h"
 #include "libsc/dir_encoder.h"
 #include "libsc/futaba_s3010.h"
@@ -32,8 +35,57 @@ using namespace libsc::k60;
 namespace util {
 namespace testground {
 
+struct {
+  std::string input = "";
+  bool tune = false;
+  std::vector<double> vars{};
+} tuning_vars;
+
+bool BluetoothListener(const Byte* data, const std::size_t size) {
+  if (data[0] == 't') {
+    tuning_vars.tune = true;
+    tuning_vars.input.clear();
+  }
+
+  if (tuning_vars.tune) {
+    unsigned int i = 0;
+    while (i < size) {
+      if (data[i] != 't' && data[i] != '\n') {
+        tuning_vars.input.push_back(data[i]);
+      } else if (data[i] == '\n') {
+        tuning_vars.tune = false;
+        break;
+      }
+      i++;
+    }
+
+    if (!tuning_vars.tune) {
+      tuning_vars.vars.clear();
+      char* pch = strtok(&tuning_vars.input[0], ",");
+      while (pch != nullptr) {
+        double constant;
+        std::stringstream(pch) >> constant;
+        tuning_vars.vars.push_back(constant);
+        pch = strtok(nullptr, ",");
+      }
+
+      // variable assignments here
+//      CarManager::kMotorPidCar1.kP[0] = tuning_vars.vars.at(0);
+//      CarManager::kMotorPidCar1.kI[0] = tuning_vars.vars.at(1);
+//      CarManager::kMotorPidCar1.kD[0] = tuning_vars.vars.at(2);
+//
+//      CarManager::kMotorPidCar1.kP[1] = tuning_vars.vars.at(3);
+//      CarManager::kMotorPidCar1.kI[1] = tuning_vars.vars.at(4);
+//      CarManager::kMotorPidCar1.kD[1] = tuning_vars.vars.at(5);
+    }
+  }
+
+  return true;
+}
+
 void main() {
   Led::Config ConfigLed;
+  ConfigLed.is_active_low = true;
   ConfigLed.id = 0;
   Led led0(ConfigLed);
   ConfigLed.id = 1;
@@ -43,12 +95,19 @@ void main() {
   ConfigLed.id = 3;
   Led led3(ConfigLed);
 
-//  k60::Ov7725::Config cameraConfig;
-//  cameraConfig.id = 0;
-//  cameraConfig.w = 80;
-//  cameraConfig.h = 60;
-//  cameraConfig.fps = k60::Ov7725Configurator::Config::Fps::kHigh;
-//  k60::Ov7725 camera(cameraConfig);
+  led0.SetEnable(true);
+  led1.SetEnable(false);
+  led2.SetEnable(false);
+  led3.SetEnable(false);
+
+  k60::Ov7725::Config cameraConfig;
+  cameraConfig.id = 0;
+  cameraConfig.w = 80;
+  cameraConfig.h = 60;
+  cameraConfig.fps = k60::Ov7725Configurator::Config::Fps::kHigh;
+  k60::Ov7725 camera(cameraConfig);
+
+  led1.SetEnable(true);
 
   FutabaS3010::Config ConfigServo;
   ConfigServo.id = 0;
@@ -66,49 +125,60 @@ void main() {
   ConfigMotor.id = 1;
   auto motor1 = make_unique<AlternateMotor>(ConfigMotor);
 
-  auto mpc_dual = make_unique<MpcDual>(motor0.get(), motor1.get(), encoder0.get(), encoder1.get());
+  led2.SetEnable(true);
 
-  k60::JyMcuBt106::Config ConfigBT;
-  ConfigBT.id = 0;
-  ConfigBT.baud_rate = libbase::k60::Uart::Config::BaudRate::k115200;
-  k60::JyMcuBt106 bt(ConfigBT);
+	St7735r::Config lcdConfig;
+	lcdConfig.is_revert = true;
+	St7735r lcd(lcdConfig);
+	auto pLcd = &lcd;
 
-  St7735r::Config lcdConfig;
-  lcdConfig.is_revert = true;
-  St7735r lcd(lcdConfig);
+	LcdTypewriter::Config writerConfig;
+	writerConfig.lcd = pLcd;
+	LcdTypewriter writer(writerConfig);
+	auto pWriter = &writer;
 
-  LcdConsole::Config console_config;
-  console_config.lcd = &lcd;
-  LcdConsole console(console_config);
+  JyMcuBt106::Config bt_config;
+  bt_config.id = 0;
+  bt_config.baud_rate = libbase::k60::Uart::Config::BaudRate::k115200;
+//  bt_config.rx_isr = &BluetoothListener;
+  JyMcuBt106 bt(bt_config);
 
-  Joystick::Config joystick_config;
-  joystick_config.id = 0;
-  joystick_config.is_active_low = true;
-  Joystick joystick(joystick_config);
+  CarManager::ServoBounds servo_bounds = {1070, 755, 460};
+  int cur_servo_val = servo_bounds.kCenter;
 
-  CarManager::Config car_config;
-  car_config.servo = std::move(servo);
-  car_config.epc = std::move(mpc_dual);
-  car_config.car = CarManager::Car::kCar1;
-  CarManager::Init(std::move(car_config));
-
-  CarManager::SetOverrideProtection(true);
-  CarManager::SetTargetSpeed(6000);
-  CarManager::SetTargetAngle(CarManager::kBoundsCar1.kCenter);
+  Joystick::Config jy_config;
+  jy_config.id = 0;
+  jy_config.dispatcher = [&cur_servo_val](const uint8_t id, const Joystick::State which){
+	  switch(which){
+	  case Joystick::State::kLeft:
+		  cur_servo_val -= 5;
+		  break;
+	  case Joystick::State::kRight:
+		  cur_servo_val += 5;
+		  break;
+        default:
+          // not handled
+          break;
+	  }
+  };
+  Joystick jy(jy_config);
 
   FcYyUsV4 usir(libbase::k60::Pin::Name::kPtb0);
 
   Timer::TimerInt time_img = 0;
 
-  CarManager::SetTargetSpeed(8250);
   while (true) {
-    if (time_img != System::Time()) {
-      time_img = System::Time();
-      if (time_img % 100 == 0) led0.Switch();
-		if (time_img % 15 == 0){
-			CarManager::UpdateParameters();
-		}
-    }
+	  while (time_img != System::Time()){
+		  time_img = System::Time();
+		  if (time_img % 10 == 0){
+			  led0.Switch();
+			  servo->SetDegree(cur_servo_val);
+			  char temp[100];
+			  sprintf(temp, "servo:%d", cur_servo_val);
+			  pLcd->SetRegion(Lcd::Rect(0,0,128,15));
+			  pWriter->WriteString(temp);
+		  }
+	  }
   }
 }
 

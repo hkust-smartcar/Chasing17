@@ -6,7 +6,7 @@
  *
  * Author: Dipsy Wong (dipsywong98)
  *
- * DebugConsole (v3) class
+ * DebugConsole (v4.2) class
  * Console-based GUI for debugging purposes.
  *
  */
@@ -14,7 +14,6 @@
 #ifndef CHASING17_DEBUG_CONSOLE_H_
 #define CHASING17_DEBUG_CONSOLE_H_
 
-#include <string>
 #include <vector>
 
 #include "libsc/joystick.h"
@@ -24,45 +23,25 @@
 
 typedef void(* Fptr)();
 
-class Item {
- public:
-  Item(std::string text = "", float* value = nullptr, bool flashable = false, bool readOnly = false)
-      : text(text), value(value), readOnly(readOnly), flash(flashable) {}
+typedef enum {
+  kNan,
+  kUint16,
+  kInt32,
+  kFloat,
+  kBool,
+  kBS //bit string using int
+} VarType;
 
-  //display text methods
-  std::string GetText() { return text; }
-  Item* SetText(char* t);
-
-  //listener methods
-  Fptr GetListenerptr() { return listener; }
-  Fptr GetListener() { return *listener; }
-  Item* SetListener(Fptr fptr);
-
-  //set parameters
-  Item* SetValuePtr(float* v);
-  Item* SetValue(float v);
-  Item* SetInterval(float v);
-  Item* SetReadOnly(bool isReadOnly);
-  Item* SetFlashable(bool flag){flash=flag;return this;}
-
-  //get parameters
-  float ValueIncre() { return *value += interval; }
-  float ValueDecre() { return *value -= interval; }
-  float* GetValuePtr() { return value; }
-  float GetValue() { return value != nullptr ? *value : 0; }
-  float GetInterval() { return interval; }
-  bool IsFlashable(){return flash;}
-  bool IsReadOnly() { return readOnly; }
-
- private:
-  std::string text;
-  float* value = nullptr;
-  bool readOnly;
-  bool flash = false;
-  Fptr listener = nullptr;
+typedef struct Item {
+  char* text = nullptr;
+  VarType type = VarType::kNan;
+  uint8_t vIndex = 0;
   float interval = 1;
-  void Init() {}
-};
+  Fptr listener = nullptr;
+  uint8_t bsIndex = 0; //for bitstring
+  char* true_text = nullptr;
+  char* false_text = nullptr;
+} Item;
 
 class DebugConsole {
  public:
@@ -85,8 +64,19 @@ class DebugConsole {
   /**
    * adding items to debug console
    */
-  void PushItem(Item item) { items.push_back(item); if(item.IsFlashable())flash_sum++;}
-  void InsertItem(Item item, int index = 0) { items.insert(items.begin() + index, item); if(item.IsFlashable())flash_sum++;}
+  void PushItem(char* text);
+  void PushItem(char* text, uint16_t* valuePtr, float interval);//uint16
+  void PushItem(char* text, int32_t* valuePtr, float interval);//uint16
+  void PushItem(char* text, float* valuePtr, float interval);//float
+  void PushItem(char* text, bool* valuePtr, char* true_text = "true", char* false_text = "false");//bool
+  void PushItem(char* text, int32_t* valuePtr, char* true_text = "true", char* false_text = "false");//bitstring
+  void PushItem(char* text, Fptr fPtr);
+
+  /*
+   * Set item
+   */
+  void SetItem(int index, Item item);
+  Item GetItem(int index);
 
   /**
    * print item start from topIndex, total amount displayLength
@@ -97,6 +87,11 @@ class DebugConsole {
    * print item start from topIndex, total amount displayLength
    */
   void ListItemValues();
+
+  /**
+   * Increment or decrement of value of item given the index
+   */
+  void ChangeItemValue(int index, bool IsIncrement);
 
   /**
    * print a single item's text and value
@@ -124,19 +119,23 @@ class DebugConsole {
   DebugConsole* SetLongClickCd(int cd);
   DebugConsole* SetOffset(int offset);
   DebugConsole* SetAutoFlash(bool flag);
-  void SetFlash(libbase::k60::Flash* flash){this->flash=flash;}
+  void SetFlash(libbase::k60::Flash* flash) { this->flash = flash; }
 
   //parameters getters
   int GetDisplayLength() { return displayLength; }
   int GetLongClickThershold() { return threshold; }
   int GetLongClickCd() { return cd; }
   int GetOffset() { return offset; }
-  bool IsAutoFlash(){return auto_flash;}
 
  private:
+
   int focus = 0;
   int topIndex = 0;
   std::vector<Item> items;
+  std::vector<uint16_t*> uint16t_values;
+  std::vector<int32_t*> int32t_values;
+  std::vector<float*> float_values;
+  std::vector<bool*> bool_values;
   libsc::Joystick* joystick;
   libsc::St7735r* lcd;
   libsc::LcdTypewriter* writer;
@@ -148,10 +147,10 @@ class DebugConsole {
   int cd = 0;    //time needed to trigger next long click listener
   int offset = 0; //distance away from top of lcd
   bool auto_flash = true; //flash
-  int flash_sum=0;
-  bool flag=false;
+  int flash_sum = 0;
+  bool flag = false;
 
-  void Printxy(int x, int y, std::string c, int inverted = false);
+  void Printxy(int x, int y, char* c, int inverted = false);
 
   void Clear();
 

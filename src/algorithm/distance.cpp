@@ -7,6 +7,8 @@
 #include "libsc/st7735r.h"
 #include "libsc/lcd_console.h"
 #include "libsc/system.h"
+#include "libsc/k60/jy_mcu_bt_106.h"
+#include "libsc/joystick.h"
 
 #include "fc_yy_us_v4.h"
 #include "util/util.h"
@@ -25,26 +27,40 @@ void USIRDemo() {
 
   FcYyUsV4 US(Pin::Name::kPtb0);
 
+  Joystick::Config config_joystick;
+  config_joystick.id = 0;
+//  config_joystick.dispatcher = [&US](const uint8_t id, const Joystick::State which){US.resetFilter();};
+
   St7735r::Config lcd_config;
   lcd_config.is_revert = true;
   St7735r lcd(lcd_config);
+  St7735r* pLcd = &lcd;
   lcd.Clear();
 
-  LcdConsole::Config console_config;
-  console_config.lcd = &lcd;
-  LcdConsole console(console_config);
+  LcdTypewriter::Config writerConfig;
+  writerConfig.lcd = pLcd;
+  LcdTypewriter writer(writerConfig);
+  LcdTypewriter* pWriter = &writer;
+
+  k60::JyMcuBt106::Config btConfig;
+  btConfig.baud_rate = libbase::k60::Uart::Config::BaudRate::k115200;
+  btConfig.id = 0;
+  k60::JyMcuBt106 bt(btConfig);
+
+
 
   Timer::TimerInt time = 0;
 
   while (true) {
     if (time != System::Time()) {
       time = System::Time();
-      if (time % 100 == 0) {
-        unsigned int dist = US.GetAvgDistance();
-        console.SetCursorRow(0);
-        console.Clear(true);
-        console.WriteString(("\t" + util::to_string(dist) + "\t" + util::to_string(US.GetSD())).c_str());
-        led4.SetEnable(dist != FcYyUsV4::kMaxDistance && dist != FcYyUsV4::kMinDistance);
+      if (time % 10 == 0) {
+        unsigned int dist = US.GetDistance();
+        char temp[100];
+        sprintf(temp, "%d\n", dist);
+        bt.SendStr(temp);
+//        pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
+//        pWriter->WriteString(temp);
         led1.Switch();
       }
     }
