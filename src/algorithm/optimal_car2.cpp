@@ -146,14 +146,14 @@ const PidSet kStablePid = {
 		{1.15, 0, 0.01},	// ServoNormalLeft
 		{1.3, 0, 0},		// ServoRoundaboutLeft
 		{1.08, 0, 0.01},	// ServoSharpTurnLeft
-        {0.01, 0, 0},		// ServoTransitionalSlopeLeft
+        {0, 0, 0},			// ServoTransitionalSlopeLeft
 
 		// servo right
 		{0.8, 0, 0.01},		// ServoStraightRight
 		{1.15, 0, 0},		// ServoNormalRight
 		{1.3, 0, 0},		// ServoRoundaboutRight
 		{1.04, 0, 0.01},	// ServoSharpTurnRight
-		{0.01, 0, 1},		// ServoTransitionalSlopeRight
+		{0, 0, 0},			// ServoTransitionalSlopeRight
 
 		// speed
 		150,				// SpeedStraight
@@ -161,7 +161,7 @@ const PidSet kStablePid = {
 		85,					// SpeedRoundabout
 		120,				// SpeedSharpTurn
 		90,					// SpeedSlow
-		120					// SpeedTransitionalSlope
+		0					// SpeedTransitionalSlope
 };
 
 const PidSet kUnstablePid = {
@@ -315,8 +315,8 @@ std::string InflatePidValues() {
 	servo_roundabout_kd_left = p.ServoRoundaboutLeft.kD;
 	servo_sharp_turn_kp_left = p.ServoSharpTurnLeft.kP;
 	servo_sharp_turn_kd_left = p.ServoSharpTurnLeft.kD;
-	servo_trans_kp_slope_left = p.ServoTransitionalSlopeLeft.kP;
-	servo_trans_kd_slope_left = p.ServoTransitionalSlopeLeft.kD;
+//	servo_trans_kp_slope_left = p.ServoTransitionalSlopeLeft.kP;
+//	servo_trans_kd_slope_left = p.ServoTransitionalSlopeLeft.kD;
 
 	servo_straight_kp_right = p.ServoStraightRight.kP;
 	servo_straight_kd_right = p.ServoStraightRight.kD;
@@ -326,15 +326,15 @@ std::string InflatePidValues() {
 	servo_roundabout_kd_right = p.ServoRoundaboutRight.kD;
 	servo_sharp_turn_kp_right = p.ServoSharpTurnRight.kP;
 	servo_sharp_turn_kd_right = p.ServoSharpTurnRight.kD;
-	servo_trans_kp_slope_right = p.ServoTransitionalSlopeRight.kP;
-	servo_trans_kd_slope_right = p.ServoTransitionalSlopeRight.kD;
+//	servo_trans_kp_slope_right = p.ServoTransitionalSlopeRight.kP;
+//	servo_trans_kd_slope_right = p.ServoTransitionalSlopeRight.kD;
 
 	targetSpeed_straight = p.SpeedStraight;
 	targetSpeed_normal = p.SpeedNormal;
 	targetSpeed_round = p.SpeedRound;
 	targetSpeed_sharp_turn = p.SpeedSharpTurn;
 	targetSpeed_slow = p.SpeedSlow;
-	targetSpeed_trans = p.SpeedTransitionalSlope;
+//	targetSpeed_trans = p.SpeedTransitionalSlope;
 
 	return p.name;
 }
