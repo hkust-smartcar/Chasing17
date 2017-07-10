@@ -2118,7 +2118,7 @@ void main_car2(bool debug_) {
 //					}
 					if(TuningVar::show_algo_time){
 						char buf[10] = {};
-						sprintf(buf, "%d", System::Time()-time_img);
+						sprintf(buf, "%ld", System::Time()-time_img);
 						pLcd->SetRegion(Lcd::Rect(5,5,100,15));
 						pWriter->WriteString(buf);
 					}
