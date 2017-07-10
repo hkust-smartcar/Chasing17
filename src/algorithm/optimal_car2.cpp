@@ -820,14 +820,14 @@ bool FindEdges() {
 		if (left_corners.size() == 0){
 			std::vector<std::pair<uint16_t, uint16_t>>::iterator it;
 			for (it = left_edge.points.begin(); it != left_edge.points.end(); ++it){
-				if (worldview::car1::transformMatrix[it->first][WorldSize.h-it->second][0] == -1) break;
+				if (worldview::car2::transformMatrix[it->first][WorldSize.h-it->second][0] == -1) break;
 			}
 			left_edge.points.erase(it, left_edge.points.end());
 		}
 		if (right_corners.size() == 0){
 			std::vector<std::pair<uint16_t, uint16_t>>::iterator it;
 			for (it = right_edge.points.begin(); it != right_edge.points.end(); ++it){
-				if (worldview::car1::transformMatrix[it->first][WorldSize.h-it->second][0] == -1) break;
+				if (worldview::car2::transformMatrix[it->first][WorldSize.h-it->second][0] == -1) break;
 			}
 			right_edge.points.erase(it, right_edge.points.end());
 		}

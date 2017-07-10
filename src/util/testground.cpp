@@ -167,15 +167,21 @@ void main() {
 
   Timer::TimerInt time_img = 0;
 
+  int left_cnt = 0, right_cnt = 0;
+
   while (true) {
 	  while (time_img != System::Time()){
 		  time_img = System::Time();
 		  if (time_img % 10 == 0){
 			  led0.Switch();
 			  servo->SetDegree(cur_servo_val);
+			  encoder0->Update();
+			  left_cnt += encoder0->GetCount();
+			  encoder1->Update();
+			  right_cnt += encoder1->GetCount();
 			  char temp[100];
-			  sprintf(temp, "servo:%d", cur_servo_val);
-			  pLcd->SetRegion(Lcd::Rect(0,0,128,15));
+			  sprintf(temp, "s:%d\nl:%d\n r:%d", cur_servo_val, left_cnt, right_cnt);
+			  pLcd->SetRegion(Lcd::Rect(0,0,128,50));
 			  pWriter->WriteString(temp);
 		  }
 	  }
