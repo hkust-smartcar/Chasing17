@@ -64,11 +64,13 @@ class DebugConsole {
   /**
    * adding items to debug console
    */
+  void PushItem(char* text);
   void PushItem(char* text, uint16_t* valuePtr, float interval);//uint16
   void PushItem(char* text, int32_t* valuePtr, float interval);//uint16
   void PushItem(char* text, float* valuePtr, float interval);//float
   void PushItem(char* text, bool* valuePtr, char* true_text = "true", char* false_text = "false");//bool
   void PushItem(char* text, int32_t* valuePtr, char* true_text = "true", char* false_text = "false");//bitstring
+  void PushItem(char* text, Fptr fPtr);
 
   /*
    * Set item

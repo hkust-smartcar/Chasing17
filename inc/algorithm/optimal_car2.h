@@ -26,44 +26,10 @@ namespace algorithm {
 namespace optimal {
 namespace car2 {
 
-typedef CarManager::PidValues PidValues;
-
 void main_car2(bool debug_ = false);
 
-/**
- * Edges struct
- *
- * An type implementation for storage of Edges
- * @member points Vector storing the edges sequentially
- * @member push(int, int) Push a std::pair<int, int> into the vector points
- * @member push(Edges) Push a Edges into the vector points
- * @member size() Return the size of vector points
- * @member insert(int, int, int) Insert a std::pair<int, int> into some position of vector points
- * @member insert(int, Edges) Insert an Edges type into some position of vector points
- * @member grad() Take the gradient of certain Edges
- */
-struct Edges {
-  inline void push(int x, int y) { points.push_back(std::make_pair(x, y)); }
-  inline void push(Edges edge) { points.insert(points.end(), edge.points.begin(), edge.points.end()); }
-  inline uint32_t size() { return points.size(); }
-  inline void insert(int pos, int x, int y) { points.emplace(points.begin() + pos, std::make_pair(x, y)); }
-  inline void insert(int pos, Edges edge) {
-    points.insert(points.begin() + pos, edge.points.begin(), edge.points.end());
-  }
-  Edges grad() {
-    Edges temp;
-    for (int i = 1; i < this->size(); i++) {
-      auto last = this->points[i];
-      auto second_last = this->points[i - 1];
-      temp.push(last.first - second_last.first, last.second - second_last.second);
-    }
-    return temp;
-  }
-
-  std::vector<std::pair<uint16_t, uint16_t>> points;
-};
-
 typedef std::list<std::pair<uint16_t, uint16_t>> Corners;
+typedef CarManager::Edges Edges;
 
 /**
  * Usage:
@@ -160,48 +126,6 @@ namespace TuningVar{
 enum struct TranslateType {
   kNone = 0, kLeftNull, kRightNull
 };
-
-namespace stable {
-const PidValues kServoStraightLeft = {0.8, 0, 0.01};
-const PidValues kServoNormalLeft = {1.2, 0, 0};
-const PidValues kServoRoundaboutLeft = {1.4, 0, 0.01};
-const PidValues kServoSharpTurnLeft = {1.04, 0, 0.00};
-
-const uint16_t kSpeedStraight = 120;
-const uint16_t kSpeedNormal = 95;
-const uint16_t kSpeedRoundabout = 90;
-const uint16_t kSpeedSharpTurn = 120;
-const uint16_t kSpeedSlow = 100;
-
-const PidValues kServoStraightRight = {0.8, 0, 0.01};
-const PidValues kServoNormalRight = {1.2, 0, 0};
-const PidValues kServoRoundaboutRight = {1.4, 0, 0.01};
-const PidValues kServoSharpTurnRight = {1.03, 0, 0.00};
-}  // namespace stable
-
-namespace current {
-const PidValues kServoStraightLeft = {0.8, 0, 0.01};
-const PidValues kServoNormalLeft = {1.8, 0, 0.005};
-const PidValues kServoRoundaboutLeft = {1.4, 0, 0.01};
-const PidValues kServoSharpTurnLeft = {1.8, 0, 0.005};
-
-const uint16_t kSpeedStraightLeft = 150;
-const uint16_t kSpeedNormalLeft = 100;
-const uint16_t kSpeedRoundaboutLeft = 95;
-const uint16_t kSpeedSharpTurnLeft = 90;
-const uint16_t kSpeedSlowLeft = 110;
-
-const PidValues kServoStraightRight = {0.8, 0, 0.01};
-const PidValues kServoNormalRight = {1.8, 0, 0.005};
-const PidValues kServoRoundaboutRight = {1.4, 0, 0.01};
-const PidValues kServoSharpTurnRight = {1.8, 0, 0.005};
-
-const uint16_t kSpeedStraightRight = 150;
-const uint16_t kSpeedNormalRight = 100;
-const uint16_t kSpeedRoundaboutRight = 95;
-const uint16_t kSpeedSharpTurnRight = 90;
-const uint16_t kSpeedSlowRight = 110;
-}  // namespace current
 
 }  // namespace car2
 }  // namespace optimal

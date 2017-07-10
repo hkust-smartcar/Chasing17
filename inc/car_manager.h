@@ -17,6 +17,8 @@
 
 #include <cmath>
 #include <cstdint>
+#include <string>
+#include <vector>
 
 struct CarManager final {
  public:
@@ -74,31 +76,6 @@ struct CarManager final {
     uint16_t kRightBound;
   };
 
-  /**
-   * Struct of servo angles, stored in degrees
-   */
-  struct ServoAngles {
-    uint8_t kLeftAngle;
-    uint8_t kRightAngle;
-  };
-
-  static constexpr ServoAngles kAnglesCar1 = {36, 38};
-  static constexpr ServoAngles kAnglesCar2 = {38, 41};
-
-  static constexpr float kWheelbase = 19.65;
-  static constexpr float kAxleLength = 15.2;
-
-  /**
-   * Struct of side ratios, i.e. the speed ratio between the side of the car and the middle of the car.
-   */
-  struct SideRatio {
-    float kLeft;
-    float kRight;
-  };
-
-  static constexpr SideRatio kRatioCar1 = {std::tan(kAnglesCar1.kLeftAngle), std::tan(kAnglesCar1.kRightAngle)};
-  static constexpr SideRatio kRatioCar2 = {std::tan(kAnglesCar2.kLeftAngle), std::tan(kAnglesCar2.kRightAngle)};
-
   struct PidValues {
     float kP;
     float kI;
@@ -110,11 +87,58 @@ struct CarManager final {
     uint16_t h;
   };
 
-  // Getters
-  static ServoAngles GetServoAngles();
-  static ServoAngles GetServoAngles(Car);
-  static SideRatio GetSideRatio();
-  static SideRatio GetSideRatio(Car);
+  struct PidSet {
+    std::string name;
+
+    // servo left pid values
+    PidValues ServoStraightLeft;
+    PidValues ServoNormalLeft;
+    PidValues ServoRoundaboutLeft;
+    PidValues ServoSharpTurnLeft;
+    PidValues ServoTransitionalSlopeLeft;
+
+    // servo right pid values
+    PidValues ServoStraightRight;
+    PidValues ServoNormalRight;
+    PidValues ServoRoundaboutRight;
+    PidValues ServoSharpTurnRight;
+    PidValues ServoTransitionalSlopeRight;
+
+    // target speed values
+    uint16_t SpeedStraight;
+    uint16_t SpeedNormal;//normal turning
+    uint16_t SpeedRound;
+    uint16_t SpeedSharpTurn;
+    uint16_t SpeedSlow;//slow down speed during straight
+    uint16_t SpeedTransitionalSlope;
+  };
+
+  /**
+ * Edges struct
+ *
+ * An type implementation for storage of Edges
+ * @member points Vector storing the edges sequentially
+ * @member push(int, int) Push a std::pair<int, int> into the vector points
+ * @member push(Edges) Push a Edges into the vector points
+ * @member size() Return the size of vector points
+ * @member insert(int, int, int) Insert a std::pair<int, int> into some position of vector points
+ * @member insert(int, Edges) Insert an Edges type into some position of vector points
+ * @member grad() Take the gradient of certain Edges
+ */
+  struct Edges {
+    void push(int x, int y) { points.push_back(std::make_pair(x, y)); }
+    void push(Edges edge) { points.insert(points.end(), edge.points.begin(), edge.points.end()); }
+    uint32_t size() { return points.size(); }
+    void insert(int pos, int x, int y) { points.emplace(points.begin() + pos, std::make_pair(x, y)); }
+    void insert(int pos, Edges edge) {
+      points.insert(points.begin() + pos, edge.points.begin(), edge.points.end());
+    }
+    Edges grad();
+
+    std::vector<std::pair<uint16_t, uint16_t>> points;
+  };
+
+  static uint16_t config;
 
   static uint16_t us_distance_;
   static int32_t left_speed_;

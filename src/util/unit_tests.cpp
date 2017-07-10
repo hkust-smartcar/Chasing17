@@ -16,6 +16,7 @@
 
 #include "libbase/misc_types.h"
 #include "libsc/alternate_motor.h"
+#include "libsc/dir_motor.h"
 #include "libsc/dir_encoder.h"
 #include "libsc/futaba_s3010.h"
 #include "libsc/lcd_console.h"
@@ -28,6 +29,7 @@
 
 using libsc::AlternateMotor;
 using libsc::DirEncoder;
+using libsc::DirMotor;
 using libsc::FutabaS3010;
 using libsc::Lcd;
 using libsc::LcdConsole;
@@ -77,7 +79,7 @@ void LcdTest() {
     lcd->FillColor(Lcd::kBlack);
   }
 
-  lcd.reset(nullptr);
+  lcd.reset();
 }
 
 void CameraTest() {
@@ -103,17 +105,14 @@ void CameraTest() {
 
   while (true) {
     const Byte *pBuffer = camera->LockBuffer();
-    std::array<Byte, kBufferSize> buffer_arr{};
-    CopyByteArray(pBuffer, buffer_arr);
-
-    camera->UnlockBuffer();
     lcd->SetRegion(Lcd::Rect(0, 0, 80, 60));
-    lcd->FillBits(Lcd::kBlack, Lcd::kWhite, buffer_arr.data(), kBufferSize * 8);
+    lcd->FillBits(Lcd::kBlack, Lcd::kWhite, pBuffer, kBufferSize * 8);
+    camera->UnlockBuffer();
   }
 
   camera->Stop();
-  camera.reset(nullptr);
-  lcd.reset(nullptr);
+  camera.reset();
+  lcd.reset();
 }
 
 void ServoTest() {
@@ -122,10 +121,10 @@ void ServoTest() {
   FutabaS3010 servo(config);
 
   while (true) {
-    servo.SetDegree(450);
-    System::DelayMs(2000);
-    servo.SetDegree(1350);
-    System::DelayMs(2000);
+    servo.SetDegree(650);
+    System::DelayMs(1000);
+    servo.SetDegree(1150);
+    System::DelayMs(1000);
   }
 }
 
@@ -136,6 +135,23 @@ void AltMotorTest() {
   AlternateMotor motor_left(config);
   config.id = 1;
   AlternateMotor motor_right(config);
+
+  motor_left.SetClockwise(true);
+  motor_right.SetClockwise(true);
+
+  while (true) {
+    motor_left.SetPower(100);
+    motor_right.SetPower(100);
+  }
+}
+
+void DirMotorTest() {
+  DirMotor::Config config;
+  config.multiplier = 100;
+  config.id = 0;
+  DirMotor motor_left(config);
+  config.id = 1;
+  DirMotor motor_right(config);
 
   motor_left.SetClockwise(true);
   motor_right.SetClockwise(true);
