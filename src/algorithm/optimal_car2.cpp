@@ -820,14 +820,14 @@ bool FindEdges() {
 		if (left_corners.size() == 0){
 			std::vector<std::pair<uint16_t, uint16_t>>::iterator it;
 			for (it = left_edge.points.begin(); it != left_edge.points.end(); ++it){
-				if (worldview::car1::transformMatrix[it->first][WorldSize.h-it->second][0] == -1) break;
+				if (worldview::car2::transformMatrix[it->first][WorldSize.h-it->second][0] == -1) break;
 			}
 			left_edge.points.erase(it, left_edge.points.end());
 		}
 		if (right_corners.size() == 0){
 			std::vector<std::pair<uint16_t, uint16_t>>::iterator it;
 			for (it = right_edge.points.begin(); it != right_edge.points.end(); ++it){
-				if (worldview::car1::transformMatrix[it->first][WorldSize.h-it->second][0] == -1) break;
+				if (worldview::car2::transformMatrix[it->first][WorldSize.h-it->second][0] == -1) break;
 			}
 			right_edge.points.erase(it, right_edge.points.end());
 		}
@@ -2119,12 +2119,16 @@ void main_car2(bool debug_) {
 						pid_right.SetSetpoint(TuningVar::targetSpeed_normal* differential_left((-pServo->GetDegree() + servo_bounds.kCenter)/10));
 					}
 
-					if ((carMid.first - left_edge.points.front().first <= 3) || (right_edge.points.front().first - carMid.first <= 3))
-							pServo->SetDegree(prev_servo_angle);
-					else pServo->SetDegree(util::clamp<uint16_t>(
-							servo_bounds.kCenter - tempKp * curr_servo_error + tempKd * (curr_servo_error - prev_servo_error),
-							servo_bounds.kRightBound,
-							servo_bounds.kLeftBound));
+//					if ((carMid.first - left_edge.points.front().first <= 3) || (right_edge.points.front().first - carMid.first <= 3))
+//							pServo->SetDegree(prev_servo_angle);
+//					else pServo->SetDegree(util::clamp<uint16_t>(
+//							servo_bounds.kCenter - tempKp * curr_servo_error + tempKd * (curr_servo_error - prev_servo_error),
+//							servo_bounds.kRightBound,
+//							servo_bounds.kLeftBound));
+					pServo->SetDegree(util::clamp<uint16_t>(
+												servo_bounds.kCenter - tempKp * curr_servo_error + tempKd * (curr_servo_error - prev_servo_error),
+												servo_bounds.kRightBound,
+												servo_bounds.kLeftBound));
 
 					prev_servo_error = curr_servo_error;
 					pEncoder0->Update();
