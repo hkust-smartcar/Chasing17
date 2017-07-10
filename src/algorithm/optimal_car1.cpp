@@ -702,6 +702,29 @@ bool FindEdges() {
 		if (left_corners.size() > 0) flag_break_left = true;
 		if (right_corners.size() > 0) flag_break_right = true;
 
+		//check if going to invalid direction
+		auto last_left = left_edge.points.back();
+		auto last2_left = left_edge.points[left_edge.points.size()-2];
+		if ((last_left.first - last2_left.first == 1) && (last_left.second - last2_left.second == -1)) flag_break_left = true;
+
+		auto last_right = right_edge.points.back();
+		auto last2_right = right_edge.points[right_edge.points.size()-2];
+		if ((last_right.first - last2_right.first == -1) && (last_right.second - last2_right.second == -1)) flag_break_right = true;
+
+		//check if near world boundaries
+		for (int i = last_left.first-1; i > max(1, last_left.first-4); i--){
+			if (worldview::car1::transformMatrix[i][WorldSize.h-last_left.second][0] == -1) {
+				flag_break_left = true;
+				break;
+			}
+		}
+		for (int i = last_right.first+1; i < min(1, last_right.first+4); i++){
+			if (worldview::car1::transformMatrix[i][WorldSize.h-last_right.second][0] == -1){
+				flag_break_right = true;
+				break;
+			}
+		}
+
 		//check if two edges are close
 		uint16_t r_back_x = right_edge.points.back().first;
 		uint16_t r_back_y = right_edge.points.back().second;
