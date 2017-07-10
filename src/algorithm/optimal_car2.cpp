@@ -146,14 +146,14 @@ const PidSet kStablePid = {
 		{1.15, 0, 0.01},	// ServoNormalLeft
 		{1.3, 0, 0},		// ServoRoundaboutLeft
 		{1.08, 0, 0.01},	// ServoSharpTurnLeft
-        {0.01, 0, 0},		// ServoTransitionalSlopeLeft
+        {0, 0, 0},			// ServoTransitionalSlopeLeft
 
 		// servo right
 		{0.8, 0, 0.01},		// ServoStraightRight
 		{1.15, 0, 0},		// ServoNormalRight
 		{1.3, 0, 0},		// ServoRoundaboutRight
 		{1.04, 0, 0.01},	// ServoSharpTurnRight
-		{0.01, 0, 1},		// ServoTransitionalSlopeRight
+		{0, 0, 0},			// ServoTransitionalSlopeRight
 
 		// speed
 		150,				// SpeedStraight
@@ -161,7 +161,7 @@ const PidSet kStablePid = {
 		85,					// SpeedRoundabout
 		120,				// SpeedSharpTurn
 		90,					// SpeedSlow
-		120					// SpeedTransitionalSlope
+		0					// SpeedTransitionalSlope
 };
 
 const PidSet kUnstablePid = {
@@ -315,8 +315,8 @@ std::string InflatePidValues() {
 	servo_roundabout_kd_left = p.ServoRoundaboutLeft.kD;
 	servo_sharp_turn_kp_left = p.ServoSharpTurnLeft.kP;
 	servo_sharp_turn_kd_left = p.ServoSharpTurnLeft.kD;
-	servo_trans_kp_slope_left = p.ServoTransitionalSlopeLeft.kP;
-	servo_trans_kd_slope_left = p.ServoTransitionalSlopeLeft.kD;
+//	servo_trans_kp_slope_left = p.ServoTransitionalSlopeLeft.kP;
+//	servo_trans_kd_slope_left = p.ServoTransitionalSlopeLeft.kD;
 
 	servo_straight_kp_right = p.ServoStraightRight.kP;
 	servo_straight_kd_right = p.ServoStraightRight.kD;
@@ -326,15 +326,15 @@ std::string InflatePidValues() {
 	servo_roundabout_kd_right = p.ServoRoundaboutRight.kD;
 	servo_sharp_turn_kp_right = p.ServoSharpTurnRight.kP;
 	servo_sharp_turn_kd_right = p.ServoSharpTurnRight.kD;
-	servo_trans_kp_slope_right = p.ServoTransitionalSlopeRight.kP;
-	servo_trans_kd_slope_right = p.ServoTransitionalSlopeRight.kD;
+//	servo_trans_kp_slope_right = p.ServoTransitionalSlopeRight.kP;
+//	servo_trans_kd_slope_right = p.ServoTransitionalSlopeRight.kD;
 
 	targetSpeed_straight = p.SpeedStraight;
 	targetSpeed_normal = p.SpeedNormal;
 	targetSpeed_round = p.SpeedRound;
 	targetSpeed_sharp_turn = p.SpeedSharpTurn;
 	targetSpeed_slow = p.SpeedSlow;
-	targetSpeed_trans = p.SpeedTransitionalSlope;
+//	targetSpeed_trans = p.SpeedTransitionalSlope;
 
 	return p.name;
 }
@@ -816,6 +816,7 @@ bool FindEdges() {
 		auto last2_right = right_edge.points[right_edge.points.size()-2];
 		if ((last_right.first - last2_right.first == -1) && (last_right.second - last2_right.second == -1)) flag_break_right = true;
 
+<<<<<<< HEAD
 		//check if near world boundaries if has no corners
 		if (left_corners.size() == 0){
 			std::vector<std::pair<uint16_t, uint16_t>>::iterator it;
@@ -832,6 +833,8 @@ bool FindEdges() {
 			right_edge.points.erase(it, right_edge.points.end());
 		}
 
+=======
+>>>>>>> 273b5661fd5cd1338b993192e2fa11ca73a470e2
 		//check if two edges are close
 		uint16_t r_back_x = right_edge.points.back().first;
 		uint16_t r_back_y = right_edge.points.back().second;
@@ -880,6 +883,24 @@ bool FindEdges() {
 				flag_break_right = true;
 			}
 		}
+	}
+
+	//check if near world boundaries if has no corners
+	if (left_corners.size() == 0){
+		std::vector<std::pair<uint16_t, uint16_t>>::iterator it;
+		for (it = left_edge.points.begin(); it != left_edge.points.end(); ++it){
+			for (int i = it->first; i >= max(1,it->first - 3); i--)
+				if (worldview::car1::transformMatrix[i][WorldSize.h-it->second][0] == -1) break;
+		}
+		left_edge.points.erase(it, left_edge.points.end());
+	}
+	if (right_corners.size() == 0){
+		std::vector<std::pair<uint16_t, uint16_t>>::iterator it;
+		for (it = right_edge.points.begin(); it != right_edge.points.end(); ++it){
+			for (int i = it->first; i <= min(WorldSize.w-1, it->first+3); i++ )
+				if (worldview::car1::transformMatrix[i][WorldSize.h-it->second][0] == -1) break;
+		}
+		right_edge.points.erase(it, right_edge.points.end());
 	}
 
 	//Straight line judgement - helper for feature_corner()
