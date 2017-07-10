@@ -866,20 +866,22 @@ bool FindEdges() {
 	}
 
 	//check if near world boundaries if has no corners
-	if (left_corners.size() == 0){
+	if (left_corners.size() == 0 && left_edge.points.size() > 10){
 		std::vector<std::pair<uint16_t, uint16_t>>::iterator it;
-		for (it = left_edge.points.begin(); it != left_edge.points.end(); ++it){
-			for (int i = it->first; i >= max(1,it->first - 3); i--)
-				if (worldview::car1::transformMatrix[i][WorldSize.h-it->second][0] == -1) break;
+		for (it = left_edge.points.begin()+10; it != left_edge.points.end(); ++it){
+			for (int i = it->first; i >= max(1,it->first - 5); i--)
+				if (worldview::car1::transformMatrix[i][WorldSize.h-it->second][0] == -1) goto left_edge_erase;
 		}
+		left_edge_erase:
 		left_edge.points.erase(it, left_edge.points.end());
 	}
-	if (right_corners.size() == 0){
+	if (right_corners.size() == 0 && right_edge.points.size() > 10){
 		std::vector<std::pair<uint16_t, uint16_t>>::iterator it;
-		for (it = right_edge.points.begin(); it != right_edge.points.end(); ++it){
-			for (int i = it->first; i <= min(WorldSize.w-1, it->first+3); i++ )
-				if (worldview::car1::transformMatrix[i][WorldSize.h-it->second][0] == -1) break;
+		for (it = right_edge.points.begin()+10; it != right_edge.points.end(); ++it){
+			for (int i = it->first; i <= min(WorldSize.w-1, it->first+5); i++ )
+				if (worldview::car1::transformMatrix[i][WorldSize.h-it->second][0] == -1) goto right_edge_erase;
 		}
+		right_edge_erase:
 		right_edge.points.erase(it, right_edge.points.end());
 	}
 
@@ -2115,9 +2117,10 @@ void main_car1(bool debug_) {
 						pid_right.SetSetpoint(TuningVar::targetSpeed_normal* differential_right((pServo->GetDegree() - servo_bounds.kCenter)/10));
 					}
 
-					if ((carMid.first - left_edge.points.front().first <= 3) || (right_edge.points.front().first - carMid.first <= 3))
-							pServo->SetDegree(prev_servo_angle);
-					else pServo->SetDegree(util::clamp<uint16_t>(
+//					if ((carMid.first - left_edge.points.front().first <= 3) || (right_edge.points.front().first - carMid.first <= 3))
+//							pServo->SetDegree(prev_servo_angle);
+//					else
+						pServo->SetDegree(util::clamp<uint16_t>(
 							servo_bounds.kCenter - tempKp * curr_servo_error + tempKd * (curr_servo_error - prev_servo_error),
 							servo_bounds.kRightBound,
 							servo_bounds.kLeftBound));
