@@ -87,9 +87,9 @@ namespace TuningVar { //tuning var declaration
   uint16_t cross_encoder_count = 4000; // The hardcoded encoder count that car must reach in crossroad
   uint16_t min_dist_meet_crossing = 30;
   uint16_t roundroad_min_size = 30; // When the edge is broken in roundabout, find until this threshold
-  uint16_t exit_action_dist = 35; // double check to avoid corner's sudden disappear inside roundabout
-  uint16_t roundabout_offset = 13; // half of road width
-  uint16_t round_exit_offset = 20;
+  uint16_t exit_action_dist = 30; // double check to avoid corner's sudden disappear inside roundabout
+  uint16_t roundabout_offset = 11; // half of road width
+  uint16_t round_exit_offset = 15;
   uint16_t round_encoder_count = 2600;
   uint16_t roundExit_encoder_count = 3800;
   int32_t roundabout_shortest_flag = 0b00011; //1 means turn left, 0 means turn right. Reading from left to right
@@ -118,7 +118,7 @@ namespace TuningVar { //tuning var declaration
   float servo_roundabout_kp_left = 1.3;
   float servo_roundabout_kd_left = 0;
   float servo_sharp_turn_kp_left = 1.02;
-  float servo_sharp_turn_kd_left = 0;
+  float servo_sharp_turn_kd_left = 0.001;
   float servo_trans_kp_slope_left = 0.94;
   float servo_trans_kd_slope_left = 0;
 
@@ -230,8 +230,12 @@ std::pair<int, int> roundabout_nearest_corner_left{0, 0};
 std::pair<int, int> roundabout_nearest_corner_right{0, 0};
 int CornerCheck_left = 0, CornerCheck_right = 0;
 
+ServoBounds servo_bounds = {1070, 755, 460};
+ImageSize CameraSize = {128, 480};
+ImageSize WorldSize = {128, 160};
 
 int prev_servo_error = 0;
+int prev_servo_angle = servo_bounds.kCenter;
 int curr_enc_val_left = 0;
 int curr_enc_val_right = 0;
 
@@ -251,10 +255,6 @@ DirMotor* pMotor0 = nullptr;
 DirMotor* pMotor1 = nullptr;
 IncrementalPidController<float, float>* pid_left_p = nullptr;
 IncrementalPidController<float, float>* pid_right_p = nullptr;
-
-ServoBounds servo_bounds = {1070, 755, 460};
-ImageSize CameraSize = {128, 480};
-ImageSize WorldSize = {128, 160};
 
 inline constexpr int max(int a, int b) {
 	return (a > b) ? a : b;
@@ -816,18 +816,18 @@ bool FindEdges() {
 		if ((last_right.first - last2_right.first == -1) && (last_right.second - last2_right.second == -1)) flag_break_right = true;
 
 		//check if near world boundaries
-		for (int i = last_left.first-1; i > max(1, last_left.first-4); i--){
-			if (worldview::car1::transformMatrix[i][WorldSize.h-last_left.second][0] == -1) {
-				flag_break_left = true;
-				break;
-			}
-		}
-		for (int i = last_right.first+1; i < min(1, last_right.first+4); i++){
-			if (worldview::car1::transformMatrix[i][WorldSize.h-last_right.second][0] == -1){
-				flag_break_right = true;
-				break;
-			}
-		}
+//		for (int i = last_left.first-1; i > max(1, last_left.first-4); i--){
+//			if (worldview::car1::transformMatrix[i][WorldSize.h-last_left.second][0] == -1) {
+//				flag_break_left = true;
+//				break;
+//			}
+//		}
+//		for (int i = last_right.first+1; i < min(1, last_right.first+4); i++){
+//			if (worldview::car1::transformMatrix[i][WorldSize.h-last_right.second][0] == -1){
+//				flag_break_right = true;
+//				break;
+//			}
+//		}
 
 		//check if two edges are close
 		uint16_t r_back_x = right_edge.points.back().first;
@@ -2051,7 +2051,7 @@ void main_car1(bool debug_) {
 								if(sum<25) continue; // only consider latter 25 points
 								further_servo_error += (point.first - carMid.first);
 							}
-//							further_servo_error = further_servo_error;
+//							char timestr[100];
 //							pLcd->SetRegion(Lcd::Rect(0, 45, 128, 15));
 //							sprintf(timestr, "Ferror: %d", abs(further_servo_error));
 //							pWriter->WriteString(timestr);
@@ -2103,11 +2103,13 @@ void main_car1(bool debug_) {
 						pid_right.SetSetpoint(TuningVar::targetSpeed_normal* differential_left((-pServo->GetDegree() + servo_bounds.kCenter)/10));
 					}
 
-					pServo->SetDegree(util::clamp<uint16_t>(
+					if ((carMid.first - left_edge.points.front().first <= 3) || (right_edge.points.front().first - carMid.first <= 3))
+							pServo->SetDegree(prev_servo_angle);
+					else pServo->SetDegree(util::clamp<uint16_t>(
 							servo_bounds.kCenter - tempKp * curr_servo_error + tempKd * (curr_servo_error - prev_servo_error),
 							servo_bounds.kRightBound,
 							servo_bounds.kLeftBound));
-
+					prev_servo_angle = pServo->GetDegree();
 					prev_servo_error = curr_servo_error;
 					pEncoder0->Update();
 					pEncoder1->Update();
@@ -2119,8 +2121,10 @@ void main_car1(bool debug_) {
 						pid_left.SetSetpoint(0);
 						pid_right.SetSetpoint(0);
 					}
-					curr_enc_val_left = pEncoder0->GetCount();
-					curr_enc_val_right = -pEncoder1->GetCount();
+					if (pEncoder0->GetCount() < 60000 || pEncoder1->GetCount() < 60000){
+						curr_enc_val_left = pEncoder0->GetCount();
+						curr_enc_val_right = -pEncoder1->GetCount();
+					}
 					SetMotorPower(GetMotorPower(0)+pid_left.Calc(curr_enc_val_left),0);
 					SetMotorPower(GetMotorPower(1)+pid_right.Calc(curr_enc_val_right),1);
 					//				if((curr_enc_val_left<100 || curr_enc_val_right<100) && (System::Time()-startTime>1000 || skip_motor_protection)){

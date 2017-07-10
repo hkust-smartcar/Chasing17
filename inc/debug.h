@@ -46,6 +46,9 @@ void loadItems(DebugConsole* console) {
     console->PushItem("overt_sel", &roundabout_overtake_flag, "y", "n");
     console->PushItem("rndabt sel", &roundabout_shortest_flag, "l", "r");
     console->PushItem("over_time", &overtake_interval_time, 5);
+    console->PushItem("exit_dist", &exit_action_dist, 1);
+    console->PushItem("rnd_off", &roundabout_offset, 1);
+    console->PushItem("rndE_off", &round_exit_offset, 1);
 //    console->PushItem("corner_size", &corner_range, 1);
 //    console->PushItem("corner_min", &corner_min, 1);
 //    console->PushItem("corner_max", &corner_max, 1);
@@ -57,7 +60,6 @@ void loadItems(DebugConsole* console) {
     console->PushItem("normal", &targetSpeed_normal, 5);
     console->PushItem("rndabt", &targetSpeed_round, 5);
     console->PushItem("s_turn", &targetSpeed_sharp_turn, 5);
-    console->PushItem("trans", &targetSpeed_trans, 5);
 
     // servo
     console->PushItem("servo pid:");
@@ -77,10 +79,6 @@ void loadItems(DebugConsole* console) {
     console->PushItem("s_turn-d-r", &servo_sharp_turn_kd_right, 0.001);
     console->PushItem("s_turn-p-l", &servo_sharp_turn_kp_left, 0.01);
     console->PushItem("s_turn-d-l", &servo_sharp_turn_kd_left, 0.001);
-    console->PushItem("trans-p-r", &servo_trans_kp_slope_right, 0.01);
-    console->PushItem("trans-d-r", &servo_trans_kd_slope_right, 0.001);
-    console->PushItem("trans-p-l", &servo_trans_kp_slope_left, 0.01);
-    console->PushItem("trans-d-l", &servo_trans_kd_slope_left, 0.001);
 
   } else if (car != 0) {
     using namespace algorithm::optimal::car2::TuningVar;
@@ -93,6 +91,9 @@ void loadItems(DebugConsole* console) {
     console->PushItem("overt_sel", &roundabout_overtake_flag, "y", "n");
     console->PushItem("rndabt sel", &roundabout_shortest_flag, "l", "r");
     console->PushItem("over_time", &overtake_interval_time, 5);
+    console->PushItem("exit_dist", &exit_action_dist, 1);
+    console->PushItem("rnd_off", &roundabout_offset, 1);
+    console->PushItem("rndE_off", &round_exit_offset, 1);
 //    console->PushItem("corner_size", &corner_range, 1);
 //    console->PushItem("corner_min", &corner_min, 1);
 //    console->PushItem("corner_max", &corner_max, 1);
@@ -104,7 +105,6 @@ void loadItems(DebugConsole* console) {
     console->PushItem("normal", &targetSpeed_normal, 5);
     console->PushItem("rndabt", &targetSpeed_round, 5);
     console->PushItem("s_turn", &targetSpeed_sharp_turn, 5);
-    console->PushItem("trans", &targetSpeed_trans, 5);
 
     // servo
     console->PushItem("servo pid:");
@@ -124,11 +124,6 @@ void loadItems(DebugConsole* console) {
     console->PushItem("s_turn-d-r", &servo_sharp_turn_kd_right, 0.001);
     console->PushItem("s_turn-p-l", &servo_sharp_turn_kp_left, 0.01);
     console->PushItem("s_turn-d-l", &servo_sharp_turn_kd_left, 0.001);
-    console->PushItem("trans-p-r", &servo_trans_kp_slope_right, 0.01);
-    console->PushItem("trans-d-r", &servo_trans_kd_slope_right, 0.001);
-    console->PushItem("trans-p-l", &servo_trans_kp_slope_left, 0.01);
-    console->PushItem("trans-d-l", &servo_trans_kd_slope_left, 0.001);
-
   }
 }
 
