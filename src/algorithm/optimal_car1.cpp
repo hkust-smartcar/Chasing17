@@ -90,7 +90,7 @@ namespace TuningVar { //tuning var declaration
   uint16_t roundabout_offset = 13; // half of road width
   uint16_t round_exit_offset = 20;
   uint16_t round_encoder_count = 2600;
-  uint16_t roundExit_encoder_count = 3700;
+  uint16_t roundExit_encoder_count = 3800;
   int32_t roundabout_shortest_flag = 0b00011; //1 means turn left, 0 means turn right. Reading from left to right
   int32_t roundabout_overtake_flag = 0b11111;
   uint16_t nearest_corner_threshold = 128/2;
