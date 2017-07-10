@@ -22,52 +22,14 @@ CarManager::Feature CarManager::feature_ = CarManager::Feature::kStraight;
 CarManager::Identity CarManager::identity_ = CarManager::Identity::kFront;
 CarManager::Car CarManager::car_ = CarManager::Car::kCar1;
 
-constexpr CarManager::ServoAngles CarManager::kAnglesCar1;
-constexpr CarManager::ServoAngles CarManager::kAnglesCar2;
+uint16_t CarManager::config = 0;
 
-constexpr CarManager::SideRatio CarManager::kRatioCar1;
-constexpr CarManager::SideRatio CarManager::kRatioCar2;
-
-CarManager::ServoAngles CarManager::GetServoAngles() {
-  switch (car_) {
-    default:
-      // all cases covered
-    case Car::kCar1:
-      return kAnglesCar1;
-    case Car::kCar2:
-      return kAnglesCar2;
+CarManager::Edges CarManager::Edges::grad() {
+  Edges temp;
+  for (int i = 1; i < this->size(); i++) {
+    auto last = this->points[i];
+    auto second_last = this->points[i - 1];
+    temp.push(last.first - second_last.first, last.second - second_last.second);
   }
-}
-
-CarManager::ServoAngles CarManager::GetServoAngles(Car c) {
-  switch (c) {
-    default:
-      // all cases covered
-    case Car::kCar1:
-      return kAnglesCar1;
-    case Car::kCar2:
-      return kAnglesCar2;
-  }
-}
-
-CarManager::SideRatio CarManager::GetSideRatio() {
-  switch (car_) {
-    default:
-      // all cases covered
-    case Car::kCar1:
-      return kRatioCar1;
-    case Car::kCar2:
-      return kRatioCar2;
-  }
-}
-
-CarManager::SideRatio CarManager::GetSideRatio(Car c) {
-  switch (c) {
-    default:
-      // all cases covered
-    case Car::kCar1:
-      return kRatioCar1;
-    case Car::kCar2:
-      return kRatioCar2;
-  }
+  return temp;
 }

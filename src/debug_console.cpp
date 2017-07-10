@@ -59,6 +59,13 @@ void DebugConsole::Listen() {
   }
 }
 
+void DebugConsole::PushItem(char* text) {
+  Item item;
+  item.text = text;
+  item.type = VarType::kNan;
+  items.push_back(item);
+}
+
 void DebugConsole::PushItem(char* text, uint16_t* valuePtr, float interval) {
   Item item;
   item.text = text;
@@ -111,6 +118,14 @@ void DebugConsole::PushItem(char* text, int32_t* valuePtr, char* true_text, char
   int32t_values.push_back(valuePtr);
   items.push_back(item);
   flash_sum += sizeof(*valuePtr);
+}
+
+void DebugConsole::PushItem(char* text, Fptr fPtr) {
+  Item item;
+  item.text = text;
+  item.type = VarType::kNan;
+  item.listener = fPtr;
+  items.push_back(item);
 }
 
 void DebugConsole::SetItem(int index, Item item) {

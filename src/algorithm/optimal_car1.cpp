@@ -132,8 +132,62 @@ namespace TuningVar { //tuning var declaration
 
 }  // namespace TuningVar
 
-
 namespace {
+typedef CarManager::PidSet PidSet;
+
+const PidSet kStablePid = {
+		"c1_stable",		// set name
+
+		// servo left
+		{0.8, 0, 0.01},		// ServoStraightLeft
+		{1.45, 0, 0},		// ServoNormalLeft
+		{1.3, 0, 0},		// ServoRoundaboutLeft
+		{0.98, 0, 0},		// ServoSharpTurnLeft
+		{0.94, 0, 0},		// ServoTransitionalSlopeLeft
+
+		// servo right
+		{0.8, 0, 0.01},		// ServoStraightRight
+		{1.43, 0, 0},		// ServoNormalRight
+		{1.3, 0, 0},		// ServoRoundaboutRight
+		{1.25, 0, 0},		// ServoSharpTurnRight
+		{-0.0165, 0, 0},	// ServoTransitionalSlopeRight
+
+		// speed
+		150,				// SpeedStraight
+		160,				// SpeedNormal
+		85,					// SpeedRoundabout
+		120,				// SpeedSharpTurn
+		90,					// SpeedSlow
+		120					// SpeedTransitionalSlope
+		
+};
+
+const PidSet kUnstablePid = {
+		"c1_unstable",		// set name
+
+		// servo left
+		{0.8, 0, 0.01},		// ServoStraightLeft
+		{1.45, 0, 0},		// ServoNormalLeft
+		{1.3, 0, 0},		// ServoRoundaboutLeft
+		{0.98, 0, 0},		// ServoSharpTurnLeft
+		{0.94, 0, 0},		// ServoTransitionalSlopeLeft
+
+		// servo right
+		{0.8, 0, 0.01},		// ServoStraightRight
+		{1.43, 0, 0},		// ServoNormalRight
+		{1.3, 0, 0},		// ServoRoundaboutRight
+		{1.25, 0, 0},		// ServoSharpTurnRight
+		{-0.0165, 0, 0},	// ServoTransitionalSlopeRight
+
+		// speed
+		150,				// SpeedStraight
+		160,				// SpeedNormal
+		85,					// SpeedRoundabout
+		120,				// SpeedSharpTurn
+		90,					// SpeedSlow
+		120					// SpeedTransitionalSlope
+};
+
 //BT listener
 std::string inputStr;
 bool tune = false;
@@ -222,6 +276,7 @@ bool FindOneLeftEdge();
 bool FindOneRightEdge();
 void GenPath(Feature);
 bool getWorldBit(int, int);
+std::string InflatePidValues();
 void PrintCorner(Corners, uint16_t);
 void PrintEdge(Edges, uint16_t);
 void PrintImage();
@@ -230,6 +285,54 @@ void PrintWorldImage();
 int roundabout_shortest(uint32_t a, int pos);
 int roundabout_overtake(uint32_t a, int pos);
 
+std::string InflatePidValues() {
+	using namespace TuningVar;
+
+	PidSet p;
+
+	switch (CarManager::config) {
+		case 1:
+			p = kStablePid;
+			break;
+		case 2:
+			p = kUnstablePid;
+			break;
+		default:
+			return "Custom";
+	}
+
+	// inflate the pid values
+	servo_straight_kp_left = p.ServoStraightLeft.kP;
+	servo_straight_kd_left = p.ServoStraightLeft.kD;
+	servo_normal_kp_left = p.ServoNormalLeft.kP;
+	servo_normal_kd_left = p.ServoNormalLeft.kD;
+	servo_roundabout_kp_left = p.ServoRoundaboutLeft.kP;
+	servo_roundabout_kd_left = p.ServoRoundaboutLeft.kD;
+	servo_sharp_turn_kp_left = p.ServoSharpTurnLeft.kP;
+	servo_sharp_turn_kd_left = p.ServoSharpTurnLeft.kD;
+	servo_trans_kp_slope_left = p.ServoTransitionalSlopeLeft.kP;
+	servo_trans_kd_slope_left = p.ServoTransitionalSlopeLeft.kD;
+
+	servo_straight_kp_right = p.ServoStraightRight.kP;
+	servo_straight_kd_right = p.ServoStraightRight.kD;
+	servo_normal_kp_right = p.ServoNormalRight.kP;
+	servo_normal_kd_right = p.ServoNormalRight.kD;
+	servo_roundabout_kp_right = p.ServoRoundaboutRight.kP;
+	servo_roundabout_kd_right = p.ServoRoundaboutRight.kD;
+	servo_sharp_turn_kp_right = p.ServoSharpTurnRight.kP;
+	servo_sharp_turn_kd_right = p.ServoSharpTurnRight.kD;
+	servo_trans_kp_slope_right = p.ServoTransitionalSlopeRight.kP;
+	servo_trans_kd_slope_right = p.ServoTransitionalSlopeRight.kD;
+
+	targetSpeed_straight = p.SpeedStraight;
+	targetSpeed_normal = p.SpeedNormal;
+	targetSpeed_round = p.SpeedRound;
+	targetSpeed_sharp_turn = p.SpeedSharpTurn;
+	targetSpeed_slow = p.SpeedSlow;
+	targetSpeed_trans = p.SpeedTransitionalSlope;
+
+	return p.name;
+}
 
 /*
  * @brief: bluetooth listener for processing tuning
@@ -300,17 +403,17 @@ int getFilteredBit(const Byte* buff, int x, int y) {
 
 	return buff[y * CameraSize.w / 8 + x / 8] >> (7 - (x % 8)) & 1; //buff[y*CameraSize.w/8+x/8] & 0x80>>x%8;
 
-	// Median Filter
-	int count = 0, total = 0;
-
-	for (int i = max(0, x - 1); i < min(CameraSize.w - 1, x + 1); i++) {
-		for (int j = max(0, y - 1); j < min(CameraSize.h - 1, y + 1); j++) {
-			total++;
-			count += buff[j * CameraSize.w / 8 + i / 8] >> (7 - (i % 8)) & 1;
-		}
-	}
-	// Median Filter
-	return (count > total / 2) ? 1 : 0;
+//	// Median Filter
+//	int count = 0, total = 0;
+//
+//	for (int i = max(0, x - 1); i < min(CameraSize.w - 1, x + 1); i++) {
+//		for (int j = max(0, y - 1); j < min(CameraSize.h - 1, y + 1); j++) {
+//			total++;
+//			count += buff[j * CameraSize.w / 8 + i / 8] >> (7 - (i % 8)) & 1;
+//		}
+//	}
+//	// Median Filter
+//	return (count > total / 2) ? 1 : 0;
 }
 
 //get bit value from camerabuf using camera coordinate system
@@ -1518,6 +1621,7 @@ int GetMotorPower(int id){
 }
 
 void main_car1(bool debug_) {
+	std::string kPidProfile = InflatePidValues();
 
 	debug = debug_;
 
@@ -2024,7 +2128,7 @@ void main_car1(bool debug_) {
 					//				}
 					if(TuningVar::show_algo_time){
 						char buf[10] = {};
-						sprintf(buf, "%d", System::Time()-time_img);
+						sprintf(buf, "%ld", System::Time()-time_img);
 						pLcd->SetRegion(Lcd::Rect(5,5,100,15));
 						pWriter->WriteString(buf);
 					}

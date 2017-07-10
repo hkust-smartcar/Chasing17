@@ -87,9 +87,6 @@ int main() {
   // modify next line to switch between algorithms
   constexpr Algorithm a = Algorithm::kOptimal;
 
-  // modify next line to change which car we're working with
-  CarManager::Car c = CarManager::Car::kCar1;
-
   bool reset = false;
   {
     Joystick::Config joystick_config;
@@ -100,6 +97,7 @@ int main() {
     reset = joystick.GetState() == Joystick::State::kSelect;
   }
 
+  CarManager::Car c;
    switch (debug(reset)) {
      case 1:
        c = CarManager::Car::kCar1;
