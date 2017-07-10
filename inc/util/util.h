@@ -26,16 +26,6 @@
 
 namespace util {
 /**
- * Copies a byte array from its pointer to a C++11-style byte array
- *
- * @tparam size Size (i.e. number of elements) of the arrays
- * @param src Source (C++11-style) array
- * @param dest Destination (C++11-style) array
- */
-template<size_t size>
-void CopyByteArray(const Byte* const src, std::array<Byte, size>& dest);
-
-/**
  * Converts an uint16_t to an array with 2 bytes.
  *
  * @param num The uint16_t number
@@ -104,7 +94,5 @@ constexpr const T& clamp(const T& v, const T& lo, const T& hi) {
 #endif  // __cplusplus > 201402L (check for C++17 support)
 
 }  // namespace util
-
-#include "util/util.tcc"
 
 #endif

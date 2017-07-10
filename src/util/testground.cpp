@@ -10,6 +10,7 @@
 
 #include "util/testground.h"
 
+#include <cstring>
 #include <sstream>
 
 #include "libsc/alternate_motor.h"
@@ -155,6 +156,9 @@ void main() {
 	  case Joystick::State::kRight:
 		  cur_servo_val += 5;
 		  break;
+        default:
+          // not handled
+          break;
 	  }
   };
   Joystick jy(jy_config);

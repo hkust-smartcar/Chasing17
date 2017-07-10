@@ -12,6 +12,7 @@
 
 #include "util/pid_tuning.h"
 
+#include <cstring>
 #include <sstream>
 
 #include "libsc/dir_motor.h"

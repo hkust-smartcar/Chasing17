@@ -57,6 +57,14 @@ void ServoTest();
  */
 void AltMotorTest();
 /**
+ * Tests the direct-motor of the mainboard
+ *
+ * Turns both direct motors on at 10%.
+ *
+ * @note Motor will be initialized within the function.
+ */
+void DirMotorTest();
+/**
  * Tests the direct-encoder of the mainboard
  *
  * Turns on both alternate motors on at 10%, and displays raw encoder values
