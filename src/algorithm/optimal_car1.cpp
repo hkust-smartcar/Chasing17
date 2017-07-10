@@ -64,7 +64,7 @@ namespace TuningVar { //tuning var declaration
   bool show_algo_time = false;
   bool roundabout_turn_left = true; //Used for GenPath()
   bool single_car_testing = false;
-  uint16_t starting_y = 15; //the starting y for edge detection
+  uint16_t starting_y = 13; //the starting y for edge detection
   uint16_t edge_length = 159; //max length for an edge
   uint16_t edge_hor_search_max = 4; //max for horizontal search of edge if next edge point cannot be found
   uint16_t edge_min_worldview_bound_check = 30; //min for worldview bound check in edge finding
