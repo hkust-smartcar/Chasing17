@@ -816,22 +816,6 @@ bool FindEdges() {
 		auto last2_right = right_edge.points[right_edge.points.size()-2];
 		if ((last_right.first - last2_right.first == -1) && (last_right.second - last2_right.second == -1)) flag_break_right = true;
 
-		//check if near world boundaries if has no corners
-		if (left_corners.size() == 0){
-			std::vector<std::pair<uint16_t, uint16_t>>::iterator it;
-			for (it = left_edge.points.begin(); it != left_edge.points.end(); ++it){
-				if (worldview::car2::transformMatrix[it->first][WorldSize.h-it->second][0] == -1) break;
-			}
-			left_edge.points.erase(it, left_edge.points.end());
-		}
-		if (right_corners.size() == 0){
-			std::vector<std::pair<uint16_t, uint16_t>>::iterator it;
-			for (it = right_edge.points.begin(); it != right_edge.points.end(); ++it){
-				if (worldview::car2::transformMatrix[it->first][WorldSize.h-it->second][0] == -1) break;
-			}
-			right_edge.points.erase(it, right_edge.points.end());
-		}
-
 		//check if two edges are close
 		uint16_t r_back_x = right_edge.points.back().first;
 		uint16_t r_back_y = right_edge.points.back().second;
@@ -880,6 +864,24 @@ bool FindEdges() {
 				flag_break_right = true;
 			}
 		}
+	}
+
+	//check if near world boundaries if has no corners
+	if (left_corners.size() == 0){
+		std::vector<std::pair<uint16_t, uint16_t>>::iterator it;
+		for (it = left_edge.points.begin(); it != left_edge.points.end(); ++it){
+			for (int i = it->first; i >= max(1,it->first - 3); i--)
+				if (worldview::car1::transformMatrix[i][WorldSize.h-it->second][0] == -1) break;
+		}
+		left_edge.points.erase(it, left_edge.points.end());
+	}
+	if (right_corners.size() == 0){
+		std::vector<std::pair<uint16_t, uint16_t>>::iterator it;
+		for (it = right_edge.points.begin(); it != right_edge.points.end(); ++it){
+			for (int i = it->first; i <= min(WorldSize.w-1, it->first+3); i++ )
+				if (worldview::car1::transformMatrix[i][WorldSize.h-it->second][0] == -1) break;
+		}
+		right_edge.points.erase(it, right_edge.points.end());
 	}
 
 	//Straight line judgement - helper for feature_corner()
