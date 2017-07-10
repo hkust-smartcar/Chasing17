@@ -208,6 +208,7 @@ uint16_t prev_corner_y;
 bool is_front_car = true;
 bool stop_before_roundexit = true;
 bool overtake;
+int exit_count = 0;//for debugging
 
 bool need_slow_down = false;
 bool run =true;//for bluetooth stopping
@@ -1141,6 +1142,7 @@ Feature featureIdent_Corner() {
 				//				pEncoder1->Update();
 				encoder_total_exit = 0;
 				roundaboutExitStatus = 1;
+					exit_count++;
 				return Feature::kRoundaboutExit;
 			}
 		}
@@ -1831,6 +1833,10 @@ void main_car1(bool debug_) {
 
 					/*-------------CONTROL SYSTEM-----------------------*/
 					int curr_servo_error = CalcAngleDiff();
+					char timestr[100];
+					pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
+					sprintf(timestr, "exit: %d", exit_count);
+					pWriter->WriteString(timestr);
 					if(debug){
 						char timestr[100];
 						pLcd->SetRegion(Lcd::Rect(0, 15, 128, 15));
