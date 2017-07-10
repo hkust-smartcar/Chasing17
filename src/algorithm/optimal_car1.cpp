@@ -87,7 +87,7 @@ namespace TuningVar { //tuning var declaration
   uint16_t min_dist_meet_crossing = 30;
   uint16_t roundroad_min_size = 30; // When the edge is broken in roundabout, find until this threshold
   uint16_t exit_action_dist = 35; // double check to avoid corner's sudden disappear inside roundabout
-  uint16_t roundabout_offset = 15; // half of road width
+  uint16_t roundabout_offset = 13; // half of road width
   uint16_t round_exit_offset = 20;
   uint16_t round_encoder_count = 2600;
   uint16_t roundExit_encoder_count = 3700;
@@ -2087,10 +2087,10 @@ void main_car1(bool debug_) {
 					prev_servo_error = curr_servo_error;
 					pEncoder0->Update();
 					pEncoder1->Update();
-					if(System::Time() - startTime < 1000){
-						pid_left.SetSetpoint(120);
-						pid_right.SetSetpoint(120);
-					}
+//					if(System::Time() - startTime < 1000){
+//						pid_left.SetSetpoint(120);
+//						pid_right.SetSetpoint(120);
+//					}
 					if(met_stop_line){
 						pid_left.SetSetpoint(0);
 						pid_right.SetSetpoint(0);
