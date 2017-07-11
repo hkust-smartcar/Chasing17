@@ -60,6 +60,7 @@ void loadItems(DebugConsole* console) {
     console->PushItem("normal", &targetSpeed_normal, 5);
     console->PushItem("rndabt", &targetSpeed_round, 5);
     console->PushItem("s_turn", &targetSpeed_sharp_turn, 5);
+    console->PushItem("insideRnd", &targetSpeed_inside, 5);
 
     // servo
     console->PushItem("servo pid:");
@@ -105,6 +106,7 @@ void loadItems(DebugConsole* console) {
     console->PushItem("normal", &targetSpeed_normal, 5);
     console->PushItem("rndabt", &targetSpeed_round, 5);
     console->PushItem("s_turn", &targetSpeed_sharp_turn, 5);
+    console->PushItem("insideRnd", &targetSpeed_inside, 5);
 
     // servo
     console->PushItem("servo pid:");
