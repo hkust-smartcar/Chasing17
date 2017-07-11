@@ -139,38 +139,38 @@ namespace {
 typedef CarManager::PidSet PidSet;
 
 /**
- * Set Time:
- * CW:
+ * Set Time: 11/7/2017 08:58
+ * CW: 19.5s
  * CCW:
  */
 const PidSet kStablePid = {
 		"c2_stable",		// set name
 
 		// servo left
-		{0.80, 0, 0.010},	// ServoStraightLeft
-		{1.15, 0, 0.010},	// ServoNormalLeft
+		{0.60, 0, 0.010},	// ServoStraightLeft
+		{1.20, 0, 0.020},	// ServoNormalLeft
 		{1.30, 0, 0.000},	// ServoRoundaboutLeft
-		{1.08, 0, 0.010},	// ServoSharpTurnLeft
+		{1.50, 0, 0.010},	// ServoSharpTurnLeft
         {0.00, 0, 0.000},	// ServoTransitionalSlopeLeft
 
 		// servo right
-		{0.80, 0, 0.010},	// ServoStraightRight
-		{1.15, 0, 0.000},	// ServoNormalRight
+		{0.60, 0, 0.010},	// ServoStraightRight
+		{1.45, 0, 0.010},	// ServoNormalRight
 		{1.30, 0, 0.000},	// ServoRoundaboutRight
-		{1.04, 0, 0.010},	// ServoSharpTurnRight
+		{1.42, 0, 0.010},	// ServoSharpTurnRight
 		{0.00, 0, 0.000},	// ServoTransitionalSlopeRight
 
 		// speed
-		150,				// SpeedStraight
-		160,				// SpeedNormal
-		85,					// SpeedRoundabout
+		140,				// SpeedStraight
+		120,				// SpeedNormal
+		100,				// SpeedRoundabout
 		120,				// SpeedSharpTurn
-		90,					// SpeedSlow
+		100,				// SpeedSlow
 		0					// SpeedTransitionalSlope
 };
 
 /**
- * Set Time:
+ * Set Time: 11/7/2017 09:22
  * CW:
  * CCW:
  */
@@ -178,24 +178,24 @@ const PidSet kUnstablePid = {
 		"c2_unstable",		// set name
 
 		// servo left
-		{0.80, 0, 0.010},	// ServoStraightLeft
-		{1.45, 0, 0.000},	// ServoNormalLeft
-		{1.40, 0, 0.010},	// ServoRoundaboutLeft
-		{1.04, 0, 0.000},	// ServoSharpTurnLeft
+		{0.60, 0, 0.010},	// ServoStraightLeft
+		{1.22, 0, 0.025},	// ServoNormalLeft
+		{1.30, 0, 0.000},	// ServoRoundaboutLeft
+		{1.60, 0, 0.019},	// ServoSharpTurnLeft
 		{0.00, 0, 0.000},	// ServoTransitionalSlopeLeft
 
 		// servo right
-		{0.80, 0, 0.010},	// ServoStraightRight
-		{1.58, 0, 0.000},	// ServoNormalRight
-		{1.40, 0, 0.010},	// ServoRoundaboutRight
-		{1.03, 0, 0.000},	// ServoSharpTurnRight
+		{0.60, 0, 0.010},	// ServoStraightRight
+		{1.45, 0, 0.020},	// ServoNormalRight
+		{1.33, 0, 0.000},	// ServoRoundaboutRight
+		{1.46, 0, 0.019},	// ServoSharpTurnRight
 		{0.00, 0, 0.000},	// ServoTransitionalSlopeRight
 
 		// speed
-		120,				// SpeedStraight
-		200,				// SpeedNormal
-		90,					// SpeedRoundabout
-		90,					// SpeedSharpTurn
+		140,				// SpeedStraight
+		120,				// SpeedNormal
+		100,				// SpeedRoundabout
+		120,				// SpeedSharpTurn
 		100,				// SpeedSlow
 		0					// SpeedTransitionalSlope
 };
@@ -209,25 +209,25 @@ const PidSet kTempPid = {
 		"c2_temp",			// set name
 
 		// servo left
-		{0.58, 0, 0.010},	// ServoStraightLeft
-		{1.24, 0, 0.002},	// ServoNormalLeft
-		{1.35, 0, 0.002},	// ServoRoundaboutLeft
-		{1.04, 0, 0.000},	// ServoSharpTurnLeft
+		{0.60, 0, 0.010},	// ServoStraightLeft
+		{1.20, 0, 0.020},	// ServoNormalLeft
+		{1.30, 0, 0.000},	// ServoRoundaboutLeft
+		{1.50, 0, 0.010},	// ServoSharpTurnLeft
 		{0.00, 0, 0.000},	// ServoTransitionalSlopeLeft
 
 		// servo right
-		{0.58, 0, 0.010},	// ServoStraightRight
-		{1.48, 0, 0.002},	// ServoNormalRight
-		{1.35, 0, 0.002},	// ServoRoundaboutRight
-		{1.57, 0, 0.003},	// ServoSharpTurnRight
+		{0.60, 0, 0.010},	// ServoStraightRight
+		{1.45, 0, 0.010},	// ServoNormalRight
+		{1.30, 0, 0.000},	// ServoRoundaboutRight
+		{1.42, 0, 0.010},	// ServoSharpTurnRight
 		{0.00, 0, 0.000},	// ServoTransitionalSlopeRight
 
 		// speed
-		120,				// SpeedStraight
+		140,				// SpeedStraight
 		120,				// SpeedNormal
-		85,					// SpeedRoundabout
+		100,				// SpeedRoundabout
 		120,				// SpeedSharpTurn
-		120,				// SpeedSlow
+		100,				// SpeedSlow
 		0					// SpeedTransitionalSlope
 };
 
