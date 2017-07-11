@@ -136,57 +136,98 @@ namespace TuningVar { //tuning var declaration
 namespace {
 typedef CarManager::PidSet PidSet;
 
+/**
+ * Set Time: 11/7/2017 07:26
+ * CW: 19.53s
+ * CCW: 19.29s
+ */
 const PidSet kStablePid = {
 		"c1_stable",		// set name
 
 		// servo left
-		{0.8, 0, 0.01},		// ServoStraightLeft
-		{1.45, 0, 0},		// ServoNormalLeft
-		{1.3, 0, 0},		// ServoRoundaboutLeft
-		{0.98, 0, 0},		// ServoSharpTurnLeft
-		{0, 0, 0},			// ServoTransitionalSlopeLeft
+		{0.60, 0, 0.010},	// ServoStraightLeft
+		{1.20, 0, 0.030},	// ServoNormalLeft
+		{1.30, 0, 0.000},	// ServoRoundaboutLeft
+		{1.45, 0, 0.040},	// ServoSharpTurnLeft
+		{0.00, 0, 0.000},	// ServoTransitionalSlopeLeft
 
 		// servo right
-		{0.8, 0, 0.01},		// ServoStraightRight
-		{1.43, 0, 0},		// ServoNormalRight
-		{1.3, 0, 0},		// ServoRoundaboutRight
-		{1.25, 0, 0},		// ServoSharpTurnRight
-		{0, 0, 0},			// ServoTransitionalSlopeRight
+		{0.60, 0, 0.010},	// ServoStraightRight
+		{1.42, 0, 0.030},	// ServoNormalRight
+		{1.30, 0, 0.000},	// ServoRoundaboutRight
+		{1.50, 0, 0.040},	// ServoSharpTurnRight
+		{0.00, 0, 0.000},	// ServoTransitionalSlopeRight
 
 		// speed
-		150,				// SpeedStraight
-		160,				// SpeedNormal
-		85,					// SpeedRoundabout
+		140,				// SpeedStraight
+		120,				// SpeedNormal
+		90,					// SpeedRoundabout
 		120,				// SpeedSharpTurn
-		90,					// SpeedSlow
+		100,				// SpeedSlow
 		0					// SpeedTransitionalSlope
 		
 };
 
+/**
+ * Set Time: 11/7/2017 01:45
+ * CW: (unsuccessful)
+ * CCW: 17.73s
+ */
 const PidSet kUnstablePid = {
 		"c1_unstable",		// set name
 
-		// servo left
-		{0.8, 0, 0.01},		// ServoStraightLeft
-		{1.45, 0, 0},		// ServoNormalLeft
-		{1.3, 0, 0},		// ServoRoundaboutLeft
-		{0.98, 0, 0},		// ServoSharpTurnLeft
-		{0, 0, 0},			// ServoTransitionalSlopeLeft
+        // servo left
+        {0.60, 0, 0.010},	// ServoStraightLeft
+        {1.20, 0, 0.030},	// ServoNormalLeft
+        {1.30, 0, 0.000},	// ServoRoundaboutLeft
+        {1.45, 0, 0.040},	// ServoSharpTurnLeft
+        {0.00, 0, 0.000},	// ServoTransitionalSlopeLeft
 
-		// servo right
-		{0.8, 0, 0.01},		// ServoStraightRight
-		{1.43, 0, 0},		// ServoNormalRight
-		{1.3, 0, 0},		// ServoRoundaboutRight
-		{1.25, 0, 0},		// ServoSharpTurnRight
-		{0, 0, 0},			// ServoTransitionalSlopeRight
+        // servo right
+        {0.60, 0, 0.010},	// ServoStraightRight
+        {1.42, 0, 0.030},	// ServoNormalRight
+        {1.30, 0, 0.000},	// ServoRoundaboutRight
+        {1.50, 0, 0.040},	// ServoSharpTurnRight
+        {0.00, 0, 0.000},	// ServoTransitionalSlopeRight
 
-		// speed
-		150,				// SpeedStraight
-		160,				// SpeedNormal
-		85,					// SpeedRoundabout
-		120,				// SpeedSharpTurn
-		90,					// SpeedSlow
-		0					// SpeedTransitionalSlope
+        // speed
+        140,				// SpeedStraight
+        120,				// SpeedNormal
+        90,					// SpeedRoundabout
+        120,				// SpeedSharpTurn
+        100,				// SpeedSlow
+        0					// SpeedTransitionalSlope
+};
+
+/**
+ * Set Time: 11/7/2017 02:47
+ * CW:
+ * CCW:
+ */
+const PidSet kTempPid = {
+		"c1_temp",			// set name
+
+        // servo left
+        {0.60, 0, 0.010},	// ServoStraightLeft
+        {1.20, 0, 0.030},	// ServoNormalLeft
+        {1.30, 0, 0.000},	// ServoRoundaboutLeft
+        {1.45, 0, 0.040},	// ServoSharpTurnLeft
+        {0.00, 0, 0.000},	// ServoTransitionalSlopeLeft
+
+        // servo right
+        {0.60, 0, 0.010},	// ServoStraightRight
+        {1.42, 0, 0.030},	// ServoNormalRight
+        {1.30, 0, 0.000},	// ServoRoundaboutRight
+        {1.50, 0, 0.040},	// ServoSharpTurnRight
+        {0.00, 0, 0.000},	// ServoTransitionalSlopeRight
+
+        // speed
+        140,				// SpeedStraight
+        120,				// SpeedNormal
+        90,					// SpeedRoundabout
+        120,				// SpeedSharpTurn
+        100,				// SpeedSlow
+        0					// SpeedTransitionalSlope
 };
 
 //BT listener

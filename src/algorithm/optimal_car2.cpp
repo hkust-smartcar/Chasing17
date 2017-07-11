@@ -138,22 +138,27 @@ namespace TuningVar{ //tuning var delaration
 namespace {
 typedef CarManager::PidSet PidSet;
 
+/**
+ * Set Time:
+ * CW:
+ * CCW:
+ */
 const PidSet kStablePid = {
 		"c2_stable",		// set name
 
 		// servo left
-		{0.8, 0, 0.01},		// ServoStraightLeft
-		{1.15, 0, 0.01},	// ServoNormalLeft
-		{1.3, 0, 0},		// ServoRoundaboutLeft
-		{1.08, 0, 0.01},	// ServoSharpTurnLeft
-        {0, 0, 0},			// ServoTransitionalSlopeLeft
+		{0.80, 0, 0.010},	// ServoStraightLeft
+		{1.15, 0, 0.010},	// ServoNormalLeft
+		{1.30, 0, 0.000},	// ServoRoundaboutLeft
+		{1.08, 0, 0.010},	// ServoSharpTurnLeft
+        {0.00, 0, 0.000},	// ServoTransitionalSlopeLeft
 
 		// servo right
-		{0.8, 0, 0.01},		// ServoStraightRight
-		{1.15, 0, 0},		// ServoNormalRight
-		{1.3, 0, 0},		// ServoRoundaboutRight
-		{1.04, 0, 0.01},	// ServoSharpTurnRight
-		{0, 0, 0},			// ServoTransitionalSlopeRight
+		{0.80, 0, 0.010},	// ServoStraightRight
+		{1.15, 0, 0.000},	// ServoNormalRight
+		{1.30, 0, 0.000},	// ServoRoundaboutRight
+		{1.04, 0, 0.010},	// ServoSharpTurnRight
+		{0.00, 0, 0.000},	// ServoTransitionalSlopeRight
 
 		// speed
 		150,				// SpeedStraight
@@ -164,22 +169,27 @@ const PidSet kStablePid = {
 		0					// SpeedTransitionalSlope
 };
 
+/**
+ * Set Time:
+ * CW:
+ * CCW:
+ */
 const PidSet kUnstablePid = {
 		"c2_unstable",		// set name
 
 		// servo left
-		{0.8, 0, 0.01},		// ServoStraightLeft
-		{1.45, 0, 0},		// ServoNormalLeft
-		{1.4, 0, 0.01},		// ServoRoundaboutLeft
-		{1.04, 0, 0},		// ServoSharpTurnLeft
-		{0, 0, 0},			// ServoTransitionalSlopeLeft
+		{0.80, 0, 0.010},	// ServoStraightLeft
+		{1.45, 0, 0.000},	// ServoNormalLeft
+		{1.40, 0, 0.010},	// ServoRoundaboutLeft
+		{1.04, 0, 0.000},	// ServoSharpTurnLeft
+		{0.00, 0, 0.000},	// ServoTransitionalSlopeLeft
 
 		// servo right
-		{0.8, 0, 0.01},		// ServoStraightRight
-		{1.58, 0, 0},		// ServoNormalRight
-		{1.4, 0, 0.01},		// ServoRoundaboutRight
-		{1.03, 0, 0},		// ServoSharpTurnRight
-		{0, 0, 0},			// ServoTransitionalSlopeRight
+		{0.80, 0, 0.010},	// ServoStraightRight
+		{1.58, 0, 0.000},	// ServoNormalRight
+		{1.40, 0, 0.010},	// ServoRoundaboutRight
+		{1.03, 0, 0.000},	// ServoSharpTurnRight
+		{0.00, 0, 0.000},	// ServoTransitionalSlopeRight
 
 		// speed
 		120,				// SpeedStraight
@@ -190,6 +200,36 @@ const PidSet kUnstablePid = {
 		0					// SpeedTransitionalSlope
 };
 
+/**
+ * Set Time: 11/7/2017 02:47
+ * CW:
+ * CCW:
+ */
+const PidSet kTempPid = {
+		"c2_temp",			// set name
+
+		// servo left
+		{0.58, 0, 0.010},	// ServoStraightLeft
+		{1.24, 0, 0.002},	// ServoNormalLeft
+		{1.35, 0, 0.002},	// ServoRoundaboutLeft
+		{1.04, 0, 0.000},	// ServoSharpTurnLeft
+		{0.00, 0, 0.000},	// ServoTransitionalSlopeLeft
+
+		// servo right
+		{0.58, 0, 0.010},	// ServoStraightRight
+		{1.48, 0, 0.002},	// ServoNormalRight
+		{1.35, 0, 0.002},	// ServoRoundaboutRight
+		{1.57, 0, 0.003},	// ServoSharpTurnRight
+		{0.00, 0, 0.000},	// ServoTransitionalSlopeRight
+
+		// speed
+		120,				// SpeedStraight
+		120,				// SpeedNormal
+		85,					// SpeedRoundabout
+		120,				// SpeedSharpTurn
+		120,				// SpeedSlow
+		0					// SpeedTransitionalSlope
+};
 
 //BT listener
 std::string inputStr;
@@ -871,7 +911,7 @@ bool FindEdges() {
 		std::vector<std::pair<uint16_t, uint16_t>>::iterator it;
 		for (it = left_edge.points.begin()+10; it != left_edge.points.end(); ++it){
 			for (int i = it->first; i >= max(1,it->first - 5); i--)
-				if (worldview::car1::transformMatrix[i][WorldSize.h-it->second][0] == -1) goto left_edge_erase;
+				if (worldview::car2::transformMatrix[i][WorldSize.h-it->second][0] == -1) goto left_edge_erase;
 		}
 		left_edge_erase:
 		left_edge.points.erase(it, left_edge.points.end());
@@ -880,7 +920,7 @@ bool FindEdges() {
 		std::vector<std::pair<uint16_t, uint16_t>>::iterator it;
 		for (it = right_edge.points.begin()+10; it != right_edge.points.end(); ++it){
 			for (int i = it->first; i <= min(WorldSize.w-1, it->first+5); i++ )
-				if (worldview::car1::transformMatrix[i][WorldSize.h-it->second][0] == -1) goto right_edge_erase;
+				if (worldview::car2::transformMatrix[i][WorldSize.h-it->second][0] == -1) goto right_edge_erase;
 		}
 		right_edge_erase:
 		right_edge.points.erase(it, right_edge.points.end());

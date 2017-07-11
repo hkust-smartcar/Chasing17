@@ -19,11 +19,12 @@
 
 #include "debug.h"
 
-#include "algorithm/distance.h"
-#include "util/testground.h"
-#include "util/util.h"
 #include "car_manager.h"
+#include "algorithm/distance.h"
 #include "util/pid_tuning.h"
+#include "util/testground.h"
+#include "util/unit_tests.h"
+#include "util/util.h"
 
 namespace libbase {
 namespace k60 {
