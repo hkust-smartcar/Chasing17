@@ -918,7 +918,7 @@ bool FindEdges() {
 	if (right_corners.size() == 0 && right_edge.points.size() > 10){
 		std::vector<std::pair<uint16_t, uint16_t>>::iterator it;
 		for (it = right_edge.points.begin()+10; it != right_edge.points.end(); ++it){
-			for (int i = it->first; i <= min(WorldSize.w-1, it->first+5); i++ )
+			for (int i = it->first; i <= min(WorldSize.w-1, it->first+10); i++ )
 				if (worldview::car1::transformMatrix[i][WorldSize.h-it->second][0] == -1) goto right_edge_erase;
 		}
 		right_edge_erase:
@@ -1058,16 +1058,33 @@ Feature featureIdent_Corner() {
 			//Both sides are break due to -1 - CONDITION_2
 			// Only one corner - CONDITION_3
 			bool crossing = false;
-			float slope;
+			bool roundabout = false;
 			//right edge touch right boundary + left corner
 			if ((worldview::car1::transformMatrix[min(
-					right_edge.points.back().first + 1, WorldSize.w - 1)][WorldSize.h
+					right_edge.points.back().first + 5, WorldSize.w - 1)][WorldSize.h
 																		   - right_edge.points.back().second][0] == -1)
-					&& left_corners.size() > 0) {
+					&& left_corners.size() > 0 && right_edge.size() >= 2 && (right_edge.points.back().second - right_edge.points.front().second) != 0) {
 				//Only left corner + close enough
 				if (abs(left_corners.front().second - carMid.second)
 						<= TuningVar::min_dist_meet_crossing) {
-
+					int test_y_extreme = 60;
+					int test_x_extreme =
+							(right_edge.points.front().first + left_edge.points.front().first)/2 +  (test_y_extreme - (right_edge.points.front().second + left_edge.points.front().second)/2)
+								* (left_edge.points.back().first - left_edge.points.front().first)
+									/(left_edge.points.back().second - left_edge.points.front().second);
+					if(debug){
+						pLcd->SetRegion(Lcd::Rect(test_x_extreme, WorldSize.h - test_y_extreme + 1, 4, 4));
+						pLcd->FillColor(Lcd::kCyan);
+					}
+					if (getWorldBit(test_x_extreme, test_y_extreme) == 1){
+						roundabout = true;
+					}
+					else{
+						crossing = true;
+						start_y = test_y_extreme;
+						start_x = test_x_extreme;
+					}
+//
 //					//push the midpoint of right edge into corner
 //					right_corners.push_back({
 //							(right_edge.points.front().first
@@ -1079,13 +1096,29 @@ Feature featureIdent_Corner() {
 			}
 			//left edge touch left boundary)
 			if ((worldview::car1::transformMatrix[max(
-					left_edge.points.back().first - 1, 1)][WorldSize.h
+					left_edge.points.back().first - 5, 1)][WorldSize.h
 														   - left_edge.points.back().second][0] == -1)
-					&& right_corners.size() > 0) {
+					&& right_corners.size() > 0 && left_edge.size() >= 2 && (left_edge.points.back().second - left_edge.points.front().second) != 0) {
 				//Only right corner
 				if (abs(right_corners.front().second - carMid.second)
 						<= TuningVar::min_dist_meet_crossing) {
-					float delta_x = TuningVar::testDist/left_edge.size() * (left_edge.points.front().first - left_edge.points.back().first);
+					int test_y_extreme = 60;
+					int test_x_extreme =
+							(left_edge.points.front().first + right_edge.points.front().first)/2 +  (test_y_extreme - (left_edge.points.front().second + right_edge.points.front().second)/2)
+								* (right_edge.points.back().first - right_edge.points.front().first)
+									/(right_edge.points.back().second - right_edge.points.front().second);
+					if(debug){
+						pLcd->SetRegion(Lcd::Rect(test_x_extreme, WorldSize.h - test_y_extreme + 1, 4, 4));
+						pLcd->FillColor(Lcd::kCyan);
+					}
+					if (getWorldBit(test_x_extreme, test_y_extreme) == 1){
+						roundabout = true;
+					}
+					else{
+						crossing = true;
+						start_y = test_y_extreme;
+						start_x = test_x_extreme;
+					}
 //					left_corners.push_back({
 //							(left_edge.points.front().first
 //									+ left_edge.points.back().first) / 2,
@@ -1097,23 +1130,32 @@ Feature featureIdent_Corner() {
 
 			if (crossing) {
 				//Record the start midpoint for searching
-				start_y = carMid.second
-						+ (TuningVar::cross_cal_start_num
-								- encoder_total_cross
-								/ TuningVar::cross_cal_ratio);
-				start_x = (start_y
-						- (left_corners.front().second
-								+ right_corners.front().second) / 2)
-            								/ (left_corners.front().first
-            										- right_corners.front().first)
-													* (right_corners.front().second
-															- left_corners.front().second)
-															+ (left_corners.front().first
-																	+ right_corners.front().first) / 2;
+//				start_y = carMid.second
+//						+ (TuningVar::cross_cal_start_num
+//								- encoder_total_cross
+//								/ TuningVar::cross_cal_ratio);
+//				start_x = (start_y
+//						- (left_corners.front().second
+//								+ right_corners.front().second) / 2)
+//            								/ (left_corners.front().first
+//            										- right_corners.front().first)
+//													* (right_corners.front().second
+//															- left_corners.front().second)
+//															+ (left_corners.front().first
+//																	+ right_corners.front().first) / 2;
 				//				pEncoder0->Update();
 				crossingStatus = 1; //Detected
 				encoder_total_cross = 0;
 				return Feature::kCross;
+			}
+			if(roundabout){
+					need_slow_down = true;
+					pBT->resetFeature();
+					encoder_total_round = 0;
+					roundaboutStatus = 1; //Detected
+					//			feature_start_time = System::Time(); // Mark the startTime of latest enter time
+					roundabout_cnt++;
+					return Feature::kRoundabout;
 			}
 		}
 	}
@@ -1299,8 +1341,8 @@ void GenPath(Feature feature) {
 			&& encoder_total_cross < TuningVar::cross_encoder_count) { //Gen new path by searching midpoint
 		//		pEncoder0->Update÷();
 		encoder_total_cross += curr_enc_val_left;
-		uint16_t new_right_x;
-		uint16_t new_left_x;
+		uint16_t new_right_x = WorldSize.w;
+		uint16_t new_left_x = 0;
 		// find new right edge
 		for (uint16_t i = start_x; i < WorldSize.w; i++) {
 			if (getWorldBit(i, start_y) == 1) {
@@ -1955,7 +1997,7 @@ void main_car1(bool debug_) {
 					bool skip_motor_protection=false;
 					if (joystick.GetState() == Joystick::State::kSelect) bt.sendStopCar();
 					//Overtake motor control
-//					bt.resendNAKData();
+					bt.resendNAKData();
 
 					//        Timer::TimerInt new_time = System::Time();
 					Capture(); //Capture until two base points are identified
@@ -2288,10 +2330,10 @@ void main_car1(bool debug_) {
 					prev_servo_error = curr_servo_error;
 					pEncoder0->Update();
 					pEncoder1->Update();
-//					if(System::Time() - startTime < 1000){
-//						pid_left.SetSetpoint(120);
-//						pid_right.SetSetpoint(120);
-//					}
+					if(System::Time() - startTime < 1000){
+						pid_left.SetSetpoint(100);
+						pid_right.SetSetpoint(100);
+					}
 					if(met_stop_line){
 						pid_left.SetSetpoint(0);
 						pid_right.SetSetpoint(0);
