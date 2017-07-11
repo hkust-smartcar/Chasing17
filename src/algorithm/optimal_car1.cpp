@@ -37,10 +37,6 @@
 #include "algorithm/worldview/car1.h"
 #include "util/util.h"
 
-typedef CarManager::Feature Feature;
-typedef CarManager::ImageSize ImageSize;
-typedef CarManager::ServoBounds ServoBounds;
-
 using libsc::DirMotor;
 using libsc::DirEncoder;
 using libsc::FutabaS3010;
@@ -57,85 +53,15 @@ using libsc::k60::Ov7725Configurator;
 
 using namespace libutil;
 
+typedef CarManager::Feature Feature;
+typedef CarManager::ImageSize ImageSize;
+typedef CarManager::PidSet PidSet;
+typedef CarManager::ServoBounds ServoBounds;
+
 namespace algorithm {
 namespace optimal {
 namespace car1 {
-namespace TuningVar { //tuning var declaration
-  bool show_algo_time = false;
-  bool roundabout_turn_left = true; //Used for GenPath()
-  bool single_car_testing = false;
-
-  uint16_t starting_y = 12; //the starting y for edge detection
-  uint16_t edge_length = 159; //max length for an edge
-  uint16_t edge_hor_search_max = 4; //max for horizontal search of edge if next edge point cannot be found
-  uint16_t edge_min_worldview_bound_check = 30; //min for worldview bound check in edge finding
-  uint16_t corner_range = 8; //the square for detection would be in size corener_range*2+1
-  float corner_height_ratio = 2.9; //the max height for detection would be WorldSize.h/corner_height_ratio
-  uint16_t corner_min = 16, corner_max = 34; //threshold (in %) for corner detection
-  uint16_t min_corners_dist = 7; // Manhattan dist threshold for consecutive corners
-  uint16_t min_edges_dist = 7; // Manhattan dist threshold for edges
-  uint16_t track_width_threshold = 900; //track width threshold for consideration of sudden change (square)
-  uint16_t track_width_change_threshold = 350; //track width change threshold for consideration of sudden change
-  uint16_t testDist = 43; // The distance from which the image pixel should be tested and identify feature
-  uint16_t slowDownDist = 100; // the distance from which the image pixel should be tested and know whether it should slow down in advance
-  uint16_t straight_line_threshold = 45; // The threshold num. of equal width for straight line detection
-  uint16_t action_distance = 27; // The condition in which the car start handling this feature when meeting it
-  libsc::Timer::TimerInt feature_inside_time = 350; // freezing time for feature extraction, the time for entering the entrance
-  uint16_t cross_cal_start_num = 80;
-  uint16_t cross_cal_ratio = 80; //Look forward @cross_cal_start_num - encoder_total/@cross_cal_ratio to determine path
-  uint16_t general_cal_num = 20; //The num of path points considered for servo angle decision except crossing
-  uint16_t cross_encoder_count = 4000; // The hardcoded encoder count that car must reach in crossroad
-  uint16_t min_dist_meet_crossing = 30;
-  uint16_t roundroad_min_size = 30; // When the edge is broken in roundabout, find until this threshold
-  uint16_t exit_action_dist = 30; // double check to avoid corner's sudden disappear inside roundabout
-  uint16_t roundabout_offset = 11; // half of road width
-  uint16_t round_exit_offset = 15;
-  uint16_t round_encoder_count = 2600;
-  uint16_t roundExit_encoder_count = 3800;
-  int32_t roundabout_shortest_flag = 0b00011; //1 means turn left, 0 means turn right. Reading from left to right
-  int32_t roundabout_overtake_flag = 0b11111;
-  uint16_t nearest_corner_threshold = 128/2;
-  uint16_t overtake_interval_time = 1000;
-
-  // servo right pid values
-  float servo_straight_kp_right = 0.6;
-  float servo_straight_kd_right = 0.01;
-  float servo_normal_kp_right = 1.42;
-  float servo_normal_kd_right = 0;
-  float servo_roundabout_kp_right = 1.3;
-  float servo_roundabout_kd_right = 0;
-  float servo_sharp_turn_kp_right = 1.46;
-  float servo_sharp_turn_kd_right = 0;
-  float servo_trans_kp_slope_right = 0.01;
-  float servo_trans_kd_slope_right = 0;
-
-
-  // servo left pid values
-  float servo_straight_kp_left = 0.6;
-  float servo_straight_kd_left = 0.01;
-  float servo_normal_kp_left = 1.20;
-  float servo_normal_kd_left = 0;
-  float servo_roundabout_kp_left = 1.3;
-  float servo_roundabout_kd_left = 0;
-  float servo_sharp_turn_kp_left = 1.02;
-  float servo_sharp_turn_kd_left = 0.001;
-  float servo_trans_kp_slope_left = 0.94;
-  float servo_trans_kd_slope_left = 0;
-
-  // target speed values
-  uint16_t targetSpeed_straight = 150;
-  uint16_t targetSpeed_normal = 120;//normal turning
-  uint16_t targetSpeed_round = 85;
-  uint16_t targetSpeed_sharp_turn = 120;
-  uint16_t targetSpeed_slow = 90;
-  uint16_t targetSpeed_trans = 120;
   uint16_t targetSpeed_inside = 100;
-
-
-}  // namespace TuningVar
-
-namespace {
-typedef CarManager::PidSet PidSet;
 
 /**
  * Set Time: 11/7/2017 07:26
@@ -166,7 +92,6 @@ const PidSet kStablePid = {
 		120,				// SpeedSharpTurn
 		100,				// SpeedSlow
 		0					// SpeedTransitionalSlope
-		
 };
 
 /**
@@ -231,6 +156,79 @@ const PidSet kTempPid = {
         0					// SpeedTransitionalSlope
 };
 
+namespace TuningVar { //tuning var declaration
+  bool show_algo_time = false;
+  bool roundabout_turn_left = true; //Used for GenPath()
+  bool single_car_testing = false;
+
+  uint16_t starting_y = 12; //the starting y for edge detection
+  uint16_t edge_length = 159; //max length for an edge
+  uint16_t edge_hor_search_max = 4; //max for horizontal search of edge if next edge point cannot be found
+  uint16_t edge_min_worldview_bound_check = 30; //min for worldview bound check in edge finding
+  uint16_t corner_range = 8; //the square for detection would be in size corener_range*2+1
+  float corner_height_ratio = 2.9; //the max height for detection would be WorldSize.h/corner_height_ratio
+  uint16_t corner_min = 16, corner_max = 34; //threshold (in %) for corner detection
+  uint16_t min_corners_dist = 7; // Manhattan dist threshold for consecutive corners
+  uint16_t min_edges_dist = 7; // Manhattan dist threshold for edges
+  uint16_t track_width_threshold = 900; //track width threshold for consideration of sudden change (square)
+  uint16_t track_width_change_threshold = 350; //track width change threshold for consideration of sudden change
+  uint16_t testDist = 43; // The distance from which the image pixel should be tested and identify feature
+  uint16_t slowDownDist = 100; // the distance from which the image pixel should be tested and know whether it should slow down in advance
+  uint16_t straight_line_threshold = 45; // The threshold num. of equal width for straight line detection
+  uint16_t action_distance = 27; // The condition in which the car start handling this feature when meeting it
+  libsc::Timer::TimerInt feature_inside_time = 350; // freezing time for feature extraction, the time for entering the entrance
+  uint16_t cross_cal_start_num = 80;
+  uint16_t cross_cal_ratio = 80; //Look forward @cross_cal_start_num - encoder_total/@cross_cal_ratio to determine path
+  uint16_t general_cal_num = 20; //The num of path points considered for servo angle decision except crossing
+  uint16_t cross_encoder_count = 4000; // The hardcoded encoder count that car must reach in crossroad
+  uint16_t min_dist_meet_crossing = 30;
+  uint16_t roundroad_min_size = 30; // When the edge is broken in roundabout, find until this threshold
+  uint16_t exit_action_dist = 30; // double check to avoid corner's sudden disappear inside roundabout
+  uint16_t roundabout_offset = 11; // half of road width
+  uint16_t round_exit_offset = 15;
+  uint16_t round_encoder_count = 2600;
+  uint16_t roundExit_encoder_count = 3800;
+  int32_t roundabout_shortest_flag = 0b00011; //1 means turn left, 0 means turn right. Reading from left to right
+  int32_t roundabout_overtake_flag = 0b11111;
+  uint16_t nearest_corner_threshold = 128/2;
+  uint16_t overtake_interval_time = 1000;
+
+  // servo right pid values
+  float servo_straight_kp_right = kStablePid.ServoStraightRight.kP;
+  float servo_straight_kd_right = kStablePid.ServoStraightRight.kD;
+  float servo_normal_kp_right = kStablePid.ServoNormalRight.kP;
+  float servo_normal_kd_right = kStablePid.ServoNormalRight.kD;
+  float servo_roundabout_kp_right = kStablePid.ServoRoundaboutRight.kP;
+  float servo_roundabout_kd_right = kStablePid.ServoRoundaboutRight.kD;
+  float servo_sharp_turn_kp_right = kStablePid.ServoSharpTurnRight.kP;
+  float servo_sharp_turn_kd_right = kStablePid.ServoSharpTurnRight.kD;
+  float servo_trans_kp_slope_right = kStablePid.ServoTransitionalSlopeRight.kP;
+  float servo_trans_kd_slope_right = kStablePid.ServoTransitionalSlopeRight.kD;
+
+  // servo left pid values
+  float servo_straight_kp_left = kStablePid.ServoStraightLeft.kP;
+  float servo_straight_kd_left = kStablePid.ServoStraightLeft.kD;
+  float servo_normal_kp_left = kStablePid.ServoNormalLeft.kP;
+  float servo_normal_kd_left = kStablePid.ServoNormalLeft.kD;
+  float servo_roundabout_kp_left = kStablePid.ServoRoundaboutLeft.kP;
+  float servo_roundabout_kd_left = kStablePid.ServoRoundaboutLeft.kD;
+  float servo_sharp_turn_kp_left = kStablePid.ServoSharpTurnLeft.kP;
+  float servo_sharp_turn_kd_left = kStablePid.ServoSharpTurnLeft.kD;
+  float servo_trans_kp_slope_left = kStablePid.ServoTransitionalSlopeLeft.kP;
+  float servo_trans_kd_slope_left = kStablePid.ServoTransitionalSlopeLeft.kD;
+
+  // target speed values
+  uint16_t targetSpeed_straight = kStablePid.SpeedStraight;
+  uint16_t targetSpeed_normal = kStablePid.SpeedNormal;//normal turning
+  uint16_t targetSpeed_round = kStablePid.SpeedRound;
+  uint16_t targetSpeed_sharp_turn = kStablePid.SpeedSharpTurn;
+  uint16_t targetSpeed_slow = kStablePid.SpeedSlow;
+  uint16_t targetSpeed_trans = kStablePid.SpeedTransitionalSlope;
+  uint16_t targetSpeed_inside = 100;
+
+}  // namespace TuningVar
+
+namespace {
 //BT listener
 std::string inputStr;
 bool tune = false;
@@ -1786,7 +1784,7 @@ void main_car1(bool debug_) {
 	//	  }
 
 	//
-	while(!bt.hasStartReq()&&!debug&&joystick.GetState()==Joystick::State::kIdle);
+//	while(!bt.hasStartReq()&&!debug&&joystick.GetState()==Joystick::State::kIdle);
 
 	/*motor PID setting*/
 	IncrementalPidController<float, float> pid_left(0,2.5,0.02,0);
@@ -1796,10 +1794,142 @@ void main_car1(bool debug_) {
 	pid_right_p = &pid_right;
 	pid_right.SetOutputBound(-500, 500);
 
-	//	StartlineOvertake();
+	led0.SetEnable(true);
 
 	pMotor0->SetClockwise(true);
 	pMotor1->SetClockwise(false);
+
+	int start_time = System::Time();
+	int servo_angle=845;
+
+	float Kp = 2.5, Ki = 0.02, Kd = 0;
+	float left_motor_target = 000, right_motor_target = 000;
+	while(!bt.hasStartReq()&&!debug&&joystick.GetState()==Joystick::State::kIdle){
+		if (System::Time() != time_img){
+				  int curr_left=0, curr_right=0;
+				  time_img = System::Time();
+
+
+		//		  if(time_img>resume_time){
+		//			  Ki=0.02;
+		//		  }
+
+				  //test case
+				  int start=time_img-start_time;
+				  if(start<1000){
+					  left_motor_target=100;
+					  right_motor_target=100;
+				  }
+				  else if(start>1000 && start<7000){
+					  left_motor_target=0;
+					  right_motor_target=0;
+					  if(start>2500){
+						  left_motor_target=400;
+						  right_motor_target=400;
+						  if(start>3000){
+							  left_motor_target=200;
+							  right_motor_target=200;
+							  if(start>4500){
+								  left_motor_target=0;
+								  right_motor_target=0;
+								  if(start>5000){
+									  left_motor_target=100;
+									  right_motor_target=100;
+									  if(start>6000){
+										  left_motor_target=0;
+										  right_motor_target=0;
+									  }
+								  }
+							  }
+						  }
+					  }
+				  }
+
+		//		  char buff[10];
+		//		  sprintf(buff,"%d",control.GetEncoder());
+		//
+		//		  if(time_img%1000==0)
+		//		  writer.WriteBuffer(buff,10);
+
+		//		  control.debug(&lcd,&writer);
+
+				  if(joystick.GetState()==Joystick::State::kLeft)
+					  servo_angle=util::clamp<int>(--servo_angle,545,1145);
+				  if(joystick.GetState()==Joystick::State::kRight)
+					  servo_angle=util::clamp<int>(++servo_angle,545,1145);
+
+
+				  if (time_img % 10 == 0){
+
+					  pEncoder0->Update();
+					  pEncoder1->Update();
+
+					  curr_left = pEncoder0->GetCount();
+					  curr_right = -pEncoder1->GetCount();
+
+					  if(time_img-start_time<10000){
+						  float temp = (10000-0.98*(time_img-start_time))/10000.0;
+						  if(std::abs(left_motor_target - curr_left)>20){
+							  Ki=temp;
+						  }
+						  else{
+		//					  Ki=0.02;
+						  }
+						  pid_left.SetKi(Ki);
+						  if(std::abs(right_motor_target - curr_right)>20){
+							  Ki=temp;
+						  }
+						  else{
+		//					  Ki=0.02;
+						  }
+						  pid_right.SetKi(Ki);
+					  }
+					  else{
+						  Ki=0.02;
+						  pid_left.SetKi(Ki);
+						  pid_right.SetKi(Ki);
+					  }
+					  pid_left.SetKp(Kp);
+					  pid_right.SetKp(Kp);
+					  pid_left.SetKd(Kd);
+					  pid_right.SetKd(Kd);
+					  pid_left.SetSetpoint(left_motor_target);
+					  pid_right.SetSetpoint(right_motor_target);
+//
+//					  char speedChar[100]{};
+//					  sprintf(speedChar, "%.1f,%d,%.2f,%d,%.2f\n", 1.0, curr_left, left_motor_target, curr_right, right_motor_target);
+//					  const Byte speedByte = 85;
+//					  bt.SendBuffer(&speedByte, 1);
+//					  bt.SendStr(speedChar);
+
+		//			  motor0.AddPower(pid_left.Calc(curr_left));
+		//			  motor1.AddPower(pid_right.Calc(curr_right));
+
+					  SetMotorPower(GetMotorPower(0)+pid_left.Calc(curr_left),0);
+					  SetMotorPower(GetMotorPower(1)+pid_right.Calc(curr_right),1);
+
+		//			  SetMotorPower(pid_left.Calc(curr_left),0);
+		//			  SetMotorPower(pid_right.Calc(curr_right),1);
+
+					  led1.SetEnable(time_img/250);
+				  }
+				  if (time_img % 500 == 0) {
+					  led0.Switch();
+					  if(joystick.GetState()==Joystick::State::kSelect){
+						  char buff[100];
+						  sprintf(buff,"kp:%.5lf \nki:%.5lf \nkd:%.5lf \nleft:%.5lf \n right:%.5lf\n left%.5lf\nright%.5lf\n%d\n%d",Kp,Ki,Kd,left_motor_target,right_motor_target,pid_left.Calc(curr_left),pid_right.Calc(curr_right),GetMotorPower(0),GetMotorPower(1));
+		//				  sprintf(buff,"%d\n%d",GetMotorPower(0),GetMotorPower(1));
+		//				  sprintf(buff,"%.3lf \n%.3lf \n%.3lf \n%.3lf \n%.3lf \n%.3lf ",pid_left.GetKp(),pid_left.GetKi(),pid_left.GetKd(),pid_right.GetKp(),pid_right.GetKi(),pid_right.GetKd());
+						  lcd.SetRegion(Lcd::Rect(0,0,128,160));
+						  writer.WriteBuffer(buff,100);
+					  }
+				  }
+			  }
+	}
+	pid_left.SetKi(0.02);
+	pid_right.SetKi(0.02);
+	//	StartlineOvertake();
+
 
 	Timer::TimerInt startTime=System::Time();
 	bool met_stop_line=false;
@@ -1883,6 +2013,30 @@ void main_car1(bool debug_) {
 					/*END OF DEBUGGING*/
 
 					/*-------------CONTROL SYSTEM-----------------------*/
+//					if(time_img-startTime<3000){
+//						float Ki = 0.02;
+//						float temp = (10000-(0.1-0.02)*(time_img-startTime))/10000.0;
+//						if(std::abs(pid_left.GetSetpoint() - curr_enc_val_left)>20){
+//							Ki=temp;
+//						}
+//						else{
+//							Ki=0.02;
+//						}
+//						pid_left.SetKi(Ki);
+//						if(std::abs(pid_right.GetSetpoint() - curr_enc_val_right)>20){
+//							Ki=temp;
+//						}
+//						else{
+//							Ki=0.02;
+//						}
+//						pid_right.SetKi(Ki);
+//					}
+//					else{
+//						float Ki=0.02;
+//						pid_left.SetKi(Ki);
+//						pid_right.SetKi(Ki);
+//					}
+
 					int curr_servo_error = CalcAngleDiff();
 //					char timestr[100];
 //					pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
