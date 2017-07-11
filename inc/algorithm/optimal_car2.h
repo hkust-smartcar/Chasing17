@@ -37,7 +37,12 @@ typedef CarManager::Edges Edges;
  * left = differential_left(delta_degree) * t;
  * right = differential_left(-delta_degree) * t;
  */
-inline float differential_left(float x) { return 0.996595 - 0.00862696*x; }
+//inline float differential_left_v1(float x) { return 0.996595 - 0.00862696*x; }
+//inline float differential_right_v1(float x) { return 1.00340476 - 0.00862696*x; }
+
+inline float differential_left(float x) { return x < 0 ? 1 : (0.996595 - 0.00862696*x) / (1.00340476 - 0.00862696*x); }
+inline float differential_right(float x) { return x > 0 ? 1 : (1.00340476 - 0.00862696*x) / (0.996595 - 0.00862696*x); }
+
 
 /*CAR2*/
 namespace TuningVar{
