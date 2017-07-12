@@ -98,24 +98,26 @@ int main() {
     reset = joystick.GetState() == Joystick::State::kSelect;
   }
 
-  CarManager::Car c;
-   switch (debug(reset)) {
-     case 1:
-       c = CarManager::Car::kCar1;
-       break;
-     case 2:
-       c = CarManager::Car::kCar2;
-       break;
-   }
+  uint16_t car = debug(reset);
 
   switch (a) {
     case Algorithm::kOptimal:
-      switch (c) {
-        case CarManager::Car::kCar1:
+      switch (car) {
+        case 1:
           algorithm::optimal::car1::main_car1(debug_flag::lcd_debug);
           break;
-        case CarManager::Car::kCar2:
+        case 2:
           algorithm::optimal::car2::main_car2(debug_flag::lcd_debug);
+          break;
+        case 3:
+          algorithm::optimal::car3::main_car3(debug_flag::lcd_debug);
+          break;
+        case 4:
+          algorithm::optimal::car4::main_car4(debug_flag::lcd_debug);
+          break;
+        default:
+          // not handled
+          break;
       }
 
       break;
