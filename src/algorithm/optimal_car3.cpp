@@ -68,7 +68,7 @@ namespace TuningVar { //tuning var declaration
   uint16_t edge_length = 159; //max length for an edge
   uint16_t edge_hor_search_max = 4; //max for horizontal search of edge if next edge point cannot be found
   uint16_t edge_min_worldview_bound_check = 30; //min for worldview bound check in edge finding
-  uint16_t corner_range = 5; //the square for detection would be in size corener_range*2+1
+  uint16_t corner_range = 7; //the square for detection would be in size corener_range*2+1
   float corner_height_ratio = 2.9; //the max height for detection would be WorldSize.h/corner_height_ratio
   uint16_t corner_min = 16, corner_max = 32; //threshold (in %) for corner detection
   uint16_t min_corners_dist = 7; // Manhattan dist threshold for consecutive corners
@@ -152,7 +152,7 @@ int encoder_total_round = 0; // for roundabout
 int encoder_total_exit = 0;
 int roundabout_cnt = 0; // count the roundabout
 //Timer::TimerInt feature_start_time;
-std::pair<int, int> carMid {61, 0};
+std::pair<int, int> carMid {63, 0};
 int roundabout_nearest_corner_cnt_left = pow(TuningVar::corner_range * 2 + 1, 2); // for finding the nearest corner point for roundabout
 int roundabout_nearest_corner_cnt_right = pow(TuningVar::corner_range * 2 + 1, 2);
 std::pair<int, int> roundabout_nearest_corner_left{0, 0};
@@ -178,6 +178,8 @@ DirMotor* pMotor0 = nullptr;
 DirMotor* pMotor1 = nullptr;
 IncrementalPidController<float, float>* pid_left_p = nullptr;
 IncrementalPidController<float, float>* pid_right_p = nullptr;
+int CornerCheck_left = 0, CornerCheck_right = 0;
+
 
 ServoBounds servo_bounds = {1040, 755, 470};
 ImageSize CameraSize = {128, 480};
@@ -398,6 +400,70 @@ void PrintImage() {
 	pLcd->FillBits(0x0000, 0xFFFF, CameraBuf, spCamera->GetBufferSize() * 8);
 }
 
+int findCorner_old(std::pair<uint16_t, uint16_t> last){
+	int cnt = 0;
+	for (int i = (last.first - TuningVar::corner_range);
+			i <= (last.first + TuningVar::corner_range); i++) {
+		for (int j = (last.second - TuningVar::corner_range);
+				j <= (last.second + TuningVar::corner_range); j++) {
+			cnt += getWorldBit(i, j);
+		}
+	}
+	return cnt;
+}
+
+int findCorner_new(int old_cnt, std::pair<uint16_t, uint16_t> last2, std::pair<uint16_t, uint16_t> last){
+	int size = TuningVar::corner_range;
+	int new_x = last.first, new_y = last.second;
+	int old_x = last2.first, old_y = last2.second;
+	int dx = new_x - old_x;
+	int dy = new_y - old_y;
+	int add_v = 0, add_h = 0;
+	int sub_v = 0, sub_h = 0;
+	if (dx == 1 && dy == 1){
+		for (int i = new_x - size; i < new_x + size; i++) add_h += getWorldBit(i, new_y+size);
+		for (int j = new_y - size; j <= new_y + size; j++) add_v += getWorldBit(new_x+size, j);
+		for (int i = old_x - size+1; i <= old_x + size; i++) sub_h += getWorldBit(i, old_y-size);
+		for (int j = old_y - size; j <= old_y + size; j++) sub_v += getWorldBit(old_x-size, j);
+		return old_cnt + add_v + add_h - sub_v - sub_h;
+	} else if (dx == 1 && dy == 0){
+		for (int j = new_y - size; j <= new_y + size; j++) add_v += getWorldBit(new_x+size, j);
+		for (int j = old_y - size; j <= old_y + size; j++) sub_v += getWorldBit(old_x-size, j);
+		return old_cnt + add_v - sub_v;
+	} else if (dx == 1 && dy == -1){
+		for (int i = new_x - size; i < new_x + size; i++) add_h += getWorldBit(i, new_y-size);
+		for (int j = new_y - size; j <= new_y + size; j++) add_v += getWorldBit(new_x+size, j);
+		for (int i = old_x - size; i <= old_x + size; i++) sub_h += getWorldBit(i, old_y+size);
+		for (int j = old_y - size; j < old_y + size; j++) sub_v += getWorldBit(old_x-size, j);
+		return old_cnt + add_v + add_h - sub_v - sub_h;
+	} else if (dx == 0 && dy == 1){
+		for (int i = new_x - size; i <= new_x + size; i++) add_h += getWorldBit(i, new_y+size);
+		for (int i = old_x - size; i <= old_x + size; i++) sub_h += getWorldBit(i, old_y-size);
+		return old_cnt + add_h - sub_h;
+	} else if (dx == 0 && dy == -1){
+		for (int i = new_x - size; i <= new_x + size; i++) add_h += getWorldBit(i, new_y-size);
+		for (int i = old_x - size; i <= old_x + size; i++) sub_h += getWorldBit(i, old_y+size);
+		return old_cnt + add_h - sub_h;
+	} else if (dx == -1 && dy == 1){
+		for (int i = new_x - size; i <= new_x + size; i++) add_h += getWorldBit(i, new_y+size);
+		for (int j = new_y - size; j < new_y + size; j++) add_v += getWorldBit(new_x-size, j);
+		for (int i = old_x - size; i < old_x + size; i++) sub_h += getWorldBit(i, old_y-size);
+		for (int j = old_y - size; j <= old_y + size; j++) sub_v += getWorldBit(old_x+size, j);
+		return old_cnt + add_v + add_h - sub_v - sub_h;
+	} else if (dx == -1 && dy == 0){
+		for (int j = new_y - size; j <= new_y + size; j++) add_v += getWorldBit(new_x-size, j);
+		for (int j = old_y - size; j <= old_y + size; j++) sub_v += getWorldBit(old_x+size, j);
+		return old_cnt + add_v - sub_v;
+	} else if (dx == -1 && dy == -1){
+		for (int i = new_x - size+1; i <= new_x + size; i++) add_h += getWorldBit(i, new_y-size);
+		for (int j = new_y - size; j <= new_y + size; j++) add_v += getWorldBit(new_x-size, j);
+		for (int i = old_x - size; i <= old_x + size; i++) sub_h += getWorldBit(i, old_y+size);
+		for (int j = old_y - size; j < old_y + size; j++) sub_v += getWorldBit(old_x+size, j);
+		return old_cnt + add_v + add_h - sub_v - sub_h;
+	} else if (dx == 0 && dy == 0) return old_cnt;
+	  else return findCorner_old(last);
+}
+
 bool FindOneLeftEdge() {
 	if (left_edge.size() == 0) return false;
 	uint16_t prev_x = left_edge.points.back().first;
@@ -459,29 +525,22 @@ bool FindOneLeftEdge() {
 		return false; //reaches right
 
 
-	int CornerCheck = 0;
-	int total = 0;
 	auto last = left_edge.points.back();
 	if (last.first - TuningVar::corner_range <= 0
 			|| last.first + TuningVar::corner_range > WorldSize.w - 1
 			|| last.second - TuningVar::corner_range <= 0
 			|| last.second + TuningVar::corner_range > WorldSize.h - 1)
 		return true;
-	for (int i = (last.first - TuningVar::corner_range);
-			i <= (last.first + TuningVar::corner_range); i++) {
-		for (int j = (last.second - TuningVar::corner_range);
-				j <= (last.second + TuningVar::corner_range); j++) {
-			CornerCheck += getWorldBit(i, j);
-			total++;
-		}
-	}
+	if (left_edge.points.size() == 2) CornerCheck_left = findCorner_old(left_edge.points.back());
+	else CornerCheck_left = findCorner_new(CornerCheck_left, left_edge.points[left_edge.points.size()-2],left_edge.points.back());
+	int total = pow(TuningVar::corner_range*2+1,2);
 	//find corners
 	if (left_edge.points.back().second
-			<= WorldSize.h / TuningVar::corner_height_ratio) {
+			<= WorldSize.h / TuningVar::corner_height_ratio && left_corners.size() < 40) {
 
 		//if in this threshold, consider as corner
-		if (CornerCheck > total * TuningVar::corner_min / 100
-				&& CornerCheck < total * TuningVar::corner_max / 100) {
+		if (CornerCheck_left > total * TuningVar::corner_min / 100
+				&& CornerCheck_left < total * TuningVar::corner_max / 100) {
 			if (abs(last.first - left_corners.back().first)
 					+ abs(last.second - left_corners.back().second)
 					<= TuningVar::min_corners_dist) { //discard if too close
@@ -493,11 +552,10 @@ bool FindOneLeftEdge() {
 	}
 
 	//check if the point is the point closest to corners
-	if (CornerCheck < roundabout_nearest_corner_cnt_left && last.second <= TuningVar::nearest_corner_threshold) {
-		roundabout_nearest_corner_cnt_left = CornerCheck;
+	if (CornerCheck_left < roundabout_nearest_corner_cnt_left && last.second <= TuningVar::nearest_corner_threshold) {
+		roundabout_nearest_corner_cnt_left = CornerCheck_left;
 		roundabout_nearest_corner_left = last;
 	}
-
 	return true;
 }
 
@@ -560,29 +618,22 @@ bool FindOneRightEdge() {
 	if (right_edge.points.back().first == WorldSize.w - 1)
 		return false; //reaches right
 
-	int CornerCheck = 0;
-	int total = 0;
 	auto last = right_edge.points.back();
 	if (last.first - TuningVar::corner_range <= 0
 			|| last.first + TuningVar::corner_range > WorldSize.w - 1
 			|| last.second - TuningVar::corner_range <= 0
 			|| last.second + TuningVar::corner_range > WorldSize.h - 1)
 		return true;
-	for (int i = (last.first - TuningVar::corner_range);
-			i <= (last.first + TuningVar::corner_range); i++) {
-		for (int j = (last.second - TuningVar::corner_range);
-				j <= (last.second + TuningVar::corner_range); j++) {
-			CornerCheck += getWorldBit(i, j);
-			total++;
-		}
-	}
+	if (right_edge.points.size() == 2) CornerCheck_right = findCorner_old(right_edge.points.back());
+	else CornerCheck_right = findCorner_new(CornerCheck_right, right_edge.points[right_edge.points.size()-2],right_edge.points.back());
+	int total = pow(TuningVar::corner_range*2+1,2);
 	//find corners
 	if (right_edge.points.back().second
-			<= WorldSize.h / TuningVar::corner_height_ratio) {
+			<= WorldSize.h / TuningVar::corner_height_ratio && right_corners.size() < 40) {
 
 		//if in this threshold, consider as corner
-		if (CornerCheck > total * TuningVar::corner_min / 100
-				&& CornerCheck < total * TuningVar::corner_max / 100) {
+		if (CornerCheck_right > total * TuningVar::corner_min / 100
+				&& CornerCheck_right < total * TuningVar::corner_max / 100) {
 			if (abs(last.first - right_corners.back().first)
 					+ abs(last.second - right_corners.back().second)
 					<= TuningVar::min_corners_dist) { //discard if too close
@@ -595,8 +646,8 @@ bool FindOneRightEdge() {
 	}
 
 	//check if the point is the point closest to corners
-	if (CornerCheck < roundabout_nearest_corner_cnt_right && last.second <= TuningVar::nearest_corner_threshold) {
-		roundabout_nearest_corner_cnt_right = CornerCheck;
+	if (CornerCheck_right < roundabout_nearest_corner_cnt_right && last.second <= TuningVar::nearest_corner_threshold) {
+		roundabout_nearest_corner_cnt_right = CornerCheck_right;
 		roundabout_nearest_corner_right = last;
 	}
 
