@@ -929,17 +929,17 @@ bool FindEdges() {
 	//3 cases: 1. y=30~35 black, 2. size unchanged, 3. corner
 	if (obsta_status == ObstaclePos::kNull){
 		//case 1
-		if (left_edge.size() >= 36){
+		if (left_edge.size() >= 46){
 			int cnt_black = 0;
-			for (int i = 30; i < 35; i++) cnt_black += getWorldBit(left_edge.points[i].first+3, left_edge.points[i].second);
+			for (int i = 40; i < 45; i++) cnt_black += getWorldBit(left_edge.points[i].first+3, left_edge.points[i].second);
 			if (cnt_black == 5) {
 				obsta_status = ObstaclePos::kLeft;
 				goto obsta_status_end;
 			}
 		}
-		if (right_edge.size() >= 36){
+		if (right_edge.size() >= 46){
 			int cnt_black = 0;
-			for (int i = 30; i < 35; i++) cnt_black += getWorldBit(right_edge.points[i].first-3, right_edge.points[i].second);
+			for (int i = 40; i < 45; i++) cnt_black += getWorldBit(right_edge.points[i].first-3, right_edge.points[i].second);
 			if (cnt_black == 5) {
 				obsta_status = ObstaclePos::kRight;
 				goto obsta_status_end;

@@ -708,7 +708,7 @@ bool FindOneLeftEdge() {
 	int total = pow(TuningVar::corner_range*2+1,2);
 	//find corners
 	if (left_edge.points.back().second
-			<= WorldSize.h / TuningVar::corner_height_ratio) {
+			<= WorldSize.h / TuningVar::corner_height_ratio && left_corners.size() < 40) {
 
 		//if in this threshold, consider as corner
 		if (CornerCheck_left > total * TuningVar::corner_min / 100
@@ -802,7 +802,7 @@ bool FindOneRightEdge() {
 	int total = pow(TuningVar::corner_range*2+1,2);
 	//find corners
 	if (right_edge.points.back().second
-			<= WorldSize.h / TuningVar::corner_height_ratio) {
+			<= WorldSize.h / TuningVar::corner_height_ratio && right_corners.size() < 40) {
 
 		//if in this threshold, consider as corner
 		if (CornerCheck_right > total * TuningVar::corner_min / 100
