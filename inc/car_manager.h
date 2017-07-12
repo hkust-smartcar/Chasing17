@@ -111,6 +111,7 @@ struct CarManager final {
     uint16_t SpeedSharpTurn;
     uint16_t SpeedSlow;//slow down speed during straight
     uint16_t SpeedTransitionalSlope;
+    uint16_t SpeedInside;
   };
 
   /**

@@ -91,7 +91,8 @@ const PidSet kStablePid = {
 		100,				// SpeedRoundabout
 		120,				// SpeedSharpTurn
 		100,				// SpeedSlow
-		0					// SpeedTransitionalSlope
+		0,					// SpeedTransitionalSlope
+		100					// SpeedInside
 };
 
 /**
@@ -122,7 +123,8 @@ const PidSet kUnstablePid = {
 		100,				// SpeedRoundabout
 		120,				// SpeedSharpTurn
 		100,				// SpeedSlow
-		0					// SpeedTransitionalSlope
+		0,					// SpeedTransitionalSlope
+		100					// SpeedInside
 };
 
 /**
@@ -153,7 +155,8 @@ const PidSet kTempPid = {
 		100,				// SpeedRoundabout
 		120,				// SpeedSharpTurn
 		100,				// SpeedSlow
-		0					// SpeedTransitionalSlope
+		0,					// SpeedTransitionalSlope
+		100					// SpeedInside
 };
 
 bool show_algo_time = false;
@@ -224,7 +227,7 @@ uint16_t targetSpeed_round = kStablePid.SpeedRound;
 uint16_t targetSpeed_sharp_turn = kStablePid.SpeedSharpTurn;
 uint16_t targetSpeed_slow = kStablePid.SpeedSlow;
 uint16_t targetSpeed_trans = kStablePid.SpeedTransitionalSlope;
-uint16_t targetSpeed_inside = 100;
+uint16_t targetSpeed_inside = kStablePid.SpeedInside;
 
 }  // namespace TuningVar
 
@@ -372,6 +375,7 @@ std::string InflatePidValues() {
 	targetSpeed_sharp_turn = p.SpeedSharpTurn;
 	targetSpeed_slow = p.SpeedSlow;
 //	targetSpeed_trans = p.SpeedTransitionalSlope;
+	targetSpeed_inside = p.SpeedInside;
 
 	return p.name;
 }
