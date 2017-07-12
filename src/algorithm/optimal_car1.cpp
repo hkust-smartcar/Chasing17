@@ -57,6 +57,7 @@ typedef CarManager::Feature Feature;
 typedef CarManager::ImageSize ImageSize;
 typedef CarManager::PidSet PidSet;
 typedef CarManager::ServoBounds ServoBounds;
+typedef CarManager::ObstaclePos ObstaclePos;
 
 namespace algorithm {
 namespace optimal {
@@ -251,7 +252,7 @@ bool is_front_car = true;
 bool stop_before_roundexit = true;
 bool overtake;
 int exit_count = 0;//for debugging
-int obsta_status = 0;// 0 means no obsta, 1 means left obsta, 2 means right obsta
+ObstaclePos obsta_status = ObstaclePos::kNull;
 
 bool need_slow_down = false;
 bool run =true;//for bluetooth stopping

@@ -68,6 +68,15 @@ struct CarManager final {
   };
 
   /**
+   * Enum of obstacle postion
+   */
+  enum struct ObstaclePos : uint8_t{
+	kNull = 0,
+	kLeft,
+	kRight
+  };
+
+  /**
    * Struct of servo boundaries, stored in servo values
    */
   struct ServoBounds {

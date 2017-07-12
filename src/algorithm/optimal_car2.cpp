@@ -253,7 +253,7 @@ uint16_t prev_corner_y;
 bool is_front_car = false;
 bool stop_before_roundexit = false;
 bool overtake;
-int obsta_status = 0;// 0 means no obsta, 1 means left obsta, 2 means right obsta
+ObstaclePos obsta_status = ObstaclePos::kNull;
 
 bool need_slow_down = false;
 bool run =true;//for bluetooth stopping
