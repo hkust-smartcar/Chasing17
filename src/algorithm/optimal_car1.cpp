@@ -184,6 +184,7 @@ uint16_t cross_cal_start_num = 80;
 uint16_t cross_cal_ratio = 80; //Look forward @cross_cal_start_num - encoder_total/@cross_cal_ratio to determine path
 uint16_t general_cal_num = 20; //The num of path points considered for servo angle decision except crossing
 uint16_t cross_encoder_count = 4000; // The hardcoded encoder count that car must reach in crossroad
+uint16_t obstacle_encoder_count = 5000; // the encoder count setting for passing obstacle
 uint16_t min_dist_meet_crossing = 30;
 uint16_t roundroad_min_size = 30; // When the edge is broken in roundabout, find until this threshold
 uint16_t exit_action_dist = 30; // double check to avoid corner's sudden disappear inside roundabout
@@ -265,6 +266,7 @@ int roundaboutExitStatus = 0; //0: Before 1: Detected/Inside Exit of Roundabout
 uint16_t prev_track_width = 0;
 int encoder_total_cross = 0; //for crossroad
 int encoder_total_round = 0; // for roundabout
+int encoder_total_obstacle = 0;
 int encoder_total_exit = 0;
 int roundabout_cnt = 0; // count the roundabout
 //Timer::TimerInt feature_start_time;
@@ -1415,6 +1417,23 @@ void GenPath(Feature feature) {
 		//		pEncoder1->Update();
 		encoder_total_exit += curr_enc_val_left/*(pEncoder0->GetCount() + pEncoder1->GetCount()) / 2*/;
 		feature = Feature::kRoundaboutExit;
+	}
+
+	// obstacle case handling
+	if(abs(encoder_total_obstacle) >= TuningVar::obstacle_encoder_count && obsta_status != ObstaclePos::kNull){
+		obsta_status = ObstaclePos::kNull;
+	}
+	if(obsta_status == ObstaclePos::kLeft && abs(encoder_total_obstacle) < TuningVar::obstacle_encoder_count){
+		encoder_total_obstacle += curr_enc_val_left;
+		/*path offset right*/
+		for(int i =0; i < 20; i++) path.push(right_edge.points[i].first - 5, right_edge.points[i].second);
+		return;
+	}
+	else if (obsta_status == ObstaclePos::kRight && abs(encoder_total_obstacle) < TuningVar::obstacle_encoder_count){
+		encoder_total_obstacle += curr_enc_val_left;
+		/*path offset left*/
+		for(int i =0; i < 20; i++) path.push(left_edge.points[i].first + 5, left_edge.points[i].second);
+		return;
 	}
 
 	// When entering the roundabout, keep roundabout method until completely enter, but still keep roundaboutStatus until exit
