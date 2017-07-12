@@ -682,7 +682,7 @@ bool FindEdges() {
 	roundabout_nearest_corner_cnt_left = pow(TuningVar::corner_range * 2 + 1, 2);
 	roundabout_nearest_corner_cnt_right = pow(TuningVar::corner_range * 2 + 1, 2);
 	uint16_t staright_line_edge_count = 0; // Track the num. of equal width
-	while (left_edge.points.size() <= 35 && right_edge.points.size() <= 35
+	while (left_edge.points.size() <= 50 && right_edge.points.size() <= 50
 			&& (!flag_break_left || !flag_break_right)) {
 		if (!flag_break_left)
 			flag_break_left = !FindOneLeftEdge();
@@ -741,6 +741,62 @@ bool FindEdges() {
 			}
 		}
 	}
+	//check for obstacle
+		//3 cases: 1. y=30~35 black, 2. size unchanged, 3. corner
+		if (obsta_status == ObstaclePos::kNull){
+			//case 1
+			if (left_edge.size() >= 46){
+				int cnt_black = 0;
+				for (int i = 40; i < 45; i++) cnt_black += getWorldBit(left_edge.points[i].first+3, left_edge.points[i].second);
+				if (cnt_black == 5) {
+					obsta_status = ObstaclePos::kLeft;
+					goto obsta_status_end;
+				}
+			}
+			if (right_edge.size() >= 46){
+				int cnt_black = 0;
+				for (int i = 40; i < 45; i++) cnt_black += getWorldBit(right_edge.points[i].first-3, right_edge.points[i].second);
+				if (cnt_black == 5) {
+					obsta_status = ObstaclePos::kRight;
+					goto obsta_status_end;
+				}
+			}
+			//case 2
+			if (!FindOneLeftEdge()){
+				int cnt_black = 0;
+				for (int i = left_edge.size()-5; i < left_edge.size(); i++) cnt_black += getWorldBit(left_edge.points[i].first+3, left_edge.points[i].second);
+				if (cnt_black == 5) {
+					obsta_status = ObstaclePos::kLeft;
+					goto obsta_status_end;
+				}
+			} else left_edge.points.pop_back();
+			if (!FindOneRightEdge()){
+				int cnt_black = 0;
+				for (int i = right_edge.size()-5; i < right_edge.size(); i++) cnt_black += getWorldBit(right_edge.points[i].first-3, right_edge.points[i].second);
+				if (cnt_black == 5) {
+					obsta_status = ObstaclePos::kRight;
+					goto obsta_status_end;
+				}
+			} else right_edge.points.pop_back();
+			//case 3
+			if (left_corners.size() == 1 && right_corners.size() == 0){
+				int cnt_black = 0;
+				for (int i = left_edge.size()-5; i < left_edge.size(); i++) cnt_black += getWorldBit(left_edge.points[i].first+3, left_edge.points[i].second);
+				if (cnt_black == 5) {
+					obsta_status = ObstaclePos::kLeft;
+					goto obsta_status_end;
+				}
+			}
+			if (right_corners.size() == 1 && left_corners.size() == 0){
+				int cnt_black = 0;
+				for (int i = right_edge.size()-5; i < right_edge.size(); i++) cnt_black += getWorldBit(right_edge.points[i].first-3, right_edge.points[i].second);
+				if (cnt_black == 5) {
+					obsta_status = ObstaclePos::kRight;
+					goto obsta_status_end;
+				}
+			}
+		}
+		obsta_status_end:
 
 	//Straight line judgement - helper for feature_corner()
 	if (staright_line_edge_count >= TuningVar::straight_line_threshold) {
