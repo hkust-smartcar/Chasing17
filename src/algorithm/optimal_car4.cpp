@@ -1007,6 +1007,7 @@ Feature featureIdent_Corner() {
 			if (meet_exit) {
 				//below part can handle the other case: back car has passed, no need to stop (not same as main.cpp)
 				//TODO:Maybe need to handle dist if when the car come across exit, back car just finish exit so they are still close
+				// case one: before front car meet exit, back car has finished overtake - no stop
 				if(pBT->hasFinishedOvertake() && (System::Time() - pBT->getOvertakeTime())>TuningVar::overtake_interval_time ){
 					stop_before_roundexit = false;
 					// roundaboutStatus = 0;
@@ -1016,6 +1017,9 @@ Feature featureIdent_Corner() {
 					encoder_total_exit = 0;
 					pBT->resetFinishOvertake();
 				}
+				// case two: when front car meets exit, back car haven't finished overtake
+				// case three: when front car meets exit, back car has finished overtake but interval time is not enough
+
 				else{
 					encoder_total_exit = 0;//clear history data to avoid immediately judged as "finish exit"
 					stop_before_roundexit = true;
@@ -1688,15 +1692,19 @@ void main_car4(bool debug_) {
 					if(roundaboutExitStatus == 1){
 						//for stopping the car completely
 						if(stop_before_roundexit && TuningVar::overtake){
-							pServo->SetDegree(util::clamp<uint16_t>(
-									servo_bounds.kCenter - (TuningVar::servo_roundabout_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
-									servo_bounds.kRightBound,
-									servo_bounds.kLeftBound));
-							pid_left.SetSetpoint(0);
-							pid_right.SetSetpoint(0);
-
+							// case two: when front car meets exit, back car haven't finished overtake
+							// case three: when front car meets exit, back car has finished overtake but interval time is not enough
+							if( !pBT->hasFinishedOvertake() || (pBT->hasFinishedOvertake()
+									&& (System::Time() - pBT->getOvertakeTime()) <= TuningVar::overtake_interval_time )){
+								pServo->SetDegree(util::clamp<uint16_t>(
+										servo_bounds.kCenter - (TuningVar::servo_roundabout_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
+										servo_bounds.kRightBound,
+										servo_bounds.kLeftBound));
+								pid_left.SetSetpoint(0);
+								pid_right.SetSetpoint(0);
+							}
 							//below part only used for restarting the car after stopping
-							if(pBT->hasFinishedOvertake() && (System::Time() - pBT->getOvertakeTime())>TuningVar::overtake_interval_time){
+							else if(pBT->hasFinishedOvertake() && ((System::Time() - pBT->getOvertakeTime())>TuningVar::overtake_interval_time)){
 								//only delay when it really stops inside roundabout
 //								System::DelayMs(TuningVar::overtake_interval_time);
 								stop_before_roundexit = false;
@@ -1709,6 +1717,7 @@ void main_car4(bool debug_) {
 							}
 
 						}
+						//go
 						else{
 							pServo->SetDegree(util::clamp<uint16_t>(
 									servo_bounds.kCenter - (TuningVar::servo_roundabout_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
@@ -1735,6 +1744,7 @@ void main_car4(bool debug_) {
 								// roundaboutStatus = 0;
 							}
 						}
+						//slow down the car when the exit is ready
 						else if(need_slow_down){
 							pServo->SetDegree(util::clamp<uint16_t>(
 									servo_bounds.kCenter - (TuningVar::servo_roundabout_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
