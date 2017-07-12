@@ -846,7 +846,7 @@ bool FindEdges() {
 	uint16_t staright_line_edge_count = 0; // Track the num. of equal width
 	roundabout_nearest_corner_cnt_left = pow(TuningVar::corner_range * 2 + 1, 2);
 	roundabout_nearest_corner_cnt_right = pow(TuningVar::corner_range * 2 + 1, 2);
-	while (left_edge.points.size() <= 50 && right_edge.points.size() <= 50
+	while (left_edge.points.size() <= 80 && right_edge.points.size() <= 80
 			&& (!flag_break_left || !flag_break_right)) {
 		if (!flag_break_left)
 			flag_break_left = !FindOneLeftEdge();
@@ -918,7 +918,7 @@ bool FindEdges() {
 	//3 cases: 1. y=30~35 black, 2. size unchanged, 3. corner
 	if (obsta_status == ObstaclePos::kNull){
 		//case 1
-		if (left_edge.size() == 36){
+		if (left_edge.size() >= 36){
 			int cnt_black = 0;
 			for (int i = 30; i < 35; i++) cnt_black += getWorldBit(left_edge.points[i].first+3, left_edge.points[i].second);
 			if (cnt_black == 5) {
@@ -926,7 +926,7 @@ bool FindEdges() {
 				goto obsta_status_end;
 			}
 		}
-		if (right_edge.size() == 36){
+		if (right_edge.size() >= 36){
 			int cnt_black = 0;
 			for (int i = 30; i < 35; i++) cnt_black += getWorldBit(right_edge.points[i].first-3, right_edge.points[i].second);
 			if (cnt_black == 5) {
@@ -1669,7 +1669,7 @@ void GenPath(Feature feature) {
 					int temp_y = (curr_left.second + curr_right.second) / 2;
 					path.push(temp_x, temp_y);
 				}
-
+				if (path.size() >= 40) break;
 			}
 		}
 		break;

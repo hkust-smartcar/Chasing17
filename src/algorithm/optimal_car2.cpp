@@ -929,7 +929,7 @@ bool FindEdges() {
 	//3 cases: 1. y=30~35 black, 2. size unchanged, 3. corner
 	if (obsta_status == ObstaclePos::kNull){
 		//case 1
-		if (left_edge.size() == 36){
+		if (left_edge.size() >= 36){
 			int cnt_black = 0;
 			for (int i = 30; i < 35; i++) cnt_black += getWorldBit(left_edge.points[i].first+3, left_edge.points[i].second);
 			if (cnt_black == 5) {
@@ -937,7 +937,7 @@ bool FindEdges() {
 				goto obsta_status_end;
 			}
 		}
-		if (right_edge.size() == 36){
+		if (right_edge.size() >= 36){
 			int cnt_black = 0;
 			for (int i = 30; i < 35; i++) cnt_black += getWorldBit(right_edge.points[i].first-3, right_edge.points[i].second);
 			if (cnt_black == 5) {
@@ -2018,28 +2018,28 @@ void main_car2(bool debug_) {
 
 					/*-------------CONTROL SYSTEM-----------------------*/
 					int curr_servo_error = CalcAngleDiff();
-						char temp[100];
-						sprintf(temp, "Oenc: %d", encoder_total_obstacle);
-						pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
-						pWriter->WriteString(temp);
-						sprintf(temp, "leftSize: %d", left_edge.size());
-						pLcd->SetRegion(Lcd::Rect(0, 32, 128, 15));
-						pWriter->WriteString(temp);
-						sprintf(temp, "rightSize: %d", right_edge.size());
-						pLcd->SetRegion(Lcd::Rect(0, 50, 128, 15));
-						pWriter->WriteString(temp);
-						pLcd->SetRegion(Lcd::Rect(0, 16, 128, 15));
-						switch (obsta_status){
-							case ObstaclePos::kNull:
-								pWriter->WriteString("Null");
-								break;
-							case ObstaclePos::kLeft:
-								pWriter->WriteString("Left");
-								break;
-							case ObstaclePos::kRight:
-								pWriter->WriteString("Right");
-								break;
-						}
+//						char temp[100];
+//						sprintf(temp, "Oenc: %d", encoder_total_obstacle);
+//						pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
+//						pWriter->WriteString(temp);
+//						sprintf(temp, "leftSize: %d", left_edge.size());
+//						pLcd->SetRegion(Lcd::Rect(0, 32, 128, 15));
+//						pWriter->WriteString(temp);
+//						sprintf(temp, "rightSize: %d", right_edge.size());
+//						pLcd->SetRegion(Lcd::Rect(0, 50, 128, 15));
+//						pWriter->WriteString(temp);
+//						pLcd->SetRegion(Lcd::Rect(0, 16, 128, 15));
+//						switch (obsta_status){
+//							case ObstaclePos::kNull:
+//								pWriter->WriteString("Null");
+//								break;
+//							case ObstaclePos::kLeft:
+//								pWriter->WriteString("Left");
+//								break;
+//							case ObstaclePos::kRight:
+//								pWriter->WriteString("Right");
+//								break;
+//						}
 					if(debug){
 						char temp[100];
 						sprintf(temp, "error: %d", curr_servo_error);
