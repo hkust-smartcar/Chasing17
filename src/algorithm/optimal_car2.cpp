@@ -62,7 +62,7 @@ typedef CarManager::ServoBounds ServoBounds;
 namespace algorithm {
 namespace optimal {
 namespace car2 {
-namespace TuningVar{ //tuning var delaration
+
 /**
  * Set Time: 11/7/2017 08:58
  * CW: 19.5s
@@ -76,7 +76,7 @@ const PidSet kStablePid = {
 		{1.20, 0, 0.020},	// ServoNormalLeft
 		{1.30, 0, 0.000},	// ServoRoundaboutLeft
 		{1.50, 0, 0.010},	// ServoSharpTurnLeft
-        {0.00, 0, 0.000},	// ServoTransitionalSlopeLeft
+		{0.00, 0, 0.000},	// ServoTransitionalSlopeLeft
 
 		// servo right
 		{0.60, 0, 0.010},	// ServoStraightRight
@@ -159,6 +159,7 @@ const PidSet kTempPid = {
 		100					// SpeedInside
 };
 
+namespace TuningVar{ //tuning var delaration
 bool show_algo_time = false;
 bool roundabout_turn_left = true; //Used for GenPath()
 bool single_car_testing = false;// still need to set overtake flag to false
