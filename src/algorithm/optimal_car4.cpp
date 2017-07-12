@@ -141,6 +141,7 @@ uint16_t prev_corner_y;
 
 bool is_front_car = false;
 bool stop_before_roundexit = false;
+ObstaclePos obsta_status = ObstaclePos::kNull;
 
 bool need_slow_down = false;
 bool run =true;//for bluetooth stopping
