@@ -41,6 +41,7 @@
 typedef CarManager::Feature Feature;
 typedef CarManager::ImageSize ImageSize;
 typedef CarManager::ServoBounds ServoBounds;
+typedef CarManager::ObstaclePos ObstaclePos;
 
 using libsc::DirMotor;
 using libsc::DirEncoder;
@@ -142,6 +143,7 @@ uint16_t prev_corner_y;
 bool is_front_car = false;
 bool stop_before_roundexit = false;
 bool overtake;
+ObstaclePos obsta_status = ObstaclePos::kNull;
 
 bool need_slow_down = false;
 bool run =true;//for bluetooth stopping
