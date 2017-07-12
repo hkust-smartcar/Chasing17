@@ -184,6 +184,7 @@ uint16_t cross_cal_start_num = 80;
 uint16_t cross_cal_ratio = 80; //Look forward @cross_cal_start_num - encoder_total/@cross_cal_ratio to determine path
 uint16_t general_cal_num = 20; //The num of path points considered for servo angle decision except crossing
 uint16_t cross_encoder_count = 4000; // The hardcoded encoder count that car must reach in crossroad
+uint16_t obstacle_encoder_count = 5000; // the encoder count setting for passing obstacle
 uint16_t min_dist_meet_crossing = 30;
 uint16_t roundroad_min_size = 30; // When the edge is broken in roundabout, find until this threshold
 uint16_t exit_action_dist = 30; // double check to avoid corner's sudden disappear inside roundabout
@@ -252,7 +253,10 @@ bool is_front_car = true;
 bool stop_before_roundexit = true;
 bool overtake;
 int exit_count = 0;//for debugging
+
+/*FOR OBSTACLE*/
 ObstaclePos obsta_status = ObstaclePos::kNull;
+bool sendFlag = true;
 
 bool need_slow_down = false;
 bool run =true;//for bluetooth stopping
@@ -265,6 +269,7 @@ int roundaboutExitStatus = 0; //0: Before 1: Detected/Inside Exit of Roundabout
 uint16_t prev_track_width = 0;
 int encoder_total_cross = 0; //for crossroad
 int encoder_total_round = 0; // for roundabout
+int encoder_total_obstacle = 0;
 int encoder_total_exit = 0;
 int roundabout_cnt = 0; // count the roundabout
 //Timer::TimerInt feature_start_time;
@@ -913,43 +918,55 @@ bool FindEdges() {
 	//3 cases: 1. y=30~35 black, 2. size unchanged, 3. corner
 	if (obsta_status == ObstaclePos::kNull){
 		//case 1
-		if (left_edge.size() == 35){
+		if (left_edge.size() == 36){
 			int cnt_black = 0;
-			for (int i = 30; i < 35; i++) cnt_black += getWorldBit(left_edge.points[i].first, left_edge.points[i].second);
-			if (cnt_black == 5) obsta_status = ObstaclePos::kLeft;
-			goto obsta_status_end;
+			for (int i = 30; i < 35; i++) cnt_black += getWorldBit(left_edge.points[i].first+3, left_edge.points[i].second);
+			if (cnt_black == 5) {
+				obsta_status = ObstaclePos::kLeft;
+				goto obsta_status_end;
+			}
 		}
-		if (right_edge.size() == 35){
+		if (right_edge.size() == 36){
 			int cnt_black = 0;
-			for (int i = 30; i < 35; i++) cnt_black += getWorldBit(right_edge.points[i].first, right_edge.points[i].second);
-			if (cnt_black == 5) obsta_status = ObstaclePos::kRight;
-			goto obsta_status_end;
+			for (int i = 30; i < 35; i++) cnt_black += getWorldBit(right_edge.points[i].first-3, right_edge.points[i].second);
+			if (cnt_black == 5) {
+				obsta_status = ObstaclePos::kRight;
+				goto obsta_status_end;
+			}
 		}
 		//case 2
 		if (!FindOneLeftEdge()){
 			int cnt_black = 0;
-			for (int i = left_edge.size()-5; i < left_edge.size(); i++) cnt_black += getWorldBit(left_edge.points[i].first, left_edge.points[i].second);
-			if (cnt_black == 5) obsta_status = ObstaclePos::kLeft;
-			goto obsta_status_end;
+			for (int i = left_edge.size()-5; i < left_edge.size(); i++) cnt_black += getWorldBit(left_edge.points[i].first+3, left_edge.points[i].second);
+			if (cnt_black == 5) {
+				obsta_status = ObstaclePos::kLeft;
+				goto obsta_status_end;
+			}
 		} else left_edge.points.pop_back();
 		if (!FindOneRightEdge()){
 			int cnt_black = 0;
-			for (int i = right_edge.size()-5; i < right_edge.size(); i++) cnt_black += getWorldBit(right_edge.points[i].first, right_edge.points[i].second);
-			if (cnt_black == 5) obsta_status = ObstaclePos::kRight;
-			goto obsta_status_end;
+			for (int i = right_edge.size()-5; i < right_edge.size(); i++) cnt_black += getWorldBit(right_edge.points[i].first-3, right_edge.points[i].second);
+			if (cnt_black == 5) {
+				obsta_status = ObstaclePos::kRight;
+				goto obsta_status_end;
+			}
 		} else right_edge.points.pop_back();
 		//case 3
 		if (left_corners.size() == 1 && right_corners.size() == 0){
 			int cnt_black = 0;
-			for (int i = left_edge.size()-5; i < left_edge.size(); i++) cnt_black += getWorldBit(left_edge.points[i].first, left_edge.points[i].second);
-			if (cnt_black == 5) obsta_status = ObstaclePos::kLeft;
-			goto obsta_status_end;
+			for (int i = left_edge.size()-5; i < left_edge.size(); i++) cnt_black += getWorldBit(left_edge.points[i].first+3, left_edge.points[i].second);
+			if (cnt_black == 5) {
+				obsta_status = ObstaclePos::kLeft;
+				goto obsta_status_end;
+			}
 		}
 		if (right_corners.size() == 1 && left_corners.size() == 0){
 			int cnt_black = 0;
-			for (int i = right_edge.size()-5; i < right_edge.size(); i++) cnt_black += getWorldBit(right_edge.points[i].first, right_edge.points[i].second);
-			if (cnt_black == 5) obsta_status = ObstaclePos::kRight;
-			goto obsta_status_end;
+			for (int i = right_edge.size()-5; i < right_edge.size(); i++) cnt_black += getWorldBit(right_edge.points[i].first-3, right_edge.points[i].second);
+			if (cnt_black == 5) {
+				obsta_status = ObstaclePos::kRight;
+				goto obsta_status_end;
+			}
 		}
 	}
 	obsta_status_end:
@@ -1299,7 +1316,25 @@ Feature featureIdent_Corner() {
 		//	  }
 	}
 
-	//5. Nothing special: Return kNormal and wait for next testing
+	//5. obstacle case
+	//front car sends signal when pass half of obstacle
+	if (is_front_car && sendFlag && obsta_status != ObstaclePos::kNull && abs(encoder_total_obstacle) >= TuningVar::obstacle_encoder_count/2){
+		pBT->sendObstaclePos(obsta_status);
+		sendFlag = false;
+	}
+	//back car keep status only when the front car sends the same feature to himself, and reset the feature after reading the feature
+	if(!is_front_car && obsta_status != ObstaclePos::kNull){
+		// not the same as front car situation
+		if(pBT->getObstaclePos() != obsta_status){
+			// reset
+			obsta_status = ObstaclePos::kNull;
+		}
+		else
+			pBT->resetObstaclePos();
+	}
+
+
+	//6. Nothing special: Return kNormal and wait for next testing
 	return Feature::kNormal;
 }
 
@@ -1459,6 +1494,25 @@ void GenPath(Feature feature) {
 		//		pEncoder1->Update();
 		encoder_total_exit += curr_enc_val_left/*(pEncoder0->GetCount() + pEncoder1->GetCount()) / 2*/;
 		feature = Feature::kRoundaboutExit;
+	}
+
+	// obstacle case handling
+	// reset the obsta_status when finish
+	if(abs(encoder_total_obstacle) >= TuningVar::obstacle_encoder_count && obsta_status != ObstaclePos::kNull){
+		obsta_status = ObstaclePos::kNull;
+		sendFlag = true;
+	}
+	if(obsta_status == ObstaclePos::kLeft && abs(encoder_total_obstacle) < TuningVar::obstacle_encoder_count){
+		encoder_total_obstacle += curr_enc_val_left;
+		/*path offset right*/
+		for(int i =0; i < 20; i++) path.push(right_edge.points[i].first - 8, right_edge.points[i].second);
+		return;
+	}
+	else if (obsta_status == ObstaclePos::kRight && abs(encoder_total_obstacle) < TuningVar::obstacle_encoder_count){
+		encoder_total_obstacle += curr_enc_val_left;
+		/*path offset left*/
+		for(int i =0; i < 20; i++) path.push(left_edge.points[i].first + 8, left_edge.points[i].second);
+		return;
 	}
 
 	// When entering the roundabout, keep roundabout method until completely enter, but still keep roundaboutStatus until exit
