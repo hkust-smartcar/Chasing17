@@ -73,8 +73,8 @@ inline float differential_left(float x) { return 1.00716 - 0.00776897*x; }
 /*CAR1*/
 namespace TuningVar {
   extern bool show_algo_time;
-  extern bool overtake;
   extern bool roundabout_turn_left; //Used for GenPath()
+  extern bool single_car_testing;
   extern uint16_t starting_y; //the starting y for edge detection
   extern uint16_t edge_length; //max length for an edge
   extern uint16_t edge_hor_search_max; //max for horizontal search of edge if next edge point cannot be found
@@ -108,6 +108,7 @@ namespace TuningVar {
   extern uint16_t round_encoder_count;
   extern uint16_t roundExit_encoder_count;
   extern int32_t roundabout_shortest_flag; //1 means turn left, 0 means turn right. Reading from left to right
+  extern int32_t roundabout_overtake_flag;//1 means overtake, 0 means ignore overtake
   extern uint16_t angle_div_error; // translate error into angle
   extern uint16_t nearest_corner_threshold;
   extern uint16_t overtake_interval_time;

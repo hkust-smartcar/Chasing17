@@ -62,8 +62,8 @@ namespace optimal {
 namespace car3 {
 namespace TuningVar { //tuning var declaration
   bool show_algo_time = false;
-  bool overtake = true;
   bool roundabout_turn_left = true; //Used for GenPath()
+  bool single_car_testing = false;
   uint16_t starting_y = 15; //the starting y for edge detection
   uint16_t edge_length = 159; //max length for an edge
   uint16_t edge_hor_search_max = 4; //max for horizontal search of edge if next edge point cannot be found
@@ -93,6 +93,7 @@ namespace TuningVar { //tuning var declaration
   uint16_t round_encoder_count = 2600;
   uint16_t roundExit_encoder_count = 3700;
   int32_t roundabout_shortest_flag = 0b00011; //1 means turn left, 0 means turn right. Reading from left to right
+  int32_t roundabout_overtake_flag = 0b11111;
   uint16_t nearest_corner_threshold = 128/2;
   uint16_t overtake_interval_time = 1000;
 
@@ -105,8 +106,7 @@ namespace TuningVar { //tuning var declaration
   float servo_roundabout_kd = 0;
   float servo_sharp_turn_kp = 1.2;
   float servo_sharp_turn_kd = 0;
-  float servo_roundabout_exit_kp = 0.9;
-  float servo_roundabout_exit_kd = 0;
+
 
   // target speed values
   uint16_t targetSpeed_straight = 150;
@@ -137,6 +137,7 @@ uint16_t prev_corner_y;
 /*FOR OVERTAKING*/
 bool is_front_car = true;
 bool stop_before_roundexit = true;
+bool overtake;
 
 bool need_slow_down = false;
 bool run =true;//for bluetooth stopping
@@ -212,6 +213,7 @@ void PrintImage();
 void PrintSuddenChangeTrackWidthLocation(uint16_t);
 void PrintWorldImage();
 int roundabout_shortest(uint32_t a, int pos);
+int roundabout_overtake(uint32_t a, int pos);
 
 /*
  * @brief: bluetooth listener for processing tuning
@@ -751,10 +753,13 @@ bool FindEdges() {
  * @note: Execute this function after calling FindEdges()
  */
 Feature featureIdent_Corner() {
-	if(!TuningVar::overtake){
-		is_front_car = false;
+	bool temp_is_front;// don't change the is_front_car
+	if(!overtake){
+		temp_is_front = false;
 		stop_before_roundexit = false;
 	}
+	else
+		temp_is_front = is_front_car;
 
 	//1. Straight line
 	if (is_straight_line) {
@@ -793,13 +798,14 @@ Feature featureIdent_Corner() {
 				&& crossingStatus == 0/*Temporary close*/) {
 			//All black
 			if (abs(carMid.second - cornerMid_y) < TuningVar::action_distance) {
-				if(is_front_car || pBT->getBufferFeature() == Feature::kRoundabout || !TuningVar::overtake){
+				if(is_front_car || pBT->getBufferFeature() == Feature::kRoundabout || TuningVar::single_car_testing){// for single car running testing
 					pBT->resetFeature();
 					encoder_total_round = 0;
 					roundaboutStatus = 1; //Detected
 		//			feature_start_time = System::Time(); // Mark the startTime of latest enter time
 					roundabout_cnt++;
 					return Feature::kRoundabout;
+				// judge as crossing
 				}else{
 					encoder_total_cross = 0;
 					crossingStatus = 1; //Detected
@@ -918,7 +924,7 @@ Feature featureIdent_Corner() {
 		}
 	}
 	/*Exit case handling: ready -> exit*///To avoid entrance double check for corner
-	if(is_front_car?!roundabout_shortest(TuningVar::roundabout_shortest_flag, roundabout_cnt - 1):roundabout_shortest(TuningVar::roundabout_shortest_flag, roundabout_cnt - 1)){
+	if(temp_is_front?!roundabout_shortest(TuningVar::roundabout_shortest_flag, roundabout_cnt - 1):roundabout_shortest(TuningVar::roundabout_shortest_flag, roundabout_cnt - 1)){
 		if (left_corners.size() > 0 && roundaboutStatus == 1 && roundaboutExitStatus == 0
 				&& abs(encoder_total_round) > TuningVar::round_encoder_count) {
 			//		//keep updating until corner disappear
@@ -960,7 +966,7 @@ Feature featureIdent_Corner() {
 	if (exit_round_ready && roundaboutStatus == 1
 			&& abs(encoder_total_round) > TuningVar::round_encoder_count/*abs(System::Time() - feature_start_time) > TuningVar::feature_inside_time*/) {
 
-		if (is_front_car?!roundabout_shortest(TuningVar::roundabout_shortest_flag, roundabout_cnt - 1):roundabout_shortest(TuningVar::roundabout_shortest_flag, roundabout_cnt - 1)) {
+		if(temp_is_front?!roundabout_shortest(TuningVar::roundabout_shortest_flag, roundabout_cnt - 1):roundabout_shortest(TuningVar::roundabout_shortest_flag, roundabout_cnt - 1)){
 			/*FOR DEBUGGING*/
 			if (debug) {
 				pLcd->SetRegion(Lcd::Rect(roundabout_nearest_corner_left.first, WorldSize.h - roundabout_nearest_corner_left.second - 1, 4, 4));
@@ -980,7 +986,7 @@ Feature featureIdent_Corner() {
 			meet_exit = abs(roundabout_nearest_corner_right.second - carMid.second) < TuningVar::exit_action_dist;
 		}
 		//TODO: receive buffer message: only keep moving when receiving exit message
-		if(!is_front_car){//back car
+		if(!temp_is_front){//back car
 			stop_before_roundexit = false;
 			if (meet_exit) {
 				//roundaboutStatus = 0;
@@ -1068,10 +1074,13 @@ void PrintCorner(Corners corners, uint16_t color) {
  * 3. Under no LEFT_NULL and RIGHT_NULL, the midpt's midpt
  */
 void GenPath(Feature feature) {
-	if(!TuningVar::overtake){
-		is_front_car = false;
+	bool temp_is_front;// don't change the is_front_car
+	if(!overtake){
+		temp_is_front = false;
 		stop_before_roundexit = false;
 	}
+	else
+		temp_is_front = is_front_car;
 
 	int left_size = left_edge.size();
 	int right_size = right_edge.size();
@@ -1158,7 +1167,7 @@ void GenPath(Feature feature) {
 		roundaboutExitStatus = 0;
 		roundaboutStatus = 0;
 		/*TODO: switch carID, sendBT to another car and set has_exited on the other side to true*/
-		if(TuningVar::overtake){
+		if(overtake){
 			if(!is_front_car){//Back car
 				//switch ID
 				is_front_car = true;
@@ -1169,10 +1178,10 @@ void GenPath(Feature feature) {
 				is_front_car = false;
 			}
 		}
+		overtake = roundabout_overtake(TuningVar::roundabout_overtake_flag, roundabout_cnt);
 	}
 	if (roundaboutExitStatus == 1
 			&& abs(encoder_total_exit) < TuningVar::roundExit_encoder_count) {//TODO: Be care of back turning of motor when stop will affect encoder value
-		// TODO(Derppening): Figure out the use of the lines below
 		//		pEncoder0->Update();
 		//		pEncoder1->Update();
 		encoder_total_exit += curr_enc_val_left/*(pEncoder0->GetCount() + pEncoder1->GetCount()) / 2*/;
@@ -1209,7 +1218,8 @@ void GenPath(Feature feature) {
 	switch (feature) {
 	case Feature::kRoundabout: {
 		// Turning left at the entrance
-		if (is_front_car?!roundabout_shortest(TuningVar::roundabout_shortest_flag, roundabout_cnt - 1):roundabout_shortest(TuningVar::roundabout_shortest_flag, roundabout_cnt - 1)) {
+		if (temp_is_front?!roundabout_shortest(TuningVar::roundabout_shortest_flag, roundabout_cnt - 1):roundabout_shortest(TuningVar::roundabout_shortest_flag, roundabout_cnt - 1)) {
+		  			//ensure the size of left is large enough for turning, size of left will never be 0
 			//ensure the size of left is large enough for turning, size of left will never be 0
 			while ((left_edge.points.size() < TuningVar::roundroad_min_size) && FindOneLeftEdge()) {}
 			//translate right
@@ -1230,7 +1240,8 @@ void GenPath(Feature feature) {
 	}
 	case Feature::kRoundaboutExit: {
 		// Turning left at the entrance - Turning left at the exit
-		if (is_front_car?!roundabout_shortest(TuningVar::roundabout_shortest_flag, roundabout_cnt - 1):roundabout_shortest(TuningVar::roundabout_shortest_flag, roundabout_cnt - 1)) {
+		if (temp_is_front?!roundabout_shortest(TuningVar::roundabout_shortest_flag, roundabout_cnt - 1):roundabout_shortest(TuningVar::roundabout_shortest_flag, roundabout_cnt - 1)) {
+		  			//ensure the size of left is large enough for turning, size of left will never be 0
 			//ensure the size of left is large enough for turning, size of left will never be 0
 			while ((left_edge.points.size() < TuningVar::roundroad_min_size) && FindOneLeftEdge()) {}
 			//translate right
@@ -1348,6 +1359,14 @@ void GenPath(Feature feature) {
 int roundabout_shortest(uint32_t a, int pos){
 	return (a >> pos) & true;
 }
+
+/*
+ * @brief: return whether overtake for current roundabout
+ * @return: 1 means overtake, 0 means not overtake
+ * */
+ int roundabout_overtake(uint32_t a, int pos){
+ 	return (a >> pos) & true;
+ }
 
 
 /**
@@ -1584,6 +1603,8 @@ void main_car3(bool debug_) {
 	bool met_stop_line=false;
 	uint8_t stop_count=0;
 	bool brake_flag = true;
+	overtake = roundabout_overtake(TuningVar::roundabout_overtake_flag, 0);// get ready for the first roundabout
+
 
 	//	int servoAngle = 0;
 	pServo->SetDegree(servo_bounds.kCenter);
@@ -1603,9 +1624,7 @@ void main_car3(bool debug_) {
 					bool skip_motor_protection=false;
 					if (joystick.GetState() == Joystick::State::kSelect) bt.sendStopCar();
 					//Overtake motor control
-					if(TuningVar::overtake){
-						bt.resendNAKData();
-					}
+					bt.resendNAKData();
 
 					//        Timer::TimerInt new_time = System::Time();
 					Capture(); //Capture until two base points are identified
@@ -1703,7 +1722,7 @@ void main_car3(bool debug_) {
 
 					if(roundaboutExitStatus == 1){
 						//for stopping the car completely
-						if(stop_before_roundexit && TuningVar::overtake){
+						if(stop_before_roundexit && overtake){
 							// case two: when front car meets exit, back car haven't finished overtake
 							// case three: when front car meets exit, back car has finished overtake but interval time is not enough
 							if( !pBT->hasFinishedOvertake() || (pBT->hasFinishedOvertake()
@@ -1745,7 +1764,7 @@ void main_car3(bool debug_) {
 					else if(roundaboutStatus == 1){
 
 						//for slowing down the car in advance when need to stop
-						if(stop_before_roundexit && TuningVar::overtake){
+						if(stop_before_roundexit && overtake){
 							pServo->SetDegree(util::clamp<uint16_t>(
 									servo_bounds.kCenter - (TuningVar::servo_roundabout_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
 									servo_bounds.kRightBound,
@@ -1789,7 +1808,7 @@ void main_car3(bool debug_) {
 					}
 
 					//sharp turning case
-					else if(abs(curr_servo_error) > 180){
+					else if(abs(curr_servo_error) > 140){
 						pServo->SetDegree(util::clamp<uint16_t>(
 								servo_bounds.kCenter - (TuningVar::servo_sharp_turn_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
 								servo_bounds.kRightBound,
