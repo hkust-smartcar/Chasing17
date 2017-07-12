@@ -214,6 +214,27 @@ class BTComm {
     sendSide(side);
   };
 
+  /**
+   * Send obstacle pos
+   */
+  void sendObstaclePos(CarManager::ObstaclePos pos){
+	  sendData(DataType::kObstacle, static_cast<uint8_t>(pos));
+  }
+
+  /**
+   * See if front car has also detected obstacle
+   */
+  CarManager::ObstaclePos getObstaclePos(){
+	  return obstacle_pos_;
+  }
+
+  /**
+   * Reset obstacle pos
+   */
+  void resetObstaclePos(){
+	  obstacle_pos_ = CarManager::ObstaclePos::kNull;
+  }
+
   enum struct OvertakeStatus {
     kRequested = 0,
     kAgreed,
@@ -368,6 +389,7 @@ class BTComm {
     static constexpr Byte kFeature = 0x13;
     static constexpr Byte kSide = 0x14;
     static constexpr Byte kReq = 0x15;
+    static constexpr Byte kObstacle = 0x16;
   };
 
   struct ReqType {
@@ -400,6 +422,7 @@ class BTComm {
   static uint8_t dist_;
   static CarManager::Feature feat_;
   static CarManager::Side side_;
+  static CarManager::ObstaclePos obstacle_pos_;
 
   static OvertakeStatus OvertakeReq_;
   static bool hasFinishedOvertake_;

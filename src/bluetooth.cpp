@@ -31,6 +31,7 @@ bool BTComm::hasStartReq_ = false;
 bool BTComm::hasFinishedOvertake_ = false;
 bool BTComm::stop_car_ = false;
 libsc::Timer::TimerInt BTComm::overtake_time_ = 0;
+CarManager::ObstaclePos BTComm::obstacle_pos_ = CarManager::ObstaclePos::kNull;
 
 void BTComm::sendData(unsigned char type, uint16_t data) {
   uint8_t ID = (mapIndex_ %= 10)++;
@@ -123,6 +124,9 @@ bool BTComm::BTListener(const Byte* data, size_t size) {
       break;
     case DataType::kSide:
       side_ = static_cast<CarManager::Side>(value);
+      break;
+    case DataType::kObstacle:
+      obstacle_pos_ = static_cast<CarManager::ObstaclePos>(value);
       break;
     case DataType::kReq:
       switch (value) {

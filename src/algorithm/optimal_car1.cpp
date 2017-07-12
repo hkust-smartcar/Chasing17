@@ -911,6 +911,50 @@ bool FindEdges() {
 			}
 		}
 	}
+	//check for obstacle
+	//3 cases: 1. y=30~35 black, 2. size unchanged, 3. corner
+	if (obsta_status == ObstaclePos::kNull){
+		//case 1
+		if (left_edge.size() == 35){
+			int cnt_black = 0;
+			for (int i = 30; i < 35; i++) cnt_black += getWorldBit(left_edge.points[i].first, left_edge.points[i].second);
+			if (cnt_black == 5) obsta_status = ObstaclePos::kLeft;
+			goto obsta_status_end;
+		}
+		if (right_edge.size() == 35){
+			int cnt_black = 0;
+			for (int i = 30; i < 35; i++) cnt_black += getWorldBit(right_edge.points[i].first, right_edge.points[i].second);
+			if (cnt_black == 5) obsta_status = ObstaclePos::kRight;
+			goto obsta_status_end;
+		}
+		//case 2
+		if (!FindOneLeftEdge()){
+			int cnt_black = 0;
+			for (int i = left_edge.size()-5; i < left_edge.size(); i++) cnt_black += getWorldBit(left_edge.points[i].first, left_edge.points[i].second);
+			if (cnt_black == 5) obsta_status = ObstaclePos::kLeft;
+			goto obsta_status_end;
+		} else left_edge.points.pop_back();
+		if (!FindOneRightEdge()){
+			int cnt_black = 0;
+			for (int i = right_edge.size()-5; i < right_edge.size(); i++) cnt_black += getWorldBit(right_edge.points[i].first, right_edge.points[i].second);
+			if (cnt_black == 5) obsta_status = ObstaclePos::kRight;
+			goto obsta_status_end;
+		} else right_edge.points.pop_back();
+		//case 3
+		if (left_corners.size() == 1 && right_corners.size() == 0){
+			int cnt_black = 0;
+			for (int i = left_edge.size()-5; i < left_edge.size(); i++) cnt_black += getWorldBit(left_edge.points[i].first, left_edge.points[i].second);
+			if (cnt_black == 5) obsta_status = ObstaclePos::kLeft;
+			goto obsta_status_end;
+		}
+		if (right_corners.size() == 1 && left_corners.size() == 0){
+			int cnt_black = 0;
+			for (int i = right_edge.size()-5; i < right_edge.size(); i++) cnt_black += getWorldBit(right_edge.points[i].first, right_edge.points[i].second);
+			if (cnt_black == 5) obsta_status = ObstaclePos::kRight;
+			goto obsta_status_end;
+		}
+	}
+	obsta_status_end:
 
 	//check if near world boundaries if has no corners
 	if (left_corners.size() == 0 && left_edge.points.size() > 10){
