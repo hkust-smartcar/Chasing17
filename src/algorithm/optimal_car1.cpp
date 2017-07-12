@@ -61,7 +61,6 @@ typedef CarManager::ServoBounds ServoBounds;
 namespace algorithm {
 namespace optimal {
 namespace car1 {
-  uint16_t targetSpeed_inside = 100;
 
 /**
  * Set Time: 11/7/2017 07:26
@@ -1063,7 +1062,8 @@ Feature featureIdent_Corner() {
 			if ((worldview::car1::transformMatrix[min(
 					right_edge.points.back().first + 5, WorldSize.w - 1)][WorldSize.h
 																		   - right_edge.points.back().second][0] == -1)
-					&& left_corners.size() > 0 && right_edge.size() >= 2 && (right_edge.points.back().second - right_edge.points.front().second) != 0) {
+					&& left_corners.size() > 0 && right_edge.size() >= 2
+					&& (right_edge.points.back().second - right_edge.points.front().second) != 0) {
 				//Only left corner + close enough
 				if (abs(left_corners.front().second - carMid.second)
 						<= TuningVar::min_dist_meet_crossing) {
@@ -1072,10 +1072,6 @@ Feature featureIdent_Corner() {
 							(right_edge.points.front().first + left_edge.points.front().first)/2 +  (test_y_extreme - (right_edge.points.front().second + left_edge.points.front().second)/2)
 								* (left_edge.points.back().first - left_edge.points.front().first)
 									/(left_edge.points.back().second - left_edge.points.front().second);
-					if(debug){
-						pLcd->SetRegion(Lcd::Rect(test_x_extreme, WorldSize.h - test_y_extreme + 1, 4, 4));
-						pLcd->FillColor(Lcd::kCyan);
-					}
 					if (getWorldBit(test_x_extreme, test_y_extreme) == 1){
 						roundabout = true;
 					}
@@ -1107,10 +1103,6 @@ Feature featureIdent_Corner() {
 							(left_edge.points.front().first + right_edge.points.front().first)/2 +  (test_y_extreme - (left_edge.points.front().second + right_edge.points.front().second)/2)
 								* (right_edge.points.back().first - right_edge.points.front().first)
 									/(right_edge.points.back().second - right_edge.points.front().second);
-					if(debug){
-						pLcd->SetRegion(Lcd::Rect(test_x_extreme, WorldSize.h - test_y_extreme + 1, 4, 4));
-						pLcd->FillColor(Lcd::kCyan);
-					}
 					if (getWorldBit(test_x_extreme, test_y_extreme) == 1){
 						roundabout = true;
 					}
@@ -1185,10 +1177,6 @@ Feature featureIdent_Corner() {
 	}
 	/*FOR DEBUGGING*/
 	if (debug) {
-		//				char temp_1[100];
-		//				sprintf(temp_1, "Ycor:%d", abs(roundabout_nearest_corner_right.second - carMid.second));
-		//				pLcd->SetRegion(Lcd::Rect(0, 75, 128, 15));
-		//				pWriter->WriteString(temp_1);
 		pLcd->SetRegion(Lcd::Rect(0,30,128,15));
 		exit_round_ready?pWriter->WriteString("ready"):pWriter->WriteString("Not ready");
 		pLcd->SetRegion(Lcd::Rect(0,45,128,15));
@@ -1231,7 +1219,7 @@ Feature featureIdent_Corner() {
 				//				pEncoder1->Update();
 				encoder_total_exit = 0;
 				roundaboutExitStatus = 1;
-					exit_count++;
+				exit_count++;
 				return Feature::kRoundaboutExit;
 			}
 		}
@@ -1339,7 +1327,7 @@ void GenPath(Feature feature) {
 	}
 	if (crossingStatus == 1
 			&& encoder_total_cross < TuningVar::cross_encoder_count) { //Gen new path by searching midpoint
-		//		pEncoder0->Update÷();
+		//		pEncoder0->Update();
 		encoder_total_cross += curr_enc_val_left;
 		uint16_t new_right_x = WorldSize.w;
 		uint16_t new_left_x = 0;
@@ -2080,10 +2068,6 @@ void main_car1(bool debug_) {
 //					}
 
 					int curr_servo_error = CalcAngleDiff();
-//					char timestr[100];
-//					pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
-//					sprintf(timestr, "exit: %d", exit_count);
-//					pWriter->WriteString(timestr);
 					if(debug){
 						char timestr[100];
 						pLcd->SetRegion(Lcd::Rect(0, 15, 128, 15));
