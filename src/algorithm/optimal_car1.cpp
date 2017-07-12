@@ -841,7 +841,7 @@ bool FindEdges() {
 	uint16_t staright_line_edge_count = 0; // Track the num. of equal width
 	roundabout_nearest_corner_cnt_left = pow(TuningVar::corner_range * 2 + 1, 2);
 	roundabout_nearest_corner_cnt_right = pow(TuningVar::corner_range * 2 + 1, 2);
-	while (left_edge.points.size() <= 35 && right_edge.points.size() <= 35
+	while (left_edge.points.size() <= 50 && right_edge.points.size() <= 50
 			&& (!flag_break_left || !flag_break_right)) {
 		if (!flag_break_left)
 			flag_break_left = !FindOneLeftEdge();
@@ -2122,6 +2122,11 @@ void main_car1(bool debug_) {
 						pWriter->WriteString(timestr);
 					}
 					/* Motor PID + Servo PID* for different situations*/
+					int left_dx = (left_edge.points.back().first - left_edge.points.front().first);
+					int right_dx = (right_edge.points.back().first - right_edge.points.front().first);
+					bool isStraight =
+							(((left_dx > 0 && right_dx > 0) || (left_dx < 0 && right_dx < 0)) &&
+								(abs(left_dx) < 5 && abs(right_dx) < 5)) || (crossingStatus == 1);
 
 					if(roundaboutExitStatus == 1){
 						//for stopping the car completely
@@ -2224,23 +2229,23 @@ void main_car1(bool debug_) {
 							pid_right.SetSetpoint(TuningVar::targetSpeed_round* differential_right((pServo->GetDegree() - servo_bounds.kCenter)/10));
 						}
 					}
-
-					//sharp turning case TODO: Left: < -200 Right: > 130
-					else if(curr_servo_error > 110 || curr_servo_error < -180){
-						if(debug){
-							pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
-							pWriter->WriteString("sharp turn");
-						}
-						if(curr_servo_error > 0){
-							tempKp = TuningVar::servo_sharp_turn_kp_right;
-							tempKd = TuningVar::servo_sharp_turn_kd_right;
-						}else{
-							tempKp = TuningVar::servo_sharp_turn_kp_left;
-							tempKd = TuningVar::servo_sharp_turn_kd_left;
-						}
-						pid_left.SetSetpoint(TuningVar::targetSpeed_sharp_turn*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
-						pid_right.SetSetpoint(TuningVar::targetSpeed_sharp_turn* differential_right((pServo->GetDegree() - servo_bounds.kCenter)/10));
-					}
+//
+//					//sharp turning case TODO: Left: < -200 Right: > 130
+//					else if(curr_servo_error > 110 || curr_servo_error < -180){
+//						if(debug){
+//							pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
+//							pWriter->WriteString("sharp turn");
+//						}
+//						if(curr_servo_error > 0){
+//							tempKp = TuningVar::servo_sharp_turn_kp_right;
+//							tempKd = TuningVar::servo_sharp_turn_kd_right;
+//						}else{
+//							tempKp = TuningVar::servo_sharp_turn_kp_left;
+//							tempKd = TuningVar::servo_sharp_turn_kd_left;
+//						}
+//						pid_left.SetSetpoint(TuningVar::targetSpeed_sharp_turn*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
+//						pid_right.SetSetpoint(TuningVar::targetSpeed_sharp_turn* differential_right((pServo->GetDegree() - servo_bounds.kCenter)/10));
+//					}
 
 					// transition PID to reduce discontinuous changing of PID between sharp and normal
 //					else if(curr_servo_error > 110 || curr_servo_error < -180){
@@ -2262,7 +2267,7 @@ void main_car1(bool debug_) {
 //					}
 
 					//straight case + TODO:double check further image to decide whether add speed or not
-					else if(abs(curr_servo_error) < 60){
+					else if(isStraight){
 						if(debug){
 							pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
 							pWriter->WriteString("straight");
@@ -2334,7 +2339,7 @@ void main_car1(bool debug_) {
 					}
 
 					//normal turning case Right: 60 ~ 110 Left: -180 ~ -60
-					else{
+					else {
 						if(debug){
 							pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
 							pWriter->WriteString("normal turn");
@@ -2349,7 +2354,6 @@ void main_car1(bool debug_) {
 						pid_left.SetSetpoint(TuningVar::targetSpeed_normal*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
 						pid_right.SetSetpoint(TuningVar::targetSpeed_normal* differential_right((pServo->GetDegree() - servo_bounds.kCenter)/10));
 					}
-
 //					if ((carMid.first - left_edge.points.front().first <= 3) || (right_edge.points.front().first - carMid.first <= 3))
 //							pServo->SetDegree(prev_servo_angle);
 //					else

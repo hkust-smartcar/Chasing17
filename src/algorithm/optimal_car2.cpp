@@ -281,6 +281,9 @@ ServoBounds servo_bounds = {1170, 845, 530};
 ImageSize CameraSize = {128, 480};
 ImageSize WorldSize = {128, 160};
 
+int left_edge_min = WorldSize.h, left_edge_max = 0;
+int right_edge_min = WorldSize.h, right_edge_max = 0;
+
 int prev_servo_error = 0;
 int prev_servo_angle = servo_bounds.kCenter;
 int curr_enc_val_left = 0;
@@ -708,7 +711,7 @@ bool FindOneLeftEdge() {
 	int total = pow(TuningVar::corner_range*2+1,2);
 	//find corners
 	if (left_edge.points.back().second
-			<= WorldSize.h / TuningVar::corner_height_ratio) {
+			<= WorldSize.h / TuningVar::corner_height_ratio && left_edge.size() < 40) {
 		//if in this threshold, consider as corner
 		if (CornerCheck_left > total * TuningVar::corner_min / 100
 				&& CornerCheck_left < total * TuningVar::corner_max / 100) {
@@ -800,7 +803,7 @@ bool FindOneRightEdge() {
 	int total = pow(TuningVar::corner_range*2+1,2);
 	//find corners
 	if (right_edge.points.back().second
-			<= WorldSize.h / TuningVar::corner_height_ratio) {
+			<= WorldSize.h / TuningVar::corner_height_ratio && right_edge.size() < 40) {
 		//if in this threshold, consider as corner
 		if (CornerCheck_right > total * TuningVar::corner_min / 100
 				&& CornerCheck_right < total * TuningVar::corner_max / 100) {
@@ -837,15 +840,23 @@ bool FindEdges() {
 	right_corners.clear();
 	bool flag_break_left = left_edge.points.size() == 0;
 	bool flag_break_right = right_edge.points.size() == 0;
+	int left_edge_min = WorldSize.h, left_edge_max = 0;
+	int right_edge_min = WorldSize.h, right_edge_max = 0;
 	roundabout_nearest_corner_cnt_left = pow(TuningVar::corner_range * 2 + 1, 2);
 	roundabout_nearest_corner_cnt_right = pow(TuningVar::corner_range * 2 + 1, 2);
 	uint16_t staright_line_edge_count = 0; // Track the num. of equal width
-	while (left_edge.points.size() <= 35 && right_edge.points.size() <= 35
+	while (left_edge.points.size() <= 80 && right_edge.points.size() <= 80
 			&& (!flag_break_left || !flag_break_right)) {
-		if (!flag_break_left)
+		if (!flag_break_left){
 			flag_break_left = !FindOneLeftEdge();
-		if (!flag_break_right)
+//			if (left_edge.points.back().first < left_edge_min) left_edge_min = left_edge.points.back().first;
+//			if (left_edge.points.back().first > left_edge_max) left_edge_max = left_edge.points.back().first;
+		}
+		if (!flag_break_right){
 			flag_break_right = !FindOneRightEdge();
+//			if (right_edge.points.back().first < right_edge_min) right_edge_min = right_edge.points.back().first;
+//			if (right_edge.points.back().first > right_edge_max) right_edge_max = right_edge.points.back().first;
+		}
 
 		//check if have corners
 		if (left_corners.size() > 0) flag_break_left = true;
@@ -1589,7 +1600,7 @@ void GenPath(Feature feature) {
 					int temp_y = (curr_left.second + curr_right.second) / 2;
 					path.push(temp_x, temp_y);
 				}
-
+				if (path.size() > 40) break;
 			}
 		}
 		break;
@@ -1959,6 +1970,11 @@ void main_car2(bool debug_) {
 						pWriter->WriteString(temp);
 					}
 					/* Motor PID + Servo PID* for different situations*/
+					int left_dx = (left_edge.points.back().first - left_edge.points.front().first);
+					int right_dx = (right_edge.points.back().first - right_edge.points.front().first);
+					bool isStraight =
+							(((left_dx > 0 && right_dx > 0) || (left_dx < 0 && right_dx < 0)) &&
+								(abs(left_dx) < 5 && abs(right_dx) < 5)) || (crossingStatus == 1);
 
 					//roundaboutExit case
 					if(roundaboutExitStatus == 1){
@@ -2062,22 +2078,22 @@ void main_car2(bool debug_) {
 						}
 					}
 
-					//sharp turning case TODO: Left: < -200 Right: >160
-					else if(curr_servo_error > 140 || curr_servo_error < -180){
-						if(debug){
-							pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
-							pWriter->WriteString("sharp turn");
-						}
-						if(curr_servo_error > 0){
-							tempKp = TuningVar::servo_sharp_turn_kp_right;
-							tempKd = TuningVar::servo_sharp_turn_kd_right;
-						}else{
-							tempKp = TuningVar::servo_sharp_turn_kp_left;
-							tempKd = TuningVar::servo_sharp_turn_kd_left;
-						}
-						pid_left.SetSetpoint(TuningVar::targetSpeed_sharp_turn*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
-						pid_right.SetSetpoint(TuningVar::targetSpeed_sharp_turn* differential_right((pServo->GetDegree() - servo_bounds.kCenter)/10));
-					}
+//					//sharp turning case TODO: Left: < -200 Right: >160
+//					else if(curr_servo_error > 140 || curr_servo_error < -180){
+//						if(debug){
+//							pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
+//							pWriter->WriteString("sharp turn");
+//						}
+//						if(curr_servo_error > 0){
+//							tempKp = TuningVar::servo_sharp_turn_kp_right;
+//							tempKd = TuningVar::servo_sharp_turn_kd_right;
+//						}else{
+//							tempKp = TuningVar::servo_sharp_turn_kp_left;
+//							tempKd = TuningVar::servo_sharp_turn_kd_left;
+//						}
+//						pid_left.SetSetpoint(TuningVar::targetSpeed_sharp_turn*differential_left((pServo->GetDegree() - servo_bounds.kCenter)/10));
+//						pid_right.SetSetpoint(TuningVar::targetSpeed_sharp_turn* differential_right((pServo->GetDegree() - servo_bounds.kCenter)/10));
+//					}
 
 //					// transition PID to reduce discontinuous changing of PID between sharp and normal: Left: -200 ~ -180 Right: 140 ~ 160
 //					else if(curr_servo_error > 140 || curr_servo_error < -180){
@@ -2099,7 +2115,7 @@ void main_car2(bool debug_) {
 //					}
 
 					//straight case + TODO:double check further image to decide whether add speed or not < 60
-					else if(abs(curr_servo_error) < 60){
+					else if(isStraight){
 						if(debug){
 							pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
 							pWriter->WriteString("straight");
