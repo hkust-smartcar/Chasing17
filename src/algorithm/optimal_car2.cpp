@@ -73,24 +73,24 @@ const PidSet kStablePid = {
 		"c2_stable",		// set name
 
 		// servo left
-		{0.60, 0, 0.010},	// ServoStraightLeft
-		{1.20, 0, 0.020},	// ServoNormalLeft
+		{0.45, 0, 0.080},	// ServoStraightLeft
+		{1.46, 0, 0.000},	// ServoNormalLeft
 		{1.30, 0, 0.000},	// ServoRoundaboutLeft
-		{1.50, 0, 0.010},	// ServoSharpTurnLeft
+		{1.69, 0, 0.000},	// ServoSharpTurnLeft
 		{0.00, 0, 0.000},	// ServoTransitionalSlopeLeft
 
 		// servo right
-		{0.60, 0, 0.010},	// ServoStraightRight
-		{1.45, 0, 0.010},	// ServoNormalRight
+		{0.45, 0, 0.080},	// ServoStraightRight
+		{2.38, 0, 0.000},	// ServoNormalRight
 		{1.30, 0, 0.000},	// ServoRoundaboutRight
-		{1.42, 0, 0.010},	// ServoSharpTurnRight
+		{1.93, 0, 0.000},	// ServoSharpTurnRight
 		{0.00, 0, 0.000},	// ServoTransitionalSlopeRight
 
 		// speed
-		140,				// SpeedStraight
-		120,				// SpeedNormal
+		100,				// SpeedStraight
+		100,				// SpeedNormal
 		100,				// SpeedRoundabout
-		120,				// SpeedSharpTurn
+		100,				// SpeedSharpTurn
 		100,				// SpeedSlow
 		0,					// SpeedTransitionalSlope
 		100					// SpeedInside
@@ -2275,7 +2275,7 @@ void main_car2(bool debug_) {
 //							servo_bounds.kRightBound,
 //							servo_bounds.kLeftBound));
 					pServo->SetDegree(util::clamp<uint16_t>(
-												servo_bounds.kCenter - tempKp * curr_servo_error + tempKd * (curr_servo_error - prev_servo_error),
+												servo_bounds.kCenter - tempKp * curr_servo_error - tempKd * (curr_servo_error - prev_servo_error),
 												servo_bounds.kRightBound,
 												servo_bounds.kLeftBound));
 

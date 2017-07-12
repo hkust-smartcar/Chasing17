@@ -64,32 +64,32 @@ namespace optimal {
 namespace car1 {
 
 /**
- * Set Time: 11/7/2017 07:26
- * CW: 19.53s
- * CCW: 19.29s
+ * Set Time: fuck you bitch the last night of competition
+ * CW: 21s
+ * CCW: 21s
  */
 const PidSet kStablePid = {
 		"c1_stable",		// set name
 
 		// servo left
-		{0.60, 0, 0.010},	// ServoStraightLeft
-		{1.20, 0, 0.030},	// ServoNormalLeft
+		{0.45, 0, 0.080},	// ServoStraightLeft
+		{1.38, 0, 0.030},	// ServoNormalLeft
 		{1.30, 0, 0.000},	// ServoRoundaboutLeft
-		{1.45, 0, 0.040},	// ServoSharpTurnLeft
+		{1.67, 0, 0.000},	// ServoSharpTurnLeft
 		{0.00, 0, 0.000},	// ServoTransitionalSlopeLeft
 
 		// servo right
-		{0.60, 0, 0.010},	// ServoStraightRight
-		{1.42, 0, 0.030},	// ServoNormalRight
+		{0.45, 0, 0.080},	// ServoStraightRight
+		{1.69, 0, 0.000},	// ServoNormalRight
 		{1.30, 0, 0.000},	// ServoRoundaboutRight
-		{1.50, 0, 0.040},	// ServoSharpTurnRight
+		{1.78, 0, 0.000},	// ServoSharpTurnRight
 		{0.00, 0, 0.000},	// ServoTransitionalSlopeRight
 
 		// speed
-		140,				// SpeedStraight
-		120,				// SpeedNormal
-		90,					// SpeedRoundabout
-		120,				// SpeedSharpTurn
+		100,				// SpeedStraight
+		100,				// SpeedNormal
+		100,					// SpeedRoundabout
+		100,				// SpeedSharpTurn
 		100,				// SpeedSlow
         0,					// SpeedTransitionalSlope
 		100					// SpeedInside
@@ -2310,7 +2310,7 @@ void main_car1(bool debug_) {
 //							pServo->SetDegree(prev_servo_angle);
 //					else
 						pServo->SetDegree(util::clamp<uint16_t>(
-							servo_bounds.kCenter - tempKp * curr_servo_error + tempKd * (curr_servo_error - prev_servo_error),
+							servo_bounds.kCenter - tempKp * curr_servo_error - tempKd * (curr_servo_error - prev_servo_error),
 							servo_bounds.kRightBound,
 							servo_bounds.kLeftBound));
 					prev_servo_angle = pServo->GetDegree();
