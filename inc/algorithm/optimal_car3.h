@@ -20,16 +20,46 @@
 
 #include "libsc/system.h"
 
-#include "car_manager.h"
-
 namespace algorithm {
 namespace optimal {
 namespace car3 {
 
 void main_car3(bool debug_ = false);
 
+/**
+ * Edges struct
+ *
+ * An type implementation for storage of Edges
+ * @member points Vector storing the edges sequentially
+ * @member push(int, int) Push a std::pair<int, int> into the vector points
+ * @member push(Edges) Push a Edges into the vector points
+ * @member size() Return the size of vector points
+ * @member insert(int, int, int) Insert a std::pair<int, int> into some position of vector points
+ * @member insert(int, Edges) Insert an Edges type into some position of vector points
+ * @member grad() Take the gradient of certain Edges
+ */
+struct Edges {
+  inline void push(int x, int y) { points.push_back(std::make_pair(x, y)); }
+  inline void push(Edges edge) { points.insert(points.end(), edge.points.begin(), edge.points.end()); }
+  inline uint32_t size() { return points.size(); }
+  inline void insert(int pos, int x, int y) { points.emplace(points.begin() + pos, std::make_pair(x, y)); }
+  inline void insert(int pos, Edges edge) {
+    points.insert(points.begin() + pos, edge.points.begin(), edge.points.end());
+  }
+  Edges grad() {
+    Edges temp;
+    for (int i = 1; i < this->size(); i++) {
+      auto last = this->points[i];
+      auto second_last = this->points[i - 1];
+      temp.push(last.first - second_last.first, last.second - second_last.second);
+    }
+    return temp;
+  }
+
+  std::vector<std::pair<uint16_t, uint16_t>> points;
+};
+
 typedef std::list<std::pair<uint16_t, uint16_t>> Corners;
-typedef CarManager::Edges Edges;
 
 /**
  * Usage:
@@ -38,18 +68,13 @@ typedef CarManager::Edges Edges;
  * right = differential_left(-delta_degree) * t;
  *
  */
-//inline float differential_left_v1(float x) { return 1.00379358 - 0.00870460 * x; }
-//inline float differential_right_v1(float x) { return 0.9962064 + 0.00870460 * x; }
-
-inline float differential_left(float x) { return x < 0 ? 1 : (1.00379358 - 0.00870460 * x) / (0.9962064 + 0.00870460 * x); }
-inline float differential_right(float x) { return x > 0 ? 1 : (0.9962064 + 0.00870460 * x) / (1.00379358 - 0.00870460 * x); }
+inline float differential_left(float x) { return 1.00716 - 0.00776897*x; }
 
 /*CAR1*/
 namespace TuningVar {
   extern bool show_algo_time;
   extern bool overtake;
   extern bool roundabout_turn_left; //Used for GenPath()
-  extern bool single_car_testing;
   extern uint16_t starting_y; //the starting y for edge detection
   extern uint16_t edge_length; //max length for an edge
   extern uint16_t edge_hor_search_max; //max for horizontal search of edge if next edge point cannot be found
@@ -83,34 +108,21 @@ namespace TuningVar {
   extern uint16_t round_encoder_count;
   extern uint16_t roundExit_encoder_count;
   extern int32_t roundabout_shortest_flag; //1 means turn left, 0 means turn right. Reading from left to right
-  extern int32_t roundabout_overtake_flag;//1 means overtake, 0 means ignore overtake
   extern uint16_t angle_div_error; // translate error into angle
   extern uint16_t nearest_corner_threshold;
   extern uint16_t overtake_interval_time;
 
-  // servo right pid values
-  extern float servo_straight_kp_right;
-  extern float servo_straight_kd_right;
-  extern float servo_normal_kd_right;
-  extern float servo_normal_kp_right;
-  extern float servo_roundabout_kp_right;
-  extern float servo_roundabout_kd_right;
-  extern float servo_sharp_turn_kp_right;
-  extern float servo_sharp_turn_kd_right;
-  extern float servo_trans_kp_slope_right;
-  extern float servo_trans_kd_slope_right;
-
-  // servo left pid values
-  extern float servo_straight_kp_left;
-  extern float servo_straight_kd_left;
-  extern float servo_normal_kd_left;
-  extern float servo_normal_kp_left;
-  extern float servo_roundabout_kp_left;
-  extern float servo_roundabout_kd_left;
-  extern float servo_sharp_turn_kp_left;
-  extern float servo_sharp_turn_kd_left;
-  extern float servo_trans_kp_slope_left;
-  extern float servo_trans_kd_slope_left;
+  // servo pid values
+  extern float servo_straight_kp;
+  extern float servo_straight_kd;
+  extern float servo_normal_kd;
+  extern float servo_normal_kp;
+  extern float servo_roundabout_kp;
+  extern float servo_roundabout_kd;
+  extern float servo_sharp_turn_kp;
+  extern float servo_sharp_turn_kd;
+  extern float servo_roundabout_exit_kp;
+  extern float servo_roundabout_exit_kd;
 
   // target speed values
   extern uint16_t targetSpeed_straight;
@@ -118,8 +130,6 @@ namespace TuningVar {
   extern uint16_t targetSpeed_round;
   extern uint16_t targetSpeed_sharp_turn;
   extern uint16_t targetSpeed_slow;//slow down speed during straight
-  extern uint16_t targetSpeed_trans;
-  extern uint16_t targetSpeed_inside;
 }  // namespace TuningVar
 
 /**

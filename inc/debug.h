@@ -140,16 +140,12 @@ void loadItems(DebugConsole* console) {
       // misc
       console->PushItem("lcd debug", &debug_flag::lcd_debug);
       console->PushItem("algo time", &show_algo_time, "true", "false");
-      console->PushItem("single test", &single_car_testing, "true", "false");
-      console->PushItem("overt_sel", &roundabout_overtake_flag, "y", "n");
+      console->PushItem("overtake", &overtake);
       console->PushItem("rndabt sel", &roundabout_shortest_flag, "l", "r");
       console->PushItem("over_time", &overtake_interval_time, 5);
-      console->PushItem("exit_dist", &exit_action_dist, 1);
-      console->PushItem("rnd_off", &roundabout_offset, 1);
-      console->PushItem("rndE_off", &round_exit_offset, 1);
-//    console->PushItem("corner_size", &corner_range, 1);
-//    console->PushItem("corner_min", &corner_min, 1);
-//    console->PushItem("corner_max", &corner_max, 1);
+      console->PushItem("corner_size", &corner_range, 1);
+      console->PushItem("corner_min", &corner_min, 1);
+      console->PushItem("corner_max", &corner_max, 1);
 
       // speed
       console->PushItem("target spd:");
@@ -158,26 +154,17 @@ void loadItems(DebugConsole* console) {
       console->PushItem("normal", &targetSpeed_normal, 5);
       console->PushItem("rndabt", &targetSpeed_round, 5);
       console->PushItem("s_turn", &targetSpeed_sharp_turn, 5);
-      console->PushItem("insideRnd", &targetSpeed_inside, 5);
 
       // servo
       console->PushItem("servo pid:");
-      console->PushItem("strght-p-r", &servo_straight_kp_right, 0.01);
-      console->PushItem("strght-d-r", &servo_straight_kd_right, 0.001);
-      console->PushItem("strght-p-l", &servo_straight_kp_left, 0.01);
-      console->PushItem("strght-d-l", &servo_straight_kd_left, 0.001);
-      console->PushItem("normal-p-r", &servo_normal_kp_right, 0.01);
-      console->PushItem("normal-d-r", &servo_normal_kd_right, 0.001);
-      console->PushItem("normal-p-l", &servo_normal_kp_left, 0.01);
-      console->PushItem("normal-d-l", &servo_normal_kd_left, 0.001);
-      console->PushItem("rndabt-p-r", &servo_roundabout_kp_right, 0.01);
-      console->PushItem("rndabt-d-r", &servo_roundabout_kd_right, 0.001);
-      console->PushItem("rndabt-p-l", &servo_roundabout_kp_left, 0.01);
-      console->PushItem("rndabt-d-l", &servo_roundabout_kd_left, 0.001);
-      console->PushItem("s_turn-p-r", &servo_sharp_turn_kp_right, 0.01);
-      console->PushItem("s_turn-d-r", &servo_sharp_turn_kd_right, 0.001);
-      console->PushItem("s_turn-p-l", &servo_sharp_turn_kp_left, 0.01);
-      console->PushItem("s_turn-d-l", &servo_sharp_turn_kd_left, 0.001);
+      console->PushItem("strght-p", &servo_straight_kp, 0.1);
+      console->PushItem("strght-d", &servo_straight_kd, 0.01);
+      console->PushItem("normal-p", &servo_normal_kp, 0.1);
+      console->PushItem("normal-d", &servo_normal_kd, 0.01);
+      console->PushItem("rndabt-p", &servo_roundabout_kp, 0.1);
+      console->PushItem("rndabt-d", &servo_roundabout_kd, 0.01);
+      console->PushItem("s_turn-p", &servo_sharp_turn_kp, 0.1);
+      console->PushItem("s_turn-d", &servo_sharp_turn_kd, 0.01);
     }
     break;
     case 4: {
@@ -185,18 +172,14 @@ void loadItems(DebugConsole* console) {
 
       // misc
       console->PushItem("lcd debug", &debug_flag::lcd_debug);
-      console->PushItem("algo time", &show_algo_time, "yes", "no");
-      console->PushItem("single test", &single_car_testing, "true", "false");
+      console->PushItem("algo time", &show_algo_time, "true", "false");
       console->PushItem("distance", &start_car_distance, 10);
-      console->PushItem("overt_sel", &roundabout_overtake_flag, "y", "n");
+      console->PushItem("overtake", &overtake);
       console->PushItem("rndabt sel", &roundabout_shortest_flag, "l", "r");
       console->PushItem("over_time", &overtake_interval_time, 5);
-      console->PushItem("exit_dist", &exit_action_dist, 1);
-      console->PushItem("rnd_off", &roundabout_offset, 1);
-      console->PushItem("rndE_off", &round_exit_offset, 1);
-//    console->PushItem("corner_size", &corner_range, 1);
-//    console->PushItem("corner_min", &corner_min, 1);
-//    console->PushItem("corner_max", &corner_max, 1);
+      console->PushItem("corner_size", &corner_range, 1);
+      console->PushItem("corner_min", &corner_min, 1);
+      console->PushItem("corner_max", &corner_max, 1);
 
       // speed
       console->PushItem("target spd:");
@@ -205,26 +188,18 @@ void loadItems(DebugConsole* console) {
       console->PushItem("normal", &targetSpeed_normal, 5);
       console->PushItem("rndabt", &targetSpeed_round, 5);
       console->PushItem("s_turn", &targetSpeed_sharp_turn, 5);
-      console->PushItem("insideRnd", &targetSpeed_inside, 5);
 
       // servo
       console->PushItem("servo pid:");
-      console->PushItem("strght-p-r", &servo_straight_kp_right, 0.01);
-      console->PushItem("strght-d-r", &servo_straight_kd_right, 0.001);
-      console->PushItem("strght-p-l", &servo_straight_kp_left, 0.01);
-      console->PushItem("strght-d-l", &servo_straight_kd_left, 0.001);
-      console->PushItem("normal-p-r", &servo_normal_kp_right, 0.01);
-      console->PushItem("normal-d-r", &servo_normal_kd_right, 0.001);
-      console->PushItem("normal-p-l", &servo_normal_kp_left, 0.01);
-      console->PushItem("normal-d-l", &servo_normal_kd_left, 0.001);
-      console->PushItem("rndabt-p-r", &servo_roundabout_kp_right, 0.01);
-      console->PushItem("rndabt-d-r", &servo_roundabout_kd_right, 0.001);
-      console->PushItem("rndabt-p-l", &servo_roundabout_kp_left, 0.01);
-      console->PushItem("rndabt-d-l", &servo_roundabout_kd_left, 0.001);
-      console->PushItem("s_turn-p-r", &servo_sharp_turn_kp_right, 0.01);
-      console->PushItem("s_turn-d-r", &servo_sharp_turn_kd_right, 0.001);
-      console->PushItem("s_turn-p-l", &servo_sharp_turn_kp_left, 0.01);
-      console->PushItem("s_turn-d-l", &servo_sharp_turn_kd_left, 0.001);
+      console->PushItem("strght-p", &servo_straight_kp, 0.1);
+      console->PushItem("strght-d", &servo_straight_kd, 0.01);
+      console->PushItem("normal-p", &servo_normal_kp, 0.1);
+      console->PushItem("normal-d", &servo_normal_kd, 0.01);
+      console->PushItem("rndabt-p", &servo_roundabout_kp, 0.1);
+      console->PushItem("rndabt-d", &servo_roundabout_kd, 0.01);
+      console->PushItem("s_turn-p", &servo_sharp_turn_kp, 0.1);
+      console->PushItem("s_turn-d", &servo_sharp_turn_kd, 0.01);
+
     }
     break;
     default:
