@@ -79,7 +79,7 @@ namespace TuningVar{ //tuning var delaration
   uint16_t min_edges_dist = 7; // Manhattan dist threshold for edges
   uint16_t track_width_threshold = 900; //track width threshold for consideration of sudden change (square)
   uint16_t track_width_change_threshold = 350; //track width change threshold for consideration of sudden change
-  uint16_t testDist = 38; // The distance from which the image pixel should be tested and identify feature
+  uint16_t testDist = 40; // The distance from which the image pixel should be tested and identify feature
   uint16_t slowDownDist = 100; // the distance from which the image pixel should be tested and know whether it should slow down in advance
   uint16_t straight_line_threshold = 45; // The threshold num. of equal width for straight line detection
   uint16_t action_distance = 27; // The condition in which the car start handling this feature when meeting it
@@ -252,6 +252,7 @@ uint16_t prev_corner_y;
 bool is_front_car = false;
 bool stop_before_roundexit = false;
 bool overtake;
+int obsta_status = 0;// 0 means no obsta, 1 means left obsta, 2 means right obsta
 
 bool need_slow_down = false;
 bool run =true;//for bluetooth stopping
@@ -878,9 +879,8 @@ bool FindEdges() {
 			flag_break_left = flag_break_right = true;
 		}
 
-
-
 		// edges reach worldview boundaries
+
 		if (worldview::car2::transformMatrix[min(
 				left_edge.points.back().first + 1, WorldSize.w - 1)][WorldSize.h
 																	  - left_edge.points.back().second][0] == -1) {
@@ -924,11 +924,6 @@ bool FindEdges() {
 		}
 		right_edge_erase:
 		right_edge.points.erase(it, right_edge.points.end());
-	}
-
-	//Straight line judgement - helper for feature_corner()
-	if (staright_line_edge_count >= TuningVar::straight_line_threshold) {
-		is_straight_line = true;
 	}
 
 	return true;
@@ -1062,7 +1057,7 @@ Feature featureIdent_Corner() {
 			// Only one corner + another side break- CONDITION_2&&3
 			bool crossing = false;
 			bool roundabout = false;
-
+			//right edge touch right boundary + left corner
 			if ((worldview::car2::transformMatrix[min(
 					right_edge.points.back().first + 5, WorldSize.w - 1)][WorldSize.h
 																		   - right_edge.points.back().second][0] == -1)
@@ -1369,7 +1364,7 @@ void GenPath(Feature feature) {
 	/*END OF CROSSING PASSING PART*/
 
 	/*FOR DEBUGGING*/
-	if (debug) {
+	if (false) {
 		char temp[100];
 		sprintf(temp, "ExitEnc:%d", abs(encoder_total_exit));
 		pLcd->SetRegion(Lcd::Rect(0, 54, 128, 15));

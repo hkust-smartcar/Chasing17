@@ -248,6 +248,7 @@ bool is_front_car = true;
 bool stop_before_roundexit = true;
 bool overtake;
 int exit_count = 0;//for debugging
+int obsta_status = 0;// 0 means no obsta, 1 means left obsta, 2 means right obsta
 
 bool need_slow_down = false;
 bool run =true;//for bluetooth stopping
@@ -522,7 +523,7 @@ void Capture(uint16_t y0) {
 	spCamera->UnlockBuffer();
 
 	//Search horizontally
-	for (int i = WorldSize.w / 2; i > 0; i--) {
+	for (int i = carMid.first; i > 0; i--) {
 		if (getWorldBit(i, y0) == 1) {
 			left_x = i + 1;
 			left_y = y0;
@@ -536,7 +537,7 @@ void Capture(uint16_t y0) {
 	}
 
 	//Search horizontally
-	for (int i = WorldSize.w / 2; i < WorldSize.w; i++) {
+	for (int i = carMid.first; i < WorldSize.w; i++) {
 		if (getWorldBit(i, y0) == 1) {
 			right_x = i - 1;
 			right_y = y0;
@@ -924,10 +925,6 @@ bool FindEdges() {
 		right_edge.points.erase(it, right_edge.points.end());
 	}
 
-	//Straight line judgement
-	if (staright_line_edge_count >= TuningVar::straight_line_threshold) {
-		is_straight_line = true;
-	}
 	return true;
 }
 
@@ -967,7 +964,8 @@ Feature featureIdent_Corner() {
 		/*For identifying the feature*/
 		uint16_t test_y = cornerMid_y + TuningVar::testDist;
 		uint16_t test_x = (test_y - cornerMid_y)
-				* (right_corners.front().second - left_corners.front().second) / (left_corners.front().first - right_corners.front().first) + cornerMid_x;
+				* (right_corners.front().second - left_corners.front().second)
+					/ (left_corners.front().first - right_corners.front().first) + cornerMid_x;
 		/*FOR DEBUGGING*/
 		if (debug) {
 			pLcd->SetRegion(Lcd::Rect(test_x, WorldSize.h - test_y - 1, 4, 4));
