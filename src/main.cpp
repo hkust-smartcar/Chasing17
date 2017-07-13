@@ -109,12 +109,6 @@ int main() {
         case 2:
           algorithm::optimal::car2::main_car2(debug_flag::lcd_debug);
           break;
-        case 3:
-          algorithm::optimal::car3::main_car3(debug_flag::lcd_debug);
-          break;
-        case 4:
-          algorithm::optimal::car4::main_car4(debug_flag::lcd_debug);
-          break;
         default:
           // not handled
           break;
