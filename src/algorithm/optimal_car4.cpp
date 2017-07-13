@@ -141,8 +141,8 @@ uint16_t prev_corner_y;
 
 /*FOR OVERTAKING*/
 
-bool is_front_car = false;
-bool stop_before_roundexit = false;
+bool is_front_car = true;
+bool stop_before_roundexit = true;// to slow down in first roundabout and fix the bug for cannot stop
 bool overtake;
 
 /*FOR OBSTACLE*/
@@ -1967,8 +1967,8 @@ void main_car4(bool debug_) {
 					pEncoder0->Update();
 					pEncoder1->Update();
 					if(System::Time() - startTime < 1000){
-						pid_left.SetSetpoint(120);
-						pid_right.SetSetpoint(120);
+						pid_left.SetSetpoint(90);
+						pid_right.SetSetpoint(90);
 					}
 					if(met_stop_line){
 						pid_left.SetSetpoint(0);
