@@ -102,7 +102,7 @@ namespace TuningVar { //tuning var declaration
   // servo pid values
   float servo_straight_kp = 0.8;
   float servo_straight_kd = 0.01;
-  float servo_normal_kp = 1.1;
+  float servo_normal_kp = 1.15;
   float servo_normal_kd = 0;
   float servo_roundabout_kp = 1.3;
   float servo_roundabout_kd = 0;
@@ -926,7 +926,7 @@ Feature featureIdent_Corner() {
 	//4. Only one corner case: Only one corner - Exit/Cross/Entering crossing & roundabout
 	else if (left_corners.size() > 0
 			|| right_corners.size() > 0) {
-		/*Double check for crossing to handle only one corner case*/
+		/*TODO:Double check to handle only one corner case*/
 		if (roundaboutStatus == 0 && crossingStatus == 0) { // avoid double check for crossing when inside the crossing (encoder_total_cross<2500)){ //Not inside roundabout, not Exit of Roundabout when encounter one corner case - CONDITION_1
 			//	  //Both sides are break due to -1 - CONDITION_2
 			// Only one corner - CONDITION_3
