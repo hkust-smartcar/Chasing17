@@ -96,6 +96,7 @@ namespace TuningVar{ //tuning var delaration
   uint16_t round_exit_offset = 24;
   uint16_t round_encoder_count = 2600;
   uint16_t roundExit_encoder_count = 3700;
+  uint16_t obstacle_encoder_count = 5000;
   int32_t roundabout_shortest_flag = 0b00011; //1 means turn left, 0 means turn right. Reading from left to right
   int32_t roundabout_overtake_flag = 0b11111;
   uint16_t nearest_corner_threshold = 128/2;
@@ -143,7 +144,10 @@ uint16_t prev_corner_y;
 bool is_front_car = false;
 bool stop_before_roundexit = false;
 bool overtake;
+
+/*FOR OBSTACLE*/
 ObstaclePos obsta_status = ObstaclePos::kNull;
+bool sendFlag = true;
 
 bool need_slow_down = false;
 bool run =true;//for bluetooth stopping
@@ -157,6 +161,7 @@ uint16_t prev_track_width = 0;
 int encoder_total_cross = 0; //for crossroad
 int encoder_total_round = 0; // for roundabout
 int encoder_total_exit = 0;
+int encoder_total_obstacle = 0;
 int roundabout_cnt = 0; // count the roundabout
 //Timer::TimerInt feature_start_time;
 std::pair<int, int> carMid{69, 0};
@@ -1091,7 +1096,25 @@ Feature featureIdent_Corner() {
 		}
 	}
 
-	//5. Nothing special: Return kNormal and wait for next testing
+	//5. obstacle case
+	//front car sends signal when pass half of obstacle
+	if (is_front_car && sendFlag && obsta_status != ObstaclePos::kNull && abs(encoder_total_obstacle) >= TuningVar::obstacle_encoder_count/2){
+		pBT->sendObstaclePos(obsta_status);
+		sendFlag = false;
+	}
+	//back car keep status only when the front car sends the same feature to himself, and reset the feature after reading the feature
+	if(!is_front_car && obsta_status != ObstaclePos::kNull){
+		// not the same as front car situation
+		if(pBT->getObstaclePos() != obsta_status){
+			// reset
+			obsta_status = ObstaclePos::kNull;
+		}
+		else
+			pBT->resetObstaclePos();
+	}
+
+
+	//6. Nothing special: Return kNormal and wait for next testing
 	return Feature::kNormal;
 }
 
@@ -1254,6 +1277,26 @@ void GenPath(Feature feature) {
 		encoder_total_exit += curr_enc_val_left;
 		feature = Feature::kRoundaboutExit;
 	}
+
+	// obstacle case handling
+	// reset the obsta_status when finish
+	if(abs(encoder_total_obstacle) >= TuningVar::obstacle_encoder_count && obsta_status != ObstaclePos::kNull){
+		obsta_status = ObstaclePos::kNull;
+		sendFlag = true;
+	}
+	if(obsta_status == ObstaclePos::kLeft && abs(encoder_total_obstacle) < TuningVar::obstacle_encoder_count){
+		encoder_total_obstacle += curr_enc_val_left;
+		/*path offset right*/
+		for(int i =0; i < 20; i++) path.push(right_edge.points[i].first - 8, right_edge.points[i].second);
+		return;
+	}
+	else if (obsta_status == ObstaclePos::kRight && abs(encoder_total_obstacle) < TuningVar::obstacle_encoder_count){
+		encoder_total_obstacle += curr_enc_val_left;
+		/*path offset left*/
+		for(int i =0; i < 20; i++) path.push(left_edge.points[i].first + 8, left_edge.points[i].second);
+		return;
+	}
+
 	/*END OF ROUNDABOUT EXIT PASSING PART*/
 	/*OTHER CASE*/
 	switch (feature) {
