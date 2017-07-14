@@ -1546,6 +1546,28 @@ void StartlineOvertake() {
 	}
 }
 
+/**
+ * @brief ObstacleOvertake
+ * For left obstacle, front car go right and back car overtake.
+ * For right obstacle, front car go left and back car overtake.
+ * After overtake via encoder count, send bt signal to the other car to start after 1.5s
+ */
+void ObstacleOvertake(){
+	switch(obsta_status){
+	case ObstaclePos::kLeft:
+		if (is_front_car){
+
+		} else {
+
+		}
+		break;
+	case ObstaclePos::kRight:
+
+		break;
+	}
+
+}
+
 }  // namespace
 
 /*
