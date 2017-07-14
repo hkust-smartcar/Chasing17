@@ -750,7 +750,7 @@ bool FindEdges() {
 		//3 cases: 1. y=30~35 black, 2. size unchanged, 3. corner
 		if (obsta_status == ObstaclePos::kNull){
 			//case 1
-			if (left_edge.size() >= 46){
+			if (left_edge.size() >= 46 && getWorldBit(left_edge.points[45].first-1, left_edge.points[45].second) == 1){ //only for left of left edge is black
 				int cnt_black = 0;
 				for (int i = 40; i < 45; i++) cnt_black += getWorldBit(left_edge.points[i].first+3, left_edge.points[i].second);
 				if (cnt_black == 5) {
@@ -758,7 +758,7 @@ bool FindEdges() {
 					goto obsta_status_end;
 				}
 			}
-			if (right_edge.size() >= 46){
+			if (right_edge.size() >= 46 && getWorldBit(right_edge.points[45].first-1, right_edge.points[45].second) == 1){ //only for right of right edge is black
 				int cnt_black = 0;
 				for (int i = 40; i < 45; i++) cnt_black += getWorldBit(right_edge.points[i].first-3, right_edge.points[i].second);
 				if (cnt_black == 5) {
@@ -767,7 +767,7 @@ bool FindEdges() {
 				}
 			}
 			//case 2
-			if (!FindOneLeftEdge()){
+			if (getWorldBit(left_edge.points.back().first-1, left_edge.points.back().second) == 1 && !FindOneLeftEdge()){
 				int cnt_black = 0;
 				for (int i = left_edge.size()-5; i < left_edge.size(); i++) cnt_black += getWorldBit(left_edge.points[i].first+3, left_edge.points[i].second);
 				if (cnt_black == 5) {
@@ -775,7 +775,7 @@ bool FindEdges() {
 					goto obsta_status_end;
 				}
 			} else left_edge.points.pop_back();
-			if (!FindOneRightEdge()){
+			if (getWorldBit(right_edge.points.back().first+1, right_edge.points.back().second) == 1 && !FindOneRightEdge()){
 				int cnt_black = 0;
 				for (int i = right_edge.size()-5; i < right_edge.size(); i++) cnt_black += getWorldBit(right_edge.points[i].first-3, right_edge.points[i].second);
 				if (cnt_black == 5) {
@@ -784,7 +784,7 @@ bool FindEdges() {
 				}
 			} else right_edge.points.pop_back();
 			//case 3
-			if (left_corners.size() == 1 && right_corners.size() == 0){
+			if (left_corners.size() == 1 && right_corners.size() == 0 && getWorldBit(left_edge.points.back().first-1,left_edge.points.back().second)){
 				int cnt_black = 0;
 				for (int i = left_edge.size()-5; i < left_edge.size(); i++) cnt_black += getWorldBit(left_edge.points[i].first+3, left_edge.points[i].second);
 				if (cnt_black == 5) {
@@ -792,7 +792,7 @@ bool FindEdges() {
 					goto obsta_status_end;
 				}
 			}
-			if (right_corners.size() == 1 && left_corners.size() == 0){
+			if (right_corners.size() == 1 && left_corners.size() == 0 && getWorldBit(right_edge.points.back().first-1,right_edge.points.back().second)){
 				int cnt_black = 0;
 				for (int i = right_edge.size()-5; i < right_edge.size(); i++) cnt_black += getWorldBit(right_edge.points[i].first-3, right_edge.points[i].second);
 				if (cnt_black == 5) {
