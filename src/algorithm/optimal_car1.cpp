@@ -145,6 +145,8 @@ bool overtake;
 /*FOR OBSTACLE*/
 ObstaclePos obsta_status = ObstaclePos::kNull;
 bool sendFlag = true;
+int obstacle_cnt = 0;// track the num of obstacle and cancel obstacle detection after once
+bool stop_obsta_overtake = true;
 
 bool need_slow_down = false;
 bool run =true;//for bluetooth stopping
@@ -1276,14 +1278,95 @@ void GenPath(Feature feature) {
 		feature = Feature::kRoundaboutExit;
 	}
 
-	// obstacle case handling
-	// reset the obsta_status when finish
-	if(abs(encoder_total_obstacle) >= TuningVar::obstacle_encoder_count && obsta_status != ObstaclePos::kNull){
-		obsta_status = ObstaclePos::kNull;
-		sendFlag = true;
-	}
+	// obstacle case handling + overtake
 
 	if (TuningVar::obstacle_mode){
+		// reset the obsta_status when finish and count++
+		if(abs(encoder_total_obstacle) >= TuningVar::obstacle_encoder_count && obsta_status == ObstaclePos::kLeft){
+			obsta_overtake_status = 1;
+			obsta_status = ObstaclePos::kNull;
+			sendFlag = true;
+			obstacle_cnt++;
+
+		}
+		else if (abs(encoder_total_obstacle) >= TuningVar::obstacle_encoder_count && obsta_status == ObstaclePos::kRight){
+			obsta_overtake_status = 2;// 2 means obstacle is right
+			obsta_status = ObstaclePos::kNull;
+			sendFlag = true;
+			obstacle_cnt++;
+		}
+
+		// front car stops
+		if(is_front_car && obsta_overtake_mode && obsta_overtake_status != 0){
+			encoder_total_obstacle_overtake += curr_enc_val_left;
+			// parking on the left
+			if(obsta_overtake_status == 1){
+				if(abs(encoder_total_obstacle) <= TuningVar::obstacle_overtake_encoder_count){
+					stop_obsta_overtake = false;
+					// follow new path
+					/*path offset left*/
+					for(int i =0; i < 20; i++) path.push(left_edge.points[i].first + 8, left_edge.points[i].second);
+					return;
+
+				}
+				else if(stop_obsta_overtake && pBT && time){
+					// start the car until receiving message from back car and reset the flag, overtake finished
+					stop_obsta_overtake = false;
+					is_front_car = false; // switch ID
+					obsta_overtake_status = 0;
+
+				}
+				else{
+					stop_obsta_overtake = true;// set the speed to 0
+				}
+			}
+			else if(obsta_overtake_status == 2){
+				// parking on the right
+				if(abs(encoder_total_obstacle) <= TuningVar::obstacle_overtake_encoder_count){
+					stop_obsta_overtake = false;
+					// follow new path
+					/*path offset right*/
+					for(int i =0; i < 20; i++) path.push(right_edge.points[i].first - 8, right_edge.points[i].second);
+					return;
+
+				}
+				else if(stop_obsta_overtake && pBT && time){
+					// start the car until receiving message from back car and reset the flag, overtake finished
+					stop_obsta_overtake = false;
+					is_front_car = false; // switch ID
+					obsta_overtake_status = 0;
+
+				}
+				else{
+					stop_obsta_overtake = true;// set the speed to 0
+				}
+			}
+
+		}
+		// back car move
+		if (!is_front_car && obsta_overtake_mode && obsta_overtake_status != 0){
+			encoder_total_obstacle_overtake += curr_enc_val_left;
+			// moving on the right
+			if(obsta_overtake_status == 1){
+				if(abs(encoder_total_obstacle) <= TuningVar::obstacle_overtake_encoder_count){
+					// follow new path
+					/*path offset right*/
+					for(int i =0; i < 20; i++) path.push(right_edge.points[i].first - 8, right_edge.points[i].second);
+					return;
+
+				}
+				else{
+					// send message to front car
+					is_front_car = true;
+					pBT
+					obsta_overtake_status = 0;
+				}
+		}
+
+
+
+
+
 		if(obsta_status == ObstaclePos::kLeft && abs(encoder_total_obstacle) < TuningVar::obstacle_encoder_count){
 			encoder_total_obstacle += curr_enc_val_left;
 			/*path offset right*/
