@@ -339,35 +339,35 @@ class BTComm {
   }
 
   /**
-   * Return the time when stop_car_ flag is received
+   * Return the time when overtake_time_ flag is received
    */
   libsc::Timer::TimerInt getOvertakeTime(){
 	  return overtake_time_;
   }
 
   /**
-   * Send signal for finishing overtake
+   * Send signal for finishing obstacle overtake
    */
   void sendFinishObstacleOvertake(){
 	  sendData(DataType::kReq, ReqType::kFinishObstacleOvertake);
   }
 
   /**
-   * Check if the overtake procedure is done
+   * Check if the obstacle overtake procedure is done
    */
   bool hasFinishedObstacleOvertake(){
 	  return hasFinishedObstacleOvertake_;
   }
 
   /**
-   * Reset hasFinishedOvertake_ flag
+   * Reset hasFinishedObstacleOvertake_ flag
    */
   void resetFinishObstacleOvertake(){
 	  hasFinishedObstacleOvertake_ = false;
   }
 
   /**
-   * Return the time when stop_car_ flag is received
+   * Return the time when obstacle_overtake_time_ flag is received
    */
   libsc::Timer::TimerInt getObstacleOvertakeTime(){
 	  return obstacle_overtake_time_;
