@@ -86,6 +86,8 @@ bool show_algo_time = false;
 bool single_car_testing = false;// only for car2 roundabout detection
 bool overtake_mode = true; // true: overtake with communication, false: no overtake WITH communication
 bool obstacle_mode = true; // true: handle obstacle with communication, false: cancel obstacle handler
+bool obsta_overtake_mode = true;
+
 uint16_t starting_y = 15; //the starting y for edge detection
 uint16_t edge_length = 159; //max length for an edge
 uint16_t edge_hor_search_max = 4; //max for horizontal search of edge if next edge point cannot be found
@@ -115,6 +117,8 @@ uint16_t round_exit_offset = 20;
 uint16_t round_encoder_count = 2600;
 uint16_t roundExit_encoder_count = 3700;
 uint16_t obstacle_encoder_count = 5000;
+uint16_t front_obstacle_overtake_encoder_count = 5000;
+uint16_t back_obstacle_overtake_encoder_count = 5000;
 int32_t roundabout_shortest_flag = 0b00011; //1 means turn left, 0 means turn right. Reading from left to right
 int32_t roundabout_overtake_flag = 0b11111;
 uint16_t nearest_corner_threshold = 128/2;
@@ -167,6 +171,9 @@ ObstaclePos obsta_status = ObstaclePos::kNull;
 bool sendFlag = true;
 int obstacle_cnt = 0;// track the num of obstacle and cancel obstacle detection after once
 bool stop_obsta_overtake = true;
+int obsta_overtake_status = 0;
+int encoder_total_obstacle_overtake = 0;
+
 
 bool need_slow_down = false;
 bool run =true;//for bluetooth stopping
@@ -882,6 +889,10 @@ Feature featureIdent_Corner() {
 	else
 		temp_is_front = is_front_car;
 
+	// no feature detection during obstacle overtake
+	if(obsta_overtake_status != 0){
+		return Feature::kNormal;
+	}
 	//1. Straight line
 	if (is_straight_line) {
 		//    roundaboutStatus = 0;// Avoid failure of detecting roundabout exit
@@ -1148,6 +1159,12 @@ Feature featureIdent_Corner() {
 	}
 	//5. obstacle case
 	//front car sends signal when pass half of obstacle
+	// reset the obstacle case during overtake
+	if(obsta_overtake_status != 0){
+		// reset
+		obsta_status = ObstaclePos::kNull;
+	}
+
 	if (is_front_car && sendFlag && obsta_status != ObstaclePos::kNull && abs(encoder_total_obstacle) >= TuningVar::obstacle_encoder_count/2){
 		pBT->sendObstaclePos(obsta_status);
 		sendFlag = false;
@@ -1159,8 +1176,9 @@ Feature featureIdent_Corner() {
 			// reset
 			obsta_status = ObstaclePos::kNull;
 		}
-		else
+		else{
 			pBT->resetObstaclePos();
+		}
 	}
 
 
@@ -1333,42 +1351,49 @@ void GenPath(Feature feature) {
 	}
 
 	// obstacle case handling + overtake
-
 	if (TuningVar::obstacle_mode){
+
 		// reset the obsta_status when finish and count++
 		if(abs(encoder_total_obstacle) >= TuningVar::obstacle_encoder_count && obsta_status == ObstaclePos::kLeft){
 			obsta_overtake_status = 1;
+			// clear encoder count
+			encoder_total_obstacle = 0;
+			encoder_total_obstacle_overtake = 0;
 			obsta_status = ObstaclePos::kNull;
-			sendFlag = true;
-			obstacle_cnt++;
+
 
 		}
 		else if (abs(encoder_total_obstacle) >= TuningVar::obstacle_encoder_count && obsta_status == ObstaclePos::kRight){
 			obsta_overtake_status = 2;// 2 means obstacle is right
+			// clear encoder count
+			encoder_total_obstacle = 0;
+			encoder_total_obstacle_overtake = 0;
 			obsta_status = ObstaclePos::kNull;
-			sendFlag = true;
-			obstacle_cnt++;
+
 		}
 
+		/*OVERTAKE PART*/
 		// front car stops
-		if(is_front_car && obsta_overtake_mode && obsta_overtake_status != 0){
+		if(is_front_car && TuningVar::obsta_overtake_mode && obsta_overtake_status != 0){
 			encoder_total_obstacle_overtake += curr_enc_val_left;
 			// parking on the left
 			if(obsta_overtake_status == 1){
-				if(abs(encoder_total_obstacle) <= TuningVar::obstacle_overtake_encoder_count){
+				if(abs(encoder_total_obstacle_overtake) <= TuningVar::front_obstacle_overtake_encoder_count){
 					stop_obsta_overtake = false;
 					// follow new path
 					/*path offset left*/
-					for(int i =0; i < 20; i++) path.push(left_edge.points[i].first + 8, left_edge.points[i].second);
+					for(int i =0; i < 20; i++) path.push(left_edge.points[i].first + 5, left_edge.points[i].second);
 					return;
 
 				}
-				else if(stop_obsta_overtake && pBT && time){
+				else if(stop_obsta_overtake && pBT->hasFinishedObstacleOvertake() && System::Time() - pBT->getObstacleOvertakeTime() >= TuningVar::overtake_interval_time){
 					// start the car until receiving message from back car and reset the flag, overtake finished
 					stop_obsta_overtake = false;
 					is_front_car = false; // switch ID
 					obsta_overtake_status = 0;
-
+					sendFlag = true;
+					obstacle_cnt++;
+					pBT->resetFinishObstacleOvertake();
 				}
 				else{
 					stop_obsta_overtake = true;// set the speed to 0
@@ -1376,20 +1401,22 @@ void GenPath(Feature feature) {
 			}
 			else if(obsta_overtake_status == 2){
 				// parking on the right
-				if(abs(encoder_total_obstacle) <= TuningVar::obstacle_overtake_encoder_count){
+				if(abs(encoder_total_obstacle_overtake) <= TuningVar::front_obstacle_overtake_encoder_count){
 					stop_obsta_overtake = false;
 					// follow new path
 					/*path offset right*/
-					for(int i =0; i < 20; i++) path.push(right_edge.points[i].first - 8, right_edge.points[i].second);
+					for(int i =0; i < 20; i++) path.push(right_edge.points[i].first - 5, right_edge.points[i].second);
 					return;
 
 				}
-				else if(stop_obsta_overtake && pBT && time){
+				else if(stop_obsta_overtake && pBT->hasFinishedObstacleOvertake() && System::Time() - pBT->getObstacleOvertakeTime() >= TuningVar::overtake_interval_time){
 					// start the car until receiving message from back car and reset the flag, overtake finished
 					stop_obsta_overtake = false;
 					is_front_car = false; // switch ID
 					obsta_overtake_status = 0;
-
+					sendFlag = true;
+					obstacle_cnt++;
+					pBT->resetFinishObstacleOvertake();
 				}
 				else{
 					stop_obsta_overtake = true;// set the speed to 0
@@ -1398,27 +1425,45 @@ void GenPath(Feature feature) {
 
 		}
 		// back car move
-		if (!is_front_car && obsta_overtake_mode && obsta_overtake_status != 0){
+		if (!is_front_car && TuningVar::obsta_overtake_mode && obsta_overtake_status != 0){
 			encoder_total_obstacle_overtake += curr_enc_val_left;
 			// moving on the right
 			if(obsta_overtake_status == 1){
-				if(abs(encoder_total_obstacle) <= TuningVar::obstacle_overtake_encoder_count){
+				if(abs(encoder_total_obstacle_overtake) <= TuningVar::back_obstacle_overtake_encoder_count){
 					// follow new path
 					/*path offset right*/
-					for(int i =0; i < 20; i++) path.push(right_edge.points[i].first - 8, right_edge.points[i].second);
+					for(int i =0; i < 20; i++) path.push(right_edge.points[i].first - 5, right_edge.points[i].second);
 					return;
 
 				}
 				else{
 					// send message to front car
 					is_front_car = true;
-					pBT
+					pBT->sendFinishObstacleOvertake();
 					obsta_overtake_status = 0;
+					sendFlag = true;
+					obstacle_cnt++;
 				}
+			}
+			// moving on the left
+			if(obsta_overtake_status == 2){
+				if(abs(encoder_total_obstacle_overtake) <= TuningVar::back_obstacle_overtake_encoder_count){
+					// follow new path
+					/*path offset left*/
+					for(int i =0; i < 20; i++) path.push(left_edge.points[i].first + 5, left_edge.points[i].second);
+					return;
+
+				}
+				else{
+					// send message to front car
+					is_front_car = true;
+					pBT->sendFinishObstacleOvertake();
+					obsta_overtake_status = 0;
+					sendFlag = true;
+					obstacle_cnt++;
+				}
+			}
 		}
-
-
-
 
 
 		if(obsta_status == ObstaclePos::kLeft && abs(encoder_total_obstacle) < TuningVar::obstacle_encoder_count){
@@ -1434,32 +1479,7 @@ void GenPath(Feature feature) {
 			return;
 		}
 	}
-	// When entering the roundabout, keep roundabout method until completely enter, but still keep roundaboutStatus until exit
-	//	if (roundaboutStatus == 1
-	//			&& abs(encoder_total_round)
-	//					< TuningVar::round_encoder_count/*abs(System::Time() - feature_start_time) < TuningVar::feature_inside_time*/) {
-	//		pEncoder0->Update();
-	//		pEncoder1->Update();
-	//		encoder_total_round += (pEncoder0->GetCount() + pEncoder1->GetCount())
-	//				/ 2;
-	//		feature = Feature::kRoundabout;
-	//	}
-	/*END OF ROUNDABOUT ENTRANCE PASSING PART*/
-	/*ROUNDABOUT EXIT PASSING PART*/
-	//When exiting the roundabout, keep exit method until completely exit
-	//	if (roundaboutExitStatus == 1
-	//			&& abs(encoder_total_exit) >= TuningVar::roundExit_encoder_count) {
-	//		roundaboutExitStatus = 0;
-	//	}
-	//	if (roundaboutExitStatus == 1
-	//			&& abs(encoder_total_exit) < TuningVar::roundExit_encoder_count) {
-	//		pEncoder0->Update();
-	//		pEncoder1->Update();
-	//		encoder_total_exit += (pEncoder0->GetCount() + pEncoder1->GetCount())
-	//				/ 2;
-	//		feature = Feature::kRoundaboutExit;
-	//	}
-	/*END OF ROUNDABOUT EXIT PASSING PART*/
+
 	/*OTHER CASE*/
 	switch (feature) {
 	case Feature::kRoundabout: {
@@ -1874,6 +1894,10 @@ void main_car1(bool debug_) {
 					if(TuningVar::show_algo_time){
 						time_img = System::Time();
 					}
+					// disable obstacle after met one obstacle
+					if (obstacle_cnt>0){
+						TuningVar::obstacle_mode = false;
+					}
 					if (bt.hasStopCar()) met_stop_line = true;
 //					pLcd->Clear();
 					need_slow_down = false;
@@ -1916,7 +1940,33 @@ void main_car1(bool debug_) {
 					//		sprintf(timestr, "AngleOS: %d", servoAngle);
 					//		pServo->SetDegree(servo_bounds.kCenter + servoAngle);
 					//		pWriter->WriteString(timestr);
-
+					if(true){
+						pLcd->SetRegion(Lcd::Rect(0,0,128,15));
+						if (obsta_overtake_status == 1) pWriter->WriteString("OverLeft");
+						if (obsta_overtake_status == 2)	pWriter->WriteString("OverRight");
+						pLcd->SetRegion(Lcd::Rect(0,15,128,15));
+						stop_obsta_overtake ?pWriter->WriteString("StopB"):pWriter->WriteString("No StopB");
+						pLcd->SetRegion(Lcd::Rect(0,75,128,15));
+						TuningVar::obstacle_mode?pWriter->WriteString("ObstaM"):pWriter->WriteString("No ObsM");
+						pLcd->SetRegion(Lcd::Rect(0,90,128,15));
+						is_front_car?pWriter->WriteString("Front"):pWriter->WriteString("Back");
+						pLcd->SetRegion(Lcd::Rect(0,105,128,15));
+						roundaboutStatus?pWriter->WriteString("RS = 1"):pWriter->WriteString("RS = 0");
+						pLcd->SetRegion(Lcd::Rect(0,130,128,15));
+						roundaboutExitStatus?pWriter->WriteString("RSE = 1"):pWriter->WriteString("RSE = 0");
+						pLcd->SetRegion(Lcd::Rect(0,145,128,15));
+						crossingStatus?pWriter->WriteString("Cross = 1"):pWriter->WriteString("Cross = 0");
+						char temp_1[100];
+						sprintf(temp_1, "Obs_cnt:%d", obstacle_cnt);
+						pLcd->SetRegion(Lcd::Rect(0, 30, 128, 15));
+						pWriter->WriteString(temp_1);
+						sprintf(temp_1, "enc_overt:%d", encoder_total_obstacle_overtake);
+						pLcd->SetRegion(Lcd::Rect(0, 45, 128, 15));
+						pWriter->WriteString(temp_1);
+						sprintf(temp_1, "encoder_obs:%d", encoder_total_obstacle);
+						pLcd->SetRegion(Lcd::Rect(0, 60, 128, 15));
+						pWriter->WriteString(temp_1);
+					}
 					if (debug) {
 						PrintWorldImage();
 						PrintEdge(left_edge, Lcd::kRed); //Print left_edge
@@ -2149,7 +2199,7 @@ void main_car1(bool debug_) {
 						pid_left.SetSetpoint(90);
 						pid_right.SetSetpoint(90);
 					}
-					if(met_stop_line){
+					if(met_stop_line || stop_obsta_overtake){
 						pid_left.SetSetpoint(0);
 						pid_right.SetSetpoint(0);
 					}
