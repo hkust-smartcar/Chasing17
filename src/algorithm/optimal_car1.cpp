@@ -383,7 +383,7 @@ void Capture(uint16_t y0) {
 	}
 
 	//Search horizontally
-	for (int i = carMid.second; i < WorldSize.w; i++) {
+	for (int i = carMid.first; i < WorldSize.w; i++) {
 		if (getWorldBit(i, y0) == 1) {
 			right_x = i - 1;
 			right_y = y0;
