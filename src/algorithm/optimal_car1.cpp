@@ -369,7 +369,7 @@ void Capture(uint16_t y0) {
 	spCamera->UnlockBuffer();
 
 	//Search horizontally
-	for (int i = WorldSize.w / 2; i > 0; i--) {
+	for (int i = carMid.first; i > 0; i--) {
 		if (getWorldBit(i, y0) == 1) {
 			left_x = i + 1;
 			left_y = y0;
@@ -383,7 +383,7 @@ void Capture(uint16_t y0) {
 	}
 
 	//Search horizontally
-	for (int i = WorldSize.w / 2; i < WorldSize.w; i++) {
+	for (int i = carMid.second; i < WorldSize.w; i++) {
 		if (getWorldBit(i, y0) == 1) {
 			right_x = i - 1;
 			right_y = y0;
