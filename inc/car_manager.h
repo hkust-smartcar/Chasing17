@@ -104,7 +104,6 @@ struct CarManager final {
     PidValues ServoNormal;
     PidValues ServoRoundabout;
     PidValues ServoSharpTurn;
-    PidValues ServoRoundaboutExit;
 
     // target speed values
     uint16_t SpeedStraight;

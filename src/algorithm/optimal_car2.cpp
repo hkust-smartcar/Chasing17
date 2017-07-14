@@ -42,6 +42,7 @@ typedef CarManager::Feature Feature;
 typedef CarManager::ImageSize ImageSize;
 typedef CarManager::ServoBounds ServoBounds;
 typedef CarManager::ObstaclePos ObstaclePos;
+typedef CarManager::PidSet PidSet;
 
 using libsc::DirMotor;
 using libsc::DirEncoder;
@@ -64,63 +65,82 @@ using namespace libutil;
 namespace algorithm {
 namespace optimal {
 namespace car2 {
+
+const PidSet kStablePid = {
+		// name
+		"c2_stable",
+
+		// servo values
+		{0.80, 0, 0.010},   // ServoStraight
+		{1.10, 0, 0.000},   // ServoNormal
+		{1.30, 0, 0.000},   // ServoRoundabout
+		{1.20, 0, 0.000},   // ServoSharpTurn
+
+		// motor values
+		150,                // SpeedStraight
+		100,                // SpeedNormal
+		 90,                // SpeedRoundabout
+		 90,                // SpeedSharpTurn
+		100                 // SpeedSlow
+};
+
 namespace TuningVar{ //tuning var delaration
-  bool show_algo_time = false;
-  bool single_car_testing = false;// still need to set overtake flag to false, only for car2 roundabout detection
-  bool overtake_mode = true; // true: overtake with communication, false: no overtake WITH communication
-  bool obstacle_mode = true; // true: handle obstacle with communication, false: cancel obstacle handler
-  uint16_t starting_y = 15; //the starting y for edge detection
-  uint16_t edge_length = 159; //max length for an edge
-  uint16_t edge_hor_search_max = 4; //max for horizontal search of edge if next edge point cannot be found
-  uint16_t edge_min_worldview_bound_check = 30; //min for worldview bound check in edge finding
-  uint16_t corner_range = 7; //the square for detection would be in size corener_range*2+1
-  float corner_height_ratio = 2.9; //the max height for detection would be WorldSize.h/corner_height_ratio
-  uint16_t corner_min = 16, corner_max = 32; //threshold (in %) for corner detection
-  uint16_t min_corners_dist = 7; // Manhattan dist threshold for consecutive corners
-  uint16_t min_edges_dist = 7; // Manhattan dist threshold for edges
-  uint16_t track_width_threshold = 900; //track width threshold for consideration of sudden change (square)
-  uint16_t track_width_change_threshold = 350; //track width change threshold for consideration of sudden change
-  uint16_t testDist = 35; // The distance from which the image pixel should be tested and identify feature
-  uint16_t slowDownDist = 100; // the distance from which the image pixel should be tested and know whether it should slow down in advance
-  uint16_t straight_line_threshold = 45; // The threshold num. of equal width for straight line detection
-  uint16_t action_distance = 27; // The condition in which the car start handling this feature when meeting it
-  libsc::Timer::TimerInt feature_inside_time = 350; // freezing time for feature extraction, the time for entering the entrance
-  uint16_t cross_cal_start_num = 80;
-  uint16_t cross_cal_ratio = 80; //Look forward @cross_cal_start_num - encoder_total/@cross_cal_ratio to determine path
-  uint16_t general_cal_num = 20; //The num of path points considered for servo angle decision except crossing
-  uint16_t cross_encoder_count = 4000; // The hardcoded encoder count that car must reach in crossroad
-  uint16_t round_enter_offset = 17;
-  uint16_t min_dist_meet_crossing = 30;
-  uint16_t roundroad_min_size = 30; // When the edge is broken in roundabout, find until this threshold
-  uint16_t exit_action_dist = 35; // double check to avoid corner's sudden disappear inside roundabout
-  uint16_t roundabout_offset = 15; // half of road width
-  uint16_t round_exit_offset = 24;
-  uint16_t round_encoder_count = 2600;
-  uint16_t roundExit_encoder_count = 3700;
-  uint16_t obstacle_encoder_count = 5000;
-  int32_t roundabout_shortest_flag = 0b00011; //1 means turn left, 0 means turn right. Reading from left to right
-  int32_t roundabout_overtake_flag = 0b11111;
-  uint16_t nearest_corner_threshold = 128/2;
-  uint16_t start_car_distance = 500;
-  uint16_t overtake_interval_time = 1000;
+bool show_algo_time = false;
+bool single_car_testing = false;// still need to set overtake flag to false, only for car2 roundabout detection
+bool overtake_mode = true; // true: overtake with communication, false: no overtake WITH communication
+bool obstacle_mode = true; // true: handle obstacle with communication, false: cancel obstacle handler
+uint16_t starting_y = 15; //the starting y for edge detection
+uint16_t edge_length = 159; //max length for an edge
+uint16_t edge_hor_search_max = 4; //max for horizontal search of edge if next edge point cannot be found
+uint16_t edge_min_worldview_bound_check = 30; //min for worldview bound check in edge finding
+uint16_t corner_range = 7; //the square for detection would be in size corener_range*2+1
+float corner_height_ratio = 2.9; //the max height for detection would be WorldSize.h/corner_height_ratio
+uint16_t corner_min = 16, corner_max = 32; //threshold (in %) for corner detection
+uint16_t min_corners_dist = 7; // Manhattan dist threshold for consecutive corners
+uint16_t min_edges_dist = 7; // Manhattan dist threshold for edges
+uint16_t track_width_threshold = 900; //track width threshold for consideration of sudden change (square)
+uint16_t track_width_change_threshold = 350; //track width change threshold for consideration of sudden change
+uint16_t testDist = 35; // The distance from which the image pixel should be tested and identify feature
+uint16_t slowDownDist = 100; // the distance from which the image pixel should be tested and know whether it should slow down in advance
+uint16_t straight_line_threshold = 45; // The threshold num. of equal width for straight line detection
+uint16_t action_distance = 27; // The condition in which the car start handling this feature when meeting it
+libsc::Timer::TimerInt feature_inside_time = 350; // freezing time for feature extraction, the time for entering the entrance
+uint16_t cross_cal_start_num = 80;
+uint16_t cross_cal_ratio = 80; //Look forward @cross_cal_start_num - encoder_total/@cross_cal_ratio to determine path
+uint16_t general_cal_num = 20; //The num of path points considered for servo angle decision except crossing
+uint16_t cross_encoder_count = 4000; // The hardcoded encoder count that car must reach in crossroad
+uint16_t round_enter_offset = 17;
+uint16_t min_dist_meet_crossing = 30;
+uint16_t roundroad_min_size = 30; // When the edge is broken in roundabout, find until this threshold
+uint16_t exit_action_dist = 35; // double check to avoid corner's sudden disappear inside roundabout
+uint16_t roundabout_offset = 15; // half of road width
+uint16_t round_exit_offset = 24;
+uint16_t round_encoder_count = 2600;
+uint16_t roundExit_encoder_count = 3700;
+uint16_t obstacle_encoder_count = 5000;
+int32_t roundabout_shortest_flag = 0b00011; //1 means turn left, 0 means turn right. Reading from left to right
+int32_t roundabout_overtake_flag = 0b11111;
+uint16_t nearest_corner_threshold = 128/2;
+uint16_t start_car_distance = 500;
+uint16_t overtake_interval_time = 1000;
 
-  // servo pid values
-  float servo_straight_kp = 0.8;
-  float servo_straight_kd = 0.01;
-  float servo_normal_kp = 1.1;
-  float servo_normal_kd = 0;
-  float servo_roundabout_kp = 1.3;
-  float servo_roundabout_kd = 0;
-  float servo_sharp_turn_kp = 1.2;
-  float servo_sharp_turn_kd = 0;
+// servo pid values
+float servo_straight_kp = kStablePid.ServoStraight.kP;
+float servo_straight_kd = kStablePid.ServoStraight.kD;
+float servo_normal_kp = kStablePid.ServoNormal.kP;
+float servo_normal_kd = kStablePid.ServoNormal.kD;
+float servo_roundabout_kp = kStablePid.ServoRoundabout.kP;
+float servo_roundabout_kd = kStablePid.ServoRoundabout.kD;
+float servo_sharp_turn_kp = kStablePid.ServoSharpTurn.kP;
+float servo_sharp_turn_kd = kStablePid.ServoSharpTurn.kD;
 
 
-  // target speed values
-  uint16_t targetSpeed_straight = 150;
-  uint16_t targetSpeed_normal = 100;//normal turning
-  uint16_t targetSpeed_round = 90;
-  uint16_t targetSpeed_sharp_turn = 90;
-  uint16_t targetSpeed_slow = 100;
+// target speed values
+uint16_t targetSpeed_straight = kStablePid.SpeedStraight;
+uint16_t targetSpeed_normal = kStablePid.SpeedNormal;//normal turning
+uint16_t targetSpeed_round = kStablePid.SpeedRound;
+uint16_t targetSpeed_sharp_turn = kStablePid.SpeedSharpTurn;
+uint16_t targetSpeed_slow = kStablePid.SpeedSlow;
 }  // namespace TuningVar
 
 namespace {
@@ -219,6 +239,7 @@ bool FindOneLeftEdge();
 bool FindOneRightEdge();
 void GetPath(Feature);
 bool getWorldBit(int, int);
+std::string InflatePidValues();
 void PrintCorner(Corners, uint16_t);
 void PrintEdge(Edges, uint16_t);
 void PrintImage();
@@ -227,6 +248,37 @@ void PrintWorldImage();
 int roundabout_shortest(uint32_t a, int pos);
 int roundabout_overtake(uint32_t a, int pos);
 
+std::string InflatePidValues() {
+	using namespace TuningVar;
+
+	PidSet p;
+
+	switch (CarManager::pid_preset_) {
+		case 1:
+			p = kStablePid;
+		break;
+		default:
+			return "Custom";
+	}
+
+	// inflate the pid values
+	servo_straight_kp = p.ServoStraight.kP;
+	servo_straight_kd = p.ServoStraight.kD;
+	servo_normal_kp = p.ServoNormal.kP;
+	servo_normal_kd = p.ServoNormal.kD;
+	servo_roundabout_kp = p.ServoRoundabout.kP;
+	servo_roundabout_kd = p.ServoRoundabout.kD;
+	servo_sharp_turn_kp = p.ServoSharpTurn.kP;
+	servo_sharp_turn_kd = p.ServoSharpTurn.kD;
+
+	targetSpeed_straight = p.SpeedStraight;
+	targetSpeed_normal = p.SpeedNormal;
+	targetSpeed_round = p.SpeedRound;
+	targetSpeed_sharp_turn = p.SpeedSharpTurn;
+	targetSpeed_slow = p.SpeedSlow;
+
+	return p.name;
+}
 
 /*
  * @brief: bluetooth listener for processing tuning
@@ -751,7 +803,7 @@ bool FindEdges() {
 		//3 cases: 1. y=30~35 black, 2. size unchanged, 3. corner
 		if (obsta_status == ObstaclePos::kNull){
 			//case 1
-			if (left_edge.size() >= 46){
+			if (left_edge.size() >= 46 && getWorldBit(left_edge.points[45].first-1, left_edge.points[45].second) == 1){ //only for left of left edge is black
 				int cnt_black = 0;
 				for (int i = 40; i < 45; i++) cnt_black += getWorldBit(left_edge.points[i].first+3, left_edge.points[i].second);
 				if (cnt_black == 5) {
@@ -759,7 +811,7 @@ bool FindEdges() {
 					goto obsta_status_end;
 				}
 			}
-			if (right_edge.size() >= 46){
+			if (right_edge.size() >= 46 && getWorldBit(right_edge.points[45].first-1, right_edge.points[45].second) == 1){ //only for right of right edge is black
 				int cnt_black = 0;
 				for (int i = 40; i < 45; i++) cnt_black += getWorldBit(right_edge.points[i].first-3, right_edge.points[i].second);
 				if (cnt_black == 5) {
@@ -768,7 +820,7 @@ bool FindEdges() {
 				}
 			}
 			//case 2
-			if (!FindOneLeftEdge()){
+			if (getWorldBit(left_edge.points.back().first-1, left_edge.points.back().second) == 1 && !FindOneLeftEdge()){
 				int cnt_black = 0;
 				for (int i = left_edge.size()-5; i < left_edge.size(); i++) cnt_black += getWorldBit(left_edge.points[i].first+3, left_edge.points[i].second);
 				if (cnt_black == 5) {
@@ -776,7 +828,7 @@ bool FindEdges() {
 					goto obsta_status_end;
 				}
 			} else left_edge.points.pop_back();
-			if (!FindOneRightEdge()){
+			if (getWorldBit(right_edge.points.back().first+1, right_edge.points.back().second) == 1 && !FindOneRightEdge()){
 				int cnt_black = 0;
 				for (int i = right_edge.size()-5; i < right_edge.size(); i++) cnt_black += getWorldBit(right_edge.points[i].first-3, right_edge.points[i].second);
 				if (cnt_black == 5) {
@@ -785,7 +837,7 @@ bool FindEdges() {
 				}
 			} else right_edge.points.pop_back();
 			//case 3
-			if (left_corners.size() == 1 && right_corners.size() == 0){
+			if (left_corners.size() == 1 && right_corners.size() == 0 && getWorldBit(left_edge.points.back().first-1,left_edge.points.back().second)){
 				int cnt_black = 0;
 				for (int i = left_edge.size()-5; i < left_edge.size(); i++) cnt_black += getWorldBit(left_edge.points[i].first+3, left_edge.points[i].second);
 				if (cnt_black == 5) {
@@ -793,7 +845,7 @@ bool FindEdges() {
 					goto obsta_status_end;
 				}
 			}
-			if (right_corners.size() == 1 && left_corners.size() == 0){
+			if (right_corners.size() == 1 && left_corners.size() == 0 && getWorldBit(right_edge.points.back().first-1,right_edge.points.back().second)){
 				int cnt_black = 0;
 				for (int i = right_edge.size()-5; i < right_edge.size(); i++) cnt_black += getWorldBit(right_edge.points[i].first-3, right_edge.points[i].second);
 				if (cnt_black == 5) {
@@ -1592,6 +1644,8 @@ int GetMotorPower(int id){
 }
 
 void main_car2(bool debug_) {
+	InflatePidValues();
+
 	debug = debug_;
 
 	Led::Config ConfigLed;

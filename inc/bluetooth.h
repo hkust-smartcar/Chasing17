@@ -339,6 +339,42 @@ class BTComm {
   }
 
   /**
+   * Return the time when overtake_time_ flag is received
+   */
+  libsc::Timer::TimerInt getOvertakeTime(){
+	  return overtake_time_;
+  }
+
+  /**
+   * Send signal for finishing obstacle overtake
+   */
+  void sendFinishObstacleOvertake(){
+	  sendData(DataType::kReq, ReqType::kFinishObstacleOvertake);
+  }
+
+  /**
+   * Check if the obstacle overtake procedure is done
+   */
+  bool hasFinishedObstacleOvertake(){
+	  return hasFinishedObstacleOvertake_;
+  }
+
+  /**
+   * Reset hasFinishedObstacleOvertake_ flag
+   */
+  void resetFinishObstacleOvertake(){
+	  hasFinishedObstacleOvertake_ = false;
+  }
+
+  /**
+   * Return the time when obstacle_overtake_time_ flag is received
+   */
+  libsc::Timer::TimerInt getObstacleOvertakeTime(){
+	  return obstacle_overtake_time_;
+  }
+
+
+  /**
    * Send stop car request from another car
    */
   void sendStopCar(){
@@ -357,13 +393,6 @@ class BTComm {
    */
   void resetStopCar(){
 	  stop_car_ = false;
-  }
-
-  /**
-   * Return the time when stop_car_ flag is received
-   */
-  libsc::Timer::TimerInt getOvertakeTime(){
-	  return overtake_time_;
   }
 
   /**
@@ -395,6 +424,7 @@ class BTComm {
   struct ReqType {
     static constexpr Byte kOvertake = 0xE0;
     static constexpr Byte kFinishOvertake = 0xE1;
+    static constexpr Byte kFinishObstacleOvertake = 0xE2;
     static constexpr Byte kOvertakeRej = 0xEE;
     static constexpr Byte kOvertakeAgr = 0xEF;
     static constexpr Byte kIDSwitch = 0xD0;
@@ -426,7 +456,9 @@ class BTComm {
 
   static OvertakeStatus OvertakeReq_;
   static bool hasFinishedOvertake_;
+  static bool hasFinishedObstacleOvertake_;
   static libsc::Timer::TimerInt overtake_time_;
+  static libsc::Timer::TimerInt obstacle_overtake_time_;
   static bool SwitchIDReq_;
   static bool hasStartReq_;
 
