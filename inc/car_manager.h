@@ -99,19 +99,12 @@ struct CarManager final {
   struct PidSet {
     std::string name;
 
-    // servo left pid values
-    PidValues ServoStraightLeft;
-    PidValues ServoNormalLeft;
-    PidValues ServoRoundaboutLeft;
-    PidValues ServoSharpTurnLeft;
-    PidValues ServoTransitionalSlopeLeft;
-
-    // servo right pid values
-    PidValues ServoStraightRight;
-    PidValues ServoNormalRight;
-    PidValues ServoRoundaboutRight;
-    PidValues ServoSharpTurnRight;
-    PidValues ServoTransitionalSlopeRight;
+    // servo pid values
+    PidValues ServoStraight;
+    PidValues ServoNormal;
+    PidValues ServoRoundabout;
+    PidValues ServoSharpTurn;
+    PidValues ServoRoundaboutExit;
 
     // target speed values
     uint16_t SpeedStraight;
@@ -119,8 +112,6 @@ struct CarManager final {
     uint16_t SpeedRound;
     uint16_t SpeedSharpTurn;
     uint16_t SpeedSlow;//slow down speed during straight
-    uint16_t SpeedTransitionalSlope;
-    uint16_t SpeedInside;
   };
 
   /**
@@ -148,7 +139,7 @@ struct CarManager final {
     std::vector<std::pair<uint16_t, uint16_t>> points;
   };
 
-  static uint16_t config;
+  static uint16_t pid_preset_;
 
   static uint16_t us_distance_;
   static int32_t left_speed_;

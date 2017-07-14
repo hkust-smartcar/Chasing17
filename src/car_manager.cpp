@@ -22,7 +22,7 @@ CarManager::Feature CarManager::feature_ = CarManager::Feature::kStraight;
 CarManager::Identity CarManager::identity_ = CarManager::Identity::kFront;
 CarManager::Car CarManager::car_ = CarManager::Car::kCar1;
 
-uint16_t CarManager::config = 0;
+uint16_t CarManager::pid_preset_ = 0;
 
 CarManager::Edges CarManager::Edges::grad() {
   Edges temp;
