@@ -66,8 +66,9 @@ namespace optimal {
 namespace car2 {
 namespace TuningVar{ //tuning var delaration
   bool show_algo_time = false;
-  bool roundabout_turn_left = true; //Used for GenPath()
-  bool single_car_testing = false;// still need to set overtake flag to false
+  bool single_car_testing = false;// still need to set overtake flag to false, only for car2 roundabout detection
+  bool overtake_mode = true; // true: overtake with communication, false: no overtake WITH communication
+  bool obstacle_mode = true; // true: handle obstacle with communication, false: cancel obstacle handler
   uint16_t starting_y = 15; //the starting y for edge detection
   uint16_t edge_length = 159; //max length for an edge
   uint16_t edge_hor_search_max = 4; //max for horizontal search of edge if next edge point cannot be found
@@ -141,7 +142,7 @@ uint16_t prev_corner_y;
 
 /*FOR OVERTAKING*/
 
-bool is_front_car = true;
+bool is_front_car = false;
 bool stop_before_roundexit = true;// to slow down in first roundabout and fix the bug for cannot stop
 bool overtake;
 
@@ -1268,7 +1269,13 @@ void GenPath(Feature feature) {
 				is_front_car = false;
 			}
 		}
-		overtake = roundabout_overtake(TuningVar::roundabout_overtake_flag, roundabout_cnt);
+		// update the overtake flag for next roundabout
+		if(TuningVar::overtake_mode){
+			overtake = roundabout_overtake(TuningVar::roundabout_overtake_flag, roundabout_cnt);
+		}
+		else{
+			overtake = false;
+		}
 	}
 	if (roundaboutExitStatus == 1
 			&& abs(encoder_total_exit) < TuningVar::roundExit_encoder_count) {
@@ -1284,19 +1291,21 @@ void GenPath(Feature feature) {
 		obsta_status = ObstaclePos::kNull;
 		sendFlag = true;
 	}
-	if(obsta_status == ObstaclePos::kLeft && abs(encoder_total_obstacle) < TuningVar::obstacle_encoder_count){
-		encoder_total_obstacle += curr_enc_val_left;
-		/*path offset right*/
-		for(int i =0; i < 20; i++) path.push(right_edge.points[i].first - 8, right_edge.points[i].second);
-		return;
-	}
-	else if (obsta_status == ObstaclePos::kRight && abs(encoder_total_obstacle) < TuningVar::obstacle_encoder_count){
-		encoder_total_obstacle += curr_enc_val_left;
-		/*path offset left*/
-		for(int i =0; i < 20; i++) path.push(left_edge.points[i].first + 8, left_edge.points[i].second);
-		return;
-	}
 
+	if(TuningVar::obstacle_mode){
+		if(obsta_status == ObstaclePos::kLeft && abs(encoder_total_obstacle) < TuningVar::obstacle_encoder_count){
+			encoder_total_obstacle += curr_enc_val_left;
+			/*path offset right*/
+			for(int i =0; i < 20; i++) path.push(right_edge.points[i].first - 8, right_edge.points[i].second);
+			return;
+		}
+		else if (obsta_status == ObstaclePos::kRight && abs(encoder_total_obstacle) < TuningVar::obstacle_encoder_count){
+			encoder_total_obstacle += curr_enc_val_left;
+			/*path offset left*/
+			for(int i =0; i < 20; i++) path.push(left_edge.points[i].first + 8, left_edge.points[i].second);
+			return;
+		}
+	}
 	/*END OF ROUNDABOUT EXIT PASSING PART*/
 	/*OTHER CASE*/
 	switch (feature) {
@@ -1681,22 +1690,6 @@ void main_car2(bool debug_) {
 
 	Timer::TimerInt time_img = 0;
 
-	//Servo test
-//	pServo->SetDegree(servo_bounds.kLeftBound);
-//	System::DelayMs(1000);
-//	pServo->SetDegree(servo_bounds.kRightBound);
-//	System::DelayMs(1000);
-//	pServo->SetDegree(servo_bounds.kCenter);
-//	System::DelayMs(1000);
-
-	//  while (true) {
-	//    if (joystick.GetState() == Joystick::State::kRight) {
-	//      TuningVar::roundabout_turn_left = false;
-	//      break;
-	//    } else if (joystick.GetState() == Joystick::State::kLeft) {
-	//      break;
-	//    }
-	//  }
 
 	while(!debug&&joystick.GetState()==Joystick::State::kIdle);
 
@@ -1714,7 +1707,13 @@ void main_car2(bool debug_) {
 	bool met_stop_line = false;
 	uint8_t stop_count = 0;
 	bool brake_flag = true;
-	overtake = roundabout_overtake(TuningVar::roundabout_overtake_flag, 0);// get ready for the first roundabout
+	// update the overtake for the first roundabout
+	if(TuningVar::overtake_mode){
+		overtake = roundabout_overtake(TuningVar::roundabout_overtake_flag, 0);// get ready for the first roundabout
+	}
+	else{
+		overtake = false;
+	}
 
 	pServo->SetDegree(servo_bounds.kCenter);
 	while (true) {
