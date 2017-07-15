@@ -2075,8 +2075,8 @@ void main_car1(bool debug_) {
 									servo_bounds.kCenter - (TuningVar::servo_roundabout_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
 									servo_bounds.kRightBound,
 									servo_bounds.kLeftBound));
-							pid_left.SetSetpoint(10);
-							pid_right.SetSetpoint(10);
+							pid_left.SetSetpoint(60);
+							pid_right.SetSetpoint(60);
 							//avoid another car's early pass the exit
 							if(pBT->hasFinishedOvertake()){
 								stop_before_roundexit = false;
