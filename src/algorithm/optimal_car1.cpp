@@ -117,7 +117,7 @@ uint16_t round_exit_offset = 20;
 uint16_t round_encoder_count = 2600;
 uint16_t roundExit_encoder_count = 3700;
 uint16_t obstacle_encoder_count = 5000;
-uint16_t front_obstacle_overtake_encoder_count = 5000;
+uint16_t front_obstacle_overtake_encoder_count = 4000;
 uint16_t back_obstacle_overtake_encoder_count = 5000;
 int32_t roundabout_shortest_flag = 0b00011; //1 means turn left, 0 means turn right. Reading from left to right
 int32_t roundabout_overtake_flag = 0b11111;
@@ -1355,7 +1355,9 @@ void GenPath(Feature feature) {
 
 		// reset the obsta_status when finish and count++
 		if(abs(encoder_total_obstacle) >= TuningVar::obstacle_encoder_count && obsta_status == ObstaclePos::kLeft){
-			obsta_overtake_status = 1;
+			if(TuningVar::obsta_overtake_mode){
+				obsta_overtake_status = 1;
+			}
 			// clear encoder count
 			encoder_total_obstacle = 0;
 			encoder_total_obstacle_overtake = 0;
@@ -1364,7 +1366,9 @@ void GenPath(Feature feature) {
 
 		}
 		else if (abs(encoder_total_obstacle) >= TuningVar::obstacle_encoder_count && obsta_status == ObstaclePos::kRight){
-			obsta_overtake_status = 2;// 2 means obstacle is right
+			if(TuningVar::obsta_overtake_mode){
+				obsta_overtake_status = 2;// 2 means obstacle is right
+			}
 			// clear encoder count
 			encoder_total_obstacle = 0;
 			encoder_total_obstacle_overtake = 0;
@@ -1382,7 +1386,7 @@ void GenPath(Feature feature) {
 					stop_obsta_overtake = false;
 					// follow new path
 					/*path offset left*/
-					for(int i =0; i < 20; i++) path.push(left_edge.points[i].first + 5, left_edge.points[i].second);
+					for(int i =0; i < 20; i++) path.push(left_edge.points[i].first + 6, left_edge.points[i].second);
 					return;
 
 				}
@@ -1397,6 +1401,10 @@ void GenPath(Feature feature) {
 				}
 				else{
 					stop_obsta_overtake = true;// set the speed to 0
+					// follow new path
+					/*path offset left*/
+					for(int i =0; i < 20; i++) path.push(left_edge.points[i].first + 6, left_edge.points[i].second);
+					return;
 				}
 			}
 			else if(obsta_overtake_status == 2){
@@ -1405,7 +1413,7 @@ void GenPath(Feature feature) {
 					stop_obsta_overtake = false;
 					// follow new path
 					/*path offset right*/
-					for(int i =0; i < 20; i++) path.push(right_edge.points[i].first - 5, right_edge.points[i].second);
+					for(int i =0; i < 20; i++) path.push(right_edge.points[i].first - 6, right_edge.points[i].second);
 					return;
 
 				}
@@ -1420,6 +1428,10 @@ void GenPath(Feature feature) {
 				}
 				else{
 					stop_obsta_overtake = true;// set the speed to 0
+					// follow new path
+					/*path offset right*/
+					for(int i =0; i < 20; i++) path.push(right_edge.points[i].first - 6, right_edge.points[i].second);
+					return;
 				}
 			}
 
