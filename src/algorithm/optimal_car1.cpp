@@ -1940,7 +1940,7 @@ void main_car1(bool debug_) {
 					//		sprintf(timestr, "AngleOS: %d", servoAngle);
 					//		pServo->SetDegree(servo_bounds.kCenter + servoAngle);
 					//		pWriter->WriteString(timestr);
-					if(true){
+					if(debug){
 						pLcd->SetRegion(Lcd::Rect(0,0,128,15));
 						if (obsta_overtake_status == 1) pWriter->WriteString("OverLeft");
 						if (obsta_overtake_status == 2)	pWriter->WriteString("OverRight");

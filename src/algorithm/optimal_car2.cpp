@@ -1880,8 +1880,8 @@ void main_car2(bool debug_) {
 
 	if(!debug){
 		bt.sendStartReq();
-		Timer::TimerInt start=System::Time();
-		while(System::Time()-start < 1500 && YYdistance.GetDistance() < TuningVar::start_car_distance) System::DelayMs(10);
+//		Timer::TimerInt start=System::Time();
+//		while(System::Time()-start < 1500 && YYdistance.GetDistance() < TuningVar::start_car_distance) System::DelayMs(10);
 	}
 
 	//	StartlineOvertake();
@@ -1943,7 +1943,7 @@ void main_car2(bool debug_) {
 					if(feature == Feature::kRoundabout && is_front_car) bt.sendFeature(feature);
 					GenPath(feature); //Generate path
 					/*FOR DEBUGGING*/
-					if(true){
+					if(debug){
 						pLcd->SetRegion(Lcd::Rect(0,0,128,15));
 						if (obsta_overtake_status == 1) pWriter->WriteString("OverLeft");
 						if (obsta_overtake_status == 2)	pWriter->WriteString("OverRight");
