@@ -171,7 +171,7 @@ ObstaclePos obsta_status = ObstaclePos::kNull;
 bool sendFlag = true;
 int obstacle_cnt = 0;// track the num of obstacle and cancel obstacle detection after once
 bool stop_obsta_overtake = true;
-int obsta_overtake_status = 0;
+int obsta_overtake_status = 0; // 0: not obstacle overtake 1: the previous obstacle is on the left 2: the previous obstacle is on the right
 int encoder_total_obstacle_overtake = 0;
 
 
@@ -2199,7 +2199,7 @@ void main_car1(bool debug_) {
 						pid_left.SetSetpoint(90);
 						pid_right.SetSetpoint(90);
 					}
-					if(met_stop_line || stop_obsta_overtake){
+					if(met_stop_line || (stop_obsta_overtake && is_front_car && obsta_overtake_status != 0)){
 						pid_left.SetSetpoint(0);
 						pid_right.SetSetpoint(0);
 					}

@@ -2180,7 +2180,7 @@ void main_car2(bool debug_) {
 						pid_left.SetSetpoint(90);
 						pid_right.SetSetpoint(90);
 					}
-					if(met_stop_line || stop_obsta_overtake){
+					if(met_stop_line || (stop_obsta_overtake && is_front_car && obsta_overtake_status != 0)){
 						pid_left.SetSetpoint(0);
 						pid_right.SetSetpoint(0);
 					}
