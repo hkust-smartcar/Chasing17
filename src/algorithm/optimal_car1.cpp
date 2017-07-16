@@ -86,8 +86,9 @@ namespace TuningVar { //tuning var declaration
 bool show_algo_time = false;
 bool single_car_testing = false;// only for car2 roundabout detection
 bool overtake_mode = true; // true: overtake with communication, false: no overtake WITH communication
-bool obstacle_mode = true; // true: handle obstacle with communication, false: cancel obstacle handler
+bool obstacle_mode = false; // true: handle obstacle with communication, false: cancel obstacle handler
 bool obsta_overtake_mode = false;
+bool isObstacleLeft = true; //true for left, false for right
 
 uint16_t starting_y = 13; //the starting y for edge detection
 uint16_t edge_length = 159; //max length for an edge
@@ -125,7 +126,7 @@ int32_t roundabout_overtake_flag = 0b11111;
 uint16_t nearest_corner_threshold = 128/2;
 uint16_t overtake_interval_time = 1000;
 int16_t obstacle_hardcode_enc_total = 5000;
-bool isObstacleLeft = true; //true for left, false for right
+
 
 // servo pid values
 float servo_straight_kp = kStablePid.ServoStraight.kP;
