@@ -811,7 +811,7 @@ bool FindEdges() {
 			//case 1
 			if (left_edge.size() >= 46 && getWorldBit(left_edge.points[45].first-1, left_edge.points[45].second) == 1){ //only for left of left edge is black
 				int cnt_black = 0;
-				for (int i = 40; i < 45; i++) cnt_black += getWorldBit(left_edge.points[i].first+3, left_edge.points[i].second);
+				for (int i = 40; i < 45; i++) cnt_black += getWorldBit(left_edge.points[i].first+7, left_edge.points[i].second);
 				if (cnt_black == 5) {
 					obsta_status = ObstaclePos::kLeft;
 					goto obsta_status_end;
@@ -819,7 +819,7 @@ bool FindEdges() {
 			}
 			if (right_edge.size() >= 46 && getWorldBit(right_edge.points[45].first-1, right_edge.points[45].second) == 1){ //only for right of right edge is black
 				int cnt_black = 0;
-				for (int i = 40; i < 45; i++) cnt_black += getWorldBit(right_edge.points[i].first-3, right_edge.points[i].second);
+				for (int i = 40; i < 45; i++) cnt_black += getWorldBit(right_edge.points[i].first-7, right_edge.points[i].second);
 				if (cnt_black == 5) {
 					obsta_status = ObstaclePos::kRight;
 					goto obsta_status_end;
@@ -828,7 +828,7 @@ bool FindEdges() {
 			//case 2
 			if (getWorldBit(left_edge.points.back().first-1, left_edge.points.back().second) == 1 && !FindOneLeftEdge()){
 				int cnt_black = 0;
-				for (int i = left_edge.size()-5; i < left_edge.size(); i++) cnt_black += getWorldBit(left_edge.points[i].first+3, left_edge.points[i].second);
+				for (int i = left_edge.size()-5; i < left_edge.size(); i++) cnt_black += getWorldBit(left_edge.points[i].first+7, left_edge.points[i].second);
 				if (cnt_black == 5) {
 					obsta_status = ObstaclePos::kLeft;
 					goto obsta_status_end;
@@ -836,7 +836,7 @@ bool FindEdges() {
 			} else left_edge.points.pop_back();
 			if (getWorldBit(right_edge.points.back().first+1, right_edge.points.back().second) == 1 && !FindOneRightEdge()){
 				int cnt_black = 0;
-				for (int i = right_edge.size()-5; i < right_edge.size(); i++) cnt_black += getWorldBit(right_edge.points[i].first-3, right_edge.points[i].second);
+				for (int i = right_edge.size()-5; i < right_edge.size(); i++) cnt_black += getWorldBit(right_edge.points[i].first-7, right_edge.points[i].second);
 				if (cnt_black == 5) {
 					obsta_status = ObstaclePos::kRight;
 					goto obsta_status_end;
@@ -845,7 +845,7 @@ bool FindEdges() {
 			//case 3
 			if (left_corners.size() == 1 && right_corners.size() == 0 && getWorldBit(left_edge.points.back().first-1,left_edge.points.back().second)){
 				int cnt_black = 0;
-				for (int i = left_edge.size()-5; i < left_edge.size(); i++) cnt_black += getWorldBit(left_edge.points[i].first+3, left_edge.points[i].second);
+				for (int i = left_edge.size()-5; i < left_edge.size(); i++) cnt_black += getWorldBit(left_edge.points[i].first+7, left_edge.points[i].second);
 				if (cnt_black == 5) {
 					obsta_status = ObstaclePos::kLeft;
 					goto obsta_status_end;
@@ -853,7 +853,7 @@ bool FindEdges() {
 			}
 			if (right_corners.size() == 1 && left_corners.size() == 0 && getWorldBit(right_edge.points.back().first-1,right_edge.points.back().second)){
 				int cnt_black = 0;
-				for (int i = right_edge.size()-5; i < right_edge.size(); i++) cnt_black += getWorldBit(right_edge.points[i].first-3, right_edge.points[i].second);
+				for (int i = right_edge.size()-5; i < right_edge.size(); i++) cnt_black += getWorldBit(right_edge.points[i].first-7, right_edge.points[i].second);
 				if (cnt_black == 5) {
 					obsta_status = ObstaclePos::kRight;
 					goto obsta_status_end;
@@ -1176,9 +1176,6 @@ Feature featureIdent_Corner() {
 			// reset
 			obsta_status = ObstaclePos::kNull;
 		}
-		else{
-			pBT->resetObstaclePos();
-		}
 	}
 
 
@@ -1366,7 +1363,7 @@ void GenPath(Feature feature) {
 			encoder_total_obstacle = 0;
 			encoder_total_obstacle_overtake = 0;
 			obsta_status = ObstaclePos::kNull;
-
+			pBT->resetObstaclePos();
 
 		}
 		else if (abs(encoder_total_obstacle) >= TuningVar::obstacle_encoder_count && obsta_status == ObstaclePos::kRight && obsta_overtake_status == 0){
@@ -1381,6 +1378,7 @@ void GenPath(Feature feature) {
 			encoder_total_obstacle = 0;
 			encoder_total_obstacle_overtake = 0;
 			obsta_status = ObstaclePos::kNull;
+			pBT->resetObstaclePos();
 
 		}
 
@@ -1394,7 +1392,7 @@ void GenPath(Feature feature) {
 					stop_obsta_overtake = false;
 					// follow new path
 					/*path offset left*/
-					for(int i =0; i < 20; i++) path.push(left_edge.points[i].first + 6, left_edge.points[i].second);
+					for(int i =0; i < 20; i++) path.push(left_edge.points[i].first + 7, left_edge.points[i].second);
 					return;
 
 				}
@@ -1411,7 +1409,7 @@ void GenPath(Feature feature) {
 					stop_obsta_overtake = true;// set the speed to 0
 					// follow new path
 					/*path offset left*/
-					for(int i =0; i < 20; i++) path.push(left_edge.points[i].first + 6, left_edge.points[i].second);
+					for(int i =0; i < 20; i++) path.push(left_edge.points[i].first + 7, left_edge.points[i].second);
 					return;
 				}
 			}
@@ -1421,7 +1419,7 @@ void GenPath(Feature feature) {
 					stop_obsta_overtake = false;
 					// follow new path
 					/*path offset right*/
-					for(int i =0; i < 20; i++) path.push(right_edge.points[i].first - 6, right_edge.points[i].second);
+					for(int i =0; i < 20; i++) path.push(right_edge.points[i].first - 7, right_edge.points[i].second);
 					return;
 
 				}
@@ -1438,7 +1436,7 @@ void GenPath(Feature feature) {
 					stop_obsta_overtake = true;// set the speed to 0
 					// follow new path
 					/*path offset right*/
-					for(int i =0; i < 20; i++) path.push(right_edge.points[i].first - 6, right_edge.points[i].second);
+					for(int i =0; i < 20; i++) path.push(right_edge.points[i].first - 7, right_edge.points[i].second);
 					return;
 				}
 			}
@@ -1452,7 +1450,7 @@ void GenPath(Feature feature) {
 				if(abs(encoder_total_obstacle_overtake) <= TuningVar::back_obstacle_overtake_encoder_count){
 					// follow new path
 					/*path offset right*/
-					for(int i =0; i < 20; i++) path.push(right_edge.points[i].first - 5, right_edge.points[i].second);
+					for(int i =0; i < 20; i++) path.push(right_edge.points[i].first - 7, right_edge.points[i].second);
 					return;
 
 				}
@@ -1470,7 +1468,7 @@ void GenPath(Feature feature) {
 				if(abs(encoder_total_obstacle_overtake) <= TuningVar::back_obstacle_overtake_encoder_count){
 					// follow new path
 					/*path offset left*/
-					for(int i =0; i < 20; i++) path.push(left_edge.points[i].first + 5, left_edge.points[i].second);
+					for(int i =0; i < 20; i++) path.push(left_edge.points[i].first + 7, left_edge.points[i].second);
 					return;
 
 				}
@@ -1942,6 +1940,7 @@ void main_car1(bool debug_) {
 					}
 					if ((stop_count>25 && !is_front_car) || (stop_count>50 && is_front_car)) met_stop_line = true;
 					FindEdges();
+
 					Feature feature = featureIdent_Corner();
 					if(feature == Feature::kRoundabout && is_front_car) bt.sendFeature(feature);
 					GenPath(feature); //Generate path
@@ -2218,8 +2217,8 @@ void main_car1(bool debug_) {
 					pEncoder0->Update();
 					pEncoder1->Update();
 					if(!obstacle_cnt){//System::Time() - startTime < 1000){
-						pid_left.SetSetpoint(45);
-						pid_right.SetSetpoint(45);
+						pid_left.SetSetpoint(90);
+						pid_right.SetSetpoint(90);
 					}
 					if(met_stop_line || (stop_obsta_overtake && is_front_car && obsta_overtake_status != 0)){
 						pid_left.SetSetpoint(0);

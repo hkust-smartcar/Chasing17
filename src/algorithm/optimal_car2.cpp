@@ -813,7 +813,7 @@ bool FindEdges() {
 			//case 1
 			if (left_edge.size() >= 46 && getWorldBit(left_edge.points[45].first-1, left_edge.points[45].second) == 1){ //only for left of left edge is black
 				int cnt_black = 0;
-				for (int i = 40; i < 45; i++) cnt_black += getWorldBit(left_edge.points[i].first+3, left_edge.points[i].second);
+				for (int i = 40; i < 45; i++) cnt_black += getWorldBit(left_edge.points[i].first+7, left_edge.points[i].second);
 				if (cnt_black == 5) {
 					obsta_status = ObstaclePos::kLeft;
 					goto obsta_status_end;
@@ -821,7 +821,7 @@ bool FindEdges() {
 			}
 			if (right_edge.size() >= 46 && getWorldBit(right_edge.points[45].first-1, right_edge.points[45].second) == 1){ //only for right of right edge is black
 				int cnt_black = 0;
-				for (int i = 40; i < 45; i++) cnt_black += getWorldBit(right_edge.points[i].first-3, right_edge.points[i].second);
+				for (int i = 40; i < 45; i++) cnt_black += getWorldBit(right_edge.points[i].first-7, right_edge.points[i].second);
 				if (cnt_black == 5) {
 					obsta_status = ObstaclePos::kRight;
 					goto obsta_status_end;
@@ -830,7 +830,7 @@ bool FindEdges() {
 			//case 2
 			if (getWorldBit(left_edge.points.back().first-1, left_edge.points.back().second) == 1 && !FindOneLeftEdge()){
 				int cnt_black = 0;
-				for (int i = left_edge.size()-5; i < left_edge.size(); i++) cnt_black += getWorldBit(left_edge.points[i].first+3, left_edge.points[i].second);
+				for (int i = left_edge.size()-5; i < left_edge.size(); i++) cnt_black += getWorldBit(left_edge.points[i].first+7, left_edge.points[i].second);
 				if (cnt_black == 5) {
 					obsta_status = ObstaclePos::kLeft;
 					goto obsta_status_end;
@@ -838,7 +838,7 @@ bool FindEdges() {
 			} else left_edge.points.pop_back();
 			if (getWorldBit(right_edge.points.back().first+1, right_edge.points.back().second) == 1 && !FindOneRightEdge()){
 				int cnt_black = 0;
-				for (int i = right_edge.size()-5; i < right_edge.size(); i++) cnt_black += getWorldBit(right_edge.points[i].first-3, right_edge.points[i].second);
+				for (int i = right_edge.size()-5; i < right_edge.size(); i++) cnt_black += getWorldBit(right_edge.points[i].first-7, right_edge.points[i].second);
 				if (cnt_black == 5) {
 					obsta_status = ObstaclePos::kRight;
 					goto obsta_status_end;
@@ -847,7 +847,7 @@ bool FindEdges() {
 			//case 3
 			if (left_corners.size() == 1 && right_corners.size() == 0 && getWorldBit(left_edge.points.back().first-1,left_edge.points.back().second)){
 				int cnt_black = 0;
-				for (int i = left_edge.size()-5; i < left_edge.size(); i++) cnt_black += getWorldBit(left_edge.points[i].first+3, left_edge.points[i].second);
+				for (int i = left_edge.size()-5; i < left_edge.size(); i++) cnt_black += getWorldBit(left_edge.points[i].first+7, left_edge.points[i].second);
 				if (cnt_black == 5) {
 					obsta_status = ObstaclePos::kLeft;
 					goto obsta_status_end;
@@ -855,7 +855,7 @@ bool FindEdges() {
 			}
 			if (right_corners.size() == 1 && left_corners.size() == 0 && getWorldBit(right_edge.points.back().first-1,right_edge.points.back().second)){
 				int cnt_black = 0;
-				for (int i = right_edge.size()-5; i < right_edge.size(); i++) cnt_black += getWorldBit(right_edge.points[i].first-3, right_edge.points[i].second);
+				for (int i = right_edge.size()-5; i < right_edge.size(); i++) cnt_black += getWorldBit(right_edge.points[i].first-7, right_edge.points[i].second);
 				if (cnt_black == 5) {
 					obsta_status = ObstaclePos::kRight;
 					goto obsta_status_end;
@@ -1875,9 +1875,20 @@ void main_car2(bool debug_) {
 	joystick_config.is_active_low = true;
 	Joystick joystick(joystick_config);
 
+	//  DebugConsole console(&joystick, &lcd, &writer, 10);
+
+	Timer::TimerInt time_img = 0;
 
 
+	while(!debug&&joystick.GetState()==Joystick::State::kIdle);
+
+	if(!debug){
+		bt.sendStartReq();
+		Timer::TimerInt start=System::Time();
+		while(System::Time()-start < 1500 && YYdistance.GetDistance() < TuningVar::start_car_distance) System::DelayMs(10);
+	}
 	/*motor PID setting*/
+	Timer::TimerInt pidStart = System::Time();
 	IncrementalPidController<float, float> pid_left(0,0,0,0);
 	pid_left_p = &pid_left;
 	pid_left.SetOutputBound(-500, 500);
@@ -1891,18 +1902,7 @@ void main_car2(bool debug_) {
 	pid_left.SetKd(0);
 	pid_right.SetKd(0);
 
-	//  DebugConsole console(&joystick, &lcd, &writer, 10);
-
-	Timer::TimerInt time_img = 0;
-
-
-	while(!debug&&joystick.GetState()==Joystick::State::kIdle);
-
-	if(!debug){
-		bt.sendStartReq();
-		Timer::TimerInt start=System::Time();
-		while(System::Time()-start < 1500 && YYdistance.GetDistance() < TuningVar::start_car_distance) System::DelayMs(10);
-	}
+	while(System::Time()-pidStart<5000);
 
 	//	StartlineOvertake();
 	pMotor0->SetClockwise(true);
@@ -2196,7 +2196,7 @@ void main_car2(bool debug_) {
 					prev_servo_error = curr_servo_error;
 					pEncoder0->Update();
 					pEncoder1->Update();
-					if(System::Time() - startTime < 1000){
+					if(!obstacle_cnt){//System::Time() - startTime < 1000){
 						pid_left.SetSetpoint(90);
 						pid_right.SetSetpoint(90);
 					}
