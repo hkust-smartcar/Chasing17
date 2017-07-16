@@ -89,7 +89,7 @@ bool show_algo_time = false;
 bool single_car_testing = false;// still need to set overtake flag to false, only for car2 roundabout detection
 bool overtake_mode = true; // true: overtake with communication, false: no overtake WITH communication
 bool obstacle_mode = true; // true: handle obstacle with communication, false: cancel obstacle handler
-bool obsta_overtake_mode = true;
+bool obsta_overtake_mode = false;
 
 uint16_t starting_y = 15; //the starting y for edge detection
 uint16_t edge_length = 159; //max length for an edge
@@ -116,7 +116,7 @@ uint16_t min_dist_meet_crossing = 30;
 uint16_t roundroad_min_size = 30; // When the edge is broken in roundabout, find until this threshold
 uint16_t exit_action_dist = 35; // double check to avoid corner's sudden disappear inside roundabout
 uint16_t roundabout_offset = 15; // half of road width
-uint16_t round_exit_offset = 24;
+uint16_t round_exit_offset = 23;
 uint16_t round_encoder_count = 2600;
 uint16_t roundExit_encoder_count = 3700;
 uint16_t obstacle_encoder_count = 5000;
@@ -1089,7 +1089,7 @@ Feature featureIdent_Corner() {
 		}
 	}
 	/*FOR DEBUGGING*/
-	if (debug) {
+	if (false) {
 		//				char temp_1[100];
 		//				sprintf(temp_1, "Ycor:%d", abs(roundabout_nearest_corner_right.second - carMid.second));
 		//				pLcd->SetRegion(Lcd::Rect(0, 75, 128, 15));
@@ -1305,7 +1305,7 @@ void GenPath(Feature feature) {
 	/*END OF CROSSING PASSING PART*/
 
 	/*FOR DEBUGGING*/
-	if (debug) {
+	if (false) {
 		char temp[100];
 		sprintf(temp, "ExitEnc:%d", abs(encoder_total_exit));
 		pLcd->SetRegion(Lcd::Rect(0, 54, 128, 15));
@@ -1328,7 +1328,8 @@ void GenPath(Feature feature) {
 	}
 
 	//When exiting the roundabout, keep exit method until completely exit
-	if (roundaboutExitStatus == 1 && abs(encoder_total_exit) >= TuningVar::roundExit_encoder_count) {
+	if (roundaboutExitStatus == 1
+			&& abs(encoder_total_exit) >= TuningVar::roundExit_encoder_count) {
 		roundaboutExitStatus = 0;
 		roundaboutStatus = 0;
 		/*TODO: switch carID, sendBT to another car and set has_exited on the other side to true*/
@@ -1548,12 +1549,12 @@ void GenPath(Feature feature) {
 			while ((left_edge.points.size() < TuningVar::roundroad_min_size) && FindOneLeftEdge()) {}
 			//translate right
 			for (int i = 0; i < left_edge.points.size(); i++) {
-				path.push(left_edge.points[i].first + TuningVar::roundabout_offset, left_edge.points[i].second);
+				path.push(left_edge.points[i].first + TuningVar::round_exit_offset, left_edge.points[i].second);
 			}
 		} else {
 			while ((right_edge.points.size() < TuningVar::roundroad_min_size) && FindOneRightEdge()) {}
 			for (int i = 0; i < right_edge.points.size(); i++) {
-				path.push(right_edge.points[i].first - TuningVar::roundabout_offset, right_edge.points[i].second);
+				path.push(right_edge.points[i].first - TuningVar::round_exit_offset, right_edge.points[i].second);
 			}
 		}
 		break;
@@ -1674,7 +1675,6 @@ int roundabout_shortest(uint32_t a, int pos){
  */
 int16_t CalcAngleDiff() {
 	int16_t error = 0, sum = 0;
-	int16_t roundabout_offset = 0;
 	uint16_t total_sum;
 	if (!hadStoppingLine) total_sum = 10;
 	else if (roundaboutExitStatus) total_sum = 40;
@@ -1855,8 +1855,6 @@ void main_car2(bool debug_) {
 	ConfigMotor.id = 1;
 	auto spMotor1 = util::make_unique<DirMotor>(ConfigMotor);
 	pMotor1 = spMotor1.get();
-	pMotor0->SetClockwise(true);
-	pMotor1->SetClockwise(false);
 
 	FcYyUsV4 YYdistance(Pin::Name::kPtb0);
 
@@ -1910,8 +1908,8 @@ void main_car2(bool debug_) {
 
 	pServo->SetDegree(servo_bounds.kCenter);
 	while(System::Time()-pidStart<5000);
-
 	//	StartlineOvertake();
+
 	pMotor0->SetClockwise(true);
 	pMotor1->SetClockwise(false);
 
@@ -1927,7 +1925,6 @@ void main_car2(bool debug_) {
 		overtake = false;
 	}
 
-	pServo->SetDegree(servo_bounds.kCenter);
 	while (true) {
 		if(run){
 			while (time_img != System::Time()) {
@@ -1942,6 +1939,10 @@ void main_car2(bool debug_) {
 					if (obstacle_cnt>0){
 						TuningVar::obstacle_mode = false;
 					}
+					// if obstacle_mode == 0 avoid slow speed mode
+					if (!TuningVar::obstacle_mode){
+						obstacle_cnt = 1;
+					}
 					if (bt.hasStopCar()) met_stop_line = true;
 					need_slow_down = false;
 					bool skip_motor_protection=false;
@@ -1950,8 +1951,8 @@ void main_car2(bool debug_) {
 
 					if (joystick.GetState() == Joystick::State::kSelect) bt.sendStopCar();
 					//	Timer::TimerInt algo_start_time = System::Time();
-					Capture(); //Capture until two base points are identified
 
+					Capture(); //Capture until two base points are identified
 					/*STOPPING LINE DETECTION*/
 					if (stop_count) stop_count++;
 					if (FindStoppingLine()) {
@@ -2007,7 +2008,6 @@ void main_car2(bool debug_) {
 					}
 					if (debug) {
 						char time_str[100];
-						//          sprintf(time_str, "Time:%dms", System::Time()-algo_start_time);
 						pLcd->SetRegion(Lcd::Rect(0,0,128,15));
 						pWriter->WriteString(time_str);
 						PrintWorldImage();
@@ -2094,18 +2094,21 @@ void main_car2(bool debug_) {
 					//roundabout case
 					else if(roundaboutStatus == 1){
 						//for slowing down the car in advance
-						if(stop_before_roundexit && overtake){
-							pServo->SetDegree(util::clamp<uint16_t>(
-									servo_bounds.kCenter - (TuningVar::servo_roundabout_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
-									servo_bounds.kRightBound,
-									servo_bounds.kLeftBound));
-							pid_left.SetSetpoint(60);
-							pid_right.SetSetpoint(60);
-							//avoid another car's early pass the exit
-							if(pBT->hasFinishedOvertake()){
-								stop_before_roundexit = false;
-								// roundaboutStatus = 0;
-							}
+//						if(stop_before_roundexit && overtake){
+//							pServo->SetDegree(util::clamp<uint16_t>(
+//									servo_bounds.kCenter - (TuningVar::servo_roundabout_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
+//									servo_bounds.kRightBound,
+//									servo_bounds.kLeftBound));
+//							pid_left.SetSetpoint(60);
+//							pid_right.SetSetpoint(60);
+//							//avoid another car's early pass the exit
+//							if(pBT->hasFinishedOvertake()){
+//								stop_before_roundexit = false;
+//								// roundaboutStatus = 0;
+//							}
+//						}
+						if(stop_before_roundexit && overtake && pBT->hasFinishedOvertake()){
+							stop_before_roundexit = false;
 						}
 						//slow down the car when the exit is ready
 						else if(need_slow_down){

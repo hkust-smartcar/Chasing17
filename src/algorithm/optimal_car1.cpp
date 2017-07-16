@@ -86,7 +86,7 @@ bool show_algo_time = false;
 bool single_car_testing = false;// only for car2 roundabout detection
 bool overtake_mode = true; // true: overtake with communication, false: no overtake WITH communication
 bool obstacle_mode = true; // true: handle obstacle with communication, false: cancel obstacle handler
-bool obsta_overtake_mode = true;
+bool obsta_overtake_mode = false;
 
 uint16_t starting_y = 15; //the starting y for edge detection
 uint16_t edge_length = 159; //max length for an edge
@@ -1730,27 +1730,6 @@ void StartlineOvertake() {
 	}
 }
 
-/**
- * @brief ObstacleOvertake
- * For left obstacle, front car go right and back car overtake.
- * For right obstacle, front car go left and back car overtake.
- * After overtake via encoder count, send bt signal to the other car to start after 1.5s
- */
-void ObstacleOvertake(){
-	switch(obsta_status){
-	case ObstaclePos::kLeft:
-		if (is_front_car){
-
-		} else {
-
-		}
-		break;
-	case ObstaclePos::kRight:
-
-		break;
-	}
-
-}
 
 }  // namespace
 
@@ -1929,15 +1908,21 @@ void main_car1(bool debug_) {
 					if (obstacle_cnt>0){
 						TuningVar::obstacle_mode = false;
 					}
+					// if obstacle_mode == 0 avoid slow speed mode
+					if (!TuningVar::obstacle_mode){
+						obstacle_cnt = 1;
+					}
 					if (bt.hasStopCar()) met_stop_line = true;
-//					pLcd->Clear();
 					need_slow_down = false;
 					bool skip_motor_protection=false;
-					if (joystick.GetState() == Joystick::State::kSelect) bt.sendStopCar();
-					//Overtake motor control
 					bt.resendNAKData();
 
-					//        Timer::TimerInt new_time = System::Time();
+
+					if (joystick.GetState() == Joystick::State::kSelect) bt.sendStopCar();
+
+
+
+					//  Timer::TimerInt new_time = System::Time();
 					Capture(); //Capture until two base points are identified
 					if (stop_count) stop_count++;
 					if (FindStoppingLine()) {
@@ -1969,17 +1954,6 @@ void main_car1(bool debug_) {
 //						stop_before_roundexit?pWriter->WriteString("StopB"):pWriter->WriteString("No StopB");
 						need_slow_down?pWriter->WriteString("Slow"):pWriter->WriteString("No Slow");
 					}
-					/*Tuning offset*/
-					//		if (joystick.GetState() == Joystick::State::kUp) {
-					//			servoAngle+=10;
-					//		} else if (joystick.GetState() == Joystick::State::kDown) {
-					//			servoAngle-=10;
-					//		}
-					//		pLcd->SetRegion(Lcd::Rect(0, 16, 128, 15));
-					//		char timestr[100];
-					//		sprintf(timestr, "AngleOS: %d", servoAngle);
-					//		pServo->SetDegree(servo_bounds.kCenter + servoAngle);
-					//		pWriter->WriteString(timestr);
 					if(debug){
 						pLcd->SetRegion(Lcd::Rect(0,0,128,15));
 						if (obsta_overtake_status == 1) pWriter->WriteString("OverLeft");
@@ -2019,41 +1993,6 @@ void main_car1(bool debug_) {
 						//						sprintf(timestr, "Roun_cnt: %d", roundabout_cnt);
 						//						pWriter->WriteString(timestr);
 
-						/*ALGO RUNNING TIME*/
-						//			pLcd->SetRegion(Lcd::Rect(0, 16, 128, 15));
-						//			char timestr[100];
-						//			sprintf(timestr, "time: %dms", System::Time() - new_time);
-						//			pWriter->WriteString(timestr);
-
-						//
-						//			    pLcd->SetRegion(Lcd::Rect(0, 80, 128, 15));
-						//			    is_straight_line? pWriter->WriteString("straight"):pWriter->WriteString("Not straight");
-						//          switch (feature) {
-						//            case Feature::kCross:
-						//              pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
-						//              pWriter->WriteString("Crossing");
-						//              break;
-						//            case Feature::kRoundabout:
-						//              pLcd->SetRegion(Lcd::Rect(0, 60, 128, 15));
-						//              pWriter->WriteString("Roundabout");
-						//              break;
-						//            case Feature::kNormal:
-						//              pLcd->SetRegion(Lcd::Rect(0, 30, 128, 15));
-						//              pWriter->WriteString("Normal");
-						//              break;
-						//            case Feature::kRoundaboutExit:
-						//              pLcd->SetRegion(Lcd::Rect(0, 30, 128, 15));
-						//              pWriter->WriteString("Exit of Roundabout");
-						//              break;
-						//            case Feature::kStraight:
-						//              pLcd->SetRegion(Lcd::Rect(0, 30, 128, 15));
-						//              pWriter->WriteString("Straight");
-						//              break;
-						//          }
-						//				pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
-						//				char timestr[100];
-						//				sprintf(timestr, "error %d", curr_servo_error);
-						//				pWriter->WriteString(timestr);
 
 					}
 					/*END OF DEBUGGING*/
@@ -2110,19 +2049,23 @@ void main_car1(bool debug_) {
 					else if(roundaboutStatus == 1){
 
 						//for slowing down the car in advance when need to stop
-						if(stop_before_roundexit && overtake){
-							pServo->SetDegree(util::clamp<uint16_t>(
-									servo_bounds.kCenter - (TuningVar::servo_roundabout_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
-									servo_bounds.kRightBound,
-									servo_bounds.kLeftBound));
-							pid_left.SetSetpoint(60);
-							pid_right.SetSetpoint(60);
-							//avoid another car's early pass the exit
-							if(pBT->hasFinishedOvertake()){
-								stop_before_roundexit = false;
-								// roundaboutStatus = 0;
-							}
+//						if(stop_before_roundexit && overtake){
+//							pServo->SetDegree(util::clamp<uint16_t>(
+//									servo_bounds.kCenter - (TuningVar::servo_roundabout_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
+//									servo_bounds.kRightBound,
+//									servo_bounds.kLeftBound));
+//							pid_left.SetSetpoint(60);
+//							pid_right.SetSetpoint(60);
+//							//avoid another car's early pass the exit
+//							if(pBT->hasFinishedOvertake()){
+//								stop_before_roundexit = false;
+//								// roundaboutStatus = 0;
+//							}
+//						}
+						if(stop_before_roundexit && overtake && pBT->hasFinishedOvertake()){
+							stop_before_roundexit = false;
 						}
+						/*New stopping method*/
 						//slow down the car when the exit is ready
 						else if(need_slow_down){
 							pServo->SetDegree(util::clamp<uint16_t>(
