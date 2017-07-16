@@ -91,7 +91,7 @@ bool overtake_mode = true; // true: overtake with communication, false: no overt
 bool obstacle_mode = true; // true: handle obstacle with communication, false: cancel obstacle handler
 bool obsta_overtake_mode = false;
 
-uint16_t starting_y = 15; //the starting y for edge detection
+uint16_t starting_y = 13; //the starting y for edge detection
 uint16_t edge_length = 159; //max length for an edge
 uint16_t edge_hor_search_max = 4; //max for horizontal search of edge if next edge point cannot be found
 uint16_t edge_min_worldview_bound_check = 30; //min for worldview bound check in edge finding
