@@ -66,13 +66,13 @@ void loadItems(DebugConsole* console) {
 
       // servo
       console->PushItem("servo pid:");
-      console->PushItem("strght-p", &servo_straight_kp, 0.1);
+      console->PushItem("strght-p", &servo_straight_kp, 0.01);
       console->PushItem("strght-d", &servo_straight_kd, 0.001);
-      console->PushItem("normal-p", &servo_normal_kp, 0.1);
+      console->PushItem("normal-p", &servo_normal_kp, 0.01);
       console->PushItem("normal-d", &servo_normal_kd, 0.001);
-      console->PushItem("rndabt-p", &servo_roundabout_kp, 0.1);
+      console->PushItem("rndabt-p", &servo_roundabout_kp, 0.01);
       console->PushItem("rndabt-d", &servo_roundabout_kd, 0.001);
-      console->PushItem("s_turn-p", &servo_sharp_turn_kp, 0.1);
+      console->PushItem("s_turn-p", &servo_sharp_turn_kp, 0.01);
       console->PushItem("s_turn-d", &servo_sharp_turn_kd, 0.001);
     }
     break;
@@ -104,13 +104,13 @@ void loadItems(DebugConsole* console) {
 
       // servo
       console->PushItem("servo pid:");
-      console->PushItem("strght-p", &servo_straight_kp, 0.1);
+      console->PushItem("strght-p", &servo_straight_kp, 0.01);
       console->PushItem("strght-d", &servo_straight_kd, 0.001);
-      console->PushItem("normal-p", &servo_normal_kp, 0.1);
+      console->PushItem("normal-p", &servo_normal_kp, 0.01);
       console->PushItem("normal-d", &servo_normal_kd, 0.001);
-      console->PushItem("rndabt-p", &servo_roundabout_kp, 0.1);
+      console->PushItem("rndabt-p", &servo_roundabout_kp, 0.01);
       console->PushItem("rndabt-d", &servo_roundabout_kd, 0.001);
-      console->PushItem("s_turn-p", &servo_sharp_turn_kp, 0.1);
+      console->PushItem("s_turn-p", &servo_sharp_turn_kp, 0.01);
       console->PushItem("s_turn-d", &servo_sharp_turn_kd, 0.001);
 
     }

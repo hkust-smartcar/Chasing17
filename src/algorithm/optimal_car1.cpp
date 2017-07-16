@@ -1875,9 +1875,8 @@ void main_car1(bool debug_) {
 	//  DebugConsole console(&joystick, &lcd, &writer, 10);
 
 	Timer::TimerInt time_img = 0;
-
-
 	while(!bt.hasStartReq()&&!debug&&joystick.GetState()==Joystick::State::kIdle);
+
 	/*motor PID setting*/
 	Timer::TimerInt pidStart = System::Time();
 	IncrementalPidController<float, float> pid_left(0,0,0,0);
@@ -1916,7 +1915,6 @@ void main_car1(bool debug_) {
 	}
 
 	//	int servoAngle = 0;
-	pServo->SetDegree(servo_bounds.kCenter);
 	while (true) {
 		if(run){
 			while (time_img != System::Time()) {

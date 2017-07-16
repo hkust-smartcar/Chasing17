@@ -1886,8 +1886,6 @@ void main_car2(bool debug_) {
 	//  DebugConsole console(&joystick, &lcd, &writer, 10);
 
 	Timer::TimerInt time_img = 0;
-
-
 	while(!debug&&joystick.GetState()==Joystick::State::kIdle);
 
 	if(!debug){
