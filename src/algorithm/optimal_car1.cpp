@@ -1085,7 +1085,7 @@ Feature featureIdent_Corner() {
 		}
 	}
 	/*FOR DEBUGGING*/
-	if (debug) {
+	if (false) {
 		//				char temp_1[100];
 		//				sprintf(temp_1, "Ycor:%d", abs(roundabout_nearest_corner_right.second - carMid.second));
 		//				pLcd->SetRegion(Lcd::Rect(0, 75, 128, 15));
@@ -1301,7 +1301,7 @@ void GenPath(Feature feature) {
 	/*END OF CROSSING PASSING PART*/
 
 	/*FOR DEBUGGING*/
-	if (debug) {
+	if (false) {
 		char temp[100];
 		sprintf(temp, "ExitEnc:%d", abs(encoder_total_exit));
 		pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
@@ -1359,9 +1359,13 @@ void GenPath(Feature feature) {
 	if (TuningVar::obstacle_mode){
 
 		// reset the obsta_status when finish and count++
-		if(abs(encoder_total_obstacle) >= TuningVar::obstacle_encoder_count && obsta_status == ObstaclePos::kLeft){
+		if(abs(encoder_total_obstacle) >= TuningVar::obstacle_encoder_count && obsta_status == ObstaclePos::kLeft && obsta_overtake_status == 0){
 			if(TuningVar::obsta_overtake_mode){
 				obsta_overtake_status = 1;
+			}
+			else{
+				sendFlag = true;
+				obstacle_cnt++;
 			}
 			// clear encoder count
 			encoder_total_obstacle = 0;
@@ -1370,9 +1374,13 @@ void GenPath(Feature feature) {
 
 
 		}
-		else if (abs(encoder_total_obstacle) >= TuningVar::obstacle_encoder_count && obsta_status == ObstaclePos::kRight){
+		else if (abs(encoder_total_obstacle) >= TuningVar::obstacle_encoder_count && obsta_status == ObstaclePos::kRight && obsta_overtake_status == 0){
 			if(TuningVar::obsta_overtake_mode){
 				obsta_overtake_status = 2;// 2 means obstacle is right
+			}
+			else{
+				sendFlag = true;
+				obstacle_cnt++;
 			}
 			// clear encoder count
 			encoder_total_obstacle = 0;
@@ -1866,7 +1874,14 @@ void main_car1(bool debug_) {
 	joystick_config.is_active_low = true;
 	Joystick joystick(joystick_config);
 
+	//  DebugConsole console(&joystick, &lcd, &writer, 10);
+
+	Timer::TimerInt time_img = 0;
+
+
+	while(!bt.hasStartReq()&&!debug&&joystick.GetState()==Joystick::State::kIdle);
 	/*motor PID setting*/
+	Timer::TimerInt pidStart = System::Time();
 	IncrementalPidController<float, float> pid_left(0,0,0,0);
 	pid_left_p = &pid_left;
 	pid_left.SetOutputBound(-500, 500);
@@ -1886,6 +1901,7 @@ void main_car1(bool debug_) {
 
 	pServo->SetDegree(servo_bounds.kCenter);
 	while(!bt.hasStartReq()&&!debug&&joystick.GetState()==Joystick::State::kIdle);
+	while(System::Time()-pidStart<5000);
 	//	StartlineOvertake();
 
 	pMotor0->SetClockwise(true);
@@ -1954,7 +1970,7 @@ void main_car1(bool debug_) {
 					if(feature == Feature::kRoundabout && is_front_car) bt.sendFeature(feature);
 					GenPath(feature); //Generate path
 					/*FOR DEBUGGING*/
-					if(debug){
+					if(false){
 						pLcd->SetRegion(Lcd::Rect(0,100,128,15));
 //						stop_before_roundexit?pWriter->WriteString("StopB"):pWriter->WriteString("No StopB");
 						need_slow_down?pWriter->WriteString("Slow"):pWriter->WriteString("No Slow");
@@ -2225,9 +2241,9 @@ void main_car1(bool debug_) {
 					prev_servo_error = curr_servo_error;
 					pEncoder0->Update();
 					pEncoder1->Update();
-					if(System::Time() - startTime < 1000){
-						pid_left.SetSetpoint(90);
-						pid_right.SetSetpoint(90);
+					if(!obstacle_cnt){//System::Time() - startTime < 1000){
+						pid_left.SetSetpoint(45);
+						pid_right.SetSetpoint(45);
 					}
 					if(met_stop_line || (stop_obsta_overtake && is_front_car && obsta_overtake_status != 0)){
 						pid_left.SetSetpoint(0);
