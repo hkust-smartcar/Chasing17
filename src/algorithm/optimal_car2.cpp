@@ -1364,6 +1364,10 @@ void GenPath(Feature feature) {
 			if(TuningVar::obsta_overtake_mode){
 				obsta_overtake_status = 1;
 			}
+			else{
+				sendFlag = true;
+				obstacle_cnt++;
+			}
 			// clear encoder count
 			encoder_total_obstacle = 0;
 			encoder_total_obstacle_overtake = 0;
@@ -1375,6 +1379,10 @@ void GenPath(Feature feature) {
 		else if (abs(encoder_total_obstacle) >= TuningVar::obstacle_encoder_count && obsta_status == ObstaclePos::kRight && obsta_overtake_status == 0){
 			if(TuningVar::obsta_overtake_mode){
 				obsta_overtake_status = 2;
+			}
+			else{
+				sendFlag = true;
+				obstacle_cnt++;
 			}
 			// clear encoder count
 			encoder_total_obstacle = 0;
@@ -1698,7 +1706,7 @@ bool FindStoppingLine() {
 			count++;
 			refPoint = !refPoint;
 		}
-		if (count > 20) {
+		if (count > 10) {
 			return true;
 		}
 	}
