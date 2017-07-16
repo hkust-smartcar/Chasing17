@@ -36,6 +36,7 @@
 #include "debug_console.h"
 #include "algorithm/worldview/car1.h"
 #include "util/util.h"
+#include "fc_yy_us_v4.h"
 
 typedef CarManager::Feature Feature;
 typedef CarManager::ImageSize ImageSize;
@@ -1703,6 +1704,24 @@ bool FindStoppingLine() {
 }
 
 /*
+ * @brief Find if the stopping line exist further
+ */
+bool FindFurtherStoppingLine() {
+	int refPoint = 1;
+	int count = 0;
+	for (int x = 0; x < 128; x++) {
+		if (getFilteredBit(CameraBuf, x, 250) != refPoint) {
+			count++;
+			refPoint = !refPoint;
+		}
+		if (count > 11) {
+			return true;
+		}
+	}
+	return false;
+}
+
+/*
  * @brief Start line overtake
  * Left Car 1; Right Car 2
  * After overtake, Front Car 1; Back Car 2
@@ -1827,6 +1846,8 @@ void main_car1(bool debug_) {
 	auto spMotor1 = util::make_unique<DirMotor>(ConfigMotor);
 	pMotor1 = spMotor1.get();
 
+	FcYyUsV4 YYdistance(Pin::Name::kPtb0);
+
 	JyMcuBt106::Config ConfigBT;
 	ConfigBT.id = 0;
 	ConfigBT.baud_rate = libbase::k60::Uart::Config::BaudRate::k115200;
@@ -1883,6 +1904,7 @@ void main_car1(bool debug_) {
 
 	Timer::TimerInt startTime=System::Time();
 	bool met_stop_line=false;
+	bool met_stop_line_slow_down = false;
 	uint8_t stop_count=0;
 	bool brake_flag = true;
 	// update the overtake for the first roundabout
@@ -1934,6 +1956,11 @@ void main_car1(bool debug_) {
 						}
 						Capture(25);
 					}
+					if(FindFurtherStoppingLine() && is_front_car){
+						met_stop_line_slow_down = true;
+						bt.sendSpeed(10);
+					}
+					if(!is_front_car && bt.getBufferSpeed() == 10 && YYdistance.GetDistance() < 350) bt.sendSpeed(100);
 					if (!hadStoppingLine && prevStoppingLine && !FindStoppingLine()) hadStoppingLine = true;
 					else prevStoppingLine = FindStoppingLine();
 					if (!hadStoppingLine){
@@ -2181,6 +2208,15 @@ void main_car1(bool debug_) {
 					if(!obstacle_cnt){//System::Time() - startTime < 1000){
 						pid_left.SetSetpoint(90);
 						pid_right.SetSetpoint(90);
+					}
+					if(met_stop_line_slow_down && is_front_car){
+						if(bt.getBufferSpeed() == 100){
+							pid_left.SetSetpoint(TuningVar::targetSpeed_straight);
+							pid_right.SetSetpoint(TuningVar::targetSpeed_straight);
+						}else{
+							pid_left.SetSetpoint(30);
+							pid_right.SetSetpoint(30);
+						}
 					}
 					if(met_stop_line || (stop_obsta_overtake && is_front_car && obsta_overtake_status != 0)){
 						pid_left.SetSetpoint(0);
