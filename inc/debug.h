@@ -52,6 +52,9 @@ void loadItems(DebugConsole* console) {
       console->PushItem("obs_overt", &obsta_overtake_mode, "true", "false");
       console->PushItem("overt_sel", &roundabout_overtake_flag, "y", "n");
       console->PushItem("rndabt sel", &roundabout_shortest_flag, "l", "r");
+      console->PushItem("rnd_off", &roundabout_offset, 1);
+      console->PushItem("rndEx_off", &round_exit_offset, 1);
+
       console->PushItem("over_time", &overtake_interval_time, 5);
 //      console->PushItem("corner_size", &corner_range, 1);
 //      console->PushItem("corner_min", &corner_min, 1);
@@ -91,6 +94,8 @@ void loadItems(DebugConsole* console) {
       console->PushItem("distance", &start_car_distance, 10);
       console->PushItem("overt_sel", &roundabout_overtake_flag, "y", "n");
       console->PushItem("rndabt sel", &roundabout_shortest_flag, "l", "r");
+      console->PushItem("rnd_off", &roundabout_offset, 1);
+      console->PushItem("rndEx_off", &round_exit_offset, 1);
       console->PushItem("over_time", &overtake_interval_time, 5);
 //      console->PushItem("corner_size", &corner_range, 1);
 //      console->PushItem("corner_min", &corner_min, 1);
