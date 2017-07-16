@@ -124,6 +124,8 @@ int32_t roundabout_shortest_flag = 0b00011; //1 means turn left, 0 means turn ri
 int32_t roundabout_overtake_flag = 0b11111;
 uint16_t nearest_corner_threshold = 128/2;
 uint16_t overtake_interval_time = 1000;
+int16_t obstacle_hardcode_enc_total = 5000;
+bool isObstacleLeft = true; //true for left, false for right
 
 // servo pid values
 float servo_straight_kp = kStablePid.ServoStraight.kP;
@@ -204,6 +206,9 @@ std::pair<int, int> roundabout_nearest_corner_right{0, 0};
 int prev_servo_error = 0;
 int curr_enc_val_left = 0;
 int curr_enc_val_right = 0;
+
+int obstacle_hardcode_enc_curr = 0;
+bool finishObstacleBypass = false;
 
 const Byte* CameraBuf;
 
@@ -1246,6 +1251,17 @@ void GenPath(Feature feature) {
 
 	path.points.clear();
 
+	if (!finishObstacleBypass && !TuningVar::obstacle_mode && obstacle_hardcode_enc_curr < TuningVar::obstacle_hardcode_enc_total){
+		//hardcode obstacle bypass
+		if (TuningVar::isObstacleLeft)
+			for (int i = 0; i < 20; i++) path.push(right_edge.points[i].first-8, right_edge.points[i].second);
+		else
+			for (int i = 0; i < 20; i++) path.push(left_edge.points[i].first+8, left_edge.points[i].second);
+		return;
+	} else if (!finishObstacleBypass && !TuningVar::obstacle_mode && obstacle_hardcode_enc_curr >= TuningVar::obstacle_hardcode_enc_total){
+		finishObstacleBypass = true;
+	}
+
 	if (!left_size && !right_size) { //simple validity check
 		return;
 	}
@@ -1963,9 +1979,9 @@ void main_car1(bool debug_) {
 					if(!is_front_car && bt.getBufferSpeed() == 10 && YYdistance.GetDistance() < 350) bt.sendSpeed(100);
 					if (!hadStoppingLine && prevStoppingLine && !FindStoppingLine()) hadStoppingLine = true;
 					else prevStoppingLine = FindStoppingLine();
-					if (!hadStoppingLine){
-						TuningVar::obstacle_mode = false;
-					} else TuningVar::obstacle_mode = true;
+//					if (!hadStoppingLine){
+//						TuningVar::obstacle_mode = false;
+//					} else TuningVar::obstacle_mode = true;
 					if ((stop_count>25 && !is_front_car) || (stop_count>50 && is_front_car)) met_stop_line = true;
 					FindEdges();
 					if (!hadStoppingLine){
@@ -2225,6 +2241,11 @@ void main_car1(bool debug_) {
 					}
 					curr_enc_val_left = pEncoder0->GetCount();
 					curr_enc_val_right = -pEncoder1->GetCount();
+					if (!finishObstacleBypass) obstacle_hardcode_enc_curr += pEncoder0->GetCount();
+					char tem[100];
+					sprintf(tem, "enc:%d", obstacle_hardcode_enc_curr);
+					pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
+					pWriter->WriteString(tem);
 					SetMotorPower(GetMotorPower(0)+pid_left.Calc(curr_enc_val_left),0);
 					SetMotorPower(GetMotorPower(1)+pid_right.Calc(curr_enc_val_right),1);
 					//				if((curr_enc_val_left<100 || curr_enc_val_right<100) && (System::Time()-startTime>1000 || skip_motor_protection)){
