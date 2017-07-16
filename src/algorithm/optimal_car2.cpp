@@ -1741,20 +1741,20 @@ bool FindStoppingLine() {
 /*
  * @brief Find if the stopping line exist further
  */
-bool FindFurtherStoppingLine() {
-	int refPoint = 1;
-	int count = 0;
-	for (int x = 0; x < 128; x++) {
-		if (getFilteredBit(CameraBuf, x, 250) != refPoint) {
-			count++;
-			refPoint = !refPoint;
-		}
-		if (count > 11) {
-			return true;
-		}
-	}
-	return false;
-}
+//bool FindFurtherStoppingLine() {
+//	int refPoint = 1;
+//	int count = 0;
+//	for (int x = 0; x < 128; x++) {
+//		if (getFilteredBit(CameraBuf, x, 250) != refPoint) {
+//			count++;
+//			refPoint = !refPoint;
+//		}
+//		if (count > 11) {
+//			return true;
+//		}
+//	}
+//	return false;
+//}
 
 /*
  * @brief Start line overtake
@@ -1923,8 +1923,6 @@ void main_car2(bool debug_) {
 
 	if(!debug){
 		bt.sendStartReq();
-		Timer::TimerInt start=System::Time();
-		while(System::Time()-start < 1500 && YYdistance.GetDistance() < TuningVar::start_car_distance) System::DelayMs(10);
 	}
 	/*motor PID setting*/
 	Timer::TimerInt pidStart = System::Time();
@@ -1943,6 +1941,10 @@ void main_car2(bool debug_) {
 
 	pServo->SetDegree(servo_bounds.kCenter);
 	while(System::Time()-pidStart<5000);
+	if(!debug){
+		Timer::TimerInt start=System::Time();
+		while(System::Time()-start < 1500 && YYdistance.GetDistance() < TuningVar::start_car_distance);
+	}
 	//	StartlineOvertake();
 
 	pMotor0->SetClockwise(true);
@@ -2000,10 +2002,10 @@ void main_car2(bool debug_) {
 						}
 						Capture(25);
 					}
-					if(FindFurtherStoppingLine() && is_front_car){
-						met_stop_line_slow_down = true;
-						bt.sendSpeed(10);
-					}
+//					if(FindFurtherStoppingLine() && is_front_car){
+//						met_stop_line_slow_down = true;
+//						bt.sendSpeed(10);
+//					}
 					if(!is_front_car && bt.getBufferSpeed() == 10 && YYdistance.GetDistance() < 350) bt.sendSpeed(100);
 					if (!hadStoppingLine && prevStoppingLine && !FindStoppingLine()) hadStoppingLine = true;
 					else prevStoppingLine = FindStoppingLine();
@@ -2262,15 +2264,15 @@ void main_car2(bool debug_) {
 						pid_left.SetSetpoint(90);
 						pid_right.SetSetpoint(90);
 					}
-					if(met_stop_line_slow_down && is_front_car){
-						if(bt.getBufferSpeed() == 100){
-							pid_left.SetSetpoint(TuningVar::targetSpeed_straight);
-							pid_right.SetSetpoint(TuningVar::targetSpeed_straight);
-						}else{
-							pid_left.SetSetpoint(30);
-							pid_right.SetSetpoint(30);
-						}
-					}
+//					if(met_stop_line_slow_down && is_front_car){
+//						if(bt.getBufferSpeed() == 100){
+//							pid_left.SetSetpoint(TuningVar::targetSpeed_straight);
+//							pid_right.SetSetpoint(TuningVar::targetSpeed_straight);
+//						}else{
+//							pid_left.SetSetpoint(30);
+//							pid_right.SetSetpoint(30);
+//						}
+//					}
 					if(met_stop_line || (stop_obsta_overtake && is_front_car && obsta_overtake_status != 0)){
 						pid_left.SetSetpoint(0);
 						pid_right.SetSetpoint(0);
