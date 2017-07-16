@@ -149,7 +149,6 @@ std::string inputStr;
 bool tune = false;
 std::vector<double> constVector;
 
-
 Edges left_edge;
 Edges right_edge;
 Edges path;
@@ -159,6 +158,10 @@ uint16_t start_y; //For crossing, store the last start point coordinate
 uint16_t start_x;
 uint16_t prev_corner_x; //store the latest corner coordinate appears last time during roundabout
 uint16_t prev_corner_y;
+
+/* FOR STOPPING LINE */
+bool hadStoppingLine = false;
+bool prevStoppingLine = false;
 
 /*FOR OVERTAKING*/
 
@@ -877,6 +880,7 @@ bool FindEdges() {
  */
 Feature featureIdent_Corner() {
 	bool temp_is_front;// don't change the is_front_car
+	if (!hadStoppingLine) return Feature::kNormal;
 	if(!overtake){
 		temp_is_front = false;
 		stop_before_roundexit = false;
@@ -1520,6 +1524,10 @@ int roundabout_shortest(uint32_t a, int pos){
 int16_t CalcAngleDiff() {
 	int16_t error = 0, sum = 0;
 	int16_t roundabout_offset = 0;
+	uint16_t total_sum;
+	if (!hadStoppingLine) total_sum = 10;
+	else if (roundaboutExitStatus) total_sum = 40;
+	else total_sum = 20;
 	int avg = 0;
 	//	if (roundaboutStatus == 1 && abs(encoder_total_round) > TuningVar::round_encoder_count) {
 	//		for (auto&& point : path.points) {
@@ -1530,7 +1538,7 @@ int16_t CalcAngleDiff() {
 	//		}
 	//	}
 	for (auto&& point : path.points) {
-		if (sum > (roundaboutExitStatus == 1 ? 40 : 20)) //consider first 20 points
+		if (sum > total_sum) //consider first 20 points
 			break;
 		error += (point.first - carMid.first);
 		avg += point.first;
@@ -1555,7 +1563,7 @@ bool FindStoppingLine() {
 			count++;
 			refPoint = !refPoint;
 		}
-		if (count > 20) {
+		if (count > 10) {
 			return true;
 		}
 	}
@@ -1744,7 +1752,7 @@ void main_car2(bool debug_) {
 
 	Timer::TimerInt time_img = 0;
 
-
+	pServo->SetDegree(servo_bounds.kCenter);
 	while(!debug&&joystick.GetState()==Joystick::State::kIdle);
 
 	if(!debug){
@@ -1801,9 +1809,17 @@ void main_car2(bool debug_) {
 						}
 						Capture(25);
 					}
+					if (!hadStoppingLine && prevStoppingLine && !FindStoppingLine()) hadStoppingLine = true;
+					else prevStoppingLine = FindStoppingLine();
+					if (!hadStoppingLine){
+						TuningVar::obstacle_mode = false;
+					} else TuningVar::obstacle_mode = true;
 					if ((stop_count>25 && !is_front_car) || (stop_count>50 && is_front_car)) met_stop_line = true;
-
 					FindEdges();
+					if (!hadStoppingLine){
+						left_corners.erase(left_corners.begin(), left_corners.end());
+						right_corners.erase(right_corners.begin(), right_corners.end());
+					}
 					Feature feature = featureIdent_Corner();
 					if(feature == Feature::kRoundabout && is_front_car) bt.sendFeature(feature);
 					GenPath(feature); //Generate path
