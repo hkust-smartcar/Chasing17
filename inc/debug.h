@@ -36,8 +36,7 @@ void confirmCar() {
 }
 
 void loadItems(DebugConsole* console) {
-  // TODO(Derppening): Reimplement preset system for PID values
-//  console->PushItem("pid preset", &CarManager::pid_preset_, 1.0);
+  console->PushItem("pid preset", &CarManager::pid_preset_, 1.0);
 
   switch (car) {
     case 1: {
@@ -47,6 +46,9 @@ void loadItems(DebugConsole* console) {
       console->PushItem("lcd debug", &debug_flag::lcd_debug);
       console->PushItem("algo time", &show_algo_time, "true", "false");
       console->PushItem("single test", &single_car_testing, "true", "false");
+      console->PushItem("overt_mode", &overtake_mode, "true", "false");
+      console->PushItem("obs_mode", &obstacle_mode, "true", "false");
+      console->PushItem("obs_overt", &obsta_overtake_mode, "true", "false");
       console->PushItem("overt_sel", &roundabout_overtake_flag, "y", "n");
       console->PushItem("rndabt sel", &roundabout_shortest_flag, "l", "r");
       console->PushItem("over_time", &overtake_interval_time, 5);
@@ -81,6 +83,9 @@ void loadItems(DebugConsole* console) {
       console->PushItem("lcd debug", &debug_flag::lcd_debug);
       console->PushItem("algo time", &show_algo_time, "true", "false");
       console->PushItem("single test", &single_car_testing, "true", "false");
+      console->PushItem("overt_mode", &overtake_mode, "true", "false");
+      console->PushItem("obs_mode", &obstacle_mode, "true", "false");
+      console->PushItem("obs_overt", &obsta_overtake_mode, "true", "false");
       console->PushItem("distance", &start_car_distance, 10);
       console->PushItem("overt_sel", &roundabout_overtake_flag, "y", "n");
       console->PushItem("rndabt sel", &roundabout_shortest_flag, "l", "r");
