@@ -36,8 +36,7 @@ void confirmCar() {
 }
 
 void loadItems(DebugConsole* console) {
-  // TODO(Derppening): Reimplement preset system for PID values
-//  console->PushItem("pid preset", &CarManager::pid_preset_, 1.0);
+  console->PushItem("pid preset", &CarManager::pid_preset_, 1.0);
 
   switch (car) {
     case 1: {
