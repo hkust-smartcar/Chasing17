@@ -48,6 +48,7 @@ void loadItems(DebugConsole* console) {
       console->PushItem("single test", &single_car_testing, "true", "false");
       console->PushItem("overt_mode", &overtake_mode, "true", "false");
       console->PushItem("obs_mode", &obstacle_mode, "true", "false");
+      console->PushItem("obs_pos", &isObstacleLeft, "left", "right");
       console->PushItem("obs_overt", &obsta_overtake_mode, "true", "false");
       console->PushItem("overt_sel", &roundabout_overtake_flag, "y", "n");
       console->PushItem("rndabt sel", &roundabout_shortest_flag, "l", "r");
@@ -85,6 +86,7 @@ void loadItems(DebugConsole* console) {
       console->PushItem("single test", &single_car_testing, "true", "false");
       console->PushItem("overt_mode", &overtake_mode, "true", "false");
       console->PushItem("obs_mode", &obstacle_mode, "true", "false");
+      console->PushItem("obs_pos", &isObstacleLeft, "left", "right");
       console->PushItem("obs_overt", &obsta_overtake_mode, "true", "false");
       console->PushItem("distance", &start_car_distance, 10);
       console->PushItem("overt_sel", &roundabout_overtake_flag, "y", "n");

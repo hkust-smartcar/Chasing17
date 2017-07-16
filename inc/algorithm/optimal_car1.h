@@ -115,6 +115,8 @@ namespace TuningVar {
   extern uint16_t angle_div_error; // translate error into angle
   extern uint16_t nearest_corner_threshold;
   extern uint16_t overtake_interval_time;
+  extern int16_t obstacle_hardcode_enc_total;
+  extern bool isObstacleLeft; //true for left, false for right
 
   // servo pid values
   extern float servo_straight_kp;

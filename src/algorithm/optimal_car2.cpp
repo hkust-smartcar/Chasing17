@@ -2277,10 +2277,6 @@ void main_car2(bool debug_) {
 					curr_enc_val_left = pEncoder0->GetCount();
 					curr_enc_val_right = -pEncoder1->GetCount();
 					if (!finishObstacleBypass) obstacle_hardcode_enc_curr += pEncoder0->GetCount();
-					char tem[100];
-					sprintf(tem, "e:%d b:%d %d %d", obstacle_hardcode_enc_curr, finishObstacleBypass, TuningVar::obstacle_mode, obstacle_hardcode_enc_curr >= TuningVar::obstacle_hardcode_enc_total);
-					pLcd->SetRegion(Lcd::Rect(0, 0, 128, 15));
-					pWriter->WriteString(tem);
 					SetMotorPower(GetMotorPower(0)+pid_left.Calc(curr_enc_val_left),0);
 					SetMotorPower(GetMotorPower(1)+pid_right.Calc(curr_enc_val_right),1);
 					//				if((curr_enc_val_left<100 || curr_enc_val_right<100) && (System::Time()-startTime>1000 || skip_motor_protection)){
