@@ -2007,6 +2007,7 @@ void main_car1(bool debug_) {
 						sprintf(temp_1, "encoder_obs:%d", encoder_total_obstacle);
 						pLcd->SetRegion(Lcd::Rect(0, 60, 128, 15));
 						pWriter->WriteString(temp_1);
+
 					}
 					if (debug) {
 						PrintWorldImage();

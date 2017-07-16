@@ -1960,7 +1960,7 @@ void main_car2(bool debug_) {
 					}
 					// if obstacle_mode == 0 avoid slow speed mode
 					if (!TuningVar::obstacle_mode){
-						obstacle_cnt = 1;
+						obstacle_cnt = 2;
 					}
 					if (bt.hasStopCar()) met_stop_line = true;
 					need_slow_down = false;
@@ -2029,6 +2029,9 @@ void main_car2(bool debug_) {
 						sprintf(temp_1, "encoder_obs:%d", encoder_total_obstacle);
 						pLcd->SetRegion(Lcd::Rect(0, 60, 128, 15));
 						pWriter->WriteString(temp_1);
+						pLcd->SetRegion(Lcd::Rect(0, 120, 128, 15));
+						hadStoppingLine?pWriter->WriteString("Line"):pWriter->WriteString("NoLine");
+
 					}
 					if (debug) {
 						char time_str[100];
