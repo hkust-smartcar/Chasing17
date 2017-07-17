@@ -90,7 +90,7 @@ bool single_car_testing = false;// still need to set overtake flag to false, onl
 bool overtake_mode = true; // true: overtake with communication, false: no overtake WITH communication
 bool obstacle_mode = false; // true: handle obstacle with communication, false: cancel obstacle handler
 bool obsta_overtake_mode = false;
-bool isObstacleLeft = true;// true for left
+bool isObstacleLeft = false;// true for left
 
 uint16_t starting_y = 13; //the starting y for edge detection
 uint16_t edge_length = 159; //max length for an edge
@@ -123,7 +123,7 @@ uint16_t roundExit_encoder_count = 3700;
 uint16_t obstacle_encoder_count = 5000;
 uint16_t front_obstacle_overtake_encoder_count = 4000;
 uint16_t back_obstacle_overtake_encoder_count = 5000;
-int32_t roundabout_shortest_flag = 0b00011; //1 means turn left, 0 means turn right. Reading from left to right
+int32_t roundabout_shortest_flag = 0b00010; //1 means turn left, 0 means turn right. Reading from left to right
 int32_t roundabout_overtake_flag = 0b11111;
 uint16_t nearest_corner_threshold = 128/2;
 uint16_t start_car_distance = 500;
@@ -148,6 +148,11 @@ uint16_t targetSpeed_normal = kStablePid.SpeedNormal;//normal turning
 uint16_t targetSpeed_round = kStablePid.SpeedRound;
 uint16_t targetSpeed_sharp_turn = kStablePid.SpeedSharpTurn;
 uint16_t targetSpeed_slow = kStablePid.SpeedSlow;
+
+//special mode
+bool fuck_yourself = false;
+
+uint16_t cam_contrast = 0x2F;
 }  // namespace TuningVar
 
 namespace {
@@ -1864,7 +1869,7 @@ void main_car2(bool debug_) {
 	cameraConfig.w = CameraSize.w;
 	cameraConfig.h = CameraSize.h;
 	cameraConfig.fps = Ov7725Configurator::Config::Fps::kHigh;
-	cameraConfig.contrast = 0x2F;
+	cameraConfig.contrast = TuningVar::cam_contrast;
 	cameraConfig.brightness = 0x00;
 	std::unique_ptr<Ov7725> camera = util::make_unique<Ov7725>(cameraConfig);
 	spCamera = std::move(camera);
@@ -1924,6 +1929,10 @@ void main_car2(bool debug_) {
 	if(!debug){
 		bt.sendStartReq();
 	}
+
+	pServo->SetDegree(servo_bounds.kCenter);
+	Timer::TimerInt start=System::Time();
+	while(System::Time()-start < 500);// && YYdistance.GetDistance() < TuningVar::start_car_distance);
 	/*motor PID setting*/
 	Timer::TimerInt pidStart = System::Time();
 	IncrementalPidController<float, float> pid_left(0,0,0,0);
@@ -1938,13 +1947,10 @@ void main_car2(bool debug_) {
 	pid_right.SetKi(0.02);
 	pid_left.SetKd(0);
 	pid_right.SetKd(0);
-
-	pServo->SetDegree(servo_bounds.kCenter);
-	while(System::Time()-pidStart<5000);
-	if(!debug){
-		Timer::TimerInt start=System::Time();
-		while(System::Time()-start < 1500 && YYdistance.GetDistance() < TuningVar::start_car_distance);
-	}
+	while(System::Time()-pidStart<1000);
+//	if(!debug){
+//
+//	}
 	//	StartlineOvertake();
 
 	pMotor0->SetClockwise(true);
@@ -2280,6 +2286,15 @@ void main_car2(bool debug_) {
 					curr_enc_val_left = pEncoder0->GetCount();
 					curr_enc_val_right = -pEncoder1->GetCount();
 					if (!finishObstacleBypass) obstacle_hardcode_enc_curr += pEncoder0->GetCount();
+					if (finishObstacleBypass && TuningVar::fuck_yourself){
+						pMotor0->SetPower(0);
+						pMotor1->SetPower(0);
+						System::DelayMs(10000);
+						pServo->SetDegree(servo_bounds.kRightBound);
+						pMotor0->SetPower(1000);
+						pMotor1->SetPower(1000);
+						while(1);
+					}
 					SetMotorPower(GetMotorPower(0)+pid_left.Calc(curr_enc_val_left),0);
 					SetMotorPower(GetMotorPower(1)+pid_right.Calc(curr_enc_val_right),1);
 					//				if((curr_enc_val_left<100 || curr_enc_val_right<100) && (System::Time()-startTime>1000 || skip_motor_protection)){

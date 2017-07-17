@@ -137,6 +137,11 @@ namespace TuningVar{
   extern uint16_t targetSpeed_sharp_turn;
   extern uint16_t targetSpeed_slow;//slow down speed during straight
 
+
+  //special mode
+  extern bool fuck_yourself;
+
+  extern uint16_t cam_contrast;
 }  // namespace TuningVar
 
 

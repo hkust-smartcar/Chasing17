@@ -88,7 +88,7 @@ bool single_car_testing = false;// only for car2 roundabout detection
 bool overtake_mode = true; // true: overtake with communication, false: no overtake WITH communication
 bool obstacle_mode = false; // true: handle obstacle with communication, false: cancel obstacle handler
 bool obsta_overtake_mode = false;
-bool isObstacleLeft = true; //true for left, false for right
+bool isObstacleLeft = false; //true for left, false for right
 
 uint16_t starting_y = 13; //the starting y for edge detection
 uint16_t edge_length = 159; //max length for an edge
@@ -121,7 +121,7 @@ uint16_t roundExit_encoder_count = 3700;
 uint16_t obstacle_encoder_count = 5000;
 uint16_t front_obstacle_overtake_encoder_count = 4000;
 uint16_t back_obstacle_overtake_encoder_count = 5000;
-int32_t roundabout_shortest_flag = 0b00011; //1 means turn left, 0 means turn right. Reading from left to right
+int32_t roundabout_shortest_flag = 0b00010; //1 means turn left, 0 means turn right. Reading from left to right
 int32_t roundabout_overtake_flag = 0b11111;
 uint16_t nearest_corner_threshold = 128/2;
 uint16_t overtake_interval_time = 1000;
@@ -145,6 +145,8 @@ uint16_t targetSpeed_normal = kStablePid.SpeedNormal;//normal turning
 uint16_t targetSpeed_round = kStablePid.SpeedRound;
 uint16_t targetSpeed_sharp_turn = kStablePid.SpeedSharpTurn;
 uint16_t targetSpeed_slow = kStablePid.SpeedSlow;
+
+uint16_t cam_contrast = 0x2F;
 
 }  // namespace TuningVar
 
@@ -1836,7 +1838,7 @@ void main_car1(bool debug_) {
 	cameraConfig.w = CameraSize.w;
 	cameraConfig.h = CameraSize.h;
 	cameraConfig.fps = Ov7725Configurator::Config::Fps::kHigh;
-	cameraConfig.contrast = 0x2F;
+	cameraConfig.contrast = TuningVar::cam_contrast;//0x2F;
 	cameraConfig.brightness = 0x00;
 	std::unique_ptr<Ov7725> camera = util::make_unique<Ov7725>(cameraConfig);
 	spCamera = std::move(camera);
@@ -1913,7 +1915,7 @@ void main_car1(bool debug_) {
 
 
 	pServo->SetDegree(servo_bounds.kCenter);
-	while(System::Time()-pidStart<5000);
+	while(System::Time()-pidStart<1000);
 	//	StartlineOvertake();
 
 	pMotor0->SetClockwise(true);
@@ -2094,22 +2096,22 @@ void main_car1(bool debug_) {
 					else if(roundaboutStatus == 1){
 
 						//for slowing down the car in advance when need to stop
-//						if(stop_before_roundexit && overtake){
-//							pServo->SetDegree(util::clamp<uint16_t>(
-//									servo_bounds.kCenter - (TuningVar::servo_roundabout_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
-//									servo_bounds.kRightBound,
-//									servo_bounds.kLeftBound));
-//							pid_left.SetSetpoint(60);
-//							pid_right.SetSetpoint(60);
-//							//avoid another car's early pass the exit
-//							if(pBT->hasFinishedOvertake()){
-//								stop_before_roundexit = false;
-//								// roundaboutStatus = 0;
-//							}
-//						}
-						if(stop_before_roundexit && overtake && pBT->hasFinishedOvertake()){
-							stop_before_roundexit = false;
+						if(stop_before_roundexit && overtake){
+							pServo->SetDegree(util::clamp<uint16_t>(
+									servo_bounds.kCenter - (TuningVar::servo_roundabout_kp * curr_servo_error + TuningVar::servo_normal_kd * (curr_servo_error - prev_servo_error)),
+									servo_bounds.kRightBound,
+									servo_bounds.kLeftBound));
+							pid_left.SetSetpoint(60);
+							pid_right.SetSetpoint(60);
+							//avoid another car's early pass the exit
+							if(pBT->hasFinishedOvertake()){
+								stop_before_roundexit = false;
+								// roundaboutStatus = 0;
+							}
 						}
+//						if(stop_before_roundexit && overtake && pBT->hasFinishedOvertake()){
+//							stop_before_roundexit = false;
+//						}
 						/*New stopping method*/
 						//slow down the car when the exit is ready
 						else if(need_slow_down){

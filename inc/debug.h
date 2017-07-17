@@ -78,6 +78,8 @@ void loadItems(DebugConsole* console) {
       console->PushItem("rndabt-d", &servo_roundabout_kd, 0.001);
       console->PushItem("s_turn-p", &servo_sharp_turn_kp, 0.01);
       console->PushItem("s_turn-d", &servo_sharp_turn_kd, 0.001);
+
+      console->PushItem("contrast", &cam_contrast,1);
     }
     break;
     case 2: {
@@ -120,6 +122,10 @@ void loadItems(DebugConsole* console) {
       console->PushItem("s_turn-p", &servo_sharp_turn_kp, 0.01);
       console->PushItem("s_turn-d", &servo_sharp_turn_kd, 0.001);
 
+      //special mode
+      console->PushItem("fuck", &fuck_yourself, "true", "false");
+
+      console->PushItem("contrast", &cam_contrast,1);
     }
     break;
     default:
