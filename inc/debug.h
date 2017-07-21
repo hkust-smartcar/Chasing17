@@ -27,8 +27,8 @@ using libbase::k60::Flash;
 uint16_t car = 0;
 bool confirm = false;
 
-namespace debug_flag{
-	  bool lcd_debug = false;
+namespace debug_flag {
+bool lcd_debug = false;
 }
 
 void confirmCar() {
@@ -79,9 +79,9 @@ void loadItems(DebugConsole* console) {
       console->PushItem("s_turn-p", &servo_sharp_turn_kp, 0.01);
       console->PushItem("s_turn-d", &servo_sharp_turn_kd, 0.001);
 
-      console->PushItem("contrast", &cam_contrast,1);
+      console->PushItem("contrast", &cam_contrast, 1);
     }
-    break;
+      break;
     case 2: {
       using namespace algorithm::optimal::car2::TuningVar;
 
@@ -125,9 +125,9 @@ void loadItems(DebugConsole* console) {
       //special mode
       console->PushItem("fuck", &fuck_yourself, "true", "false");
 
-      console->PushItem("contrast", &cam_contrast,1);
+      console->PushItem("contrast", &cam_contrast, 1);
     }
-    break;
+      break;
     default:
       // not handled
       break;
@@ -150,20 +150,19 @@ uint16_t debug(bool call_reset) {
   joystick_config.is_active_low = true;
   Joystick joystick(joystick_config);
 
-  if(call_reset){
-	  DebugConsole resetConfirmConsole(&joystick, &lcd, &writer);
-	  resetConfirmConsole.PushItem("Sure Reset?",&call_reset,"yes","no");
-	  resetConfirmConsole.PushItem("Confirm");
-	  Item item = resetConfirmConsole.GetItem(1);
-	  item.listener = &confirmCar;
-	  resetConfirmConsole.SetItem(1,item);
-	  resetConfirmConsole.ListItems();
-	  while(!confirm){
-		  resetConfirmConsole.Listen();
-	  }
-	  confirm=false;
+  if (call_reset) {
+    DebugConsole resetConfirmConsole(&joystick, &lcd, &writer);
+    resetConfirmConsole.PushItem("Sure Reset?", &call_reset, "yes", "no");
+    resetConfirmConsole.PushItem("Confirm");
+    Item item = resetConfirmConsole.GetItem(1);
+    item.listener = &confirmCar;
+    resetConfirmConsole.SetItem(1, item);
+    resetConfirmConsole.ListItems();
+    while (!confirm) {
+      resetConfirmConsole.Listen();
+    }
+    confirm = false;
   }
-
 
   Flash::Config flash_config;
   Flash flash(flash_config);

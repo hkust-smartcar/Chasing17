@@ -26,7 +26,7 @@ void FcYyUsV4::listener(Gpi* gpi) {
   if (gpi->Get()) {
     impulse_start_time_ = System::TimeIn125us();
   } else {
-	  distance_ = (distance_*5 + (System::TimeIn125us() - impulse_start_time_) * 42.5) / 6; //unit: mm
+    distance_ = (distance_ * 5 + (System::TimeIn125us() - impulse_start_time_) * 42.5) / 6; //unit: mm
   }
 }
 

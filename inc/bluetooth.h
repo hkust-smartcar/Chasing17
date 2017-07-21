@@ -59,13 +59,12 @@ class BTComm {
     ptrBT_->SendBuffer(&data, 1);
   }
 
-  void sendStr(char* str){
-	ptrBT_->SendStr(str);
+  void sendStr(char* str) {
+    ptrBT_->SendStr(str);
   }
 
-
-  static int fetchSize(){
-	  return NAKbuffer_.size();
+  static int fetchSize() {
+    return NAKbuffer_.size();
   }
 
   /**
@@ -89,7 +88,7 @@ class BTComm {
   /**
    * Request opponent's current speed to buffer.
    */
-  void reqSpeed(){
+  void reqSpeed() {
     sendData(DataType::kReq, ReqType::kSpeed);
   }
 
@@ -114,7 +113,7 @@ class BTComm {
   /**
    * Request opponent's current slope to buffer.
    */
-  void reqSlopeDeg(){
+  void reqSlopeDeg() {
     sendData(DataType::kReq, ReqType::kSlopeDeg);
   }
 
@@ -137,7 +136,7 @@ class BTComm {
   /**
    * Request opponent's current distance.
    */
-  void reqDist(){
+  void reqDist() {
     sendData(DataType::kReq, ReqType::kDist);
   }
 
@@ -162,15 +161,15 @@ class BTComm {
   /**
    * Request opponent's current feature.
    */
-  void reqFeature(){
+  void reqFeature() {
     sendData(DataType::kReq, ReqType::kFeature);
   }
 
   /**
    * Reset feature
    */
-  void resetFeature(){
-	  feat_ = CarManager::Feature::kNormal;
+  void resetFeature() {
+    feat_ = CarManager::Feature::kNormal;
   }
 
   /**
@@ -194,7 +193,7 @@ class BTComm {
   /**
    * Request opponent's current side.
    */
-  void reqSide(){
+  void reqSide() {
     sendData(DataType::kReq, ReqType::kSide);
   }
 
@@ -217,22 +216,22 @@ class BTComm {
   /**
    * Send obstacle pos
    */
-  void sendObstaclePos(CarManager::ObstaclePos pos){
-	  sendData(DataType::kObstacle, static_cast<uint8_t>(pos));
+  void sendObstaclePos(CarManager::ObstaclePos pos) {
+    sendData(DataType::kObstacle, static_cast<uint8_t>(pos));
   }
 
   /**
    * See if front car has also detected obstacle
    */
-  CarManager::ObstaclePos getObstaclePos(){
-	  return obstacle_pos_;
+  CarManager::ObstaclePos getObstaclePos() {
+    return obstacle_pos_;
   }
 
   /**
    * Reset obstacle pos
    */
-  void resetObstaclePos(){
-	  obstacle_pos_ = CarManager::ObstaclePos::kNull;
+  void resetObstaclePos() {
+    obstacle_pos_ = CarManager::ObstaclePos::kNull;
   }
 
   enum struct OvertakeStatus {
@@ -306,93 +305,92 @@ class BTComm {
   /**
    * Send start request
    */
-  void sendStartReq(){
-	sendData(DataType::kReq, ReqType::kStart);
+  void sendStartReq() {
+    sendData(DataType::kReq, ReqType::kStart);
   }
 
   /**
    * Check if there is a start request
    */
-  bool hasStartReq(){
-	return hasStartReq_;
+  bool hasStartReq() {
+    return hasStartReq_;
   }
 
   /**
    * Send signal for finishing overtake
    */
-  void sendFinishOvertake(){
-	  sendData(DataType::kReq, ReqType::kFinishOvertake);
+  void sendFinishOvertake() {
+    sendData(DataType::kReq, ReqType::kFinishOvertake);
   }
 
   /**
    * Check if the overtake procedure is done
    */
-  bool hasFinishedOvertake(){
-	  return hasFinishedOvertake_;
+  bool hasFinishedOvertake() {
+    return hasFinishedOvertake_;
   }
 
   /**
    * Reset hasFinishedOvertake_ flag
    */
-  void resetFinishOvertake(){
-	  hasFinishedOvertake_ = false;
+  void resetFinishOvertake() {
+    hasFinishedOvertake_ = false;
   }
 
   /**
    * Return the time when overtake_time_ flag is received
    */
-  libsc::Timer::TimerInt getOvertakeTime(){
-	  return overtake_time_;
+  libsc::Timer::TimerInt getOvertakeTime() {
+    return overtake_time_;
   }
 
   /**
    * Send signal for finishing obstacle overtake
    */
-  void sendFinishObstacleOvertake(){
-	  sendData(DataType::kReq, ReqType::kFinishObstacleOvertake);
+  void sendFinishObstacleOvertake() {
+    sendData(DataType::kReq, ReqType::kFinishObstacleOvertake);
   }
 
   /**
    * Check if the obstacle overtake procedure is done
    */
-  bool hasFinishedObstacleOvertake(){
-	  return hasFinishedObstacleOvertake_;
+  bool hasFinishedObstacleOvertake() {
+    return hasFinishedObstacleOvertake_;
   }
 
   /**
    * Reset hasFinishedObstacleOvertake_ flag
    */
-  void resetFinishObstacleOvertake(){
-	  hasFinishedObstacleOvertake_ = false;
+  void resetFinishObstacleOvertake() {
+    hasFinishedObstacleOvertake_ = false;
   }
 
   /**
    * Return the time when obstacle_overtake_time_ flag is received
    */
-  libsc::Timer::TimerInt getObstacleOvertakeTime(){
-	  return obstacle_overtake_time_;
+  libsc::Timer::TimerInt getObstacleOvertakeTime() {
+    return obstacle_overtake_time_;
   }
-
 
   /**
    * Send stop car request from another car
    */
-  void sendStopCar(){
-	  sendData(DataType::kReq, ReqType::kStopCar);
+  void sendStopCar() {
+    sendData(DataType::kReq, ReqType::kStopCar);
   }
 
   /**
    * Return if stop_car_ flag is true, for Processing remote stop car
    */
-  bool hasStopCar(){
-	  return stop_car_;
+  bool hasStopCar() {
+    return stop_car_;
   }
 
   /**
    * Reset stop car flag
    */
-  void resetStopCar(){
-	  stop_car_ = false;
+  void resetStopCar() {
+    stop_car_ = false;
   }
 
   /**
@@ -438,9 +436,9 @@ class BTComm {
   };
 
   std::unique_ptr<libsc::k60::JyMcuBt106> bluetooth_;
-  static libsc::k60::JyMcuBt106 *ptrBT_;
+  static libsc::k60::JyMcuBt106* ptrBT_;
 
-  static bool BTListener(const Byte *data, const size_t size);
+  static bool BTListener(const Byte* data, const size_t size);
   //1. Receive DATA -> Update corresponding variables
   //   -> ACK format: kACK (1B) | ID (1B) | 0x00 (3B) | kEND (1B), total 6B
   //   If not enough 8B or no kEND within 10ms -> Disregard message

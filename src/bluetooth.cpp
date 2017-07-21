@@ -46,9 +46,9 @@ void BTComm::sendData(unsigned char type, uint16_t data) {
   dataArray[5] = BitConsts::kEND;
   ptrBT_->SendBuffer(dataArray, 6);
   auto a = NAKbuffer_.emplace(ID, std::make_pair(type, data));
-  if (!a.second){
+  if (!a.second) {
     NAKbuffer_.erase(a.first);
-    NAKbuffer_.emplace(ID, std::make_pair(type,data));
+    NAKbuffer_.emplace(ID, std::make_pair(type, data));
   }
 }
 

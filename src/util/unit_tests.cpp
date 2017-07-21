@@ -104,7 +104,7 @@ void CameraTest() {
   while (!camera->IsAvailable()) {}
 
   while (true) {
-    const Byte *pBuffer = camera->LockBuffer();
+    const Byte* pBuffer = camera->LockBuffer();
     camera->UnlockBuffer();
     lcd->SetRegion(Lcd::Rect(0, 0, 80, 60));
     lcd->FillBits(Lcd::kBlack, Lcd::kWhite, pBuffer, kBufferSize * 8);

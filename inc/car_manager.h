@@ -29,8 +29,8 @@ struct CarManager final {
     kStraight = 0,
     kRoundabout,
     kCross,
-	kNormal,
-	kRoundaboutExit
+    kNormal,
+    kRoundaboutExit
   };
 
   /**
@@ -70,10 +70,10 @@ struct CarManager final {
   /**
    * Enum of obstacle postion
    */
-  enum struct ObstaclePos : uint8_t{
-	kNull = 0,
-	kLeft,
-	kRight
+  enum struct ObstaclePos : uint8_t {
+    kNull = 0,
+    kLeft,
+    kRight
   };
 
   /**

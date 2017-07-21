@@ -15,11 +15,11 @@
 #include <cstdio>
 #include <memory>
 
+#include "libbase/k60/flash.h"
 #include "libsc/joystick.h"
 #include "libsc/lcd_typewriter.h"
 #include "libsc/st7735r.h"
 #include "libsc/system.h"
-#include "libbase/k60/flash.h"
 
 using libsc::Joystick;
 using libsc::Lcd;

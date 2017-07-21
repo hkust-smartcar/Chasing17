@@ -8,19 +8,19 @@
  *
  */
 
-#include "../inc/algorithm/optimal_car1.h"
-#include "../inc/algorithm/optimal_car2.h"
 #include "libbase/k60/mcg.h"
 #include "libsc/battery_meter.h"
+#include "libsc/joystick.h"
 #include "libsc/lcd_console.h"
 #include "libsc/st7735r.h"
 #include "libsc/system.h"
-#include "libsc/joystick.h"
 
 #include "debug.h"
 
 #include "car_manager.h"
 #include "algorithm/distance.h"
+#include "algorithm/optimal_car1.h"
+#include "algorithm/optimal_car2.h"
 #include "util/pid_tuning.h"
 #include "util/testground.h"
 #include "util/unit_tests.h"

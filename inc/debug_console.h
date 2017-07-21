@@ -16,10 +16,10 @@
 
 #include <vector>
 
+#include "libbase/k60/flash.h"
 #include "libsc/joystick.h"
 #include "libsc/lcd_typewriter.h"
 #include "libsc/st7735r.h"
-#include "libbase/k60/flash.h"
 
 typedef void(* Fptr)();
 

@@ -47,8 +47,6 @@ void USIRDemo() {
   btConfig.id = 0;
   k60::JyMcuBt106 bt(btConfig);
 
-
-
   Timer::TimerInt time = 0;
 
   while (true) {

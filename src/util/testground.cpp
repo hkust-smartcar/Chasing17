@@ -127,15 +127,15 @@ void main() {
 
   led2.SetEnable(true);
 
-	St7735r::Config lcdConfig;
-	lcdConfig.is_revert = true;
-	St7735r lcd(lcdConfig);
-	auto pLcd = &lcd;
+  St7735r::Config lcdConfig;
+  lcdConfig.is_revert = true;
+  St7735r lcd(lcdConfig);
+  auto pLcd = &lcd;
 
-	LcdTypewriter::Config writerConfig;
-	writerConfig.lcd = pLcd;
-	LcdTypewriter writer(writerConfig);
-	auto pWriter = &writer;
+  LcdTypewriter::Config writerConfig;
+  writerConfig.lcd = pLcd;
+  LcdTypewriter writer(writerConfig);
+  auto pWriter = &writer;
 
   JyMcuBt106::Config bt_config;
   bt_config.id = 0;
@@ -148,18 +148,18 @@ void main() {
 
   Joystick::Config jy_config;
   jy_config.id = 0;
-  jy_config.dispatcher = [&cur_servo_val](const uint8_t id, const Joystick::State which){
-	  switch(which){
-	  case Joystick::State::kLeft:
-		  cur_servo_val -= 5;
-		  break;
-	  case Joystick::State::kRight:
-		  cur_servo_val += 5;
-		  break;
-        default:
-          // not handled
-          break;
-	  }
+  jy_config.dispatcher = [&cur_servo_val](const uint8_t id, const Joystick::State which) {
+    switch (which) {
+      case Joystick::State::kLeft:
+        cur_servo_val -= 5;
+        break;
+      case Joystick::State::kRight:
+        cur_servo_val += 5;
+        break;
+      default:
+        // not handled
+        break;
+    }
   };
   Joystick jy(jy_config);
 
@@ -170,21 +170,21 @@ void main() {
   int left_cnt = 0, right_cnt = 0;
 
   while (true) {
-	  while (time_img != System::Time()){
-		  time_img = System::Time();
-		  if (time_img % 10 == 0){
-			  led0.Switch();
-			  servo->SetDegree(cur_servo_val);
-			  encoder0->Update();
-			  left_cnt += encoder0->GetCount();
-			  encoder1->Update();
-			  right_cnt += encoder1->GetCount();
-			  char temp[100];
-			  sprintf(temp, "s:%d\nl:%d\n r:%d", cur_servo_val, left_cnt, right_cnt);
-			  pLcd->SetRegion(Lcd::Rect(0,0,128,50));
-			  pWriter->WriteString(temp);
-		  }
-	  }
+    while (time_img != System::Time()) {
+      time_img = System::Time();
+      if (time_img % 10 == 0) {
+        led0.Switch();
+        servo->SetDegree(cur_servo_val);
+        encoder0->Update();
+        left_cnt += encoder0->GetCount();
+        encoder1->Update();
+        right_cnt += encoder1->GetCount();
+        char temp[100];
+        sprintf(temp, "s:%d\nl:%d\n r:%d", cur_servo_val, left_cnt, right_cnt);
+        pLcd->SetRegion(Lcd::Rect(0, 0, 128, 50));
+        pWriter->WriteString(temp);
+      }
+    }
   }
 }
 
