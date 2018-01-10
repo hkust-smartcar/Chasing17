@@ -231,7 +231,7 @@ void main() {
   pRight = &pid_right;
 
   St7735r::Config lcd_config;
-  lcd_config.is_revert = true;
+  lcd_config.orientation = true;
   St7735r lcd(lcd_config);
   lcd.Clear();
 

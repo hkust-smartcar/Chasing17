@@ -137,7 +137,7 @@ void loadItems(DebugConsole* console) {
 uint16_t debug(bool call_reset) {
 
   St7735r::Config lcd_config;
-  lcd_config.is_revert = true;
+  lcd_config.orientation = 2;
   St7735r lcd(lcd_config);
   lcd.Clear();
 

@@ -128,7 +128,7 @@ void main() {
   led2.SetEnable(true);
 
   St7735r::Config lcdConfig;
-  lcdConfig.is_revert = true;
+  lcdConfig.orientation = true;
   St7735r lcd(lcdConfig);
   auto pLcd = &lcd;
 

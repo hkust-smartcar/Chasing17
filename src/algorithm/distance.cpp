@@ -32,7 +32,7 @@ void USIRDemo() {
 //  config_joystick.dispatcher = [&US](const uint8_t id, const Joystick::State which){US.resetFilter();};
 
   St7735r::Config lcd_config;
-  lcd_config.is_revert = true;
+  lcd_config.orientation = true;
   St7735r lcd(lcd_config);
   St7735r* pLcd = &lcd;
   lcd.Clear();

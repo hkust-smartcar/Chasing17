@@ -75,11 +75,11 @@ const PidSet kStablePid = {
     {1.20, 0, 0.000},   // ServoSharpTurn
 
     // motor values
-    150,                // SpeedStraight
-    100,                // SpeedNormal
-    90,                // SpeedRoundabout
-    90,                // SpeedSharpTurn
-    100                 // SpeedSlow
+    140,                // SpeedStraight
+    90,                // SpeedNormal
+    80,                // SpeedRoundabout
+    80,                // SpeedSharpTurn
+    90                 // SpeedSlow
 };
 
 namespace TuningVar { //tuning var delaration
@@ -170,7 +170,7 @@ uint16_t prev_corner_x; //store the latest corner coordinate appears last time d
 uint16_t prev_corner_y;
 
 /* FOR STOPPING LINE */
-bool hadStoppingLine = false;
+bool hadStoppingLine = true;
 bool prevStoppingLine = false;
 
 /*FOR OVERTAKING*/
@@ -1823,7 +1823,7 @@ void main_car2(bool debug_) {
   pBT = &bt;
 
   St7735r::Config lcdConfig;
-  lcdConfig.is_revert = true;
+  lcdConfig.orientation = 2;
   St7735r lcd(lcdConfig);
   pLcd = &lcd;
 
@@ -1891,6 +1891,7 @@ void main_car2(bool debug_) {
         led0.SetEnable(time_img % 500 >= 250);
 
         if (time_img % 10 == 0) {
+        	roundabout_cnt = 0;
           if (TuningVar::show_algo_time) {
             time_img = System::Time();
           }

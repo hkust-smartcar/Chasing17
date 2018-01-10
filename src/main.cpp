@@ -61,12 +61,13 @@ int main() {
   // Battery Check
   {
     St7735r::Config lcd_config;
-    lcd_config.is_revert = true;
+    lcd_config.orientation = 2;
     St7735r lcd(lcd_config);
     lcd.Clear();
 
     LcdConsole::Config console_config;
     console_config.lcd = &lcd;
+    console_config.region=libsc::Lcd::Rect(0,0,lcd.GetW(),lcd.GetH());
     LcdConsole console(console_config);
 
     float voltage;

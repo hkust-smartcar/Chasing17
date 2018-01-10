@@ -69,7 +69,7 @@ void LedTest() {
 void LcdTest() {
   St7735r::Config config;
   config.fps = 10;
-  config.is_revert = true;
+  config.orientation = true;
   unique_ptr<St7735r> lcd = util::make_unique<St7735r>(config);
 
   while (true) {
@@ -98,7 +98,7 @@ void CameraTest() {
   // initialize LCD
   St7735r::Config lcd_config;
   lcd_config.fps = 50;
-  lcd_config.is_revert = true;
+  lcd_config.orientation = true;
   unique_ptr<St7735r> lcd = util::make_unique<St7735r>(lcd_config);
 
   while (!camera->IsAvailable()) {}
@@ -181,7 +181,7 @@ void DirEncoderTest() {
 
   St7735r::Config lcd_config;
   lcd_config.fps = 10;
-  lcd_config.is_revert = true;
+  lcd_config.orientation = true;
   St7735r lcd(lcd_config);
 
   LcdConsole::Config console_config;
